@@ -397,7 +397,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Together AI ───────────────────────────────────────────────���─���─────────
+  // ── Together AI ─────────────────────────────────────────────���─���─���─────────
   together: {
     id: "together",
     models: [
@@ -614,31 +614,130 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Novita AI ─────────────────────────────────────────────────────────────
+  // ── Novita AI (105 LLM models) ────────────────────────────────────────────
+  // Correct endpoint: https://api.novita.ai/openai/v1/chat/completions
   novita: {
     id: "novita",
     models: [
-      // ── Code & Reasoning ─────────────────────────────────────────────────
-      "deepseek/deepseek-r1-0528",                         // DeepSeek-R1 05/28
-      "deepseek/deepseek-v3-0324",                         // DeepSeek-V3 03/24
-      "qwen/qwen3-coder-480b-a35b-instruct",               // Qwen3-Coder 480B A35B
-      "qwen/qwen3-235b-a22b-instruct-2507",                // Qwen3-235B A22B 2507
-      "moonshotai/kimi-k2-instruct",                       // Kimi K2 Instruct
-      "thudm/glm-4-5",                                     // GLM-4.5
-      // ── General ──────────────────────────────────────────────────────────
-      "meta-llama/llama-3.3-70b-instruct",                 // Llama 3.3 70B
-      "meta-llama/llama-4-maverick-17b-128e-instruct-fp8", // Llama 4 Maverick FP8
-      "meta-llama/llama-4-scout-17b-16e-instruct",         // Llama 4 Scout
-      "qwen/qwen3-235b-a22b-fp8",                          // Qwen3-235B A22B FP8
-      "qwen/qwen3-30b-a3b",                                // Qwen3-30B A3B
-      "deepseek/deepseek-r1",                              // DeepSeek-R1
-      "deepseek/deepseek-v3",                              // DeepSeek-V3
-      // ── Vision ───────────────────────────────────────────────────────────
-      "qwen/qwen2.5-vl-72b-instruct",                      // Qwen2.5-VL 72B
-      // ── Fast / Small ─────────────────────────────────────────────────────
-      "meta-llama/llama-3.1-8b-instruct",                  // Llama 3.1 8B
+      // ── NEW (Jun 2026) ────────────────────────────────────────────────────
+      "zai-org/glm-5-2",                                   // GLM 5.2 — NEW  $1.4/$4.4/Mt  1M ctx 128K out
+      "moonshotai/kimi-k2-7-code",                         // Kimi K2.7 Code — HOT  $0.95/$4/Mt  256K ctx
+      "minimax/minimax-m3",                                // MiniMax M3 — NEW  $0.3/$1.2/Mt  977K ctx 128K out
+      "deepseek/deepseek-v4-pro",                          // DeepSeek V4 Pro — HOT  $1.6/$3.2/Mt  1M ctx 384K out
+      "deepseek/deepseek-v4-flash",                        // DeepSeek V4 Flash — HOT  $0.14/$0.28/Mt  1M ctx 384K out
+      "stepfun/step-3-7-flash",                            // Step 3.7 Flash — NEW  $0.2/$1.15/Mt  256K ctx 250K out
+      "nvidia/nemotron-3-nano-30b-a3b",                    // Nemotron 3 Nano 30B A3B — NEW  $0.05/$0.2/Mt  256K ctx
+      "baidu/cobuddy",                                     // CoBuddy — NEW  $0.29/$1.13/Mt  128K ctx
+      "xiaomi/mimo-v2-5",                                  // XiaomiMiMo/MiMo-V2.5 — NEW  $0.168/$0.336/Mt  1M ctx
+      "xiaomi/mimo-v2-5-pro",                              // XiaomiMiMo/MiMo-V2.5-Pro — NEW  $0.522/$1.044/Mt  1M ctx
+      // ── HOT / Recommended ────────────────────────────────────────────────
+      "deepseek/deepseek-v3-2",                            // DeepSeek V3.2 — HOT  $0.269/$0.4/Mt  160K ctx 64K out
+      "deepseek/deepseek-r1-0528",                         // DeepSeek R1 0528  $0.7/$2.5/Mt  160K ctx
+      "deepseek/deepseek-v3-0324",                         // DeepSeek V3 0324  $0.27/$1.12/Mt  160K ctx
+      // ── Qwen3 Family ─────────────────────────────────────────────────────
+      "qwen/qwen3-7-max",                                  // Qwen3.7-Max  $1.25/$3.75/Mt  977K ctx 64K out
+      "qwen/qwen3-6-27b",                                  // Qwen3.6-27B  $0.6/$3.6/Mt  256K ctx 64K out
+      "qwen/qwen3-5-27b",                                  // Qwen3.5-27B  $0.3/$2.4/Mt  256K ctx 64K out
+      "qwen/qwen3-5-122b-a10b",                            // Qwen3.5-122B A10B  $0.4/$3.2/Mt  256K ctx
+      "qwen/qwen3-5-35b-a3b",                              // Qwen3.5-35B A3B  $0.25/$2/Mt  256K ctx
+      "qwen/qwen3-5-397b-a17b",                            // Qwen3.5-397B A17B  $0.6/$3.6/Mt  256K ctx
+      "qwen/qwen3-coder-480b-a35b-instruct",               // Qwen3-Coder 480B A35B  $0.38/$1.55/Mt  256K ctx
+      "qwen/qwen3-coder-30b-a3b-instruct",                 // Qwen3-Coder 30B A3B  $0.07/$0.27/Mt  160K ctx
+      "qwen/qwen3-235b-a22b-instruct-2507",                // Qwen3-235B A22B 2507 Thinking  $0.3/$3/Mt
+      "qwen/qwen3-235b-a22b-fp8",                          // Qwen3-235B A22B FP8  $0.09/$0.58/Mt
+      "qwen/qwen3-235b-a22b",                              // Qwen3-235B A22B  $0.2/$0.8/Mt  40K ctx
+      "qwen/qwen3-32b",                                    // Qwen3-32B  $0.1/$0.45/Mt  40K ctx
+      "qwen/qwen3-30b-a3b",                                // Qwen3-30B A3B  $0.15/$1.5/Mt  131K ctx
+      "qwen/qwen3-next-80b-a3b-instruct",                  // Qwen3 Next 80B A3B Instruct  $0.15/$1.5/Mt
+      "qwen/qwen3-next-80b-a3b-thinking",                  // Qwen3 Next 80B A3B Thinking  $0.15/$1.5/Mt
+      "qwen/qwen3-8b",                                     // Qwen3-8B  $0.035/$0.138/Mt  128K ctx
+      "qwen/qwen3-coder-next",                             // Qwen3 Coder Next  $0.2/$1.5/Mt  256K ctx
+      // ── Qwen VL (Vision) ─────────────────────────────────────────────────
+      "qwen/qwen3-vl-235b-a22b-instruct",                  // Qwen3 VL 235B Instruct  $0.3/$1.5/Mt
+      "qwen/qwen3-vl-235b-a22b-thinking",                  // Qwen3 VL 235B Thinking  $0.98/$3.95/Mt
+      "qwen/qwen3-vl-30b-a3b-instruct",                    // Qwen3 VL 30B Instruct  $0.2/$0.7/Mt
+      "qwen/qwen3-vl-30b-a3b-thinking",                    // Qwen3 VL 30B Thinking  $0.2/$1/Mt
+      "qwen/qwen3-vl-8b-instruct",                         // Qwen3 VL 8B Instruct  $0.08/$0.5/Mt
+      "qwen/qwen2.5-vl-72b-instruct",                      // Qwen2.5-VL 72B  $0.38/$0.4/Mt  32K ctx
+      "qwen/qwen-mt-plus",                                 // Qwen MT Plus  $0.25/$0.75/Mt  16K ctx
+      // ── GLM / Zai-org Family ─────────────────────────────────────────────
+      "zai-org/glm-5-1",                                   // GLM-5.1  $1.38/$4.4/Mt  200K ctx 128K out
+      "zai-org/glm-5",                                     // GLM-5  $1/$3.2/Mt  202K ctx
+      "zai-org/glm-4-7-flash",                             // GLM-4.7-Flash  $0.07/$0.4/Mt  200K ctx
+      "zai-org/glm-4-7",                                   // GLM-4.7  $0.6/$2.2/Mt  204K ctx
+      "zai-org/glm-4-6v",                                  // GLM 4.6V  $0.3/$0.9/Mt  131K ctx
+      "zai-org/glm-4-6",                                   // GLM 4.6  $0.55/$2.2/Mt  204K ctx
+      "zai-org/glm-4-5v",                                  // GLM-4.5V  $0.6/$1.8/Mt  64K ctx
+      "zai-org/glm-4-5",                                   // GLM-4.5  $0.6/$2.2/Mt  131K ctx
+      "zai-org/glm-4-5-air",                               // GLM-4.5 Air  $0.13/$0.85/Mt  131K ctx
+      "zai-org/autoglm-phone-9b-multilingual",             // AutoGLM Phone 9B Multilingual  $0.035/$0.138/Mt
+      // ── MiniMax Family ───────────────────────────────────────────────────
+      "minimax/minimax-m2-7",                              // MiniMax M2.7 — HOT  $0.3/$1.2/Mt  200K ctx
+      "minimax/minimax-m2-5-highspeed",                    // MiniMax M2.5-highspeed  $0.6/$2.4/Mt  200K ctx
+      "minimax/minimax-m2-5",                              // MiniMax M2.5  $0.3/$1.2/Mt  200K ctx
+      "minimax/minimax-m2-1",                              // MiniMax M2.1  $0.3/$1.2/Mt  200K ctx
+      "minimax/minimax-m2",                                // MiniMax M2  $0.3/$1.2/Mt  200K ctx
+      "minimax/minimax-m1",                                // MiniMax M1  $0.55/$2.2/Mt  1M ctx 40K out
+      // ── Kimi / MoonshotAI Family ─────────────────────────────────────────
+      "moonshotai/kimi-k2-6",                              // Kimi K2.6 — NEW  $0.8/$3.4/Mt  256K ctx
+      "moonshotai/kimi-k2-5",                              // Kimi K2.5  $0.6/$3/Mt  256K ctx
+      "moonshotai/kimi-k2-0905",                           // Kimi K2 0905  $0.6/$2.5/Mt  256K ctx
+      "moonshotai/kimi-k2-instruct",                       // Kimi K2 Instruct  $0.57/$2.3/Mt  131K ctx
+      "moonshotai/kimi-k2-thinking",                       // Kimi K2 Thinking  $0.6/$2.5/Mt  256K ctx
+      // ── Google Gemma Family ──────────────────────────────────────────────
+      "google/gemma-4-26b-a4b",                            // Gemma 4 26B A4B  $0.13/$0.4/Mt  256K ctx
+      "google/gemma-4-31b",                                // Gemma 4 31B  $0.14/$0.4/Mt  256K ctx
+      "google/gemma-3-27b",                                // Gemma 3 27B  $0.119/$0.2/Mt  98K ctx
+      "google/gemma3-12b",                                 // Gemma3 12B  $0.05/$0.1/Mt  131K ctx
+      // ── Meta Llama Family ────────────────────────────────────────────────
+      "meta-llama/llama-4-maverick-17b-128e-instruct-fp8", // Llama 4 Maverick FP8  $0.27/$0.85/Mt  1M ctx
+      "meta-llama/llama-4-maverick-instruct",              // Llama 4 Maverick Instruct  $0.27/$0.85/Mt
+      "meta-llama/llama-4-scout-17b-16e-instruct",         // Llama 4 Scout  $0.18/$0.59/Mt  131K ctx
+      "meta-llama/llama-4-scout-instruct",                 // Llama 4 Scout Instruct  $0.18/$0.59/Mt
+      "meta-llama/llama-3.3-70b-instruct",                 // Llama 3.3 70B  $0.135/$0.4/Mt  131K ctx
+      "meta-llama/llama-3.1-8b-instruct",                  // Llama 3.1 8B  $0.02/$0.05/Mt
+      "meta-llama/llama-3-8b-instruct",                    // Llama 3 8B  $0.04/$0.04/Mt
+      "meta-llama/llama-3-70b-instruct",                   // Llama 3 70B  $0.51/$0.74/Mt
+      "meta-llama/llama-3.2-3b-instruct",                  // Llama 3.2 3B  $0.03/$0.05/Mt
+      // ── DeepSeek Family ──────────────────────────────────────────────────
+      "deepseek/deepseek-r1",                              // DeepSeek R1  $0.7/$2.5/Mt  64K ctx
+      "deepseek/deepseek-r1-0528-qwen3-8b",                // DeepSeek R1 0528 Qwen3 8B  $0.06/$0.09/Mt
+      "deepseek/deepseek-v3",                              // DeepSeek V3 (Turbo)  $0.4/$1.3/Mt  64K ctx
+      "deepseek/deepseek-v3-0324",                         // DeepSeek V3 0324  $0.27/$1.12/Mt
+      "deepseek/deepseek-v3-1",                            // DeepSeek V3.1  $0.27/$1/Mt  131K ctx
+      "deepseek/deepseek-v3-1-terminus",                   // DeepSeek V3.1 Terminus  $0.27/$1/Mt
+      "deepseek/deepseek-v3-2-exp",                        // DeepSeek V3.2 Exp  $0.27/$0.41/Mt
+      "deepseek/deepseek-prover-v2-671b",                  // DeepSeek Prover V2 671B  $0.7/$2.5/Mt  160K ctx
+      "deepseek/deepseek-ocr-2",                           // DeepSeek-OCR 2  $0.03/$0.03/Mt  8K ctx
+      // ── OpenAI OSS ───────────────────────────────────────────────────────
+      "openai/openai-gpt-oss-120b",                        // OpenAI GPT OSS 120B  $0.05/$0.25/Mt  131K ctx
+      "openai/openai-gpt-oss-20b",                         // OpenAI GPT OSS 20B  $0.04/$0.15/Mt  131K ctx
+      // ── ERNIE (Baidu) ────────────────────────────────────────────────────
+      "baidu/ernie-4-5-vl-424b-a47b",                      // ERNIE 4.5 VL 424B A47B  $0.42/$1.25/Mt  123K ctx
+      "baidu/ernie-4-5-vl-28b-a3b",                        // ERNIE 4.5 VL 28B A3B  $0.14/$0.56/Mt  30K ctx
+      "baidu/ernie-4-5-21b-a3b",                           // ERNIE 4.5 21B A3B  $0.07/$0.28/Mt  120K ctx
+      // ── Ling / Nex ───────────────────────────────────────────────────────
+      "ling-2-6-1t",                                       // Ling-2.6-1T  $0.3/$2.5/Mt  256K ctx
+      "ling-2-6-flash",                                    // Ling-2.6-flash  $0.1/$0.3/Mt  256K ctx
+      "nex-n2-pro",                                        // Nex-N2-Pro — FREE  $0/Mt  256K ctx
+      // ── Mistral ──────────────────────────────────────────────────────────
+      "mistralai/mistral-nemo",                            // Mistral Nemo  $0.04/$0.17/Mt  60K ctx
+      // ── Misc / Roleplay / Specialty ──────────────────────────────────────
+      "hermes-2-pro-llama-3-8b",                           // Hermes 2 Pro Llama 3 8B  $0.14/$0.14/Mt
+      "l3-70b-euryale-v2-1",                               // L3 70B Euryale V2.1  $1.48/$1.48/Mt
+      "l31-70b-euryale-v2-2",                              // L31 70B Euryale V2.2  $1.48/$1.48/Mt
+      "sao10k/l3-8b-stheno-v3-2",                          // L3 8B Stheno V3.2  $0.05/$0.05/Mt
+      "sao10k/l3-8b-lunaris",                              // L3 8B Lunaris  $0.05/$0.05/Mt
+      "mythomaxl2-13b",                                    // MythoMax L2 13B  $0.09/$0.09/Mt
+      "wizardlm-2-8x22b",                                  // WizardLM 2 8×22B  $0.62/$0.62/Mt
+      "baichuan-m2-32b",                                   // BaiChuan M2 32B  $0.07/$0.07/Mt  131K ctx
+      "paddleocr-vl",                                      // PaddleOCR-VL  $0.02/$0.02/Mt
+      "kat-coder-pro",                                     // Kat Coder Pro  $0.3/$1.2/Mt  256K ctx
+      "ring-2-6-1t",                                       // Ring-2.6-1T  $0.3/$2.5/Mt  256K ctx
+      "qwen3-omni-30b-a3b-thinking",                       // Qwen3 Omni 30B A3B Thinking  $0.25/$0.97/Mt
+      "qwen3-omni-30b-a3b-instruct",                       // Qwen3 Omni 30B A3B Instruct  $0.25/$0.97/Mt
     ],
-    endpoint: "https://api.novita.ai/v3/openai/chat/completions",
+    endpoint: "https://api.novita.ai/openai/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model) => ({
@@ -710,7 +809,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── SambaNova ─────────────────────────────────────────────────────────────
+  // ── SambaNova ────────────────────────────────────────���────────────────────
   sambanova: {
     id: "sambanova",
     models: [
