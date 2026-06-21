@@ -399,12 +399,29 @@ const PRESETS: ProviderPreset[] = [
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Chat models (exact API strings):
+    //   MiniMaxAI/MiniMax-M3, MiniMaxAI/MiniMax-M2.7
+    //   moonshotai/Kimi-K2.7-Code, moonshotai/Kimi-K2.6
+    //   zai-org/GLM-5.2, zai-org/GLM-5.1, zai-org/GLM-5
+    //   openai/gpt-oss-120b, openai/gpt-oss-20b
+    //   deepseek-ai/DeepSeek-V4-Pro
+    //   nvidia/nemotron-3-ultra-550b-a55b
+    //   Qwen/Qwen3.7-Max, Qwen/Qwen3.7-Plus, Qwen/Qwen3.6-Plus
+    //   Qwen/Qwen3.5-9B, Qwen/Qwen3.5-397B-A17B
+    //   Qwen/Qwen3-235B-A22B-Instruct-2507-tput
+    //   Qwen/Qwen2.5-7B-Instruct-Turbo
+    //   meta-llama/Llama-3.3-70B-Instruct-Turbo
+    //   meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo
+    //   meta-llama/Meta-Llama-3-8B-Instruct-Lite
+    //   google/gemma-4-31B-it, google/gemma-3n-E4B-it
+    //   essentialai/rnj-1-instruct, deepcogito/cogito-v2-1-671b
+    //   LiquidAI/LFM2-24B-A2B, pearl-ai/gemma-4-31b-it
     bodyTemplate: JSON.stringify({
-      model: "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      model: "MiniMaxAI/MiniMax-M3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://docs.together.ai/reference/chat-completions-1",
+    docsUrl: "https://docs.together.ai/docs/serverless-models",
     createKeyUrl: "https://api.together.ai/settings/api-keys",
     color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
   },

@@ -187,7 +187,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
-  // ── Google Gemini ─────────────────────────────────────────────────────────
+  // ── Google Gemini ────────────────────────────────────────────────���────────
   google: {
     id: "google",
     // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
@@ -394,23 +394,44 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   together: {
     id: "together",
     models: [
-      // Llama 4
-      "meta-llama/Llama-4-Scout-17B-16E-Instruct",
-      "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
-      // Llama 3.x
+      // ── MiniMax ───────────────────────────────────────────
+      "MiniMaxAI/MiniMax-M3",
+      "MiniMaxAI/MiniMax-M2.7",
+      // ── Moonshot (Kimi) ───────────────────────────────────
+      "moonshotai/Kimi-K2.7-Code",
+      "moonshotai/Kimi-K2.6",
+      // ── Z.ai (GLM) ────────────────────────────────────────
+      "zai-org/GLM-5.2",
+      "zai-org/GLM-5.1",
+      "zai-org/GLM-5",
+      // ── OpenAI OSS ────────────────────────────────────────
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      // ── DeepSeek ──────────────────────────────────────────
+      "deepseek-ai/DeepSeek-V4-Pro",
+      // ── NVIDIA ────────────────────────────────────────────
+      "nvidia/nemotron-3-ultra-550b-a55b",
+      // ── Qwen ──────────────────────────────────────────────
+      "Qwen/Qwen3.7-Max",
+      "Qwen/Qwen3.7-Plus",
+      "Qwen/Qwen3.6-Plus",
+      "Qwen/Qwen3.5-9B",
+      "Qwen/Qwen3.5-397B-A17B",
+      "Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
+      "Qwen/Qwen2.5-7B-Instruct-Turbo",
+      // ── Meta Llama ────────────────────────────────────────
       "meta-llama/Llama-3.3-70B-Instruct-Turbo",
       "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-      // DeepSeek
-      "deepseek-ai/DeepSeek-V3",
-      "deepseek-ai/DeepSeek-R1",
-      // Qwen
-      "Qwen/Qwen3-235B-A22B",
-      "Qwen/Qwen2.5-72B-Instruct-Turbo",
-      // Mistral
-      "mistralai/Mixtral-8x7B-Instruct-v0.1",
-      "mistralai/Mistral-7B-Instruct-v0.3",
-      // Google
-      "google/gemma-2-9b-it",
+      "meta-llama/Meta-Llama-3-8B-Instruct-Lite",
+      // ── Google ────────────────────────────────────────────
+      "google/gemma-4-31B-it",
+      "google/gemma-3n-E4B-it",
+      // ── Other ─────────────────────────────────────────────
+      "essentialai/rnj-1-instruct",
+      "deepcogito/cogito-v2-1-671b",
+      "LiquidAI/LFM2-24B-A2B",
+      "pearl-ai/gemma-4-31b-it",
+      "meta-llama/Llama-Guard-4-12B",
     ],
     endpoint: "https://api.together.ai/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -833,7 +854,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Tencent Hunyuan ───────────────────────────────────────────────────────
+  // ─�� Tencent Hunyuan ───────────────────────────────────────────────────────
   hunyuan: {
     id: "hunyuan",
     models: [

@@ -162,9 +162,9 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
-  // Together AI — OpenAI-compatible
+  // Together AI — OpenAI-compatible (default: MiniMaxAI/MiniMax-M3)
   together: (prompt) => ({
-    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    model: "MiniMaxAI/MiniMax-M3",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
