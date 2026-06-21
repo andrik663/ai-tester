@@ -184,6 +184,168 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
   },
+  // ── Meta / Llama providers ────────────────────────────────────────────────
+  {
+    id: "cerebras",
+    name: "Cerebras (Llama)",
+    endpoint: "https://api.cerebras.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "llama-3.3-70b",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://inference-docs.cerebras.ai/api-reference/chat-completions",
+    createKeyUrl: "https://cloud.cerebras.ai/",
+    color: "text-lime-400 bg-lime-400/10 border-lime-400/30",
+  },
+  {
+    id: "fireworks",
+    name: "Fireworks AI",
+    endpoint: "https://api.fireworks.ai/inference/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "accounts/fireworks/models/llama-v3p3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.fireworks.ai/api-reference/post-chatcompletions",
+    createKeyUrl: "https://fireworks.ai/account/api-keys",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/30",
+  },
+  {
+    id: "novita",
+    name: "Novita AI",
+    endpoint: "https://api.novita.ai/v3/openai/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/llama-3.3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://novita.ai/docs/api-reference/llm-openai-compatible-apis",
+    createKeyUrl: "https://novita.ai/settings/key-management",
+    color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
+  },
+  {
+    id: "cloudflare",
+    name: "Cloudflare Workers AI",
+    endpoint: "https://api.cloudflare.com/client/v4/accounts/{{CF_ACCOUNT_ID}}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+      max_tokens: 1024,
+    }, null, 2),
+    docsUrl: "https://developers.cloudflare.com/workers-ai/models/",
+    createKeyUrl: "https://dash.cloudflare.com/profile/api-tokens",
+    color: "text-amber-300 bg-amber-300/10 border-amber-300/30",
+  },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/llama-3.3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://openrouter.ai/docs/api-reference/overview",
+    createKeyUrl: "https://openrouter.ai/settings/keys",
+    color: "text-violet-300 bg-violet-300/10 border-violet-300/30",
+  },
+  {
+    id: "sambanova",
+    name: "SambaNova",
+    endpoint: "https://api.sambanova.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "Meta-Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://community.sambanova.ai/t/supported-models/193",
+    createKeyUrl: "https://cloud.sambanova.ai/apis",
+    color: "text-red-300 bg-red-300/10 border-red-300/30",
+  },
+  {
+    id: "nvidia",
+    name: "NVIDIA NIM",
+    endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta/llama-3.3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.api.nvidia.com/nim/reference/llm-apis",
+    createKeyUrl: "https://build.nvidia.com/settings/api-keys",
+    color: "text-green-300 bg-green-300/10 border-green-300/30",
+  },
+  {
+    id: "hyperbolic",
+    name: "Hyperbolic",
+    endpoint: "https://api.hyperbolic.xyz/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.hyperbolic.xyz/docs/getting-started",
+    createKeyUrl: "https://app.hyperbolic.xyz/settings",
+    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/30",
+  },
+  {
+    id: "ai21",
+    name: "AI21 Labs",
+    endpoint: "https://api.ai21.com/studio/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "jamba-1.6-large",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.ai21.com/reference/jamba-16-chat-api-ref",
+    createKeyUrl: "https://studio.ai21.com/account/api-key",
+    color: "text-sky-300 bg-sky-300/10 border-sky-300/30",
+  },
   // ── Tier 3: Open-source / infra providers ─────────────────────────────────
   {
     id: "groq",
@@ -401,7 +563,46 @@ function ChevronIcon({ open }: { open: boolean }) {
   )
 }
 
-// ── Log level styles ──────────────────────────────────────────────────────────
+function ImageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  )
+}
+
+function ChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function ScanIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <polyline points="4 7 4 4 7 4" />
+      <polyline points="17 4 20 4 20 7" />
+      <polyline points="20 17 20 20 17 20" />
+      <polyline points="7 20 4 20 4 17" />
+      <line x1="9" y1="12" x2="15" y2="12" />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
+
+// ── Log level styles ───────────────────��──────────────────────────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -506,7 +707,21 @@ export default function ManualKeyTester() {
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
+  // Tab state: "chat" | "vision" | "ocr"
+  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr">("chat")
+  // Vision / OCR state
+  const [visionPrompt, setVisionPrompt] = useState("")
+  const [visionImage, setVisionImage] = useState<{ dataUrl: string; mimeType: string; name: string } | null>(null)
+  const [visionLoading, setVisionLoading] = useState(false)
+  const [visionResult, setVisionResult] = useState<ManualTestResult | null>(null)
+  const [visionHistory, setVisionHistory] = useState<ChatMessage[]>([])
+  const [ocrImage, setOcrImage] = useState<{ dataUrl: string; mimeType: string; name: string } | null>(null)
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrResult, setOcrResult] = useState<string | null>(null)
+  const visionFileRef = useRef<HTMLInputElement>(null)
+  const ocrFileRef = useRef<HTMLInputElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const visionEndRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounce API key changes by 400ms
@@ -519,6 +734,10 @@ export default function ManualKeyTester() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatHistory, loading])
+
+  useEffect(() => {
+    visionEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [visionHistory, visionLoading])
 
   // SWR key — only fetches when Dahono is selected AND key is long enough
   const dahonoSWRKey =
@@ -553,6 +772,104 @@ export default function ManualKeyTester() {
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2))
+  }
+
+  // ── Vision / OCR helpers ────────────────────────────────────────────────────
+
+  function handleImageFile(
+    file: File,
+    setter: (v: { dataUrl: string; mimeType: string; name: string } | null) => void
+  ) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string
+      setter({ dataUrl, mimeType: file.type || "image/jpeg", name: file.name })
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function runVisionTest() {
+    if (!apiKey.trim() || !visionImage || visionLoading) return
+    setVisionLoading(true)
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: visionPrompt || "(image only)",
+      ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+    }
+    setVisionHistory((prev) => [...prev, userMsg])
+    const headers: Record<string, string> = {}
+    for (const row of headerRows) {
+      if (row.key.trim()) headers[row.key.trim()] = row.value
+    }
+    try {
+      const base64 = visionImage.dataUrl.split(",")[1]
+      const res = await fetch("/api/manual-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: selectedPreset.id,
+          apiKey: apiKey.trim(),
+          endpoint,
+          method,
+          headers,
+          prompt: visionPrompt || "Describe this image in detail.",
+          testMode: "vision",
+          imageData: { base64, mimeType: visionImage.mimeType },
+        }),
+      })
+      const data: ManualTestResult = await res.json()
+      setVisionResult(data)
+      const reply = data.chatReply ?? (data.ok ? data.responseBody : `Error: HTTP ${data.status}`)
+      const assistantMsg: ChatMessage = {
+        role: "assistant",
+        content: reply ?? "No response",
+        ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      }
+      setVisionHistory((prev) => [...prev, assistantMsg])
+    } catch (err) {
+      const assistantMsg: ChatMessage = {
+        role: "assistant",
+        content: err instanceof Error ? err.message : "Request failed",
+        ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      }
+      setVisionHistory((prev) => [...prev, assistantMsg])
+    } finally {
+      setVisionLoading(false)
+      setVisionPrompt("")
+    }
+  }
+
+  async function runOcrTest() {
+    if (!apiKey.trim() || !ocrImage || ocrLoading) return
+    setOcrLoading(true)
+    setOcrResult(null)
+    const headers: Record<string, string> = {}
+    for (const row of headerRows) {
+      if (row.key.trim()) headers[row.key.trim()] = row.value
+    }
+    try {
+      const base64 = ocrImage.dataUrl.split(",")[1]
+      const res = await fetch("/api/manual-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: selectedPreset.id,
+          apiKey: apiKey.trim(),
+          endpoint,
+          method,
+          headers,
+          prompt: "Please extract and transcribe ALL text visible in this image. Output only the extracted text, preserving layout as much as possible. Do not add any explanation.",
+          testMode: "vision",
+          imageData: { base64, mimeType: ocrImage.mimeType },
+        }),
+      })
+      const data: ManualTestResult = await res.json()
+      setOcrResult(data.chatReply ?? (data.ok ? data.responseBody : `Error: HTTP ${data.status} ${data.statusText}`))
+    } catch (err) {
+      setOcrResult(err instanceof Error ? err.message : "Request failed")
+    } finally {
+      setOcrLoading(false)
+    }
   }
 
   function applyPreset(preset: ProviderPreset) {
@@ -881,235 +1198,505 @@ export default function ManualKeyTester() {
         </div>
       </aside>
 
-      {/* ── RIGHT: Chat + log panel ────────────────────────────────────────── */}
+      {/* ── RIGHT: Tabbed panel ────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
-        {/* Status bar */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card flex-shrink-0">
+        {/* Tab bar + status */}
+        <div className="flex items-center gap-0 px-2 py-0 border-b border-border bg-card flex-shrink-0">
+          {/* Tabs */}
+          <div className="flex items-center gap-0.5 mr-3 py-1.5">
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded transition-colors ${
+                activeTab === "chat"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              }`}
+            >
+              <ChatIcon /> Chat
+            </button>
+            <button
+              onClick={() => setActiveTab("vision")}
+              className={`flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded transition-colors ${
+                activeTab === "vision"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              }`}
+            >
+              <ImageIcon /> Vision
+            </button>
+            <button
+              onClick={() => setActiveTab("ocr")}
+              className={`flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded transition-colors ${
+                activeTab === "ocr"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              }`}
+            >
+              <ScanIcon /> OCR
+            </button>
+          </div>
+
+          {/* Status info */}
           <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded border ${selectedPreset.color}`}>
             {selectedPreset.name}
           </span>
           {endpoint && (
-            <span className="text-[10px] font-mono text-muted-foreground truncate flex-1 min-w-0">
-              {method} {endpoint}
+            <span className="text-[10px] font-mono text-muted-foreground truncate flex-1 min-w-0 ml-2">
+              {method} {endpoint.replace(/\?key=.*/, "?key=…")}
             </span>
           )}
-          {result && (
+          {(activeTab === "chat" ? result : activeTab === "vision" ? visionResult : null) && (
             <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-              {result.tokenUsage?.totalTokens && (
+              {(activeTab === "chat" ? result : visionResult)?.tokenUsage?.totalTokens && (
                 <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
-                  {result.tokenUsage.totalTokens} tokens
+                  {(activeTab === "chat" ? result : visionResult)?.tokenUsage?.totalTokens} tokens
                 </span>
               )}
-              <span
-                className={`text-[10px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}
-              >
-                HTTP {result.status} · {result.durationMs}ms
+              <span className={`text-[10px] font-mono ${(activeTab === "chat" ? result : visionResult)?.ok ? "text-green-400" : "text-red-400"}`}>
+                HTTP {(activeTab === "chat" ? result : visionResult)?.status} · {(activeTab === "chat" ? result : visionResult)?.durationMs}ms
               </span>
             </div>
           )}
         </div>
 
-        {/* Chat messages */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
-          {chatHistory.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
-                <span className="text-lg font-bold">{selectedPreset.name[0]}</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{selectedPreset.name}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Enter your API key and send a message to test the endpoint.
-                </p>
-                {!apiKey && (
-                  <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
-                    API key required — enter it in the left panel
-                  </p>
+        {/* ── CHAT TAB ─────────────────────────────────────────────────────── */}
+        {activeTab === "chat" && (
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {chatHistory.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
+                    <span className="text-lg font-bold">{selectedPreset.name[0]}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{selectedPreset.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Enter your API key and send a message to test the endpoint.
+                    </p>
+                    {!apiKey && (
+                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                        API key required — enter it in the left panel
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {chatHistory.map((msg, i) => (
+                <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border text-foreground"
+                  }`}>
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground/50 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex items-start gap-2">
+                  <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
+                    <SpinnerIcon />
+                    <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Log / Raw toggle row */}
+            {result && (
+              <div className="flex items-center gap-2 px-4 py-1.5 border-t border-border bg-card/50 flex-shrink-0">
+                <button
+                  onClick={() => { setShowLog((v) => !v); if (showRawResponse) setShowRawResponse(false) }}
+                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
+                    showLog ? "text-cyan-400 border-cyan-400/30 bg-cyan-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
+                  }`}
+                >
+                  <span className="font-mono">$</span> Test Log ({result.logs.length})
+                </button>
+                <button
+                  onClick={() => { setShowRawResponse((v) => !v); if (showLog) setShowLog(false) }}
+                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
+                    showRawResponse ? "text-yellow-400 border-yellow-400/30 bg-yellow-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
+                  }`}
+                >
+                  {"{ }"} Raw Response
+                </button>
+                {result.curlCommand && (
+                  <div className="flex items-center gap-1 ml-auto">
+                    <button onClick={copyCurl} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors">
+                      <CopyIcon /> {copiedCurl ? "Copied!" : "cURL (masked)"}
+                    </button>
+                    {result.curlFull && (
+                      <button onClick={copyCurlFull} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
+                        <CopyIcon /> {copiedCurlFull ? "Copied!" : "cURL (full)"}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {chatHistory.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-border text-foreground"
-                }`}
-              >
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
+            {/* Terminal log */}
+            {showLog && result && (
+              <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-48 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Request Log — {result.durationMs}ms</span>
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 rounded-full bg-red-500/60" />
+                    <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
+                    <span className="w-2 h-2 rounded-full bg-green-500/60" />
+                  </div>
+                </div>
+                {result.logs.map((entry, i) => (
+                  <div key={i} className="flex gap-2 items-start mb-0.5">
+                    <span className="text-[9px] text-muted-foreground/40 w-8 flex-shrink-0 pt-px tabular-nums">{entry.ts}ms</span>
+                    <span className={`text-[10px] leading-relaxed ${LOG_STYLES[entry.level]} whitespace-pre-wrap break-all`}>
+                      <span className="opacity-60">{LOG_PREFIX[entry.level]}</span>{entry.text}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <span className="text-[9px] text-muted-foreground/50 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
-            </div>
-          ))}
+            )}
 
-          {loading && (
-            <div className="flex items-start gap-2">
-              <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
-                <SpinnerIcon />
-                <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
+            {/* Raw response */}
+            {showRawResponse && result && (
+              <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-48 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Raw JSON Response</span>
+                  <span className={`text-[9px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}>HTTP {result.status}</span>
+                </div>
+                <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">{result.responseBody}</pre>
               </div>
-            </div>
-          )}
+            )}
 
-          <div ref={chatEndRef} />
-        </div>
+            {/* Token usage */}
+            {result?.ok && (result.tokenUsage || (result.responseHeaders && Object.keys(result.responseHeaders).length > 0)) && (
+              <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4 flex-wrap">
+                {result.tokenUsage && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
+                    {result.tokenUsage.promptTokens !== undefined && (
+                      <span className="text-[10px] font-mono text-muted-foreground">in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span></span>
+                    )}
+                    {result.tokenUsage.completionTokens !== undefined && (
+                      <span className="text-[10px] font-mono text-muted-foreground">out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span></span>
+                    )}
+                    {result.tokenUsage.totalTokens !== undefined && (
+                      <span className="text-[10px] font-mono text-primary font-semibold">total: {result.tokenUsage.totalTokens}</span>
+                    )}
+                  </div>
+                )}
+                {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
+                  <span className="text-[10px] font-mono text-muted-foreground">rl-remaining: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span></span>
+                )}
+              </div>
+            )}
 
-        {/* Log / Raw toggle row */}
-        {result && (
-          <div className="flex items-center gap-2 px-4 py-1.5 border-t border-border bg-card/50 flex-shrink-0">
-            <button
-              onClick={() => { setShowLog((v) => !v); if (showRawResponse) setShowRawResponse(false) }}
-              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
-                showLog ? "text-cyan-400 border-cyan-400/30 bg-cyan-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
-              }`}
-            >
-              <span className="font-mono">$</span> Test Log ({result.logs.length})
-            </button>
-            <button
-              onClick={() => { setShowRawResponse((v) => !v); if (showLog) setShowLog(false) }}
-              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
-                showRawResponse ? "text-yellow-400 border-yellow-400/30 bg-yellow-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
-              }`}
-            >
-              {"{ }"} Raw Response
-            </button>
-            {result.curlCommand && (
-              <div className="flex items-center gap-1 ml-auto">
+            {/* Chat input bar */}
+            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={apiKey ? "Type a message and press Enter..." : "Enter API key first..."}
+                  disabled={!apiKey.trim() || loading}
+                  rows={2}
+                  className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40"
+                />
                 <button
-                  onClick={copyCurl}
-                  title="Copy cURL with masked key"
-                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors"
+                  onClick={runTest}
+                  disabled={!apiKey.trim() || !prompt.trim() || loading}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity flex-shrink-0"
                 >
-                  <CopyIcon />
-                  {copiedCurl ? "Copied!" : "cURL (masked)"}
+                  {loading ? <SpinnerIcon /> : <SendIcon />}
+                  {loading ? "Sending" : "Send"}
                 </button>
-                {result.curlFull && (
+              </div>
+              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+                Enter sends · Shift+Enter for newline · <code>{"{{PROMPT}}"}</code> in body template is replaced with your message
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ── VISION TAB ───────────────────────────────────────────────────── */}
+        {activeTab === "vision" && (
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {visionHistory.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
+                    <ImageIcon />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Vision Test</p>
+                    <p className="text-[11px] text-muted-foreground mt-1 max-w-xs">
+                      Upload an image, optionally type a prompt, and test the model&apos;s vision capability.
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">
+                      Works with GPT-4o, Claude Sonnet, Gemini, Llama-Vision, etc.
+                    </p>
+                    {!apiKey && (
+                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                        API key required — enter it in the left panel
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {visionHistory.map((msg, i) => (
+                <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border text-foreground"
+                  }`}>
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground/50 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
+                </div>
+              ))}
+
+              {visionLoading && (
+                <div className="flex items-start gap-2">
+                  <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
+                    <SpinnerIcon />
+                    <span className="text-[11px] text-muted-foreground">Analyzing image...</span>
+                  </div>
+                </div>
+              )}
+              <div ref={visionEndRef} />
+            </div>
+
+            {/* Vision result footer */}
+            {visionResult?.ok && visionResult.tokenUsage && (
+              <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4">
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
+                {visionResult.tokenUsage.promptTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">in: <span className="text-foreground">{visionResult.tokenUsage.promptTokens}</span></span>
+                )}
+                {visionResult.tokenUsage.completionTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">out: <span className="text-foreground">{visionResult.tokenUsage.completionTokens}</span></span>
+                )}
+                {visionResult.tokenUsage.totalTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-primary font-semibold">total: {visionResult.tokenUsage.totalTokens}</span>
+                )}
+                {visionResult.durationMs && (
+                  <span className={`text-[10px] font-mono ml-auto ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
+                    HTTP {visionResult.status} · {visionResult.durationMs}ms
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Vision input */}
+            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              {/* Image preview / drop zone */}
+              <div
+                className="mb-2 relative"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const file = e.dataTransfer.files[0]
+                  if (file && file.type.startsWith("image/")) handleImageFile(file, setVisionImage)
+                }}
+              >
+                {visionImage ? (
+                  <div className="relative inline-block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={visionImage.dataUrl}
+                      alt="Vision input"
+                      className="max-h-32 rounded-lg border border-border object-contain"
+                    />
+                    <button
+                      onClick={() => setVisionImage(null)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-80 transition-opacity"
+                    >
+                      <XIcon />
+                    </button>
+                    <span className="absolute bottom-1 left-1 text-[9px] bg-black/60 text-white px-1.5 py-0.5 rounded font-mono">
+                      {visionImage.name}
+                    </span>
+                  </div>
+                ) : (
                   <button
-                    onClick={copyCurlFull}
-                    title="Copy cURL with real key — safe since you own this key"
-                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                    onClick={() => visionFileRef.current?.click()}
+                    className="w-full border border-dashed border-border rounded-lg px-4 py-3 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
                   >
-                    <CopyIcon />
-                    {copiedCurlFull ? "Copied!" : "cURL (full)"}
+                    <ImageIcon /> Click or drag an image here (JPG, PNG, WebP, GIF)
                   </button>
                 )}
+                <input
+                  ref={visionFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleImageFile(file, setVisionImage)
+                    e.target.value = ""
+                  }}
+                />
               </div>
-            )}
-          </div>
-        )}
 
-        {/* Terminal log panel */}
-        {showLog && result && (
-          <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-56 overflow-y-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                Request Log — {result.durationMs}ms
-              </span>
-              <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-red-500/60" />
-                <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
-                <span className="w-2 h-2 rounded-full bg-green-500/60" />
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={visionPrompt}
+                  onChange={(e) => setVisionPrompt(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); runVisionTest() } }}
+                  placeholder={visionImage ? "Optional: add a question about the image..." : "Upload an image first..."}
+                  disabled={!apiKey.trim() || !visionImage || visionLoading}
+                  rows={2}
+                  className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40"
+                />
+                <button
+                  onClick={runVisionTest}
+                  disabled={!apiKey.trim() || !visionImage || visionLoading}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity flex-shrink-0"
+                >
+                  {visionLoading ? <SpinnerIcon /> : <SendIcon />}
+                  {visionLoading ? "Analyzing" : "Analyze"}
+                </button>
               </div>
+              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+                Prompt is optional — defaults to &quot;Describe this image in detail.&quot;
+              </p>
             </div>
-            {result.logs.map((entry, i) => (
-              <div key={i} className="flex gap-2 items-start mb-0.5">
-                <span className="text-[9px] text-muted-foreground/40 w-8 flex-shrink-0 pt-px tabular-nums">
-                  {entry.ts}ms
-                </span>
-                <span className={`text-[10px] leading-relaxed ${LOG_STYLES[entry.level]} whitespace-pre-wrap break-all`}>
-                  <span className="opacity-60">{LOG_PREFIX[entry.level]}</span>
-                  {entry.text}
-                </span>
-              </div>
-            ))}
-          </div>
+          </>
         )}
 
-        {/* Raw response */}
-        {showRawResponse && result && (
-          <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-56 overflow-y-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                Raw JSON Response
-              </span>
-              <span className={`text-[9px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}>
-                HTTP {result.status}
-              </span>
+        {/* ── OCR TAB ──────────────────────────────────────────────────────── */}
+        {activeTab === "ocr" && (
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {!ocrResult && !ocrLoading && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
+                    <ScanIcon />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">OCR — Extract Text from Image</p>
+                    <p className="text-[11px] text-muted-foreground mt-1 max-w-xs">
+                      Upload an image containing text. The model will extract and transcribe all visible text.
+                    </p>
+                    {!apiKey && (
+                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                        API key required — enter it in the left panel
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {ocrLoading && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <SpinnerIcon />
+                  <span className="text-[11px] text-muted-foreground">Extracting text...</span>
+                </div>
+              )}
+
+              {ocrResult && !ocrLoading && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Extracted Text</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigator.clipboard.writeText(ocrResult)}
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-transparent hover:bg-secondary transition-colors"
+                      >
+                        <CopyIcon /> Copy
+                      </button>
+                      <button
+                        onClick={() => { setOcrResult(null); setOcrImage(null) }}
+                        className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-transparent hover:bg-secondary transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  {ocrImage && (
+                    <div className="flex gap-3 items-start">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={ocrImage.dataUrl} alt="OCR input" className="max-h-40 max-w-[40%] rounded-lg border border-border object-contain flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <pre className="text-sm text-foreground font-mono whitespace-pre-wrap break-words bg-card border border-border rounded-lg px-3 py-2.5 leading-relaxed text-[11px] max-h-40 overflow-y-auto">
+                          {ocrResult}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                  {!ocrImage && (
+                    <pre className="text-sm text-foreground font-mono whitespace-pre-wrap break-words bg-card border border-border rounded-lg px-3 py-2.5 leading-relaxed text-[11px]">
+                      {ocrResult}
+                    </pre>
+                  )}
+                </div>
+              )}
             </div>
-            <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">
-              {result.responseBody}
-            </pre>
-          </div>
-        )}
 
-        {/* Token usage + response headers mini-panel */}
-        {result?.ok && (result.tokenUsage || (result.responseHeaders && Object.keys(result.responseHeaders).length > 0)) && (
-          <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4 flex-wrap">
-            {result.tokenUsage && (
-              <div className="flex items-center gap-3">
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
-                {result.tokenUsage.promptTokens !== undefined && (
-                  <span className="text-[10px] font-mono text-muted-foreground">
-                    in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span>
-                  </span>
+            {/* OCR input */}
+            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              <div
+                className="mb-2"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const file = e.dataTransfer.files[0]
+                  if (file && file.type.startsWith("image/")) handleImageFile(file, setOcrImage)
+                }}
+              >
+                {ocrImage ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-secondary/50 rounded-lg border border-border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ocrImage.dataUrl} alt="OCR preview" className="h-8 w-8 object-cover rounded border border-border flex-shrink-0" />
+                    <span className="text-[10px] font-mono text-foreground truncate flex-1 min-w-0">{ocrImage.name}</span>
+                    <button onClick={() => setOcrImage(null)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                      <XIcon />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => ocrFileRef.current?.click()}
+                    className="w-full border border-dashed border-border rounded-lg px-4 py-3 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ScanIcon /> Upload image with text (JPG, PNG, WebP, PDF screenshot)
+                  </button>
                 )}
-                {result.tokenUsage.completionTokens !== undefined && (
-                  <span className="text-[10px] font-mono text-muted-foreground">
-                    out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span>
-                  </span>
-                )}
-                {result.tokenUsage.totalTokens !== undefined && (
-                  <span className="text-[10px] font-mono text-primary font-semibold">
-                    total: {result.tokenUsage.totalTokens}
-                  </span>
-                )}
+                <input
+                  ref={ocrFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleImageFile(file, setOcrImage)
+                    e.target.value = ""
+                  }}
+                />
               </div>
-            )}
-            {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
-              <span className="text-[10px] font-mono text-muted-foreground">
-                rl-remaining: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
-              </span>
-            )}
-            {result.responseHeaders?.["x-request-id"] && (
-              <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">
-                req-id: <span className="text-foreground">{result.responseHeaders["x-request-id"]}</span>
-              </span>
-            )}
-          </div>
-        )}
 
-        {/* Input bar */}
-        <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
-          <div className="flex gap-2 items-end">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={apiKey ? "Type a message and press Enter..." : "Enter API key first..."}
-              disabled={!apiKey.trim() || loading}
-              rows={2}
-              className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40"
-            />
-            <button
-              onClick={runTest}
-              disabled={!apiKey.trim() || !prompt.trim() || loading}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity flex-shrink-0"
-            >
-              {loading ? <SpinnerIcon /> : <SendIcon />}
-              {loading ? "Sending" : "Send"}
-            </button>
-          </div>
-          <p className="text-[9px] text-muted-foreground/40 mt-1.5">
-            Enter sends · Shift+Enter for newline · <code>{"{{PROMPT}}"}</code> in body template is replaced with your message
-          </p>
-        </div>
+              <button
+                onClick={runOcrTest}
+                disabled={!apiKey.trim() || !ocrImage || ocrLoading}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+              >
+                {ocrLoading ? <SpinnerIcon /> : <ScanIcon />}
+                {ocrLoading ? "Extracting text..." : "Extract Text"}
+              </button>
+              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+                Uses the selected provider&apos;s vision model to read text from the image.
+              </p>
+            </div>
+          </>
+        )}
 
       </div>
     </div>
