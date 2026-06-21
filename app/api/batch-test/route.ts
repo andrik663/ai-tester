@@ -90,13 +90,19 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   anthropic: {
     id: "anthropic",
     models: [
+      // Latest — 4.8 / 4.7 / 4.6 generation (dateless IDs)
+      "claude-opus-4-8",
+      "claude-opus-4-7",
+      "claude-opus-4-6",
+      "claude-fable-5",
+      "claude-sonnet-4-6",
+      "claude-haiku-4-5-20251001",
+      // 4.x dated snapshots still active
       "claude-opus-4-5",
-      "claude-opus-4-0",
       "claude-sonnet-4-5",
-      "claude-sonnet-4-0",
-      "claude-haiku-4-5",
-      "claude-3-5-haiku-20241022",
+      // 3.x legacy still widely used
       "claude-3-5-sonnet-20241022",
+      "claude-3-5-haiku-20241022",
       "claude-3-opus-20240229",
       "claude-3-haiku-20240307",
     ],
@@ -115,16 +121,23 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   openai: {
     id: "openai",
     models: [
+      // Latest GPT-5 family (2025)
+      "gpt-5",
+      "gpt-5-mini",
+      // GPT-4o family
       "gpt-4o",
       "gpt-4o-mini",
-      "gpt-4-turbo",
-      "gpt-4",
-      "gpt-3.5-turbo",
-      "gpt-3.5-turbo-16k",
-      "o1",
-      "o1-mini",
+      "gpt-4o-2024-11-20",
+      // o-series reasoning models
+      "o3",
+      "o3-pro",
       "o3-mini",
       "o4-mini",
+      "o1",
+      "o1-mini",
+      // Legacy
+      "gpt-4-turbo",
+      "gpt-3.5-turbo",
     ],
     endpoint: "https://api.openai.com/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -141,15 +154,18 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   google: {
     id: "google",
     models: [
+      // Gemini 2.5 stable
       "gemini-2.5-pro",
       "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      // Gemini 2.0
       "gemini-2.0-flash",
       "gemini-2.0-flash-lite",
+      // Gemini 1.5 legacy
       "gemini-1.5-pro",
       "gemini-1.5-flash",
       "gemini-1.5-flash-8b",
     ],
-    // URL built dynamically per model — endpoint is a template
     endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent",
     authHeader: () => ({ "Content-Type": "application/json" }),
     keyInUrl: true,
@@ -164,13 +180,15 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   xai: {
     id: "xai",
     models: [
+      // Latest flagship (May 2026 forward)
+      "grok-4.3",
+      "grok-4.20-0309-reasoning",
+      "grok-4.20-0309-non-reasoning",
+      // Prior generation (auto-redirects to grok-4.3 as of May 15 2026)
       "grok-3",
       "grok-3-fast",
       "grok-3-mini",
       "grok-3-mini-fast",
-      "grok-2",
-      "grok-2-mini",
-      "grok-beta",
     ],
     endpoint: "https://api.x.ai/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -187,8 +205,8 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   deepseek: {
     id: "deepseek",
     models: [
-      "deepseek-chat",
-      "deepseek-reasoner",
+      "deepseek-chat",        // DeepSeek-V3 (latest)
+      "deepseek-reasoner",    // DeepSeek-R1 (latest)
     ],
     endpoint: "https://api.deepseek.com/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -206,17 +224,21 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   qwen: {
     id: "qwen",
     models: [
+      // Qwen3 flagship (latest 2025)
+      "qwen3-235b-a22b",
+      "qwen3-30b-a3b",
+      "qwen3-32b",
+      "qwen3-14b",
+      "qwen3-8b",
+      // Qwen2.5 stable
+      "qwen-max",
       "qwen-plus",
       "qwen-turbo",
       "qwen-long",
-      "qwen-max",
       "qwen2.5-72b-instruct",
       "qwen2.5-32b-instruct",
       "qwen2.5-14b-instruct",
       "qwen2.5-7b-instruct",
-      "qwen3-235b-a22b",
-      "qwen3-32b",
-      "qwen3-8b",
     ],
     endpoint: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -241,6 +263,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "glm-z1-flash",
       "glm-z1-air",
       "glm-z1-airx",
+      "glm-z1-plus",
     ],
     endpoint: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -257,8 +280,8 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   minimax: {
     id: "minimax",
     models: [
-      "MiniMax-Text-01",
       "MiniMax-M1",
+      "MiniMax-Text-01",
       "abab6.5s-chat",
       "abab6.5g-chat",
       "abab6.5t-chat",
@@ -278,12 +301,19 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   groq: {
     id: "groq",
     models: [
-      "llama-3.1-8b-instant",
+      // Llama 4 (2025)
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "meta-llama/llama-4-maverick-17b-128e-instruct",
+      // Llama 3.x
       "llama-3.3-70b-versatile",
-      "llama-3.1-70b-versatile",
-      "mixtral-8x7b-32768",
+      "llama-3.1-8b-instant",
+      // OpenAI OSS via Groq
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      // Qwen3 via Groq
+      "qwen/qwen3-32b",
+      // Other
       "gemma2-9b-it",
-      "gemma-7b-it",
       "qwen-qwq-32b",
       "deepseek-r1-distill-llama-70b",
       "compound-beta",
@@ -303,14 +333,22 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   together: {
     id: "together",
     models: [
+      // Llama 4
+      "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+      // Llama 3.x
       "meta-llama/Llama-3.3-70B-Instruct-Turbo",
       "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-      "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      // DeepSeek
+      "deepseek-ai/DeepSeek-V3",
+      "deepseek-ai/DeepSeek-R1",
+      // Qwen
+      "Qwen/Qwen3-235B-A22B",
+      "Qwen/Qwen2.5-72B-Instruct-Turbo",
+      // Mistral
       "mistralai/Mixtral-8x7B-Instruct-v0.1",
       "mistralai/Mistral-7B-Instruct-v0.3",
-      "Qwen/Qwen2.5-72B-Instruct-Turbo",
-      "deepseek-ai/DeepSeek-R1",
-      "deepseek-ai/DeepSeek-V3",
+      // Google
       "google/gemma-2-9b-it",
     ],
     endpoint: "https://api.together.ai/v1/chat/completions",
@@ -328,14 +366,16 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   mistral: {
     id: "mistral",
     models: [
-      "mistral-small-latest",
-      "mistral-medium-latest",
+      // Latest 2025
       "mistral-large-latest",
+      "mistral-medium-latest",   // mistral-medium-3 (2025)
+      "mistral-small-latest",    // mistral-small-3.1 (25.03)
+      "codestral-latest",
+      "mistral-nemo",
+      // Legacy open weights
       "open-mistral-7b",
       "open-mixtral-8x7b",
       "open-mixtral-8x22b",
-      "codestral-latest",
-      "mistral-nemo",
     ],
     endpoint: "https://api.mistral.ai/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -352,11 +392,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   cohere: {
     id: "cohere",
     models: [
+      "command-a",          // Latest 2025 flagship
       "command-r-plus",
       "command-r",
+      "command-r7b-12-2024",
       "command",
       "command-light",
-      "command-r7b-12-2024",
     ],
     endpoint: "https://api.cohere.ai/v2/chat",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -378,10 +419,10 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   perplexity: {
     id: "perplexity",
     models: [
-      "sonar",
       "sonar-pro",
-      "sonar-reasoning",
+      "sonar",
       "sonar-reasoning-pro",
+      "sonar-reasoning",
       "r1-1776",
     ],
     endpoint: "https://api.perplexity.ai/chat/completions",
@@ -401,8 +442,10 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     models: [
       "meta-llama/Llama-3.3-70B-Instruct",
       "meta-llama/Llama-3.1-8B-Instruct",
-      "mistralai/Mistral-7B-Instruct-v0.3",
+      "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "Qwen/Qwen3-235B-A22B",
       "Qwen/Qwen2.5-72B-Instruct",
+      "mistralai/Mistral-7B-Instruct-v0.3",
       "google/gemma-2-9b-it",
       "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
     ],
@@ -434,7 +477,7 @@ function buildCurlFull(
   return parts.join(" \\\n")
 }
 
-// ── Model tester ──────────────────────────────────────────────────────────────
+// ── Model tester ─────────────────────────────────────��────────────────────────
 
 async function testModel(
   modelId: string,
