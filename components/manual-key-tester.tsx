@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
+import DahonoBatchTest from "@/components/dahono-batch-test"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -770,6 +771,16 @@ export default function ManualKeyTester() {
                   Enter your Dahono API key above to auto-load all {dahonoModelsFetching ? "..." : "models"} from the gateway.
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Dahono Batch Test — Run All Models */}
+          {selectedPreset.id === "dahono" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Batch Model Test
+              </label>
+              <DahonoBatchTest apiKey={apiKey} />
             </div>
           )}
 
