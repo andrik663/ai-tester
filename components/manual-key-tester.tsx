@@ -185,20 +185,22 @@ const PRESETS: ProviderPreset[] = [
   },
   {
     id: "minimax",
-    name: "MiniMax (Hailuo)",
+    name: "MiniMax",
     endpoint: "https://api.minimax.io/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Active: MiniMax-M3, MiniMax-M2.7, MiniMax-M2.7-highspeed
+    // Legacy: MiniMax-M2.5, MiniMax-M2.5-highspeed, MiniMax-M2.1, MiniMax-M2.1-highspeed, MiniMax-M2
     bodyTemplate: JSON.stringify({
       model: "MiniMax-M3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://platform.minimaxi.com/document/ChatCompletion%20v2",
-    createKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key",
+    docsUrl: "https://platform.minimax.io/docs/guides/models-intro",
+    createKeyUrl: "https://platform.minimax.io/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
   },
   // ── Meta / Llama providers ─────────────────────────────────────────────��──

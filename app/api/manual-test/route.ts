@@ -150,9 +150,9 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
-  // MiniMax chatcompletion_v2 — OpenAI-compatible
+  // MiniMax — OpenAI-compatible endpoint api.minimax.io/v1/chat/completions
   minimax: (prompt) => ({
-    model: "MiniMax-Text-01",
+    model: "MiniMax-M3",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
@@ -449,9 +449,9 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
       ],
     }],
   }),
-  // MiniMax — vision via MiniMax-VL-01
+  // MiniMax — vision via MiniMax-M3 (frontier multimodal model)
   minimax: (prompt, base64, mimeType) => ({
-    model: "MiniMax-VL-01",
+    model: "MiniMax-M3",
     max_tokens: 2048,
     messages: [{
       role: "user",

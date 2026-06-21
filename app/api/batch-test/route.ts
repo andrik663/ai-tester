@@ -187,7 +187,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
-  // ── Google Gemini ────────────────────────────────────────────────���────────
+  // ── Google Gemini ────────────────────────────────────────────────�����────────
   google: {
     id: "google",
     // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
@@ -343,9 +343,16 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   minimax: {
     id: "minimax",
     models: [
-      "MiniMax-M3",
-      "MiniMax-M1",
-      "MiniMax-Text-01",
+      // ── Active models ─────────────────────────────────────
+      "MiniMax-M3",             // Frontier multimodal coding, 1M context
+      "MiniMax-M2.7",           // Recursive self-improvement
+      "MiniMax-M2.7-highspeed", // Same quality as M2.7, faster
+      // ── Legacy (still callable) ───────────────────────────
+      "MiniMax-M2.5",
+      "MiniMax-M2.5-highspeed",
+      "MiniMax-M2.1",
+      "MiniMax-M2.1-highspeed",
+      "MiniMax-M2",
     ],
     endpoint: "https://api.minimax.io/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
