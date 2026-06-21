@@ -180,12 +180,21 @@ export async function POST(req: NextRequest) {
     })
     clearTimeout(timeout)
 
-    if (!response.ok) {
+    // Even a non-200 response may carry HTML/JS worth scanning (e.g. 403 WAF pages
+    // sometimes include error pages with embedded config). Try to scan what we got;
+    // only hard-fail on network-level errors (caught below) or non-HTML content types.
+    const contentType = response.headers.get("content-type") ?? ""
+    const isScannable = contentType.includes("text/") || contentType.includes("javascript") || contentType.includes("application/json")
+
+    if (!response.ok && !isScannable) {
       return NextResponse.json(
         { error: `Failed to fetch URL: HTTP ${response.status} ${response.statusText}` },
         { status: 502 }
       )
     }
+
+    // Surface the HTTP status as a warning but continue scanning
+    const fetchWarning = response.ok ? null : `HTTP ${response.status} ${response.statusText} — scanning partial response`
 
     const html = await response.text()
 
@@ -243,6 +252,7 @@ export async function POST(req: NextRequest) {
       keys: dedupedKeys,
       scannedBytes: combinedSource.length,
       scannedJsFiles: jsFiles.length,
+      ...(fetchWarning ? { warning: fetchWarning } : {}),
     })
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {

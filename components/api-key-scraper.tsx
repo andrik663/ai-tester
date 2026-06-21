@@ -439,6 +439,7 @@ interface ScrapeResult {
   keys: ScrapedKey[]
   scannedBytes: number
   scannedJsFiles: number
+  warning?: string
 }
 
 const EXAMPLE_URLS = [
@@ -585,6 +586,13 @@ export default function ApiKeyScraper() {
             </div>
           </div>
 
+          {/* Warning (e.g. non-200 HTTP status) */}
+          {result?.warning && (
+            <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-[11px] text-yellow-400 leading-relaxed">
+              <span className="font-semibold">Warning:</span> {result.warning}
+            </div>
+          )}
+
           {/* Stats */}
           {result && (
             <div className="flex flex-col gap-2 rounded-md border border-border bg-background p-3">
@@ -605,7 +613,7 @@ export default function ApiKeyScraper() {
               {[
                 "Fetches real page HTML server-side",
                 "Discovers & fetches up to 5 JS files",
-                "Matches 18+ real key patterns",
+                "Matches 25+ provider-specific patterns",
                 "Deduplicates results",
                 "Test button calls provider APIs live",
               ].map((step) => (

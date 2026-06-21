@@ -20,12 +20,20 @@ interface GeminiResponse {
 }
 
 export async function POST(req: Request) {
-  const { prompt, model = "gemini-3-pro-image", aspectRatio = "1:1" } =
-    await req.json()
+  const {
+    prompt,
+    // The correct model for Gemini image generation (as of 2025)
+    model = "gemini-2.0-flash-preview-image-generation",
+    aspectRatio = "1:1",
+  } = await req.json()
 
-  const apiKey = process.env.GEMINI_API_KEY
+  // Accept either GEMINI_API_KEY or GOOGLE_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY
   if (!apiKey) {
-    return Response.json({ error: "GEMINI_API_KEY not set" }, { status: 500 })
+    return Response.json(
+      { error: "No API key configured. Set GEMINI_API_KEY or GOOGLE_API_KEY in environment variables." },
+      { status: 500 }
+    )
   }
 
   // Map aspect ratio to size hint in prompt
@@ -55,7 +63,7 @@ export async function POST(req: Request) {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: "POST",
         headers: {
