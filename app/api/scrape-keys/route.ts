@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 
 // Patterns to detect API keys in HTML/JS source
 const KEY_PATTERNS: { label: string; pattern: RegExp }[] = [
-  // Google / Gemini / Firebase
-  { label: "Google API Key", pattern: /AIza[0-9A-Za-z\-_]{35}/g },
+  // Google / Firebase — AIza prefix, 39 chars total
+  { label: "Google / Firebase API Key", pattern: /AIza[0-9A-Za-z\-_]{35}/g },
+  // Google Analytics measurement ID (non-secret, informational)
+  { label: "Google Analytics ID", pattern: /G-[A-Z0-9]{8,12}/g },
   // OpenAI
   { label: "OpenAI API Key", pattern: /sk-[A-Za-z0-9]{20,60}/g },
   // OpenAI Project key
@@ -65,9 +67,36 @@ function extractContext(source: string, match: RegExpExecArray, windowSize = 60)
   return ctx
 }
 
+// Values that look like placeholders / documentation examples — never real keys
+const PLACEHOLDER_PATTERNS = [
+  /^[xX]{4,}$/,
+  /xxx+/i,
+  /your[_-]?api[_-]?key/i,
+  /your[_-]?key/i,
+  /insert[_-]?key/i,
+  /api[_-]?key[_-]?here/i,
+  /placeholder/i,
+  /example/i,
+  /test[_-]?key/i,
+  /dummy/i,
+  /fake/i,
+  /replace[_-]?me/i,
+  /1234567890/,
+  /abcdefgh/i,
+  // Dahono template placeholder
+  /^dahono-x{8,}/i,
+  // All same character repeated
+  /^(.)\1{6,}$/,
+]
+
+function isPlaceholder(value: string): boolean {
+  return PLACEHOLDER_PATTERNS.some((p) => p.test(value))
+}
+
 function dedupe(keys: ScrapedKey[]): ScrapedKey[] {
   const seen = new Set<string>()
   return keys.filter((k) => {
+    if (isPlaceholder(k.value)) return false
     if (seen.has(k.value)) return false
     seen.add(k.value)
     return true

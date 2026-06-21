@@ -725,6 +725,45 @@ async function testTogether(key: string): Promise<TestKeyResult> {
   return { valid: false, provider: "Together AI", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs }
 }
 
+async function testFirebase(key: string): Promise<TestKeyResult> {
+  const { log, logs } = makeLogger()
+  // Use the Firebase Identity Toolkit public project config endpoint — no OAuth needed
+  const url = `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=${key}`
+  const headers = { "Content-Type": "application/json" }
+
+  log("info", "Provider: Google / Firebase (Web API Key)")
+  log("info", "Endpoint: GET identitytoolkit/v3/relyingparty/getProjectConfig")
+  log("info", "Note: Firebase Web API keys are designed to be public. This confirms the key is real and shows the project info.")
+  log("curl", buildCurl({ method: "GET", url: url.replace(key, key.slice(0, 8) + "..."), headers }))
+  log("req",  `GET getProjectConfig?key=${key.slice(0, 8)}...`)
+
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(10_000),
+  })
+
+  log("res", `HTTP ${res.status} ${res.statusText}`)
+
+  if (res.ok) {
+    const data = await res.json().catch(() => ({}))
+    const projectId = data?.projectId ?? "unknown"
+    const domains: string[] = data?.authorizedDomains ?? []
+    log("ok", `Valid — Firebase project: ${projectId}`)
+    log("info", `Authorized domains: ${domains.join(", ")}`)
+    return {
+      valid: true,
+      provider: "Google / Firebase",
+      message: `Valid Firebase key — project: ${projectId}`,
+      detail: `Authorized domains: ${domains.slice(0, 3).join(", ")}${domains.length > 3 ? ` +${domains.length - 3} more` : ""}`,
+      logs,
+    }
+  }
+
+  const errBody = await res.json().catch(() => ({}))
+  const errMsg = errBody?.error?.message ?? `HTTP ${res.status}`
+  log("err", `${res.status}: ${errMsg}`)
+  return { valid: false, provider: "Google / Firebase", message: "Invalid or restricted key", detail: errMsg, logs }
+}
+
 // ── Label → tester map ────────────────────────────────────────────────────────
 
 type Tester = (key: string) => Promise<TestKeyResult>
@@ -735,6 +774,7 @@ const TESTERS: Record<string, Tester> = {
   "OpenAI Project Key": testOpenAI,
   "Google API Key": testGoogle,
   "Google Gemini Key": testGoogle,
+  "Google / Firebase API Key": testFirebase,
   "HuggingFace Token": testHuggingFace,
   "Groq API Key": testGroq,
   "GitHub Token": testGitHub,
@@ -770,6 +810,23 @@ export async function POST(req: NextRequest) {
 
   if (!label || !value) {
     return NextResponse.json({ error: "Missing label or value" }, { status: 400 })
+  }
+
+  // Google Analytics IDs (G-XXXXXXXX) are public tracking codes, not secret keys
+  if (label === "Google Analytics ID") {
+    const { log, logs } = makeLogger()
+    log("info", "Provider: Google Analytics")
+    log("info", `Measurement ID: ${value}`)
+    log("info", "Note: Google Analytics IDs (G-XXXXXXXX) are PUBLIC tracking codes embedded in frontend code intentionally.")
+    log("info", "They are not secret — anyone visiting the site can see them.")
+    log("ok", `ID format valid: ${value}`)
+    return NextResponse.json({
+      valid: null,
+      provider: "Google Analytics",
+      message: "Public tracking ID — not a secret (by design)",
+      detail: `${value} is a standard Google Analytics Measurement ID`,
+      logs,
+    })
   }
 
   const tester = TESTERS[label]
