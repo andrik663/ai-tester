@@ -707,6 +707,7 @@ export default function ManualKeyTester() {
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
+  const [configOpen, setConfigOpen] = useState(false)
   // Tab state: "chat" | "vision" | "ocr"
   const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr">("chat")
   // Vision / OCR state
@@ -972,34 +973,63 @@ export default function ManualKeyTester() {
   }
 
   return (
-    <div className="flex h-full bg-background text-foreground font-sans overflow-hidden">
+    <div className="flex h-full bg-background text-foreground font-sans overflow-hidden relative">
+
+      {/* ── Mobile config overlay backdrop ────────────────────────────────── */}
+      {configOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setConfigOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
       {/* ── LEFT: Config panel ─────────────────────────────────────────────── */}
-      <aside className="w-72 flex-shrink-0 border-r border-border bg-card flex flex-col overflow-y-auto">
+      <aside className={`
+        flex-shrink-0 border-r border-border bg-card flex flex-col overflow-y-auto
+        fixed md:static inset-y-0 left-0 z-40 md:z-auto
+        w-72 md:w-64 lg:w-72
+        transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
+        ${configOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
 
-        <div className="px-4 py-3 border-b border-border">
-          <p className="text-xs font-semibold text-foreground">Manual Key Tester</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Input an API key and test chat directly</p>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+          <div>
+            <p className="text-xs font-semibold text-foreground">Configuration</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Provider &amp; API key settings</p>
+          </div>
+          <button
+            onClick={() => setConfigOpen(false)}
+            className="md:hidden text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1"
+            aria-label="Close config"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div className="flex-1 px-4 py-4 flex flex-col gap-4">
+        <div className="flex-1 px-4 py-4 flex flex-col gap-5">
 
           {/* Provider selector */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
             </label>
-            <div className="flex flex-col gap-0.5 max-h-52 overflow-y-auto pr-0.5">
+            <div className="flex flex-col gap-px max-h-52 overflow-y-auto">
               {PRESETS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
-                  className={`text-[10px] font-medium px-2.5 py-1.5 rounded border transition-colors text-left w-full ${
+                  className={`text-[11px] font-medium px-2.5 py-2 rounded transition-colors text-left w-full flex items-center gap-2 group ${
                     selectedPreset.id === p.id
-                      ? p.color
-                      : "text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   }`}
                 >
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 border transition-colors ${
+                    selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
+                  }`} />
                   {p.name}
                 </button>
               ))}
@@ -1007,9 +1037,9 @@ export default function ManualKeyTester() {
           </div>
 
           {/* API Key */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                 API Key
               </label>
               {apiKey && (
@@ -1067,8 +1097,8 @@ export default function ManualKeyTester() {
           </div>
 
           {/* Endpoint */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Endpoint URL
             </label>
             <div className="flex gap-1">
@@ -1143,16 +1173,16 @@ export default function ManualKeyTester() {
           )}
 
           {/* Batch Model Test — Run All Models (all providers) */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Batch Model Test
             </label>
             <ProviderBatchTest providerId={selectedPreset.id} apiKey={apiKey} />
           </div>
 
           {/* Headers */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Headers
             </label>
             <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
@@ -1189,10 +1219,10 @@ export default function ManualKeyTester() {
 
           {/* Reset */}
           <button
-            onClick={() => { setChatHistory([]); setResult(null); setShowLog(false) }}
-            className="text-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary px-2 py-1.5 rounded transition-colors border border-transparent hover:border-border"
+            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
+            className="text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary px-3 py-2 rounded transition-colors border border-border/50 hover:border-border w-full text-left"
           >
-            Clear Chat
+            Clear All History
           </button>
 
         </div>
@@ -1202,59 +1232,64 @@ export default function ManualKeyTester() {
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
         {/* Tab bar + status */}
-        <div className="flex items-center gap-0 px-2 py-0 border-b border-border bg-card flex-shrink-0">
+        <div className="flex items-center gap-0 px-2 border-b border-border bg-card flex-shrink-0 min-h-[44px]">
+
+          {/* Mobile: config toggle button */}
+          <button
+            onClick={() => setConfigOpen(true)}
+            className="md:hidden flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground px-2 py-2 mr-1 flex-shrink-0 transition-colors"
+            aria-label="Open configuration"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+
           {/* Tabs */}
-          <div className="flex items-center gap-0.5 mr-3 py-1.5">
-            <button
-              onClick={() => setActiveTab("chat")}
-              className={`flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded transition-colors ${
-                activeTab === "chat"
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              }`}
-            >
-              <ChatIcon /> Chat
-            </button>
-            <button
-              onClick={() => setActiveTab("vision")}
-              className={`flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded transition-colors ${
-                activeTab === "vision"
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              }`}
-            >
-              <ImageIcon /> Vision
-            </button>
-            <button
-              onClick={() => setActiveTab("ocr")}
-              className={`flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded transition-colors ${
-                activeTab === "ocr"
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              }`}
-            >
-              <ScanIcon /> OCR
-            </button>
+          <div className="flex items-center gap-0.5 py-1.5 mr-2">
+            {(["chat", "vision", "ocr"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors capitalize ${
+                  activeTab === t
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                {t === "chat" && <ChatIcon />}
+                {t === "vision" && <ImageIcon />}
+                {t === "ocr" && <ScanIcon />}
+                <span className="hidden sm:inline">{t === "chat" ? "Chat" : t === "vision" ? "Vision" : "OCR"}</span>
+              </button>
+            ))}
           </div>
 
-          {/* Status info */}
-          <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded border ${selectedPreset.color}`}>
+          {/* Divider */}
+          <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
+
+          {/* Provider badge — monochrome, no color tiles */}
+          <span className="hidden sm:inline-flex items-center text-[10px] font-mono text-muted-foreground truncate max-w-[130px] flex-shrink-0">
             {selectedPreset.name}
           </span>
+
+          {/* Endpoint */}
           {endpoint && (
-            <span className="text-[10px] font-mono text-muted-foreground truncate flex-1 min-w-0 ml-2">
+            <span className="hidden md:block text-[10px] font-mono text-muted-foreground/50 truncate flex-1 min-w-0 ml-2">
               {method} {endpoint.replace(/\?key=.*/, "?key=…")}
             </span>
           )}
+
+          {/* Response status */}
           {(activeTab === "chat" ? result : activeTab === "vision" ? visionResult : null) && (
-            <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+            <div className="flex items-center gap-2 ml-auto flex-shrink-0 pr-1">
               {(activeTab === "chat" ? result : visionResult)?.tokenUsage?.totalTokens && (
-                <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
-                  {(activeTab === "chat" ? result : visionResult)?.tokenUsage?.totalTokens} tokens
+                <span className="text-[10px] font-mono text-muted-foreground hidden md:block">
+                  {(activeTab === "chat" ? result : visionResult)?.tokenUsage?.totalTokens}t
                 </span>
               )}
               <span className={`text-[10px] font-mono ${(activeTab === "chat" ? result : visionResult)?.ok ? "text-green-400" : "text-red-400"}`}>
-                HTTP {(activeTab === "chat" ? result : visionResult)?.status} · {(activeTab === "chat" ? result : visionResult)?.durationMs}ms
+                {(activeTab === "chat" ? result : visionResult)?.status} · {(activeTab === "chat" ? result : visionResult)?.durationMs}ms
               </span>
             </div>
           )}
