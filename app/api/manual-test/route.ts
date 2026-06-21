@@ -197,9 +197,9 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
       max_new_tokens: 512,
     },
   }),
-  // ── Meta / Llama providers (OpenAI-compatible) ────────────────────────────
+  // ── Cerebras (public models: kimi-k2.6, glm-5.1, minimax-m2.5, zai-glm-4.7, gpt-oss-120b, gemma-4-31b, qwen3-32b)
   cerebras: (prompt) => ({
-    model: "gpt-oss-120b",
+    model: "kimi-k2.6",
     max_completion_tokens: 1024,
     temperature: 0.2,
     top_p: 1,
@@ -485,7 +485,22 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
       ],
     }],
   }),
-  // Cerebras — no vision model available as of 2025 (models: gpt-oss-120b, zai-glm-4.7 are text-only)
+  // Cerebras — vision via kimi-k2.6 (multimodal per official Cerebras model guide)
+  cerebras: (prompt, base64, mimeType) => ({
+    model: "kimi-k2.6",
+    max_completion_tokens: 2048,
+    temperature: 0.2,
+    top_p: 1,
+    stream: false,
+    reasoning_effort: "medium",
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
   // SambaNova — vision via Llama-3.2-11B-Vision-Instruct
   sambanova: (prompt, base64, mimeType) => ({
     model: "Llama-3.2-11B-Vision-Instruct",

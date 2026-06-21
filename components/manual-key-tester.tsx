@@ -197,9 +197,12 @@ const PRESETS: ProviderPreset[] = [
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
-    // Available models: gpt-oss-120b (reasoning), zai-glm-4.7
+    // Public models: kimi-k2.6, glm-5.1, minimax-m2.5, zai-glm-4.7,
+    //                gpt-oss-120b, gemma-4-31b, qwen3-32b
+    // kimi-k2.6 / glm-5.1 / minimax-m2.5 use max_completion_tokens + reasoning_effort
+    // gemma-4-31b / qwen3-32b use standard max_tokens
     bodyTemplate: JSON.stringify({
-      model: "gpt-oss-120b",
+      model: "kimi-k2.6",
       max_completion_tokens: 1024,
       temperature: 0.2,
       top_p: 1,
