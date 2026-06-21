@@ -172,14 +172,14 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "minimax",
     name: "MiniMax (Hailuo)",
-    endpoint: "https://api.minimaxi.chat/v1/text/chatcompletion_v2",
+    endpoint: "https://api.minimax.io/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "minimax-m3",
+      model: "MiniMax-M3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -341,11 +341,11 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "jamba-1.6-large",
+      model: "jamba-large",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://docs.ai21.com/reference/jamba-16-chat-api-ref",
+    docsUrl: "https://docs.ai21.com/reference/jamba-chat-api-ref",
     createKeyUrl: "https://studio.ai21.com/account/api-key",
     color: "text-sky-300 bg-sky-300/10 border-sky-300/30",
   },
@@ -407,14 +407,14 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "cohere",
     name: "Cohere",
-    endpoint: "https://api.cohere.ai/v2/chat",
+    endpoint: "https://api.cohere.com/v2/chat",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "command-a",
+      model: "command-a-plus-05-2026",
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.cohere.com/reference/chat",
@@ -460,7 +460,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "replicate",
     name: "Replicate",
-    endpoint: "https://api.replicate.com/v1/models/meta/meta-llama-3-8b-instruct/predictions",
+    endpoint: "https://api.replicate.com/v1/predictions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
@@ -468,9 +468,10 @@ const PRESETS: ProviderPreset[] = [
       "Prefer": "wait",
     },
     bodyTemplate: JSON.stringify({
+      version: "meta/meta-llama-3-3-70b-instruct",
       input: {
         prompt: "{{PROMPT}}",
-        max_new_tokens: 512,
+        max_new_tokens: 1024,
       },
     }, null, 2),
     docsUrl: "https://replicate.com/docs/reference/http",
@@ -535,7 +536,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "stepfun",
     name: "Stepfun",
-    endpoint: "https://api.stepfun.com/v1/chat/completions",
+    endpoint: "https://api.stepfun.ai/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
@@ -546,8 +547,8 @@ const PRESETS: ProviderPreset[] = [
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://platform.stepfun.com/docs/Chat/chat_completion",
-    createKeyUrl: "https://platform.stepfun.com/account-info",
+    docsUrl: "https://platform.stepfun.ai/docs/Chat/chat_completion",
+    createKeyUrl: "https://platform.stepfun.ai/account-info",
     color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
   },
   {
@@ -664,20 +665,19 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "bytedance",
     name: "Bytedance (SeedDream)",
-    endpoint: "https://api.doubao.com/api/v3/images/generations",
+    endpoint: "https://ark.cn-beijing.volces.com/api/v3/images/generations",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "seedream-4.5",
+      model: "doubao-seedream-4.5",
       prompt: "{{PROMPT}}",
-      n: 1,
       size: "1024x1024",
     }, null, 2),
     docsUrl: "https://www.volcengine.com/docs/82379/1399008",
-    createKeyUrl: "https://www.volcengine.com/product/ark",
+    createKeyUrl: "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
     color: "text-red-300 bg-red-300/10 border-red-300/20",
   },
   {

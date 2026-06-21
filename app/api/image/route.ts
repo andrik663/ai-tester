@@ -266,7 +266,7 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
 
   // ── Stepfun image generation ──────────────────────────────────────────────
   stepfun: {
-    buildUrl: () => "https://api.stepfun.com/v1/images/generations",
+    buildUrl: () => "https://api.stepfun.ai/v1/images/generations",
     buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
     buildBody: (prompt, model, aspectRatio) => {
       const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1920x1080", "9:16": "1080x1920", "4:3": "1024x768" }
@@ -312,13 +312,13 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
     },
   },
 
-  // ── Bytedance SeedDream (Volcengine) ──────────────────────────────────────
+  // ── Bytedance SeedDream (Volcengine Ark) ──────────────────────────────────
   bytedance: {
-    buildUrl: () => "https://api.doubao.com/api/v3/images/generations",
+    buildUrl: () => "https://ark.cn-beijing.volces.com/api/v3/images/generations",
     buildHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" }),
     buildBody: (prompt, model, aspectRatio) => {
       const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1792x1024", "9:16": "1024x1792", "4:3": "1024x768" }
-      return { model: model ?? "seedream-4.5", prompt, n: 1, size: sizeMap[aspectRatio] ?? "1024x1024" }
+      return { model: model ?? "doubao-seedream-4.5", prompt, size: sizeMap[aspectRatio] ?? "1024x1024" }
     },
     extractImage: (data: unknown) => {
       const d = data as { data?: Array<{ url?: string; b64_json?: string }> }
