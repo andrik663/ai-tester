@@ -121,21 +121,54 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   openai: {
     id: "openai",
     models: [
-      // GPT-5 flagship (Responses API, Jun 2026)
-      "gpt-5.5",
-      "gpt-5.4",
-      "gpt-5.4-mini",
-      "gpt-5.4-nano",
-      // GPT-4o family (still on Responses API)
-      "gpt-4o",
-      "gpt-4o-mini",
-      // o-series reasoning models
-      "o3",
-      "o3-pro",
+      // ── Active models ──────────────────────────────────────
+      "gpt-5.3-codex",      // Most capable agentic coding model
+      "gpt-5.2",            // Previous frontier for professional work
+      "gpt-5.2-pro",        // Previous pro model
+      "gpt-5.1",            // Best for coding & agentic tasks
+      "gpt-5",              // Previous intelligent reasoning model
+      "gpt-5-mini",         // Near-frontier, low latency, high volume
+      "gpt-5-nano",         // Fastest, most cost-efficient
+      "gpt-5-pro",          // Smarter and more precise responses
+      "o3-pro",             // o3 with more compute
+      "o3",                 // Reasoning model for complex tasks
+      "gpt-4.1",            // Smartest non-reasoning model
+      "gpt-4.1-mini",       // Smaller, faster version of GPT-4.1
+      // ── Deprecated (still callable) ──────────────────────
+      "gpt-5.3-chat",
+      "gpt-5.2-chat",
+      "gpt-5.2-codex",
+      "gpt-5.1-codex",
+      "gpt-5.1-codex-max",
+      "gpt-5.1-codex-mini",
+      "gpt-5.1-chat",
+      "gpt-5-codex",
+      "gpt-5-chat",
+      "gpt-4.1-nano",
       "o4-mini",
+      "o4-mini-deep-research",
+      "o3-deep-research",
       "o3-mini",
+      "o1-pro",
       "o1",
       "o1-mini",
+      "o1-preview",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "gpt-4o-mini-search-preview",
+      "gpt-4o-search-preview",
+      "gpt-4.5-preview",
+      "gpt-4-turbo",
+      "gpt-4-turbo-preview",
+      "gpt-4",
+      "gpt-3.5-turbo",
+      "chatgpt-4o-latest",
+      "codex-mini-latest",
+      "computer-use-preview",
+      "babbage-002",
+      "davinci-002",
+      "omni-moderation-latest",
+      "text-moderation-latest",
     ],
     // OpenAI Responses API (replaces /v1/chat/completions for GPT-5+)
     endpoint: "https://api.openai.com/v1/responses",

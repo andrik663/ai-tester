@@ -73,10 +73,14 @@ const PRESETS: ProviderPreset[] = [
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
-    // Responses API — models: gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano,
-    //   gpt-4o, gpt-4o-mini, o3, o3-pro, o4-mini, o3-mini, o1, o1-mini
+    // Active: gpt-5.3-codex, gpt-5.2, gpt-5.2-pro, gpt-5.1, gpt-5, gpt-5-mini,
+    //   gpt-5-nano, gpt-5-pro, o3-pro, o3, gpt-4.1, gpt-4.1-mini
+    // Deprecated (still callable): gpt-5.3-chat, gpt-5.2-codex, gpt-5.1-codex,
+    //   gpt-5.1-codex-max, gpt-5.1-codex-mini, gpt-5-codex, gpt-4.1-nano,
+    //   o4-mini, o3-mini, o1-pro, o1, o1-mini, gpt-4o, gpt-4o-mini, gpt-4-turbo,
+    //   gpt-4, gpt-3.5-turbo, babbage-002, davinci-002, codex-mini-latest
     bodyTemplate: JSON.stringify({
-      model: "gpt-5.5",
+      model: "gpt-5.3-codex",
       input: "{{PROMPT}}",
     }, null, 2),
     docsUrl: "https://platform.openai.com/docs/api-reference/responses",
