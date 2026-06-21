@@ -69,28 +69,37 @@ function TierBadge({ tier }: { tier: string }) {
 
 function ResultRow({ r }: { r: BatchModelResult }) {
   const [expanded, setExpanded] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [copiedReply, setCopiedReply] = useState(false)
+  const [copiedCurl, setCopiedCurl] = useState(false)
 
   function copyReply() {
     if (!r.reply) return
     navigator.clipboard.writeText(r.reply).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1400)
+      setCopiedReply(true)
+      setTimeout(() => setCopiedReply(false), 1400)
+    })
+  }
+
+  function copyCurl(e: React.MouseEvent) {
+    e.stopPropagation()
+    navigator.clipboard.writeText(r.curlFull).then(() => {
+      setCopiedCurl(true)
+      setTimeout(() => setCopiedCurl(false), 1400)
     })
   }
 
   return (
-    <div className={`border-b border-border last:border-0 transition-colors ${r.ok ? "" : "bg-destructive/3"}`}>
-      {/* Main row */}
+    <div className={`border-b border-border last:border-0 ${r.ok ? "" : "bg-red-950/10"}`}>
+      {/* Main row — click to expand */}
       <div
-        className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-secondary/40 transition-colors"
+        className="flex items-start gap-2 px-3 py-2.5 cursor-pointer hover:bg-secondary/40 transition-colors"
         onClick={() => setExpanded((v) => !v)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && setExpanded((v) => !v)}
       >
         {/* Status icon */}
-        <span className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full border ${
+        <span className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full border mt-0.5 ${
           r.ok
             ? "text-green-400 border-green-400/30 bg-green-400/10"
             : "text-red-400 border-red-400/30 bg-red-400/10"
@@ -98,54 +107,78 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {r.ok ? <CheckIcon /> : <XIcon />}
         </span>
 
-        {/* Model ID */}
-        <span className="text-[11px] font-mono text-foreground truncate flex-1 min-w-0">
+        {/* Model ID — full name, wraps if needed */}
+        <span className="text-[11px] font-mono text-foreground flex-1 min-w-0 break-all leading-snug">
           {r.modelId}
         </span>
 
-        {/* Tier */}
-        <TierBadge tier={r.tier} />
-
-        {/* Latency */}
-        <span className="text-[10px] font-mono text-muted-foreground flex-shrink-0 hidden sm:block">
-          {r.latencyMs}ms
-        </span>
-
-        {/* Token total */}
-        {r.tokenUsage?.total !== undefined && (
-          <span className="text-[10px] font-mono text-muted-foreground flex-shrink-0 hidden md:block">
-            {r.tokenUsage.total} tok
-          </span>
-        )}
-
-        {/* HTTP status */}
-        <span className={`text-[10px] font-mono flex-shrink-0 ${r.ok ? "text-green-400" : "text-red-400"}`}>
-          {r.status > 0 ? r.status : "ERR"}
-        </span>
+        {/* Right-side stats — stacked to avoid squishing model name */}
+        <div className="flex flex-col items-end gap-0.5 flex-shrink-0 ml-1">
+          <div className="flex items-center gap-1.5">
+            <TierBadge tier={r.tier} />
+            <span className={`text-[10px] font-mono ${r.ok ? "text-green-400" : "text-red-400"}`}>
+              {r.status > 0 ? r.status : "ERR"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono text-muted-foreground">{r.latencyMs}ms</span>
+            {r.tokenUsage?.total !== undefined && (
+              <span className="text-[10px] font-mono text-muted-foreground/60">{r.tokenUsage.total}tok</span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Expandable detail */}
       {expanded && (
-        <div className="px-3 pb-3 pt-0 flex flex-col gap-1.5">
-          {r.ok && r.reply && (
-            <div className="flex items-start gap-2">
-              <p className="text-[11px] text-foreground bg-secondary/50 rounded-md px-2.5 py-2 leading-relaxed flex-1">
-                {r.reply}
-              </p>
+        <div className="px-3 pb-3 pt-1 flex flex-col gap-2 border-t border-border/50 bg-secondary/20">
+          {/* cURL block */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">cURL</span>
               <button
-                onClick={copyReply}
-                className="flex-shrink-0 p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors mt-0.5"
-                title="Copy reply"
+                onClick={copyCurl}
+                className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
               >
-                {copied ? <CheckIcon /> : <CopyIcon />}
+                <CopyIcon />
+                {copiedCurl ? "Copied!" : "Copy cURL"}
               </button>
             </div>
+            <pre className="text-[9px] font-mono text-muted-foreground bg-background rounded px-2.5 py-2 border border-border overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
+              {r.curlFull}
+            </pre>
+          </div>
+
+          {/* Reply */}
+          {r.ok && r.reply && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Reply</span>
+              <div className="flex items-start gap-2">
+                <p className="text-[11px] text-foreground bg-secondary/50 rounded-md px-2.5 py-2 leading-relaxed flex-1">
+                  {r.reply}
+                </p>
+                <button
+                  onClick={copyReply}
+                  className="flex-shrink-0 p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors mt-0.5"
+                  title="Copy reply"
+                >
+                  {copiedReply ? <CheckIcon /> : <CopyIcon />}
+                </button>
+              </div>
+            </div>
           )}
+
+          {/* Error */}
           {!r.ok && r.errorMsg && (
-            <p className="text-[10px] font-mono text-red-400 bg-red-400/5 rounded px-2.5 py-2 border border-red-400/15">
-              {r.errorMsg}
-            </p>
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Error</span>
+              <p className="text-[10px] font-mono text-red-400 bg-red-400/5 rounded px-2.5 py-2 border border-red-400/15 break-all">
+                {r.errorMsg}
+              </p>
+            </div>
           )}
+
+          {/* Token usage */}
           {r.tokenUsage && (r.tokenUsage.prompt !== undefined || r.tokenUsage.completion !== undefined) && (
             <div className="flex items-center gap-3">
               <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest">Tokens</span>
@@ -183,7 +216,7 @@ function SkeletonRow({ i }: { i: number }) {
   )
 }
 
-// ── Filter tabs ───────────────────────────────────────────────────────────────
+// ── Filter tabs ───��───────────────────────────────────────────────────────────
 
 type Filter = "all" | "ok" | "fail"
 
@@ -381,10 +414,7 @@ export default function DahonoBatchTest({ apiKey }: Props) {
             <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary/40 border-b border-border sticky top-0">
               <span className="w-5 flex-shrink-0" />
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 flex-1">Model</span>
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 w-14 flex-shrink-0">Tier</span>
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 w-10 flex-shrink-0 hidden sm:block">ms</span>
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 w-10 flex-shrink-0 hidden md:block">tok</span>
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 w-8 flex-shrink-0">HTTP</span>
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 flex-shrink-0 text-right">Tier / HTTP / ms</span>
             </div>
 
             {filtered.length === 0 ? (

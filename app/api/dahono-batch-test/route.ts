@@ -10,6 +10,7 @@ export interface BatchModelResult {
   reply?: string
   errorMsg?: string
   tokenUsage?: { prompt?: number; completion?: number; total?: number }
+  curlFull: string
 }
 
 export interface DahnoBatchTestResponse {
@@ -25,12 +26,29 @@ const TEST_PROMPT  = "halo"
 const MAX_TOKENS   = 64 // keep it cheap — we only need a short reply
 const CONCURRENCY  = 8  // run at most 8 requests in parallel
 
+function buildCurlFull(modelId: string, apiKey: string): string {
+  const bodyObj = {
+    model: modelId,
+    max_tokens: MAX_TOKENS,
+    messages: [{ role: "user", content: TEST_PROMPT }],
+  }
+  const bodyStr = JSON.stringify(bodyObj)
+  return [
+    `curl -X POST '${GATEWAY_URL}/chat/completions'`,
+    `  -H 'Authorization: Bearer ${apiKey}'`,
+    `  -H 'Content-Type: application/json'`,
+    `  -d '${bodyStr.replace(/'/g, "'\\''")}'`,
+  ].join(" \\\n")
+}
+
 async function testModel(
   modelId: string,
   tier: string,
   free: boolean,
   apiKey: string,
 ): Promise<BatchModelResult> {
+  const curlFull = buildCurlFull(modelId, apiKey)
+
   const body = JSON.stringify({
     model: modelId,
     max_tokens: MAX_TOKENS,
@@ -91,11 +109,11 @@ async function testModel(
       }
     }
 
-    return { modelId, tier, free, ok: res.ok, status: res.status, latencyMs, reply, errorMsg, tokenUsage }
+    return { modelId, tier, free, ok: res.ok, status: res.status, latencyMs, reply, errorMsg, tokenUsage, curlFull }
   } catch (err) {
     const latencyMs = Date.now() - start
     const msg = err instanceof Error ? err.message : "Unknown error"
-    return { modelId, tier, free, ok: false, status: 0, latencyMs, errorMsg: msg }
+    return { modelId, tier, free, ok: false, status: 0, latencyMs, errorMsg: msg, curlFull }
   }
 }
 
