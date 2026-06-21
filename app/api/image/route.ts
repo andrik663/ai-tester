@@ -101,9 +101,9 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
 
   // ── Fireworks AI ───────────────────────────────────────────────────────────
   fireworks: {
-    buildUrl: () => "https://api.fireworks.ai/inference/v1/image_generation/accounts/fireworks/models/flux-1-schnell-fp8",
+    buildUrl: (model) => `https://api.fireworks.ai/inference/v1/image_generation/${model}`,
     buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
-    buildBody: (prompt, model, aspectRatio) => {
+    buildBody: (prompt, _model, aspectRatio) => {
       const wMap: Record<string, number> = { "1:1": 1024, "16:9": 1344, "9:16": 768 }
       const hMap: Record<string, number> = { "1:1": 1024, "16:9": 768, "9:16": 1344 }
       return { prompt, width: wMap[aspectRatio] ?? 1024, height: hMap[aspectRatio] ?? 1024, num_inference_steps: 4 }

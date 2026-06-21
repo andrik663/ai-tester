@@ -812,6 +812,68 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
+// ── Provider logos (theSVG.org CDN) ───────────────────────────────────────────
+// Using jsDelivr mirror for performance. Variants: light = white for dark BG, default fallback.
+const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
+
+const PROVIDER_LOGOS: Record<string, string> = {
+  dahono:      `${BASE}/dahono/color.svg`,
+  anthropic:   `${BASE}/anthropic/light.svg`,
+  openai:      `${BASE}/openai/dark.svg`,
+  google:      `${BASE}/google/default.svg`,
+  xai:         `${BASE}/x/mono.svg`,
+  deepseek:    `${BASE}/deepseek/default.svg`,
+  qwen:        `${BASE}/alibaba-cloud/mono.svg`,
+  zhipu:       `${BASE}/zhipuai/default.svg`,
+  minimax:     `${BASE}/minimax/default.svg`,
+  cerebras:    `${BASE}/cerebras/mono.svg`,
+  fireworks:   `${BASE}/fireworks-ai/default.svg`,
+  novita:      `${BASE}/novita/default.svg`,
+  cloudflare:  `${BASE}/cloudflare-workers/default.svg`,
+  openrouter:  `${BASE}/openrouter/default.svg`,
+  sambanova:   `${BASE}/sambanova/default.svg`,
+  nvidia:      `${BASE}/nvidia/mono.svg`,
+  hyperbolic:  `${BASE}/hyperbolic/default.svg`,
+  ai21:        `${BASE}/ai21-labs/default.svg`,
+  groq:        `${BASE}/groq/default.svg`,
+  together:    `${BASE}/together-ai/default.svg`,
+  mistral:     `${BASE}/mistral-ai/default.svg`,
+  cohere:      `${BASE}/cohere/default.svg`,
+  perplexity:  `${BASE}/perplexity/default.svg`,
+  huggingface: `${BASE}/hugging-face/default.svg`,
+  replicate:   `${BASE}/replicate/default.svg`,
+  moonshot:    `${BASE}/moonshot-ai/default.svg`,
+  baidu:       `${BASE}/baidu/default.svg`,
+  yi:          `${BASE}/01dotai/mono.svg`,
+  stepfun:     `${BASE}/stepfun/default.svg`,
+  hunyuan:     `${BASE}/tencent/mono.svg`,
+  azure:       `${BASE}/microsoft-azure/default.svg`,
+  upstage:     `${BASE}/upstage/default.svg`,
+  writer:      `${BASE}/writer/default.svg`,
+  lepton:      `${BASE}/lepton-ai/default.svg`,
+  bfl:         `${BASE}/black-forest-labs/default.svg`,
+  bytedance:   `${BASE}/bytedance/default.svg`,
+  recraft:     `${BASE}/recraft/default.svg`,
+  ideogram:    `${BASE}/ideogram/default.svg`,
+  luma:        `${BASE}/luma-ai/default.svg`,
+  amazon:      `${BASE}/amazon-web-services/mono.svg`,
+}
+
+function ProviderLogo({ providerId, className = "w-4 h-4" }: { providerId: string; className?: string }) {
+  const src = PROVIDER_LOGOS[providerId]
+  if (!src) return null
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      className={`${className} object-contain flex-shrink-0`}
+      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
+    />
+  )
+}
+
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 function SpinnerIcon() {
@@ -1374,15 +1436,23 @@ export default function ManualKeyTester() {
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
-                  className={`text-[11px] font-medium px-2.5 py-2 rounded transition-colors text-left w-full flex items-center gap-2 group ${
+                  className={`text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors text-left w-full flex items-center gap-2 group ${
                     selectedPreset.id === p.id
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 border transition-colors ${
-                    selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
-                  }`} />
+                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors overflow-hidden ${
+                    selectedPreset.id === p.id ? "opacity-100" : "opacity-60 group-hover:opacity-90"
+                  }`}>
+                    {PROVIDER_LOGOS[p.id] ? (
+                      <ProviderLogo providerId={p.id} className="w-4 h-4" />
+                    ) : (
+                      <span className={`w-1.5 h-1.5 rounded-full border transition-colors ${
+                        selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
+                      }`} />
+                    )}
+                  </span>
                   {p.name}
                 </button>
               ))}
@@ -1771,8 +1841,9 @@ export default function ManualKeyTester() {
           {/* Divider */}
           <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
 
-          {/* Provider badge — monochrome, no color tiles */}
-          <span className="hidden sm:inline-flex items-center text-[10px] font-mono text-muted-foreground truncate max-w-[130px] flex-shrink-0">
+          {/* Provider badge — with logo */}
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate max-w-[160px] flex-shrink-0">
+            <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70" />
             {selectedPreset.name}
           </span>
 

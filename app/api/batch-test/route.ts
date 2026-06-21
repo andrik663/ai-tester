@@ -187,7 +187,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
-  // ── Google Gemini ────────────────────────────────────────────────�����────────
+  // ── Google Gemini ────────────────────────────────────────────────�������────────
   google: {
     id: "google",
     // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
@@ -397,7 +397,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Together AI ───────────────────────────────────────────────────────────
+  // ── Together AI ─────────────────────────────────────────────────���─────────
   together: {
     id: "together",
     models: [
@@ -580,14 +580,28 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   fireworks: {
     id: "fireworks",
     models: [
-      "accounts/fireworks/models/llama-v3p3-70b-instruct",
-      "accounts/fireworks/models/llama-v3p1-8b-instruct",
-      "accounts/fireworks/models/llama-v3p2-3b-instruct",
-      "accounts/fireworks/models/qwen3-235b-a22b",
-      "accounts/fireworks/models/deepseek-v3",
-      "accounts/fireworks/models/deepseek-r1",
-      "accounts/fireworks/models/mixtral-8x7b-instruct",
-      "accounts/fireworks/models/gemma2-9b-it",
+      // ── Newest / Trending (Serverless) ────────────────────────────────────
+      "accounts/fireworks/models/glm-5-2",                          // NEW — GLM 5.2, 1M ctx
+      "accounts/fireworks/models/kimi-k2-7-code",                   // NEW — Kimi K2.7 Code
+      "accounts/fireworks/models/minimax-m3",                       // NEW — MiniMax M3
+      "accounts/fireworks/models/qwen3-7-plus",                     // NEW — Qwen3.7 Plus
+      "accounts/fireworks/models/deepseek-v4-pro",                  // TRENDING — DeepSeek-V4-Pro
+      "accounts/fireworks/models/kimi-k2-6",                        // TRENDING — Kimi K2.6
+      "accounts/fireworks/models/minimax-m2-7",                     // TRENDING — MiniMax M2.7
+      "accounts/fireworks/models/glm-5-1",                          // TRENDING — GLM 5.1
+      "accounts/fireworks/models/deepseek-v4-flash",                // TRENDING — DeepSeek-V4-Flash
+      // ── Stable Serverless ────────────────────────────────────────────────
+      "accounts/fireworks/models/llama-v3p3-70b-instruct",          // Llama 3.3 70B
+      "accounts/fireworks/models/llama4-maverick-instruct-basic",   // Llama 4 Maverick (Basic)
+      "accounts/fireworks/models/llama4-scout-instruct-basic",      // Llama 4 Scout (Basic)
+      "accounts/fireworks/models/qwen3-235b-a22b",                  // Qwen3 235B A22B
+      "accounts/fireworks/models/qwen3-30b-a3b",                    // Qwen3 30B A3B
+      "accounts/fireworks/models/deepseek-r1",                      // DeepSeek R1 (Basic)
+      "accounts/fireworks/models/deepseek-r1-0528",                 // DeepSeek R1 05/28
+      "accounts/fireworks/models/openai-gpt-oss-120b",              // OpenAI gpt-oss-120b
+      "accounts/fireworks/models/openai-gpt-oss-20b",               // OpenAI gpt-oss-20b
+      "accounts/fireworks/models/gemma4-31b-it",                    // Gemma 4 31B IT
+      "accounts/fireworks/models/llama-v3p1-8b-instruct",           // Llama 3.1 8B
     ],
     endpoint: "https://api.fireworks.ai/inference/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
