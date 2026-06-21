@@ -16,6 +16,7 @@ interface ProviderPreset {
   headers: Record<string, string>
   bodyTemplate: string
   docsUrl: string
+  createKeyUrl: string   // direct link to API key creation page
   color: string
 }
 
@@ -36,6 +37,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://labs.dahono.com/models",
+    createKeyUrl: "https://labs.dahono.com/account/api-keys",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
   // ── Tier 1: Major providers ───────────────────────────────────────────────
@@ -55,6 +57,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.anthropic.com/en/api/messages",
+    createKeyUrl: "https://console.anthropic.com/settings/keys",
     color: "text-orange-400 bg-orange-400/10 border-orange-400/30",
   },
   {
@@ -72,6 +75,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://platform.openai.com/docs/api-reference/chat",
+    createKeyUrl: "https://platform.openai.com/api-keys",
     color: "text-green-400 bg-green-400/10 border-green-400/30",
   },
   {
@@ -85,6 +89,7 @@ const PRESETS: ProviderPreset[] = [
       generationConfig: { maxOutputTokens: 1024 },
     }, null, 2),
     docsUrl: "https://ai.google.dev/gemini-api/docs/text-generation",
+    createKeyUrl: "https://aistudio.google.com/apikey",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
   {
@@ -102,6 +107,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.x.ai/docs/overview",
+    createKeyUrl: "https://console.x.ai/",
     color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
   },
   // ── Tier 2: Chinese / Asian providers ────────────────────────────────────
@@ -121,6 +127,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://platform.deepseek.com/api-docs/",
+    createKeyUrl: "https://platform.deepseek.com/api_keys",
     color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
   },
   {
@@ -138,6 +145,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://help.aliyun.com/zh/model-studio/developer-reference/use-qwen-by-calling-api",
+    createKeyUrl: "https://bailian.console.aliyun.com/?apiKey=1",
     color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
   },
   {
@@ -155,6 +163,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://open.bigmodel.cn/dev/api",
+    createKeyUrl: "https://open.bigmodel.cn/usercenter/apikeys",
     color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
   },
   {
@@ -172,6 +181,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://platform.minimaxi.com/document/ChatCompletion%20v2",
+    createKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
   },
   // ── Tier 3: Open-source / infra providers ─────────────────────────────────
@@ -190,6 +200,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://console.groq.com/docs/openai",
+    createKeyUrl: "https://console.groq.com/keys",
     color: "text-purple-400 bg-purple-400/10 border-purple-400/30",
   },
   {
@@ -207,6 +218,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.together.ai/reference/chat-completions-1",
+    createKeyUrl: "https://api.together.ai/settings/api-keys",
     color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
   },
   {
@@ -224,6 +236,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.mistral.ai/api/#tag/chat",
+    createKeyUrl: "https://console.mistral.ai/api-keys/",
     color: "text-red-400 bg-red-400/10 border-red-400/30",
   },
   {
@@ -240,6 +253,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.cohere.com/reference/chat",
+    createKeyUrl: "https://dashboard.cohere.com/api-keys",
     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
   },
   {
@@ -257,6 +271,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.perplexity.ai/api-reference/chat-completions",
+    createKeyUrl: "https://www.perplexity.ai/settings/api",
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
   {
@@ -274,6 +289,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://huggingface.co/docs/api-inference/en/tasks/chat-completion",
+    createKeyUrl: "https://huggingface.co/settings/tokens",
     color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
   },
   {
@@ -293,6 +309,7 @@ const PRESETS: ProviderPreset[] = [
       },
     }, null, 2),
     docsUrl: "https://replicate.com/docs/reference/http",
+    createKeyUrl: "https://replicate.com/account/api-tokens",
     color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
   },
   // ── Custom ────────────────────────────────────────────────────────────────
@@ -307,6 +324,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "",
+    createKeyUrl: "",
     color: "text-muted-foreground bg-muted/10 border-border",
   },
 ]
@@ -710,6 +728,24 @@ export default function ManualKeyTester() {
               <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
                 {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
               </p>
+            )}
+            {/* Create API key link */}
+            {selectedPreset.createKeyUrl && (
+              <a
+                href={selectedPreset.createKeyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[10px] text-primary/70 hover:text-primary transition-colors self-start"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M5 3v4M3 5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                Get {selectedPreset.name} API key
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
             )}
           </div>
 
