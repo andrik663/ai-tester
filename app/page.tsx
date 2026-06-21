@@ -4,8 +4,9 @@ import { useState } from "react"
 import Chat from "@/components/chat"
 import VideoTester from "@/components/video-tester"
 import ImageTester from "@/components/image-tester"
+import ApiKeyScraper from "@/components/api-key-scraper"
 
-type Tab = "chat" | "video" | "image"
+type Tab = "chat" | "video" | "image" | "scraper"
 
 function MessageIcon() {
   return (
@@ -33,6 +34,17 @@ function ImageIcon() {
   )
 }
 
+function KeyScanIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <circle cx="7.5" cy="15.5" r="5.5" />
+      <path d="M21 8.5l-5-5-5.5 5.5" />
+      <path d="M15.5 2.5l1 1" />
+      <path d="M18 5l1 1" />
+    </svg>
+  )
+}
+
 export default function Page() {
   const [tab, setTab] = useState<Tab>("chat")
 
@@ -53,6 +65,7 @@ export default function Page() {
           { id: "chat", label: "Chat", icon: <MessageIcon /> },
           { id: "image", label: "Image Generation", icon: <ImageIcon />, badge: "Nano Banana" },
           { id: "video", label: "Video Generation", icon: <VideoIcon />, badge: "Veo 3.1" },
+          { id: "scraper", label: "API Key Scraper", icon: <KeyScanIcon /> },
         ] as { id: Tab; label: string; icon: React.ReactNode; badge?: string }[]).map((t) => (
           <button
             key={t.id}
@@ -86,6 +99,9 @@ export default function Page() {
         </div>
         <div className={tab === "video" ? "h-full" : "hidden h-full"}>
           <VideoTester />
+        </div>
+        <div className={tab === "scraper" ? "h-full" : "hidden h-full"}>
+          <ApiKeyScraper />
         </div>
       </div>
     </div>
