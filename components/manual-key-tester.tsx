@@ -55,7 +55,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "claude-opus-4-8",
+      model: "claude-opus-4-5",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -161,7 +161,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "glm-4-flash",
+      model: "glm-4-plus",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -476,6 +476,171 @@ const PRESETS: ProviderPreset[] = [
     docsUrl: "https://replicate.com/docs/reference/http",
     createKeyUrl: "https://replicate.com/account/api-tokens",
     color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
+  },
+  // ── Tier 4: Additional Chinese / Asian providers ──────────────────────────
+  {
+    id: "moonshot",
+    name: "Moonshot AI (Kimi)",
+    endpoint: "https://api.moonshot.cn/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "kimi-k2.6",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.moonshot.cn/docs/api/chat",
+    createKeyUrl: "https://platform.moonshot.cn/console/api-keys",
+    color: "text-teal-300 bg-teal-300/10 border-teal-300/30",
+  },
+  {
+    id: "baidu",
+    name: "Baidu ERNIE (Qianfan)",
+    endpoint: "https://qianfan.baidubce.com/v2/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "ernie-4.5-turbo-128k-preview",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Nlks5zkzu",
+    createKeyUrl: "https://console.bce.baidu.com/iam/#/iam/accesslist",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/30",
+  },
+  {
+    id: "yi",
+    name: "01.AI (Yi)",
+    endpoint: "https://api.lingyiwanwu.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "yi-lightning",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.lingyiwanwu.com/docs",
+    createKeyUrl: "https://platform.lingyiwanwu.com/apikeys",
+    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/30",
+  },
+  {
+    id: "stepfun",
+    name: "Stepfun",
+    endpoint: "https://api.stepfun.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "step-3.7-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.stepfun.com/docs/Chat/chat_completion",
+    createKeyUrl: "https://platform.stepfun.com/account-info",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+  },
+  {
+    id: "hunyuan",
+    name: "Tencent Hunyuan",
+    endpoint: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "hunyuan-turbos-latest",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://cloud.tencent.com/document/product/1729/111007",
+    createKeyUrl: "https://console.cloud.tencent.com/hunyuan/api-key",
+    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+  },
+  // ── Tier 5: Cloud providers ───────────────────────────────────────────────
+  {
+    id: "azure",
+    name: "Azure OpenAI",
+    endpoint: "https://{{AZURE_RESOURCE}}.openai.azure.com/openai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "api-key": "{{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "gpt-4o",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference",
+    createKeyUrl: "https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI",
+    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  },
+  // ── Tier 6: Korean / multilingual providers ───────────────────────────────
+  {
+    id: "upstage",
+    name: "Upstage Solar",
+    endpoint: "https://api.upstage.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "solar-pro3",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://developers.upstage.ai/docs/api-reference/chat-api",
+    createKeyUrl: "https://console.upstage.ai/api-keys",
+    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+  },
+  // ── Tier 7: Enterprise / specialty providers ──────────────────────────────
+  {
+    id: "writer",
+    name: "Writer AI (Palmyra)",
+    endpoint: "https://api.writer.com/v1/chat",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "palmyra-x5",
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://dev.writer.com/api-guides/chat",
+    createKeyUrl: "https://app.writer.com/aistudio/organization/api-keys",
+    color: "text-indigo-300 bg-indigo-300/10 border-indigo-300/20",
+  },
+  {
+    id: "lepton",
+    name: "LeptonAI",
+    endpoint: "https://api.lepton.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "llama3-3-70b",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://lepton.ai/references/llm_models",
+    createKeyUrl: "https://dashboard.lepton.ai/",
+    color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
   },
   // ── Custom ────────────────────────────────────────────────────────────────
   {
