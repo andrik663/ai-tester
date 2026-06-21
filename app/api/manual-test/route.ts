@@ -59,44 +59,95 @@ function buildCurl(
 // ── Body builder: inject prompt into provider templates ───────────────────────
 
 const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
+  // Anthropic Messages API — unique format
   anthropic: (prompt) => ({
-    model: "claude-3-haiku-20240307",
+    model: "claude-opus-4-5",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
+  // OpenAI-compatible (most providers share this)
   openai: (prompt) => ({
     model: "gpt-4o-mini",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
+  // Google Gemini — unique contents/parts format
   google: (prompt) => ({
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { maxOutputTokens: 1024 },
   }),
+  // xAI Grok — OpenAI-compatible
+  xai: (prompt) => ({
+    model: "grok-3-mini",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  // DeepSeek — OpenAI-compatible
+  deepseek: (prompt) => ({
+    model: "deepseek-chat",
+    max_tokens: 1024,
+    stream: false,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  // Qwen / Alibaba DashScope — OpenAI-compatible (intl endpoint)
+  qwen: (prompt) => ({
+    model: "qwen-plus",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  // Zhipu GLM — OpenAI-compatible
+  zhipu: (prompt) => ({
+    model: "glm-4-flash",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  // MiniMax chatcompletion_v2 — OpenAI-compatible
+  minimax: (prompt) => ({
+    model: "MiniMax-Text-01",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  // Groq — OpenAI-compatible
   groq: (prompt) => ({
     model: "llama-3.1-8b-instant",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
+  // Together AI — OpenAI-compatible
+  together: (prompt) => ({
+    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  // Mistral — OpenAI-compatible
   mistral: (prompt) => ({
     model: "mistral-small-latest",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
+  // Cohere v2 chat — messages array (not message string in v2)
   cohere: (prompt) => ({
-    model: "command-r",
-    max_tokens: 1024,
-    message: prompt,
+    model: "command-r-plus",
+    messages: [{ role: "user", content: prompt }],
   }),
+  // Perplexity — OpenAI-compatible
   perplexity: (prompt) => ({
-    model: "llama-3.1-sonar-small-128k-online",
+    model: "sonar",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
-  minimax: (prompt) => ({
-    model: "abab6.5s-chat",
+  // HuggingFace Inference API — OpenAI-compatible
+  huggingface: (prompt) => ({
+    model: "meta-llama/Llama-3.3-70B-Instruct",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
+  }),
+  // Replicate — predictions input format
+  replicate: (prompt) => ({
+    input: {
+      prompt,
+      max_new_tokens: 512,
+    },
   }),
 }
 
@@ -106,29 +157,50 @@ function extractChatReply(providerKey: string, data: unknown): string | undefine
   if (!data || typeof data !== "object") return undefined
   const d = data as Record<string, unknown>
 
-  // OpenAI-compatible (OpenAI, Groq, Mistral, Perplexity, MiniMax)
-  if (Array.isArray((d?.choices as unknown[]))) {
+  // OpenAI-compatible: OpenAI, Groq, Mistral, Perplexity, MiniMax, DeepSeek,
+  //                    Qwen, Zhipu GLM, xAI Grok, Together AI, HuggingFace
+  if (Array.isArray(d?.choices)) {
     const choices = d.choices as Array<Record<string, unknown>>
     const msg = choices[0]?.message as Record<string, unknown> | undefined
     if (typeof msg?.content === "string") return msg.content
+    // delta for streaming (shouldn't happen but handle gracefully)
+    const delta = choices[0]?.delta as Record<string, unknown> | undefined
+    if (typeof delta?.content === "string") return delta.content
   }
 
-  // Anthropic
-  if (Array.isArray((d?.content as unknown[]))) {
+  // Anthropic Messages API
+  if (Array.isArray(d?.content)) {
     const content = d.content as Array<Record<string, unknown>>
     const block = content.find((b) => b.type === "text")
     if (typeof block?.text === "string") return block.text
   }
 
-  // Google Gemini
-  if (Array.isArray((d?.candidates as unknown[]))) {
+  // Google Gemini generateContent
+  if (Array.isArray(d?.candidates)) {
     const cands = d.candidates as Array<Record<string, unknown>>
     const parts = (cands[0]?.content as Record<string, unknown>)?.parts as Array<Record<string, unknown>>
     if (Array.isArray(parts) && typeof parts[0]?.text === "string") return parts[0].text
   }
 
-  // Cohere
+  // Cohere v2 chat — message.content[].text or message.content (string)
+  const cohereMsg = d?.message as Record<string, unknown> | undefined
+  if (cohereMsg) {
+    if (typeof cohereMsg.content === "string") return cohereMsg.content
+    if (Array.isArray(cohereMsg.content)) {
+      const block = (cohereMsg.content as Array<Record<string, unknown>>).find((b) => b.type === "text")
+      if (typeof block?.text === "string") return block.text
+    }
+  }
+  // Cohere v1 (legacy)
   if (typeof d?.text === "string") return d.text
+
+  // Replicate predictions — output is array of strings or a string
+  if (providerKey === "replicate") {
+    if (Array.isArray(d?.output)) {
+      return (d.output as string[]).join("")
+    }
+    if (typeof d?.output === "string") return d.output
+  }
 
   return undefined
 }
@@ -148,17 +220,22 @@ function injectAuth(
       .replace(/\{\{KEY\}\}/g, apiKey)
   }
 
-  // If no auth header was set, inject a sensible default
+  // If no auth header was set, inject a sensible default per provider
   const hasAuth = Object.keys(out).some(
     (k) => k.toLowerCase() === "authorization" || k.toLowerCase() === "x-api-key"
   )
   if (!hasAuth) {
     if (providerKey === "anthropic") {
       out["x-api-key"] = apiKey
-      out["anthropic-version"] = "2023-06-01"
+      if (!out["anthropic-version"]) out["anthropic-version"] = "2023-06-01"
     } else {
+      // All other providers use Bearer token
       out["Authorization"] = `Bearer ${apiKey}`
     }
+  }
+  // Replicate needs Prefer: wait for synchronous response
+  if (providerKey === "replicate" && !out["Prefer"]) {
+    out["Prefer"] = "wait"
   }
   return out
 }

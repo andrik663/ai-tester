@@ -18,18 +18,19 @@ interface ProviderPreset {
 }
 
 const PRESETS: ProviderPreset[] = [
+  // ── Tier 1: Major providers ───────────────────────────────────────────────
   {
     id: "anthropic",
-    name: "Anthropic (Claude)",
+    name: "Claude (Anthropic)",
     endpoint: "https://api.anthropic.com/v1/messages",
     method: "POST",
     headers: {
       "x-api-key": "{{API_KEY}}",
       "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
+      "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "claude-3-haiku-20240307",
+      model: "claude-opus-4-5",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -38,7 +39,7 @@ const PRESETS: ProviderPreset[] = [
   },
   {
     id: "openai",
-    name: "OpenAI (GPT)",
+    name: "GPT (OpenAI)",
     endpoint: "https://api.openai.com/v1/chat/completions",
     method: "POST",
     headers: {
@@ -55,8 +56,8 @@ const PRESETS: ProviderPreset[] = [
   },
   {
     id: "google",
-    name: "Google Gemini",
-    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={{API_KEY}}",
+    name: "Gemini (Google)",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{API_KEY}}",
     method: "POST",
     headers: { "Content-Type": "application/json" },
     bodyTemplate: JSON.stringify({
@@ -66,6 +67,94 @@ const PRESETS: ProviderPreset[] = [
     docsUrl: "https://ai.google.dev/gemini-api/docs/text-generation",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
+  {
+    id: "xai",
+    name: "Grok (xAI)",
+    endpoint: "https://api.x.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "grok-3-mini",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.x.ai/docs/overview",
+    color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
+  },
+  // ── Tier 2: Chinese / Asian providers ────────────────────────────────────
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    endpoint: "https://api.deepseek.com/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "deepseek-chat",
+      max_tokens: 1024,
+      stream: false,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.deepseek.com/api-docs/",
+    color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
+  },
+  {
+    id: "qwen",
+    name: "Qwen (Alibaba)",
+    endpoint: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "qwen-plus",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://help.aliyun.com/zh/model-studio/developer-reference/use-qwen-by-calling-api",
+    color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
+  },
+  {
+    id: "zhipu",
+    name: "GLM (Zhipu AI)",
+    endpoint: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "glm-4-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://open.bigmodel.cn/dev/api",
+    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
+  },
+  {
+    id: "minimax",
+    name: "MiniMax (Hailuo)",
+    endpoint: "https://api.minimaxi.chat/v1/text/chatcompletion_v2",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "MiniMax-Text-01",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.minimaxi.com/document/ChatCompletion%20v2",
+    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
+  },
+  // ── Tier 3: Open-source / infra providers ─────────────────────────────────
   {
     id: "groq",
     name: "Groq",
@@ -82,6 +171,23 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://console.groq.com/docs/openai",
     color: "text-purple-400 bg-purple-400/10 border-purple-400/30",
+  },
+  {
+    id: "together",
+    name: "Together AI",
+    endpoint: "https://api.together.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.together.ai/reference/chat-completions-1",
+    color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
   },
   {
     id: "mistral",
@@ -101,21 +207,20 @@ const PRESETS: ProviderPreset[] = [
     color: "text-red-400 bg-red-400/10 border-red-400/30",
   },
   {
-    id: "minimax",
-    name: "MiniMax",
-    endpoint: "https://api.minimax.chat/v1/text/chatcompletion_v2",
+    id: "cohere",
+    name: "Cohere",
+    endpoint: "https://api.cohere.ai/v2/chat",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "abab6.5s-chat",
-      max_tokens: 1024,
+      model: "command-r-plus",
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://platform.minimaxi.com/document/ChatCompletion%20v2",
-    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
+    docsUrl: "https://docs.cohere.com/reference/chat",
+    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
   },
   {
     id: "perplexity",
@@ -127,7 +232,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "llama-3.1-sonar-small-128k-online",
+      model: "sonar",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -135,12 +240,52 @@ const PRESETS: ProviderPreset[] = [
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
   {
+    id: "huggingface",
+    name: "HuggingFace",
+    endpoint: "https://api-inference.huggingface.co/models/meta-llama/Llama-3.3-70B-Instruct/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://huggingface.co/docs/api-inference/en/tasks/chat-completion",
+    color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
+  },
+  {
+    id: "replicate",
+    name: "Replicate",
+    endpoint: "https://api.replicate.com/v1/models/meta/meta-llama-3-8b-instruct/predictions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+      "Prefer": "wait",
+    },
+    bodyTemplate: JSON.stringify({
+      input: {
+        prompt: "{{PROMPT}}",
+        max_new_tokens: 512,
+      },
+    }, null, 2),
+    docsUrl: "https://replicate.com/docs/reference/http",
+    color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
+  },
+  // ── Custom ────────────────────────────────────────────────────────────────
+  {
     id: "custom",
     name: "Custom / cURL",
     endpoint: "",
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    bodyTemplate: "",
+    bodyTemplate: JSON.stringify({
+      model: "your-model",
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
     docsUrl: "",
     color: "text-muted-foreground bg-muted/10 border-border",
   },
@@ -433,17 +578,17 @@ export default function ManualKeyTester() {
           {/* Provider selector */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Provider
+              Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
             </label>
-            <div className="grid grid-cols-2 gap-1">
+            <div className="flex flex-col gap-0.5 max-h-52 overflow-y-auto pr-0.5">
               {PRESETS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
-                  className={`text-[10px] font-medium px-2 py-1.5 rounded border transition-colors text-left truncate ${
+                  className={`text-[10px] font-medium px-2.5 py-1.5 rounded border transition-colors text-left w-full ${
                     selectedPreset.id === p.id
                       ? p.color
-                      : "text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
+                      : "text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground"
                   }`}
                 >
                   {p.name}
