@@ -485,18 +485,7 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
       ],
     }],
   }),
-  // Cerebras — vision via llama-4-scout (multimodal)
-  cerebras: (prompt, base64, mimeType) => ({
-    model: "llama-4-scout-17b-16e-instruct",
-    max_tokens: 2048,
-    messages: [{
-      role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
-        { type: "text", text: prompt },
-      ],
-    }],
-  }),
+  // Cerebras — no vision model available as of 2025 (models: gpt-oss-120b, zai-glm-4.7 are text-only)
   // SambaNova — vision via Llama-3.2-11B-Vision-Instruct
   sambanova: (prompt, base64, mimeType) => ({
     model: "Llama-3.2-11B-Vision-Instruct",

@@ -197,6 +197,7 @@ const PRESETS: ProviderPreset[] = [
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Available models: gpt-oss-120b (reasoning), zai-glm-4.7
     bodyTemplate: JSON.stringify({
       model: "gpt-oss-120b",
       max_completion_tokens: 1024,
