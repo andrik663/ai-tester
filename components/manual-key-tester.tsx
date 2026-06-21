@@ -161,7 +161,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "glm-4-plus",
+      model: "glm-5v-turbo",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -179,7 +179,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "MiniMax-Text-01",
+      model: "minimax-m3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -641,6 +641,118 @@ const PRESETS: ProviderPreset[] = [
     docsUrl: "https://lepton.ai/references/llm_models",
     createKeyUrl: "https://dashboard.lepton.ai/",
     color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
+  },
+  // ── Tier 8: Image-first providers (Arena.ai) ─────────────────────────────
+  {
+    id: "bfl",
+    name: "Black Forest Labs (FLUX)",
+    endpoint: "https://api.bfl.ai/v1/flux-pro-1.1",
+    method: "POST",
+    headers: {
+      "x-key": "{{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      prompt: "{{PROMPT}}",
+      width: 1024,
+      height: 1024,
+    }, null, 2),
+    docsUrl: "https://docs.bfl.ai/quick_start",
+    createKeyUrl: "https://api.bfl.ai/auth/register",
+    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+  },
+  {
+    id: "bytedance",
+    name: "Bytedance (SeedDream)",
+    endpoint: "https://api.doubao.com/api/v3/images/generations",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "seedream-4.5",
+      prompt: "{{PROMPT}}",
+      n: 1,
+      size: "1024x1024",
+    }, null, 2),
+    docsUrl: "https://www.volcengine.com/docs/82379/1399008",
+    createKeyUrl: "https://www.volcengine.com/product/ark",
+    color: "text-red-300 bg-red-300/10 border-red-300/20",
+  },
+  {
+    id: "recraft",
+    name: "Recraft AI",
+    endpoint: "https://external.api.recraft.ai/v1/images/generations",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "recraftv3",
+      prompt: "{{PROMPT}}",
+      n: 1,
+      size: "1024x1024",
+    }, null, 2),
+    docsUrl: "https://www.recraft.ai/docs",
+    createKeyUrl: "https://www.recraft.ai/profile",
+    color: "text-pink-300 bg-pink-300/10 border-pink-300/20",
+  },
+  {
+    id: "ideogram",
+    name: "Ideogram AI",
+    endpoint: "https://api.ideogram.ai/v1/ideogram-v3/generate",
+    method: "POST",
+    headers: {
+      "Api-Key": "{{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      image_request: {
+        prompt: "{{PROMPT}}",
+        model: "V_3",
+        aspect_ratio: "ASPECT_1_1",
+      },
+    }, null, 2),
+    docsUrl: "https://developer.ideogram.ai/ideogram-v3",
+    createKeyUrl: "https://ideogram.ai/manage-api",
+    color: "text-purple-300 bg-purple-300/10 border-purple-300/20",
+  },
+  {
+    id: "luma",
+    name: "Luma AI (Photon)",
+    endpoint: "https://api.lumalabs.ai/dream-machine/v1/generations/image",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "photon-1",
+      prompt: "{{PROMPT}}",
+      aspect_ratio: "1:1",
+    }, null, 2),
+    docsUrl: "https://docs.lumalabs.ai/reference/create-image-generation",
+    createKeyUrl: "https://lumalabs.ai/dream-machine/api/keys",
+    color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
+  },
+  {
+    id: "amazon",
+    name: "Amazon Nova (Bedrock)",
+    endpoint: "https://bedrock-runtime.us-east-1.amazonaws.com/model/amazon.nova-pro-v1:0/converse",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Amz-Bedrock-Key": "{{API_KEY}}",
+    },
+    bodyTemplate: JSON.stringify({
+      messages: [{ role: "user", content: [{ text: "{{PROMPT}}" }] }],
+      inferenceConfig: { maxTokens: 1024 },
+    }, null, 2),
+    docsUrl: "https://docs.aws.amazon.com/nova/latest/userguide/using-nova-apis.html",
+    createKeyUrl: "https://console.aws.amazon.com/iam/home#/security_credentials",
+    color: "text-amber-300 bg-amber-300/10 border-amber-300/20",
   },
   // ── Custom ────────────────────────────────────────────────────────────────
   {

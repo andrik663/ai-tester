@@ -21,8 +21,15 @@ export interface ProviderCapabilities {
 }
 
 export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
+  // ── Google ────────────────────────────────────────────────────────────────
   google: {
     image: [
+      {
+        id: "imagen-4.0-generate-001",
+        label: "Imagen 4",
+        tag: "Imagen 4",
+        description: "Google's best photorealistic image generation model",
+      },
       {
         id: "gemini-2.0-flash-preview-image-generation",
         label: "Gemini 2.0 Flash",
@@ -44,6 +51,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     videoAspectRatios: ["16:9", "9:16"],
   },
 
+  // ── OpenAI ────────────────────────────────────────────────────────────────
   openai: {
     image: [
       {
@@ -68,6 +76,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     video: [],
   },
 
+  // ── Together AI ───────────────────────────────────────────────────────────
   together: {
     image: [
       {
@@ -96,6 +105,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     videoAspectRatios: ["16:9", "9:16"],
   },
 
+  // ── Fireworks AI ──────────────────────────────────────────────────────────
   fireworks: {
     image: [
       {
@@ -120,6 +130,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     video: [],
   },
 
+  // ── Novita AI ─────────────────────────────────────────────────────────────
   novita: {
     image: [
       {
@@ -144,6 +155,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     video: [],
   },
 
+  // ── HuggingFace ───────────────────────────────────────────────────────────
   huggingface: {
     image: [
       {
@@ -168,6 +180,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     video: [],
   },
 
+  // ── Replicate ─────────────────────────────────────────────────────────────
   replicate: {
     image: [
       {
@@ -192,6 +205,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     video: [],
   },
 
+  // ── MiniMax ───────────────────────────────────────────────────────────────
   minimax: {
     image: [
       {
@@ -208,7 +222,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     videoAspectRatios: ["16:9", "9:16"],
   },
 
-  // ── xAI Aurora image generation ───────────────────────────────────────────
+  // ── xAI Aurora ───────────────────────────────────────────────────────────
   xai: {
     image: [
       {
@@ -227,7 +241,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     video: [],
   },
 
-  // ── Zhipu CogView / CogVideoX ────────────────────────────────────────────
+  // ── Zhipu CogView / CogVideoX ─────────────────────────────────────────────
   zhipu: {
     image: [
       {
@@ -250,26 +264,38 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     videoAspectRatios: ["16:9", "9:16"],
   },
 
-  // ── Qwen Wanx image generation ───────────────────────────────────────────
+  // ── Qwen / Wanx (Alibaba DashScope) ───────────────────────────────────────
   qwen: {
     image: [
       {
-        id: "wan2.1-t2i-turbo",
-        label: "Wanx 2.1 Turbo",
-        tag: "Wanx",
-        description: "Fast high-quality text-to-image via Qwen/DashScope",
+        id: "qwen-image-2512",
+        label: "Qwen Image 2512",
+        tag: "Qwen Image",
+        description: "Qwen's latest highest-quality image generation model",
       },
       {
-        id: "wan2.1-t2i",
-        label: "Wanx 2.1",
+        id: "wan2.7-image-pro",
+        label: "Wan 2.7 Pro",
         tag: "Wanx",
-        description: "Detailed photorealistic image generation",
+        description: "Professional-grade Wan 2.7 text-to-image",
+      },
+      {
+        id: "wan2.7-image",
+        label: "Wan 2.7",
+        tag: "Wanx",
+        description: "Wan 2.7 high-quality text-to-image",
+      },
+      {
+        id: "wan2.5-t2i-preview",
+        label: "Wan 2.5 T2I",
+        tag: "Wanx",
+        description: "Wan 2.5 fast text-to-image preview",
       },
     ],
     video: [],
   },
 
-  // ── Stepfun image generation ─────────────────────────────────────────────
+  // ── Stepfun ───────────────────────────────────────────────────────────────
   stepfun: {
     image: [
       {
@@ -277,6 +303,138 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
         label: "Step Image Edit 2",
         tag: "Stepfun",
         description: "Stepfun high-quality image generation and editing",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Tencent Hunyuan ────────────────────────────────────────────────────────
+  hunyuan: {
+    image: [
+      {
+        id: "hunyuan-image-3.0-instruct",
+        label: "Hunyuan Image 3.0",
+        tag: "Hunyuan",
+        description: "Tencent Hunyuan latest photorealistic image generation",
+      },
+      {
+        id: "hunyuan-image",
+        label: "Hunyuan Image",
+        tag: "Hunyuan",
+        description: "Tencent Hunyuan text-to-image generation",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Black Forest Labs (FLUX native API) ───────────────────────────────────
+  bfl: {
+    image: [
+      {
+        id: "flux-2-pro",
+        label: "FLUX 2 Pro",
+        tag: "FLUX 2",
+        description: "Black Forest Labs newest top-tier FLUX model",
+      },
+      {
+        id: "flux-2-dev",
+        label: "FLUX 2 Dev",
+        tag: "FLUX 2",
+        description: "FLUX 2 development model for open use",
+      },
+      {
+        id: "flux-1.1-pro",
+        label: "FLUX 1.1 Pro",
+        tag: "FLUX 1.1",
+        description: "State-of-the-art photorealism with superior detail",
+      },
+      {
+        id: "flux-1-kontext-pro",
+        label: "FLUX Kontext Pro",
+        tag: "FLUX EDIT",
+        description: "Context-aware image editing and generation",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Bytedance (SeedDream) ─────────────────────────────────────────────────
+  bytedance: {
+    image: [
+      {
+        id: "seedream-4.5",
+        label: "SeedDream 4.5",
+        tag: "SeedDream",
+        description: "Bytedance's latest flagship image generation model",
+      },
+      {
+        id: "seedream-5.0-lite",
+        label: "SeedDream 5.0 Lite",
+        tag: "SeedDream",
+        description: "Fast lightweight SeedDream generation",
+      },
+      {
+        id: "seedream-3",
+        label: "SeedDream 3",
+        tag: "SeedDream",
+        description: "High-quality creative image synthesis",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Recraft ───────────────────────────────────────────────────────────────
+  recraft: {
+    image: [
+      {
+        id: "recraftv3",
+        label: "Recraft V4",
+        tag: "Recraft",
+        description: "Recraft's state-of-the-art design-focused image generation",
+      },
+      {
+        id: "recraft20b",
+        label: "Recraft V3",
+        tag: "Recraft",
+        description: "High-quality vector-style and raster image generation",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Ideogram ─────────────────────────────────────────────────────────────
+  ideogram: {
+    image: [
+      {
+        id: "V_3",
+        label: "Ideogram V3 Quality",
+        tag: "Ideogram",
+        description: "Ideogram's best model with excellent text rendering",
+      },
+      {
+        id: "V_3_TURBO",
+        label: "Ideogram V3 Turbo",
+        tag: "Ideogram Fast",
+        description: "Fast Ideogram V3 generation",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Luma (Photon) ─────────────────────────────────────────────────────────
+  luma: {
+    image: [
+      {
+        id: "photon-1",
+        label: "Photon 1",
+        tag: "Luma",
+        description: "Luma Photon high-quality image generation",
+      },
+      {
+        id: "photon-flash-1",
+        label: "Photon Flash",
+        tag: "Luma Fast",
+        description: "Fast Luma Photon image generation",
       },
     ],
     video: [],
