@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
+import ProviderBatchTest from "@/components/provider-batch-test"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -14,6 +16,7 @@ interface ProviderPreset {
   headers: Record<string, string>
   bodyTemplate: string
   docsUrl: string
+  createKeyUrl: string   // direct link to API key creation page
   color: string
 }
 
@@ -34,6 +37,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://labs.dahono.com/models",
+    createKeyUrl: "https://labs.dahono.com/account/api-keys",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
   // ── Tier 1: Major providers ───────────────────────────────────────────────
@@ -48,11 +52,12 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "claude-opus-4-5",
+      model: "claude-opus-4-8",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.anthropic.com/en/api/messages",
+    createKeyUrl: "https://console.anthropic.com/settings/keys",
     color: "text-orange-400 bg-orange-400/10 border-orange-400/30",
   },
   {
@@ -70,12 +75,13 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://platform.openai.com/docs/api-reference/chat",
+    createKeyUrl: "https://platform.openai.com/api-keys",
     color: "text-green-400 bg-green-400/10 border-green-400/30",
   },
   {
     id: "google",
     name: "Gemini (Google)",
-    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{API_KEY}}",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{API_KEY}}",
     method: "POST",
     headers: { "Content-Type": "application/json" },
     bodyTemplate: JSON.stringify({
@@ -83,6 +89,7 @@ const PRESETS: ProviderPreset[] = [
       generationConfig: { maxOutputTokens: 1024 },
     }, null, 2),
     docsUrl: "https://ai.google.dev/gemini-api/docs/text-generation",
+    createKeyUrl: "https://aistudio.google.com/apikey",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
   {
@@ -95,11 +102,12 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "grok-3-mini",
+      model: "grok-4.3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.x.ai/docs/overview",
+    createKeyUrl: "https://console.x.ai/",
     color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
   },
   // ── Tier 2: Chinese / Asian providers ────────────────────────────────────
@@ -113,12 +121,13 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "deepseek-chat",
+      model: "deepseek-v4-flash",
       max_tokens: 1024,
       stream: false,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://platform.deepseek.com/api-docs/",
+    createKeyUrl: "https://platform.deepseek.com/api_keys",
     color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
   },
   {
@@ -131,11 +140,12 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "qwen-plus",
+      model: "qwen3-235b-a22b",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://help.aliyun.com/zh/model-studio/developer-reference/use-qwen-by-calling-api",
+    createKeyUrl: "https://bailian.console.aliyun.com/?apiKey=1",
     color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
   },
   {
@@ -153,6 +163,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://open.bigmodel.cn/dev/api",
+    createKeyUrl: "https://open.bigmodel.cn/usercenter/apikeys",
     color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
   },
   {
@@ -170,6 +181,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://platform.minimaxi.com/document/ChatCompletion%20v2",
+    createKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
   },
   // ── Tier 3: Open-source / infra providers ─────────────────────────────────
@@ -183,11 +195,12 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "llama-3.1-8b-instant",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://console.groq.com/docs/openai",
+    createKeyUrl: "https://console.groq.com/keys",
     color: "text-purple-400 bg-purple-400/10 border-purple-400/30",
   },
   {
@@ -200,11 +213,12 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      model: "meta-llama/Llama-4-Scout-17B-16E-Instruct",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.together.ai/reference/chat-completions-1",
+    createKeyUrl: "https://api.together.ai/settings/api-keys",
     color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
   },
   {
@@ -222,6 +236,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.mistral.ai/api/#tag/chat",
+    createKeyUrl: "https://console.mistral.ai/api-keys/",
     color: "text-red-400 bg-red-400/10 border-red-400/30",
   },
   {
@@ -234,10 +249,11 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "command-r-plus",
+      model: "command-a",
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.cohere.com/reference/chat",
+    createKeyUrl: "https://dashboard.cohere.com/api-keys",
     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
   },
   {
@@ -255,6 +271,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.perplexity.ai/api-reference/chat-completions",
+    createKeyUrl: "https://www.perplexity.ai/settings/api",
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
   {
@@ -272,6 +289,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://huggingface.co/docs/api-inference/en/tasks/chat-completion",
+    createKeyUrl: "https://huggingface.co/settings/tokens",
     color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
   },
   {
@@ -291,6 +309,7 @@ const PRESETS: ProviderPreset[] = [
       },
     }, null, 2),
     docsUrl: "https://replicate.com/docs/reference/http",
+    createKeyUrl: "https://replicate.com/account/api-tokens",
     color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
   },
   // ── Custom ────────────────────────────────────────────────────────────────
@@ -305,6 +324,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "",
+    createKeyUrl: "",
     color: "text-muted-foreground bg-muted/10 border-border",
   },
 ]
@@ -468,6 +488,7 @@ interface ChatMessage {
 export default function ManualKeyTester() {
   const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(PRESETS[0])
   const [apiKey, setApiKey] = useState("")
+  const [debouncedApiKey, setDebouncedApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
   const [endpoint, setEndpoint] = useState(PRESETS[0].endpoint)
   const [method, setMethod] = useState<"GET" | "POST" | "PUT" | "DELETE">(PRESETS[0].method)
@@ -483,38 +504,48 @@ export default function ManualKeyTester() {
   const [showRawResponse, setShowRawResponse] = useState(false)
   const [showBodyEditor, setShowBodyEditor] = useState(false)
   const [copiedCurl, setCopiedCurl] = useState(false)
-  const [dahonoModels, setDahonoModels] = useState<{ id: string; tier: string; free: boolean }[]>([])
-  const [dahonoModelsFetching, setDahonoModelsFetching] = useState(false)
+  const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounce API key changes by 400ms
+  const handleApiKeyChange = useCallback((val: string) => {
+    setApiKey(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedApiKey(val), 400)
+  }, [])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatHistory, loading])
 
-  // When Dahono is selected and user has a key, fetch live models
+  // SWR key — only fetches when Dahono is selected AND key is long enough
+  const dahonoSWRKey =
+    selectedPreset.id === "dahono" && debouncedApiKey.trim().length >= 8
+      ? ["/api/dahono-models", debouncedApiKey.trim()]
+      : null
+
+  const { data: dahonoData, isLoading: dahonoModelsFetching } = useSWR(
+    dahonoSWRKey,
+    ([url, key]: [string, string]) =>
+      fetch(url, { headers: { Authorization: `Bearer ${key}` } }).then((r) => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 30_000 }
+  )
+
+  const dahonoModels: { id: string; tier: string; free: boolean }[] = dahonoData?.models ?? []
+
+  // Auto-select first free model when models load
   useEffect(() => {
-    if (selectedPreset.id !== "dahono" || !apiKey.trim() || apiKey.trim().length < 8) return
-    setDahonoModelsFetching(true)
-    fetch("/api/dahono-models", {
-      headers: { Authorization: `Bearer ${apiKey.trim()}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.models) {
-          setDahonoModels(data.models)
-          // Default to first free model
-          const firstFree = data.models.find((m: { free: boolean }) => m.free)
-          if (firstFree) {
-            setSelectedDahonoModel(firstFree.id)
-            updateDahonoBodyModel(firstFree.id)
-          }
-        }
-      })
-      .catch(() => {})
-      .finally(() => setDahonoModelsFetching(false))
+    if (dahonoModels.length > 0) {
+      const firstFree = dahonoModels.find((m) => m.free)
+      if (firstFree) {
+        setSelectedDahonoModel(firstFree.id)
+        updateDahonoBodyModel(firstFree.id)
+      }
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPreset.id, apiKey])
+  }, [dahonoData])
 
   function updateDahonoBodyModel(modelId: string) {
     setBodyTemplate(JSON.stringify({
@@ -532,9 +563,8 @@ export default function ManualKeyTester() {
       Object.entries(preset.headers).map(([key, value], i) => ({ key, value, id: i }))
     )
     setBodyTemplate(preset.bodyTemplate)
-    setResult(null)
-    setShowLog(false)
-    if (preset.id !== "dahono") setDahonoModels([])
+  setResult(null)
+  setShowLog(false)
   }
 
   async function runTest() {
@@ -616,6 +646,14 @@ export default function ManualKeyTester() {
     })
   }
 
+  function copyCurlFull() {
+    if (!result?.curlFull) return
+    navigator.clipboard.writeText(result.curlFull).then(() => {
+      setCopiedCurlFull(true)
+      setTimeout(() => setCopiedCurlFull(false), 1500)
+    })
+  }
+
   return (
     <div className="flex h-full bg-background text-foreground font-sans overflow-hidden">
 
@@ -653,20 +691,35 @@ export default function ManualKeyTester() {
 
           {/* API Key */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              API Key
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                API Key
+              </label>
+              {apiKey && (
+                <button
+                  onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
+                  className="text-[9px] text-muted-foreground/60 hover:text-destructive transition-colors flex items-center gap-0.5"
+                  title="Clear API key"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  Clear
+                </button>
+              )}
+            </div>
             <div className="relative">
               <input
                 type={showKey ? "text" : "password"}
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={(e) => handleApiKeyChange(e.target.value)}
                 placeholder="sk-ant-... / sk-... / AIza..."
                 className="w-full rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
               />
               <button
                 onClick={() => setShowKey((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                title={showKey ? "Hide key" : "Show key"}
               >
                 <EyeIcon show={showKey} />
               </button>
@@ -675,6 +728,24 @@ export default function ManualKeyTester() {
               <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
                 {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
               </p>
+            )}
+            {/* Create API key link */}
+            {selectedPreset.createKeyUrl && (
+              <a
+                href={selectedPreset.createKeyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[10px] text-primary/70 hover:text-primary transition-colors self-start"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M5 3v4M3 5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                Get {selectedPreset.name} API key
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
             )}
           </div>
 
@@ -754,6 +825,14 @@ export default function ManualKeyTester() {
             </div>
           )}
 
+          {/* Batch Model Test — Run All Models (all providers) */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Batch Model Test
+            </label>
+            <ProviderBatchTest providerId={selectedPreset.id} apiKey={apiKey} />
+          </div>
+
           {/* Headers */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -816,11 +895,18 @@ export default function ManualKeyTester() {
             </span>
           )}
           {result && (
-            <span
-              className={`text-[10px] font-mono ml-auto flex-shrink-0 ${result.ok ? "text-green-400" : "text-red-400"}`}
-            >
-              HTTP {result.status} · {result.durationMs}ms
-            </span>
+            <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+              {result.tokenUsage?.totalTokens && (
+                <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
+                  {result.tokenUsage.totalTokens} tokens
+                </span>
+              )}
+              <span
+                className={`text-[10px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}
+              >
+                HTTP {result.status} · {result.durationMs}ms
+              </span>
+            </div>
           )}
         </div>
 
@@ -895,13 +981,26 @@ export default function ManualKeyTester() {
               {"{ }"} Raw Response
             </button>
             {result.curlCommand && (
-              <button
-                onClick={copyCurl}
-                className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors ml-auto"
-              >
-                <CopyIcon />
-                {copiedCurl ? "Copied!" : "Copy cURL"}
-              </button>
+              <div className="flex items-center gap-1 ml-auto">
+                <button
+                  onClick={copyCurl}
+                  title="Copy cURL with masked key"
+                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors"
+                >
+                  <CopyIcon />
+                  {copiedCurl ? "Copied!" : "cURL (masked)"}
+                </button>
+                {result.curlFull && (
+                  <button
+                    onClick={copyCurlFull}
+                    title="Copy cURL with real key — safe since you own this key"
+                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                  >
+                    <CopyIcon />
+                    {copiedCurlFull ? "Copied!" : "cURL (full)"}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -947,6 +1046,42 @@ export default function ManualKeyTester() {
             <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">
               {result.responseBody}
             </pre>
+          </div>
+        )}
+
+        {/* Token usage + response headers mini-panel */}
+        {result?.ok && (result.tokenUsage || (result.responseHeaders && Object.keys(result.responseHeaders).length > 0)) && (
+          <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4 flex-wrap">
+            {result.tokenUsage && (
+              <div className="flex items-center gap-3">
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
+                {result.tokenUsage.promptTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span>
+                  </span>
+                )}
+                {result.tokenUsage.completionTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span>
+                  </span>
+                )}
+                {result.tokenUsage.totalTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-primary font-semibold">
+                    total: {result.tokenUsage.totalTokens}
+                  </span>
+                )}
+              </div>
+            )}
+            {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
+              <span className="text-[10px] font-mono text-muted-foreground">
+                rl-remaining: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
+              </span>
+            )}
+            {result.responseHeaders?.["x-request-id"] && (
+              <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">
+                req-id: <span className="text-foreground">{result.responseHeaders["x-request-id"]}</span>
+              </span>
+            )}
           </div>
         )}
 
