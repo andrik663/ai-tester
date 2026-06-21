@@ -5,6 +5,10 @@ import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
+import Chat, { GEMINI_CHAT_MODELS } from "@/components/chat"
+import ImageTester from "@/components/image-tester"
+import VideoTester from "@/components/video-tester"
+import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -183,6 +187,168 @@ const PRESETS: ProviderPreset[] = [
     docsUrl: "https://platform.minimaxi.com/document/ChatCompletion%20v2",
     createKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
+  },
+  // ── Meta / Llama providers ─────────────────────────────────────────────��──
+  {
+    id: "cerebras",
+    name: "Cerebras (Llama)",
+    endpoint: "https://api.cerebras.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "llama-3.3-70b",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://inference-docs.cerebras.ai/api-reference/chat-completions",
+    createKeyUrl: "https://cloud.cerebras.ai/",
+    color: "text-lime-400 bg-lime-400/10 border-lime-400/30",
+  },
+  {
+    id: "fireworks",
+    name: "Fireworks AI",
+    endpoint: "https://api.fireworks.ai/inference/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "accounts/fireworks/models/llama-v3p3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.fireworks.ai/api-reference/post-chatcompletions",
+    createKeyUrl: "https://fireworks.ai/account/api-keys",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/30",
+  },
+  {
+    id: "novita",
+    name: "Novita AI",
+    endpoint: "https://api.novita.ai/v3/openai/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/llama-3.3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://novita.ai/docs/api-reference/llm-openai-compatible-apis",
+    createKeyUrl: "https://novita.ai/settings/key-management",
+    color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
+  },
+  {
+    id: "cloudflare",
+    name: "Cloudflare Workers AI",
+    endpoint: "https://api.cloudflare.com/client/v4/accounts/{{CF_ACCOUNT_ID}}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+      max_tokens: 1024,
+    }, null, 2),
+    docsUrl: "https://developers.cloudflare.com/workers-ai/models/",
+    createKeyUrl: "https://dash.cloudflare.com/profile/api-tokens",
+    color: "text-amber-300 bg-amber-300/10 border-amber-300/30",
+  },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/llama-3.3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://openrouter.ai/docs/api-reference/overview",
+    createKeyUrl: "https://openrouter.ai/settings/keys",
+    color: "text-violet-300 bg-violet-300/10 border-violet-300/30",
+  },
+  {
+    id: "sambanova",
+    name: "SambaNova",
+    endpoint: "https://api.sambanova.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "Meta-Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://community.sambanova.ai/t/supported-models/193",
+    createKeyUrl: "https://cloud.sambanova.ai/apis",
+    color: "text-red-300 bg-red-300/10 border-red-300/30",
+  },
+  {
+    id: "nvidia",
+    name: "NVIDIA NIM",
+    endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta/llama-3.3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.api.nvidia.com/nim/reference/llm-apis",
+    createKeyUrl: "https://build.nvidia.com/settings/api-keys",
+    color: "text-green-300 bg-green-300/10 border-green-300/30",
+  },
+  {
+    id: "hyperbolic",
+    name: "Hyperbolic",
+    endpoint: "https://api.hyperbolic.xyz/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.hyperbolic.xyz/docs/getting-started",
+    createKeyUrl: "https://app.hyperbolic.xyz/settings",
+    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/30",
+  },
+  {
+    id: "ai21",
+    name: "AI21 Labs",
+    endpoint: "https://api.ai21.com/studio/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "jamba-1.6-large",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.ai21.com/reference/jamba-16-chat-api-ref",
+    createKeyUrl: "https://studio.ai21.com/account/api-key",
+    color: "text-sky-300 bg-sky-300/10 border-sky-300/30",
   },
   // ── Tier 3: Open-source / infra providers ─────────────────────────────────
   {
@@ -401,7 +567,73 @@ function ChevronIcon({ open }: { open: boolean }) {
   )
 }
 
-// ── Log level styles ──────────────────────────────────────────────────────────
+function ImageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  )
+}
+
+function ChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function ScanIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <polyline points="4 7 4 4 7 4" />
+      <polyline points="17 4 20 4 20 7" />
+      <polyline points="20 17 20 20 17 20" />
+      <polyline points="7 20 4 20 4 17" />
+      <line x1="9" y1="12" x2="15" y2="12" />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
+
+function GeminiIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M12 2C12 2 8 8 8 12s4 10 4 10 4-4 4-10S12 2 12 2z" />
+      <path d="M2 12c0 0 6-4 10-4s10 4 10 4-4 4-10 4S2 12 2 12z" />
+    </svg>
+  )
+}
+
+function PhotoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  )
+}
+
+function VideoTabIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+    </svg>
+  )
+}
+
+// ── Log level styles ───────────────────��──────────────────────────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -506,7 +738,33 @@ export default function ManualKeyTester() {
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
+  const [configOpen, setConfigOpen] = useState(false)
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "gemini-chat" | "image-gen" | "video-gen">("vision")
+  // Gemini Chat config
+  const [geminiModel, setGeminiModel] = useState(GEMINI_CHAT_MODELS[0])
+  const [geminiTemperature, setGeminiTemperature] = useState(1.0)
+  const [geminiMaxTokens, setGeminiMaxTokens] = useState(2048)
+  const [geminiSystemPrompt, setGeminiSystemPrompt] = useState("")
+  // Image Gen config — default to first Google image model
+  const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
+  const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
+  // Video Gen config — default to first Google video model
+  const [videoModel, setVideoModel] = useState(() => getVideoCapabilities("google").models[0]?.id ?? "")
+  const [videoAspectRatio, setVideoAspectRatio] = useState("16:9")
+  // Vision / OCR state
+  const [visionPrompt, setVisionPrompt] = useState("")
+  const [visionImage, setVisionImage] = useState<{ dataUrl: string; mimeType: string; name: string } | null>(null)
+  const [visionLoading, setVisionLoading] = useState(false)
+  const [visionResult, setVisionResult] = useState<ManualTestResult | null>(null)
+  const [visionHistory, setVisionHistory] = useState<ChatMessage[]>([])
+  const [ocrImage, setOcrImage] = useState<{ dataUrl: string; mimeType: string; name: string } | null>(null)
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrResult, setOcrResult] = useState<string | null>(null)
+  const visionFileRef = useRef<HTMLInputElement>(null)
+  const ocrFileRef = useRef<HTMLInputElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const visionEndRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounce API key changes by 400ms
@@ -519,6 +777,10 @@ export default function ManualKeyTester() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatHistory, loading])
+
+  useEffect(() => {
+    visionEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [visionHistory, visionLoading])
 
   // SWR key — only fetches when Dahono is selected AND key is long enough
   const dahonoSWRKey =
@@ -555,6 +817,104 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
+  // ── Vision / OCR helpers ────────────────────────────────────────────────────
+
+  function handleImageFile(
+    file: File,
+    setter: (v: { dataUrl: string; mimeType: string; name: string } | null) => void
+  ) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string
+      setter({ dataUrl, mimeType: file.type || "image/jpeg", name: file.name })
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function runVisionTest() {
+    if (!apiKey.trim() || !visionImage || visionLoading) return
+    setVisionLoading(true)
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: visionPrompt || "(image only)",
+      ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+    }
+    setVisionHistory((prev) => [...prev, userMsg])
+    const headers: Record<string, string> = {}
+    for (const row of headerRows) {
+      if (row.key.trim()) headers[row.key.trim()] = row.value
+    }
+    try {
+      const base64 = visionImage.dataUrl.split(",")[1]
+      const res = await fetch("/api/manual-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: selectedPreset.id,
+          apiKey: apiKey.trim(),
+          endpoint,
+          method,
+          headers,
+          prompt: visionPrompt || "Describe this image in detail.",
+          testMode: "vision",
+          imageData: { base64, mimeType: visionImage.mimeType },
+        }),
+      })
+      const data: ManualTestResult = await res.json()
+      setVisionResult(data)
+      const reply = data.chatReply ?? (data.ok ? data.responseBody : `Error: HTTP ${data.status}`)
+      const assistantMsg: ChatMessage = {
+        role: "assistant",
+        content: reply ?? "No response",
+        ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      }
+      setVisionHistory((prev) => [...prev, assistantMsg])
+    } catch (err) {
+      const assistantMsg: ChatMessage = {
+        role: "assistant",
+        content: err instanceof Error ? err.message : "Request failed",
+        ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      }
+      setVisionHistory((prev) => [...prev, assistantMsg])
+    } finally {
+      setVisionLoading(false)
+      setVisionPrompt("")
+    }
+  }
+
+  async function runOcrTest() {
+    if (!apiKey.trim() || !ocrImage || ocrLoading) return
+    setOcrLoading(true)
+    setOcrResult(null)
+    const headers: Record<string, string> = {}
+    for (const row of headerRows) {
+      if (row.key.trim()) headers[row.key.trim()] = row.value
+    }
+    try {
+      const base64 = ocrImage.dataUrl.split(",")[1]
+      const res = await fetch("/api/manual-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: selectedPreset.id,
+          apiKey: apiKey.trim(),
+          endpoint,
+          method,
+          headers,
+          prompt: "Please extract and transcribe ALL text visible in this image. Output only the extracted text, preserving layout as much as possible. Do not add any explanation.",
+          testMode: "vision",
+          imageData: { base64, mimeType: ocrImage.mimeType },
+        }),
+      })
+      const data: ManualTestResult = await res.json()
+      setOcrResult(data.chatReply ?? (data.ok ? data.responseBody : `Error: HTTP ${data.status} ${data.statusText}`))
+    } catch (err) {
+      setOcrResult(err instanceof Error ? err.message : "Request failed")
+    } finally {
+      setOcrLoading(false)
+    }
+  }
+
   function applyPreset(preset: ProviderPreset) {
     setSelectedPreset(preset)
     setEndpoint(preset.endpoint)
@@ -563,8 +923,13 @@ export default function ManualKeyTester() {
       Object.entries(preset.headers).map(([key, value], i) => ({ key, value, id: i }))
     )
     setBodyTemplate(preset.bodyTemplate)
-  setResult(null)
-  setShowLog(false)
+    setResult(null)
+    setShowLog(false)
+    // Reset image/video model to first supported for the new provider
+    const imgModels = getImageCapabilities(preset.id)
+    if (imgModels.length > 0) setImageModel(imgModels[0].id)
+    const { models: vidModels } = getVideoCapabilities(preset.id)
+    if (vidModels.length > 0) setVideoModel(vidModels[0].id)
   }
 
   async function runTest() {
@@ -655,34 +1020,63 @@ export default function ManualKeyTester() {
   }
 
   return (
-    <div className="flex h-full bg-background text-foreground font-sans overflow-hidden">
+    <div className="flex h-full bg-background text-foreground font-sans overflow-hidden relative">
+
+      {/* ── Mobile config overlay backdrop ────────────────────────────────── */}
+      {configOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setConfigOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
       {/* ── LEFT: Config panel ─────────────────────────────────────────────── */}
-      <aside className="w-72 flex-shrink-0 border-r border-border bg-card flex flex-col overflow-y-auto">
+      <aside className={`
+        flex-shrink-0 border-r border-border bg-card flex flex-col overflow-y-auto
+        fixed md:static inset-y-0 left-0 z-40 md:z-auto
+        w-72 md:w-64 lg:w-72
+        transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
+        ${configOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
 
-        <div className="px-4 py-3 border-b border-border">
-          <p className="text-xs font-semibold text-foreground">Manual Key Tester</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Input an API key and test chat directly</p>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+          <div>
+            <p className="text-xs font-semibold text-foreground">Configuration</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Provider &amp; API key settings</p>
+          </div>
+          <button
+            onClick={() => setConfigOpen(false)}
+            className="md:hidden text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1"
+            aria-label="Close config"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div className="flex-1 px-4 py-4 flex flex-col gap-4">
+        <div className="flex-1 px-4 py-4 flex flex-col gap-5">
 
           {/* Provider selector */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
             </label>
-            <div className="flex flex-col gap-0.5 max-h-52 overflow-y-auto pr-0.5">
+            <div className="flex flex-col gap-px max-h-52 overflow-y-auto">
               {PRESETS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
-                  className={`text-[10px] font-medium px-2.5 py-1.5 rounded border transition-colors text-left w-full ${
+                  className={`text-[11px] font-medium px-2.5 py-2 rounded transition-colors text-left w-full flex items-center gap-2 group ${
                     selectedPreset.id === p.id
-                      ? p.color
-                      : "text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   }`}
                 >
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 border transition-colors ${
+                    selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
+                  }`} />
                   {p.name}
                 </button>
               ))}
@@ -690,9 +1084,9 @@ export default function ManualKeyTester() {
           </div>
 
           {/* API Key */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                 API Key
               </label>
               {apiKey && (
@@ -750,8 +1144,8 @@ export default function ManualKeyTester() {
           </div>
 
           {/* Endpoint */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Endpoint URL
             </label>
             <div className="flex gap-1">
@@ -826,16 +1220,16 @@ export default function ManualKeyTester() {
           )}
 
           {/* Batch Model Test — Run All Models (all providers) */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Batch Model Test
             </label>
             <ProviderBatchTest providerId={selectedPreset.id} apiKey={apiKey} />
           </div>
 
           {/* Headers */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Headers
             </label>
             <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
@@ -870,246 +1264,569 @@ export default function ManualKeyTester() {
             )}
           </div>
 
+          {/* ── Gemini Chat config — shown when gemini-chat tab is active ── */}
+          {activeTab === "gemini-chat" && (
+            <div className="flex flex-col gap-3 pt-1 border-t border-border">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gemini Chat Config</p>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                <select
+                  value={geminiModel}
+                  onChange={(e) => setGeminiModel(e.target.value)}
+                  className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  {GEMINI_CHAT_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Temperature</label>
+                  <span className="text-[10px] font-mono text-primary">{geminiTemperature.toFixed(1)}</span>
+                </div>
+                <input type="range" min="0" max="2" step="0.1" value={geminiTemperature}
+                  onChange={(e) => setGeminiTemperature(parseFloat(e.target.value))}
+                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
+                <div className="flex justify-between text-[9px] text-muted-foreground/50">
+                  <span>Precise</span><span>Creative</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Max Tokens</label>
+                  <span className="text-[10px] font-mono text-primary">{geminiMaxTokens.toLocaleString()}</span>
+                </div>
+                <input type="range" min="128" max="8192" step="128" value={geminiMaxTokens}
+                  onChange={(e) => setGeminiMaxTokens(parseInt(e.target.value))}
+                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">System Prompt</label>
+                <textarea value={geminiSystemPrompt} onChange={(e) => setGeminiSystemPrompt(e.target.value)}
+                  placeholder="Optional system instruction..."
+                  rows={3}
+                  className="w-full rounded-md border border-border bg-background text-foreground text-[11px] px-2.5 py-1.5 resize-none placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed" />
+              </div>
+            </div>
+          )}
+
+          {/* ── Image Gen config — provider-aware ── */}
+          {activeTab === "image-gen" && (() => {
+            const imageModels = getImageCapabilities(selectedPreset.id)
+            const isImageSupported = imageModels.length > 0
+            return (
+              <div className="flex flex-col gap-3 pt-1 border-t border-border">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Image Gen Config</p>
+
+                {!isImageSupported ? (
+                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
+                    {selectedPreset.name} does not support image generation. Switch to Gemini, OpenAI, Together AI, Fireworks, or Replicate.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                      {imageModels.map((m) => (
+                        <button key={m.id} onClick={() => setImageModel(m.id)}
+                          className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
+                            imageModel === m.id ? "border-primary/60 bg-primary/10" : "border-border hover:bg-secondary/40"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[11px] font-semibold text-foreground">{m.label}</span>
+                            <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-primary/20 text-primary">{m.tag}</span>
+                          </div>
+                          <p className="text-[9px] text-muted-foreground leading-snug">{m.description}</p>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {IMAGE_ASPECT_RATIOS.map((r) => (
+                          <button key={r} onClick={() => setImageAspectRatio(r)}
+                            className={`py-1.5 rounded-md text-[11px] font-mono font-medium border transition-colors ${
+                              imageAspectRatio === r
+                                ? "bg-primary/20 border-primary/60 text-primary"
+                                : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })()}
+
+          {/* ── Video Gen config — provider-aware ── */}
+          {activeTab === "video-gen" && (() => {
+            const { models: videoModels, aspectRatios: videoAspects } = getVideoCapabilities(selectedPreset.id)
+            const isVideoSupported = videoModels.length > 0
+            return (
+              <div className="flex flex-col gap-3 pt-1 border-t border-border">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Video Gen Config</p>
+
+                {!isVideoSupported ? (
+                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
+                    {selectedPreset.name} does not support video generation. Switch to Gemini (Google) for Veo 3.1 or MiniMax (Hailuo) for Hailuo Video.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                      <select
+                        value={videoModel}
+                        onChange={(e) => setVideoModel(e.target.value)}
+                        className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        {videoModels.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                      <div className="flex gap-2">
+                        {videoAspects.map((r) => (
+                          <button key={r} onClick={() => setVideoAspectRatio(r)}
+                            className={`flex-1 py-1.5 rounded-md border text-[11px] font-mono transition-colors ${
+                              videoAspectRatio === r
+                                ? "border-primary text-primary bg-primary/10"
+                                : "border-border text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })()}
+
           {/* Reset */}
           <button
-            onClick={() => { setChatHistory([]); setResult(null); setShowLog(false) }}
-            className="text-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary px-2 py-1.5 rounded transition-colors border border-transparent hover:border-border"
+            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
+            className="text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary px-3 py-2 rounded transition-colors border border-border/50 hover:border-border w-full text-left"
           >
-            Clear Chat
+            Clear All History
           </button>
 
         </div>
       </aside>
 
-      {/* ── RIGHT: Chat + log panel ────────────────────────────────────────── */}
+      {/* ── RIGHT: Tabbed panel ────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
-        {/* Status bar */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card flex-shrink-0">
-          <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded border ${selectedPreset.color}`}>
-            {selectedPreset.name}
-          </span>
-          {endpoint && (
-            <span className="text-[10px] font-mono text-muted-foreground truncate flex-1 min-w-0">
-              {method} {endpoint}
-            </span>
-          )}
-          {result && (
-            <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-              {result.tokenUsage?.totalTokens && (
-                <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
-                  {result.tokenUsage.totalTokens} tokens
-                </span>
-              )}
-              <span
-                className={`text-[10px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}
-              >
-                HTTP {result.status} · {result.durationMs}ms
-              </span>
-            </div>
-          )}
-        </div>
+        {/* Tab bar + status */}
+        <div className="flex items-center gap-0 px-2 border-b border-border bg-card flex-shrink-0 min-h-[44px]">
 
-        {/* Chat messages */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
-          {chatHistory.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
-                <span className="text-lg font-bold">{selectedPreset.name[0]}</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{selectedPreset.name}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Enter your API key and send a message to test the endpoint.
-                </p>
-                {!apiKey && (
-                  <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
-                    API key required — enter it in the left panel
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Mobile: config toggle button */}
+          <button
+            onClick={() => setConfigOpen(true)}
+            className="md:hidden flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground px-2 py-2 mr-1 flex-shrink-0 transition-colors"
+            aria-label="Open configuration"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
 
-          {chatHistory.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-border text-foreground"
+          {/* API Tester tabs — icon only */}
+          <div className="flex items-center gap-0.5 py-1.5 mr-1">
+            {([
+              { id: "vision", icon: <ImageIcon />, title: "Vision" },
+              { id: "ocr", icon: <ScanIcon />, title: "OCR" },
+            ] as const).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                title={t.title}
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                  activeTab === t.id
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 }`}
               >
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
-              </div>
-              <span className="text-[9px] text-muted-foreground/50 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex items-start gap-2">
-              <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
-                <SpinnerIcon />
-                <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
-              </div>
-            </div>
-          )}
-
-          <div ref={chatEndRef} />
-        </div>
-
-        {/* Log / Raw toggle row */}
-        {result && (
-          <div className="flex items-center gap-2 px-4 py-1.5 border-t border-border bg-card/50 flex-shrink-0">
-            <button
-              onClick={() => { setShowLog((v) => !v); if (showRawResponse) setShowRawResponse(false) }}
-              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
-                showLog ? "text-cyan-400 border-cyan-400/30 bg-cyan-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
-              }`}
-            >
-              <span className="font-mono">$</span> Test Log ({result.logs.length})
-            </button>
-            <button
-              onClick={() => { setShowRawResponse((v) => !v); if (showLog) setShowLog(false) }}
-              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
-                showRawResponse ? "text-yellow-400 border-yellow-400/30 bg-yellow-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
-              }`}
-            >
-              {"{ }"} Raw Response
-            </button>
-            {result.curlCommand && (
-              <div className="flex items-center gap-1 ml-auto">
-                <button
-                  onClick={copyCurl}
-                  title="Copy cURL with masked key"
-                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors"
-                >
-                  <CopyIcon />
-                  {copiedCurl ? "Copied!" : "cURL (masked)"}
-                </button>
-                {result.curlFull && (
-                  <button
-                    onClick={copyCurlFull}
-                    title="Copy cURL with real key — safe since you own this key"
-                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
-                  >
-                    <CopyIcon />
-                    {copiedCurlFull ? "Copied!" : "cURL (full)"}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Terminal log panel */}
-        {showLog && result && (
-          <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-56 overflow-y-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                Request Log — {result.durationMs}ms
-              </span>
-              <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-red-500/60" />
-                <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
-                <span className="w-2 h-2 rounded-full bg-green-500/60" />
-              </div>
-            </div>
-            {result.logs.map((entry, i) => (
-              <div key={i} className="flex gap-2 items-start mb-0.5">
-                <span className="text-[9px] text-muted-foreground/40 w-8 flex-shrink-0 pt-px tabular-nums">
-                  {entry.ts}ms
-                </span>
-                <span className={`text-[10px] leading-relaxed ${LOG_STYLES[entry.level]} whitespace-pre-wrap break-all`}>
-                  <span className="opacity-60">{LOG_PREFIX[entry.level]}</span>
-                  {entry.text}
-                </span>
-              </div>
+                {t.icon}
+              </button>
             ))}
           </div>
-        )}
 
-        {/* Raw response */}
-        {showRawResponse && result && (
-          <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-56 overflow-y-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                Raw JSON Response
-              </span>
-              <span className={`text-[9px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}>
-                HTTP {result.status}
+          {/* Divider */}
+          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
+
+          {/* AI Generation tabs — icon only */}
+          <div className="flex items-center gap-0.5 py-1.5 mr-2">
+            {([
+              { id: "gemini-chat", icon: <GeminiIcon />, title: "AI Chat" },
+              { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
+              { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
+            ] as const).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                title={t.title}
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                  activeTab === t.id
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                {t.icon}
+              </button>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
+
+          {/* Provider badge — monochrome, no color tiles */}
+          <span className="hidden sm:inline-flex items-center text-[10px] font-mono text-muted-foreground truncate max-w-[130px] flex-shrink-0">
+            {selectedPreset.name}
+          </span>
+
+          {/* Endpoint */}
+          {endpoint && (
+            <span className="hidden md:block text-[10px] font-mono text-muted-foreground/50 truncate flex-1 min-w-0 ml-2">
+              {method} {endpoint.replace(/\?key=.*/, "?key=…")}
+            </span>
+          )}
+
+          {/* Response status — shown for Vision and OCR tabs only */}
+          {activeTab === "vision" && visionResult && (
+            <div className="flex items-center gap-2 ml-auto flex-shrink-0 pr-1">
+              {visionResult.tokenUsage?.totalTokens && (
+                <span className="text-[10px] font-mono text-muted-foreground hidden md:block">
+                  {visionResult.tokenUsage.totalTokens}t
+                </span>
+              )}
+              <span className={`text-[10px] font-mono ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
+                {visionResult.status} · {visionResult.durationMs}ms
               </span>
             </div>
-            <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">
-              {result.responseBody}
-            </pre>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Token usage + response headers mini-panel */}
-        {result?.ok && (result.tokenUsage || (result.responseHeaders && Object.keys(result.responseHeaders).length > 0)) && (
-          <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4 flex-wrap">
-            {result.tokenUsage && (
-              <div className="flex items-center gap-3">
+        {/* ── VISION TAB ────────────��──────────────────────────────────────── */}
+        {activeTab === "vision" && (
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {visionHistory.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
+                    <ImageIcon />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Vision Test</p>
+                    <p className="text-[11px] text-muted-foreground mt-1 max-w-xs">
+                      Upload an image, optionally type a prompt, and test the model&apos;s vision capability.
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">
+                      Works with GPT-4o, Claude Sonnet, Gemini, Llama-Vision, etc.
+                    </p>
+                    {!apiKey && (
+                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                        API key required — enter it in the left panel
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {visionHistory.map((msg, i) => (
+                <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border text-foreground"
+                  }`}>
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground/50 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
+                </div>
+              ))}
+
+              {visionLoading && (
+                <div className="flex items-start gap-2">
+                  <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
+                    <SpinnerIcon />
+                    <span className="text-[11px] text-muted-foreground">Analyzing image...</span>
+                  </div>
+                </div>
+              )}
+              <div ref={visionEndRef} />
+            </div>
+
+            {/* Vision result footer */}
+            {visionResult?.ok && visionResult.tokenUsage && (
+              <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4">
                 <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
-                {result.tokenUsage.promptTokens !== undefined && (
-                  <span className="text-[10px] font-mono text-muted-foreground">
-                    in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span>
-                  </span>
+                {visionResult.tokenUsage.promptTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">in: <span className="text-foreground">{visionResult.tokenUsage.promptTokens}</span></span>
                 )}
-                {result.tokenUsage.completionTokens !== undefined && (
-                  <span className="text-[10px] font-mono text-muted-foreground">
-                    out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span>
-                  </span>
+                {visionResult.tokenUsage.completionTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">out: <span className="text-foreground">{visionResult.tokenUsage.completionTokens}</span></span>
                 )}
-                {result.tokenUsage.totalTokens !== undefined && (
-                  <span className="text-[10px] font-mono text-primary font-semibold">
-                    total: {result.tokenUsage.totalTokens}
+                {visionResult.tokenUsage.totalTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-primary font-semibold">total: {visionResult.tokenUsage.totalTokens}</span>
+                )}
+                {visionResult.durationMs && (
+                  <span className={`text-[10px] font-mono ml-auto ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
+                    HTTP {visionResult.status} · {visionResult.durationMs}ms
                   </span>
                 )}
               </div>
             )}
-            {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
-              <span className="text-[10px] font-mono text-muted-foreground">
-                rl-remaining: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
-              </span>
-            )}
-            {result.responseHeaders?.["x-request-id"] && (
-              <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">
-                req-id: <span className="text-foreground">{result.responseHeaders["x-request-id"]}</span>
-              </span>
-            )}
+
+            {/* Vision input */}
+            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              {/* Image preview / drop zone */}
+              <div
+                className="mb-2 relative"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const file = e.dataTransfer.files[0]
+                  if (file && file.type.startsWith("image/")) handleImageFile(file, setVisionImage)
+                }}
+              >
+                {visionImage ? (
+                  <div className="relative inline-block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={visionImage.dataUrl}
+                      alt="Vision input"
+                      className="max-h-32 rounded-lg border border-border object-contain"
+                    />
+                    <button
+                      onClick={() => setVisionImage(null)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-80 transition-opacity"
+                    >
+                      <XIcon />
+                    </button>
+                    <span className="absolute bottom-1 left-1 text-[9px] bg-black/60 text-white px-1.5 py-0.5 rounded font-mono">
+                      {visionImage.name}
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => visionFileRef.current?.click()}
+                    className="w-full border border-dashed border-border rounded-lg px-4 py-3 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ImageIcon /> Click or drag an image here (JPG, PNG, WebP, GIF)
+                  </button>
+                )}
+                <input
+                  ref={visionFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleImageFile(file, setVisionImage)
+                    e.target.value = ""
+                  }}
+                />
+              </div>
+
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={visionPrompt}
+                  onChange={(e) => setVisionPrompt(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); runVisionTest() } }}
+                  placeholder={visionImage ? "Optional: add a question about the image..." : "Upload an image first..."}
+                  disabled={!apiKey.trim() || !visionImage || visionLoading}
+                  rows={2}
+                  className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40"
+                />
+                <button
+                  onClick={runVisionTest}
+                  disabled={!apiKey.trim() || !visionImage || visionLoading}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity flex-shrink-0"
+                >
+                  {visionLoading ? <SpinnerIcon /> : <SendIcon />}
+                  {visionLoading ? "Analyzing" : "Analyze"}
+                </button>
+              </div>
+              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+                Prompt is optional — defaults to &quot;Describe this image in detail.&quot;
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ── OCR TAB ──────────────────────────────────────────────────────── */}
+        {activeTab === "ocr" && (
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {!ocrResult && !ocrLoading && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
+                    <ScanIcon />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">OCR — Extract Text from Image</p>
+                    <p className="text-[11px] text-muted-foreground mt-1 max-w-xs">
+                      Upload an image containing text. The model will extract and transcribe all visible text.
+                    </p>
+                    {!apiKey && (
+                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                        API key required — enter it in the left panel
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {ocrLoading && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <SpinnerIcon />
+                  <span className="text-[11px] text-muted-foreground">Extracting text...</span>
+                </div>
+              )}
+
+              {ocrResult && !ocrLoading && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Extracted Text</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigator.clipboard.writeText(ocrResult)}
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-transparent hover:bg-secondary transition-colors"
+                      >
+                        <CopyIcon /> Copy
+                      </button>
+                      <button
+                        onClick={() => { setOcrResult(null); setOcrImage(null) }}
+                        className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-transparent hover:bg-secondary transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  {ocrImage && (
+                    <div className="flex gap-3 items-start">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={ocrImage.dataUrl} alt="OCR input" className="max-h-40 max-w-[40%] rounded-lg border border-border object-contain flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <pre className="text-sm text-foreground font-mono whitespace-pre-wrap break-words bg-card border border-border rounded-lg px-3 py-2.5 leading-relaxed text-[11px] max-h-40 overflow-y-auto">
+                          {ocrResult}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                  {!ocrImage && (
+                    <pre className="text-sm text-foreground font-mono whitespace-pre-wrap break-words bg-card border border-border rounded-lg px-3 py-2.5 leading-relaxed text-[11px]">
+                      {ocrResult}
+                    </pre>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* OCR input */}
+            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              <div
+                className="mb-2"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const file = e.dataTransfer.files[0]
+                  if (file && file.type.startsWith("image/")) handleImageFile(file, setOcrImage)
+                }}
+              >
+                {ocrImage ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-secondary/50 rounded-lg border border-border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ocrImage.dataUrl} alt="OCR preview" className="h-8 w-8 object-cover rounded border border-border flex-shrink-0" />
+                    <span className="text-[10px] font-mono text-foreground truncate flex-1 min-w-0">{ocrImage.name}</span>
+                    <button onClick={() => setOcrImage(null)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                      <XIcon />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => ocrFileRef.current?.click()}
+                    className="w-full border border-dashed border-border rounded-lg px-4 py-3 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ScanIcon /> Upload image with text (JPG, PNG, WebP, PDF screenshot)
+                  </button>
+                )}
+                <input
+                  ref={ocrFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleImageFile(file, setOcrImage)
+                    e.target.value = ""
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={runOcrTest}
+                disabled={!apiKey.trim() || !ocrImage || ocrLoading}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+              >
+                {ocrLoading ? <SpinnerIcon /> : <ScanIcon />}
+                {ocrLoading ? "Extracting text..." : "Extract Text"}
+              </button>
+              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+                Uses the selected provider&apos;s vision model to read text from the image.
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ── GEMINI CHAT TAB ──────────────────────────────────────────────── */}
+        {activeTab === "gemini-chat" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Chat
+              apiKey={apiKey}
+              model={geminiModel}
+              temperature={geminiTemperature}
+              maxTokens={geminiMaxTokens}
+              systemPrompt={geminiSystemPrompt}
+              providerName={selectedPreset.name}
+            />
           </div>
         )}
 
-        {/* Input bar */}
-        <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
-          <div className="flex gap-2 items-end">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={apiKey ? "Type a message and press Enter..." : "Enter API key first..."}
-              disabled={!apiKey.trim() || loading}
-              rows={2}
-              className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40"
+        {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
+        {activeTab === "image-gen" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ImageTester
+              apiKey={apiKey}
+              model={imageModel}
+              aspectRatio={imageAspectRatio}
+              providerId={selectedPreset.id}
             />
-            <button
-              onClick={runTest}
-              disabled={!apiKey.trim() || !prompt.trim() || loading}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity flex-shrink-0"
-            >
-              {loading ? <SpinnerIcon /> : <SendIcon />}
-              {loading ? "Sending" : "Send"}
-            </button>
           </div>
-          <p className="text-[9px] text-muted-foreground/40 mt-1.5">
-            Enter sends · Shift+Enter for newline · <code>{"{{PROMPT}}"}</code> in body template is replaced with your message
-          </p>
-        </div>
+        )}
+
+        {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
+        {activeTab === "video-gen" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <VideoTester
+              apiKey={apiKey}
+              model={videoModel}
+              aspectRatio={videoAspectRatio}
+              providerId={selectedPreset.id}
+            />
+          </div>
+        )}
 
       </div>
     </div>

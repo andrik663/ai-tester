@@ -11,6 +11,8 @@ export interface ManualTestRequest {
   headers: Record<string, string>
   body?: string        // raw JSON string from user (optional)
   prompt?: string      // chat message to inject into body template
+  testMode?: "chat" | "vision" | "ocr"
+  imageData?: { base64: string; mimeType: string }
 }
 
 export interface ManualTestResult {
@@ -195,6 +197,170 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
       max_new_tokens: 512,
     },
   }),
+  // ── Meta / Llama providers (OpenAI-compatible) ────────────────────────────
+  cerebras: (prompt) => ({
+    model: "llama-3.3-70b",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  fireworks: (prompt) => ({
+    model: "accounts/fireworks/models/llama-v3p3-70b-instruct",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  novita: (prompt) => ({
+    model: "meta-llama/llama-3.3-70b-instruct",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  cloudflare: (prompt) => ({
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 1024,
+  }),
+  openrouter: (prompt) => ({
+    model: "meta-llama/llama-3.3-70b-instruct",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  sambanova: (prompt) => ({
+    model: "Meta-Llama-3.3-70B-Instruct",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  nvidia: (prompt) => ({
+    model: "meta/llama-3.3-70b-instruct",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  hyperbolic: (prompt) => ({
+    model: "meta-llama/Llama-3.3-70B-Instruct",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  ai21: (prompt) => ({
+    model: "jamba-1.6-large",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+  // Dahono gateway — OpenAI-compatible
+  dahono: (prompt) => ({
+    model: "dahono/deepseek-v4-flash",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  }),
+}
+
+// ── Vision body builders ──────────────────────────────────────────────────────
+// Builds the request body with image content for vision requests.
+
+type VisionBodyFn = (prompt: string, base64: string, mimeType: string) => object
+
+const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
+  // OpenAI-compatible: image_url with base64 data URI
+  _openai_compat: (prompt, base64, mimeType) => ({
+    model: "gpt-4o",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  openai: (prompt, base64, mimeType) => ({
+    model: "gpt-4o",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Anthropic Messages API — base64 source block
+  anthropic: (prompt, base64, mimeType) => ({
+    model: "claude-opus-4-5",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image", source: { type: "base64", media_type: mimeType, data: base64 } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Google Gemini — inline_data
+  google: (prompt, base64, mimeType) => ({
+    contents: [{
+      parts: [
+        { inline_data: { mime_type: mimeType, data: base64 } },
+        { text: prompt },
+      ],
+    }],
+    generationConfig: { maxOutputTokens: 2048 },
+  }),
+  // xAI Grok — OpenAI-compatible with vision
+  xai: (prompt, base64, mimeType) => ({
+    model: "grok-2-vision-1212",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Fireworks AI — OpenAI-compatible vision
+  fireworks: (prompt, base64, mimeType) => ({
+    model: "accounts/fireworks/models/llama-v3p2-11b-vision-instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // OpenRouter — OpenAI-compatible
+  openrouter: (prompt, base64, mimeType) => ({
+    model: "meta-llama/llama-3.2-11b-vision-instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // NVIDIA NIM — OpenAI-compatible
+  nvidia: (prompt, base64, mimeType) => ({
+    model: "meta/llama-3.2-11b-vision-instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Hyperbolic — OpenAI-compatible
+  hyperbolic: (prompt, base64, mimeType) => ({
+    model: "Qwen/Qwen2-VL-72B-Instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
 }
 
 // ── Chat reply extractor ──────────────────────────────────────────────────────
@@ -283,6 +449,10 @@ function injectAuth(
   if (providerKey === "replicate" && !out["Prefer"]) {
     out["Prefer"] = "wait"
   }
+  // OpenRouter needs HTTP-Referer for policy
+  if (providerKey === "openrouter" && !out["HTTP-Referer"]) {
+    out["HTTP-Referer"] = "https://ai-tester.vercel.app"
+  }
   return out
 }
 
@@ -296,7 +466,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const { provider, apiKey, endpoint, method, prompt } = body
+  const { provider, apiKey, endpoint, method, prompt, testMode, imageData } = body
   let { headers, body: rawBody } = body
 
   if (!apiKey?.trim()) return NextResponse.json({ error: "API key is required" }, { status: 400 })
@@ -304,9 +474,11 @@ export async function POST(req: NextRequest) {
 
   const { log, logs, start } = makeLogger()
   const providerKey = provider.toLowerCase()
+  const isVisionMode = (testMode === "vision" || testMode === "ocr") && !!imageData
 
   log("info", `Provider: ${provider}`)
   log("info", `Method:   ${method} ${endpoint}`)
+  if (isVisionMode) log("info", `Mode: vision (image: ${imageData?.mimeType}, ${Math.round((imageData?.base64.length ?? 0) * 0.75 / 1024)}KB)`)
 
   // ── Build request body ────────────────────────────────────────────────────
 
@@ -314,7 +486,19 @@ export async function POST(req: NextRequest) {
   let finalBody: string | undefined
 
   if (method !== "GET" && method !== "DELETE") {
-    if (rawBody && rawBody.trim()) {
+    if (isVisionMode && imageData) {
+      // Vision mode — use provider-specific vision body builder
+      const visionFn =
+        VISION_BODY_BUILDERS[providerKey] ??
+        VISION_BODY_BUILDERS["openai"] // fallback to OpenAI-compat format
+      const builtBody = visionFn(
+        prompt || "Describe this image in detail.",
+        imageData.base64,
+        imageData.mimeType
+      )
+      finalBody = JSON.stringify(builtBody)
+      requestBodySent = JSON.stringify(builtBody, null, 2)
+    } else if (rawBody && rawBody.trim()) {
       // User provided raw JSON — substitute {{PROMPT}} placeholder
       const resolved = rawBody.replace(/\{\{PROMPT\}\}/g, prompt ?? "Hello, say hi back in one sentence.")
       finalBody = resolved
