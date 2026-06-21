@@ -36,6 +36,18 @@ const KEY_PATTERNS: { label: string; pattern: RegExp }[] = [
   { label: "Generic Secret", pattern: /(?:secret|secret[_-]?key|client[_-]?secret)\s*[:=]\s*["']([A-Za-z0-9\-_\.]{16,})['"]/gi },
   // Generic token= assignments
   { label: "Generic Token", pattern: /(?:token|access[_-]?token|auth[_-]?token)\s*[:=]\s*["']([A-Za-z0-9\-_\.]{20,})['"]/gi },
+  // Dahono Labs gateway key
+  { label: "Dahono API Key", pattern: /dahono-[A-Za-z0-9]{8,64}/g },
+  // DeepSeek
+  { label: "DeepSeek API Key", pattern: /sk-[a-f0-9]{32,64}/g },
+  // xAI Grok
+  { label: "xAI API Key", pattern: /xai-[A-Za-z0-9\-_]{30,80}/g },
+  // MiniMax
+  { label: "MiniMax API Key", pattern: /eyJ[A-Za-z0-9\-_]{60,200}\.eyJ[A-Za-z0-9\-_]{60,200}\.[A-Za-z0-9\-_]{40,100}/g },
+  // Anthropic (additional variant)
+  { label: "Anthropic API Key", pattern: /sk-ant-api03-[A-Za-z0-9\-_]{80,120}/g },
+  // Together AI
+  { label: "Together AI Key", pattern: /[0-9a-f]{64}/g },
 ]
 
 export interface ScrapedKey {

@@ -465,6 +465,266 @@ async function testMinimax(key: string): Promise<TestKeyResult> {
   return { valid: false, provider: "MiniMax", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs }
 }
 
+async function testDahono(key: string): Promise<TestKeyResult> {
+  const { log, logs } = makeLogger()
+  const modelsUrl = "https://gateway.dahono.com/v1/models"
+  const chatUrl = "https://gateway.dahono.com/v1/chat/completions"
+  const headers = { Authorization: `Bearer ${key.slice(0, 14)}...` }
+
+  log("info", "Provider: Dahono Labs Gateway (OpenAI-compatible)")
+  log("info", "Step 1 — GET /v1/models to verify key and list models")
+  log("curl", buildCurl({ method: "GET", url: modelsUrl, headers }))
+  log("req",  `GET ${modelsUrl} — Authorization: Bearer ${key.slice(0, 14)}...`)
+
+  const modelsRes = await fetch(modelsUrl, {
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(12_000),
+  })
+
+  log("res", `HTTP ${modelsRes.status} ${modelsRes.statusText}`)
+
+  if (modelsRes.status === 401 || modelsRes.status === 403) {
+    const body = await modelsRes.json().catch(() => ({}))
+    const err = body?.error?.message ?? body?.message ?? "Unauthorized"
+    log("err", `${modelsRes.status}: ${err}`)
+    return { valid: false, provider: "Dahono", message: "Invalid — key rejected by gateway", detail: err, logs }
+  }
+
+  if (!modelsRes.ok) {
+    log("err", `Unexpected HTTP ${modelsRes.status}`)
+    return { valid: false, provider: "Dahono", message: `Unexpected HTTP ${modelsRes.status}`, detail: `HTTP ${modelsRes.status}`, logs }
+  }
+
+  const modelsData = await modelsRes.json().catch(() => ({ data: [] }))
+  const modelList: string[] = (modelsData?.data ?? []).map((m: Record<string, unknown>) => String(m.id))
+  const freeModels = (modelsData?.data ?? []).filter((m: Record<string, unknown>) => m.free).map((m: Record<string, unknown>) => String(m.id))
+  log("ok", `Key accepted — ${modelList.length} models found (${freeModels.length} free)`)
+  log("info", `Free models: ${freeModels.slice(0, 5).join(", ")}${freeModels.length > 5 ? `... +${freeModels.length - 5} more` : ""}`)
+
+  // Step 2: send a real chat request with a free model
+  const testModel = freeModels.find((id: string) => id.includes("flash") || id.includes("haiku")) ?? freeModels[0] ?? "dahono/deepseek-v4-flash"
+  const chatBody = {
+    model: testModel,
+    max_tokens: 32,
+    messages: [{ role: "user", content: "Say hello in one word." }],
+  }
+
+  log("info", `Step 2 — POST /v1/chat/completions with model: ${testModel}`)
+  log("curl", buildCurl({ method: "POST", url: chatUrl, headers, body: chatBody }))
+  log("req",  `POST ${chatUrl} → model: ${testModel}`)
+
+  const chatRes = await fetch(chatUrl, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify(chatBody),
+    signal: AbortSignal.timeout(15_000),
+  })
+
+  log("res", `HTTP ${chatRes.status} ${chatRes.statusText}`)
+
+  if (chatRes.ok) {
+    const chatData = await chatRes.json().catch(() => ({}))
+    const reply = chatData?.choices?.[0]?.message?.content ?? "no reply"
+    log("ok", `Chat reply: "${reply.trim()}"`)
+    return {
+      valid: true,
+      provider: "Dahono",
+      message: `Valid — ${modelList.length} models accessible, chat works`,
+      detail: `Model: ${testModel} | Reply: "${reply.trim()}"`,
+      logs,
+    }
+  }
+
+  const chatErr = await chatRes.json().catch(() => ({}))
+  const errMsg = chatErr?.error?.message ?? `HTTP ${chatRes.status}`
+  log("err", `Chat failed: ${errMsg}`)
+  return {
+    valid: true, // key was still valid (models endpoint passed)
+    provider: "Dahono",
+    message: `Key valid (${modelList.length} models), but chat request failed`,
+    detail: errMsg,
+    logs,
+  }
+}
+
+async function testDeepSeek(key: string): Promise<TestKeyResult> {
+  const { log, logs } = makeLogger()
+  const url = "https://api.deepseek.com/models"
+  const headers = { Authorization: `Bearer ${key.slice(0, 8)}...` }
+
+  log("info", "Provider: DeepSeek")
+  log("info", "Endpoint: GET /models (OpenAI-compatible)")
+  log("curl", buildCurl({ method: "GET", url, headers }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(12_000),
+  })
+
+  log("res", `HTTP ${res.status} ${res.statusText}`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const count = Array.isArray(data?.data) ? data.data.length : "?"
+    log("ok", `Valid — ${count} DeepSeek models accessible`)
+    return { valid: true, provider: "DeepSeek", message: `Valid — ${count} models accessible`, detail: "HTTP 200", logs }
+  }
+  if (res.status === 401) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Invalid API key"
+    log("err", `401: ${err}`)
+    return { valid: false, provider: "DeepSeek", message: "Invalid — authentication failed", detail: err, logs }
+  }
+  if (res.status === 402) {
+    log("ok", "Valid — key accepted (insufficient balance)")
+    return { valid: true, provider: "DeepSeek", message: "Valid (insufficient balance)", detail: "HTTP 402", logs }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "DeepSeek", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs }
+}
+
+async function testXAI(key: string): Promise<TestKeyResult> {
+  const { log, logs } = makeLogger()
+  const url = "https://api.x.ai/v1/models"
+  const headers = { Authorization: `Bearer ${key.slice(0, 8)}...` }
+
+  log("info", "Provider: xAI (Grok)")
+  log("info", "Endpoint: GET /v1/models (OpenAI-compatible)")
+  log("curl", buildCurl({ method: "GET", url, headers }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(12_000),
+  })
+
+  log("res", `HTTP ${res.status} ${res.statusText}`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const count = Array.isArray(data?.data) ? data.data.length : "?"
+    log("ok", `Valid — ${count} xAI models accessible`)
+    return { valid: true, provider: "xAI/Grok", message: `Valid — ${count} models accessible`, detail: "HTTP 200", logs }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "xAI/Grok", message: "Invalid — authentication failed", detail: err, logs }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "xAI/Grok", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs }
+}
+
+async function testQwen(key: string): Promise<TestKeyResult> {
+  const { log, logs } = makeLogger()
+  // DashScope international endpoint
+  const url = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models"
+  const headers = { Authorization: `Bearer ${key.slice(0, 8)}...` }
+
+  log("info", "Provider: Qwen / Alibaba DashScope (intl)")
+  log("info", "Endpoint: GET /compatible-mode/v1/models")
+  log("curl", buildCurl({ method: "GET", url, headers }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(12_000),
+  })
+
+  log("res", `HTTP ${res.status} ${res.statusText}`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const count = Array.isArray(data?.data) ? data.data.length : "?"
+    log("ok", `Valid — ${count} Qwen models accessible`)
+    return { valid: true, provider: "Qwen/Alibaba", message: `Valid — ${count} models accessible`, detail: "HTTP 200", logs }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.message ?? body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "Qwen/Alibaba", message: "Invalid — authentication failed", detail: err, logs }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Qwen/Alibaba", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs }
+}
+
+async function testZhipu(key: string): Promise<TestKeyResult> {
+  const { log, logs } = makeLogger()
+  // Zhipu GLM — POST a cheap chat request (no dedicated validation endpoint)
+  const url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+  const headers = {
+    Authorization: `Bearer ${key.slice(0, 8)}...`,
+    "Content-Type": "application/json",
+  }
+  const body = {
+    model: "glm-4-flash",
+    max_tokens: 1,
+    messages: [{ role: "user", content: "hi" }],
+  }
+
+  log("info", "Provider: Zhipu AI (GLM)")
+  log("info", "Endpoint: POST /api/paas/v4/chat/completions (model: glm-4-flash)")
+  log("curl", buildCurl({ method: "POST", url, headers, body }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(12_000),
+  })
+
+  log("res", `HTTP ${res.status} ${res.statusText}`)
+
+  if (res.status === 200 || res.status === 429) {
+    const msg = res.status === 429 ? "Valid (rate limited)" : "Valid — GLM key accepted"
+    log("ok", msg)
+    return { valid: true, provider: "Zhipu/GLM", message: msg, detail: `HTTP ${res.status}`, logs }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body2 = await res.json().catch(() => ({}))
+    const err = body2?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "Zhipu/GLM", message: "Invalid — key rejected", detail: err, logs }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Zhipu/GLM", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs }
+}
+
+async function testTogether(key: string): Promise<TestKeyResult> {
+  const { log, logs } = makeLogger()
+  const url = "https://api.together.ai/v1/models"
+  const headers = { Authorization: `Bearer ${key.slice(0, 8)}...` }
+
+  log("info", "Provider: Together AI")
+  log("info", "Endpoint: GET /v1/models (OpenAI-compatible)")
+  log("curl", buildCurl({ method: "GET", url, headers }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(12_000),
+  })
+
+  log("res", `HTTP ${res.status} ${res.statusText}`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const count = Array.isArray(data) ? data.length : "?"
+    log("ok", `Valid — ${count} Together AI models accessible`)
+    return { valid: true, provider: "Together AI", message: `Valid — ${count} models accessible`, detail: "HTTP 200", logs }
+  }
+  if (res.status === 401) {
+    log("err", "401 — API key invalid")
+    return { valid: false, provider: "Together AI", message: "Invalid — authentication failed", detail: "HTTP 401", logs }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Together AI", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs }
+}
+
 // ── Label → tester map ────────────────────────────────────────────────────────
 
 type Tester = (key: string) => Promise<TestKeyResult>
@@ -487,6 +747,13 @@ const TESTERS: Record<string, Tester> = {
   "Perplexity API Key": testPerplexity,
   "Replicate API Token": testReplicate,
   "MiniMax API Key": testMinimax,
+  // New providers
+  "Dahono API Key": testDahono,
+  "DeepSeek API Key": testDeepSeek,
+  "xAI API Key": testXAI,
+  "Qwen API Key": testQwen,
+  "Zhipu API Key": testZhipu,
+  "Together AI Key": testTogether,
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────

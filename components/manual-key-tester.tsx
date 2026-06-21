@@ -18,6 +18,24 @@ interface ProviderPreset {
 }
 
 const PRESETS: ProviderPreset[] = [
+  // ── Dahono Labs Gateway ───────────────────────────────────────────────────
+  {
+    id: "dahono",
+    name: "Dahono Labs Gateway",
+    endpoint: "https://gateway.dahono.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "dahono/deepseek-v4-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://labs.dahono.com/models",
+    color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
+  },
   // ── Tier 1: Major providers ───────────────────────────────────────────────
   {
     id: "anthropic",
@@ -66,6 +84,23 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://ai.google.dev/gemini-api/docs/text-generation",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
+  },
+  {
+    id: "xai",
+    name: "Grok (xAI)",
+    endpoint: "https://api.x.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "grok-3-mini",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.x.ai/docs/overview",
+    color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
   },
   {
     id: "xai",
@@ -465,11 +500,46 @@ export default function ManualKeyTester() {
   const [showRawResponse, setShowRawResponse] = useState(false)
   const [showBodyEditor, setShowBodyEditor] = useState(false)
   const [copiedCurl, setCopiedCurl] = useState(false)
+  const [dahonoModels, setDahonoModels] = useState<{ id: string; tier: string; free: boolean }[]>([])
+  const [dahonoModelsFetching, setDahonoModelsFetching] = useState(false)
+  const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatHistory, loading])
+
+  // When Dahono is selected and user has a key, fetch live models
+  useEffect(() => {
+    if (selectedPreset.id !== "dahono" || !apiKey.trim() || apiKey.trim().length < 8) return
+    setDahonoModelsFetching(true)
+    fetch("/api/dahono-models", {
+      headers: { Authorization: `Bearer ${apiKey.trim()}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.models) {
+          setDahonoModels(data.models)
+          // Default to first free model
+          const firstFree = data.models.find((m: { free: boolean }) => m.free)
+          if (firstFree) {
+            setSelectedDahonoModel(firstFree.id)
+            updateDahonoBodyModel(firstFree.id)
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setDahonoModelsFetching(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPreset.id, apiKey])
+
+  function updateDahonoBodyModel(modelId: string) {
+    setBodyTemplate(JSON.stringify({
+      model: modelId,
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2))
+  }
 
   function applyPreset(preset: ProviderPreset) {
     setSelectedPreset(preset)
@@ -481,6 +551,7 @@ export default function ManualKeyTester() {
     setBodyTemplate(preset.bodyTemplate)
     setResult(null)
     setShowLog(false)
+    if (preset.id !== "dahono") setDahonoModels([])
   }
 
   async function runTest() {
@@ -658,6 +729,47 @@ export default function ManualKeyTester() {
               </a>
             )}
           </div>
+
+          {/* Dahono model picker — shown when provider is Dahono */}
+          {selectedPreset.id === "dahono" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Model
+                {dahonoModelsFetching && <span className="ml-1 font-normal normal-case text-muted-foreground/50">fetching...</span>}
+                {!dahonoModelsFetching && dahonoModels.length > 0 && (
+                  <span className="ml-1 font-normal normal-case text-muted-foreground/50">
+                    {dahonoModels.length} models from gateway
+                  </span>
+                )}
+              </label>
+              {dahonoModels.length > 0 ? (
+                <select
+                  value={selectedDahonoModel}
+                  onChange={(e) => {
+                    setSelectedDahonoModel(e.target.value)
+                    updateDahonoBodyModel(e.target.value)
+                  }}
+                  className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring w-full"
+                >
+                  {["free", "starter", "pro", "business"].map((tier) => {
+                    const tier_models = dahonoModels.filter((m) => m.tier === tier)
+                    if (tier_models.length === 0) return null
+                    return (
+                      <optgroup key={tier} label={`${tier.charAt(0).toUpperCase() + tier.slice(1)} (${tier_models.length})`}>
+                        {tier_models.map((m) => (
+                          <option key={m.id} value={m.id}>{m.id}</option>
+                        ))}
+                      </optgroup>
+                    )
+                  })}
+                </select>
+              ) : (
+                <p className="text-[9px] text-muted-foreground/50">
+                  Enter your Dahono API key above to auto-load all {dahonoModelsFetching ? "..." : "models"} from the gateway.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Headers */}
           <div className="flex flex-col gap-1.5">
