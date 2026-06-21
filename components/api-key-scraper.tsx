@@ -113,18 +113,60 @@ function GlobeIcon() {
 // ── Label colour map ───────────────────────────────────────────────────────
 
 const LABEL_COLORS: Record<string, string> = {
-  "Google API Key": "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
-  "OpenAI API Key": "text-green-400 bg-green-400/10 border-green-400/30",
+  // Google
+  "Google / Firebase API Key": "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
+  "Google API Key":            "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
+  "Google Analytics ID":       "text-yellow-300 bg-yellow-300/10 border-yellow-300/30",
+  "Google OAuth Token":        "text-yellow-500 bg-yellow-500/10 border-yellow-500/30",
+  // OpenAI
+  "OpenAI API Key":     "text-green-400 bg-green-400/10 border-green-400/30",
   "OpenAI Project Key": "text-green-400 bg-green-400/10 border-green-400/30",
+  // Anthropic
   "Anthropic API Key": "text-orange-400 bg-orange-400/10 border-orange-400/30",
+  // HuggingFace
   "HuggingFace Token": "text-yellow-300 bg-yellow-300/10 border-yellow-300/30",
+  // Groq
   "Groq API Key": "text-purple-400 bg-purple-400/10 border-purple-400/30",
-  "AWS Access Key": "text-orange-500 bg-orange-500/10 border-orange-500/30",
-  "GitHub Token": "text-slate-300 bg-slate-300/10 border-slate-300/30",
+  // AWS
+  "AWS Access Key ID": "text-orange-500 bg-orange-500/10 border-orange-500/30",
+  "AWS Secret Key":    "text-orange-500 bg-orange-500/10 border-orange-500/30",
+  "AWS Access Key":    "text-orange-500 bg-orange-500/10 border-orange-500/30",
+  // GitHub
+  "GitHub Token":              "text-slate-300 bg-slate-300/10 border-slate-300/30",
   "GitHub Fine-grained Token": "text-slate-300 bg-slate-300/10 border-slate-300/30",
-  "Stripe Secret Key": "text-blue-400 bg-blue-400/10 border-blue-400/30",
+  "GitHub Actions Token":      "text-slate-300 bg-slate-300/10 border-slate-300/30",
+  // Stripe
+  "Stripe Secret Key":      "text-blue-400 bg-blue-400/10 border-blue-400/30",
   "Stripe Publishable Key": "text-blue-300 bg-blue-300/10 border-blue-300/30",
-  "Stripe Test Key": "text-blue-300 bg-blue-300/10 border-blue-300/30",
+  "Stripe Test Key":        "text-blue-300 bg-blue-300/10 border-blue-300/30",
+  "Stripe Test Secret Key": "text-blue-300 bg-blue-300/10 border-blue-300/30",
+  "Stripe Test Pub Key":    "text-blue-300 bg-blue-300/10 border-blue-300/30",
+  // Twilio
+  "Twilio Account SID": "text-red-400 bg-red-400/10 border-red-400/30",
+  "Twilio API Key SID": "text-red-400 bg-red-400/10 border-red-400/30",
+  // Dahono
+  "Dahono API Key": "text-amber-400 bg-amber-400/10 border-amber-400/30",
+  // DeepSeek
+  "DeepSeek API Key": "text-sky-400 bg-sky-400/10 border-sky-400/30",
+  // xAI
+  "xAI API Key": "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
+  // MiniMax
+  "MiniMax API Key": "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
+  // Cohere
+  "Cohere API Key": "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+  // Together AI
+  "Together AI Key": "text-pink-400 bg-pink-400/10 border-pink-400/30",
+  // Mistral
+  "Mistral API Key": "text-red-400 bg-red-400/10 border-red-400/30",
+  // Replicate
+  "Replicate API Token": "text-rose-400 bg-rose-400/10 border-rose-400/30",
+  // Perplexity
+  "Perplexity API Key": "text-teal-400 bg-teal-400/10 border-teal-400/30",
+  // Generic
+  "Generic API Key": "text-muted-foreground bg-muted/10 border-border",
+  "Generic Secret":  "text-muted-foreground bg-muted/10 border-border",
+  "Generic Token":   "text-muted-foreground bg-muted/10 border-border",
+  "Bearer Token":    "text-muted-foreground bg-muted/10 border-border",
   default: "text-primary bg-primary/10 border-primary/30",
 }
 

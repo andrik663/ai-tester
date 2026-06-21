@@ -1,55 +1,94 @@
 import { NextRequest, NextResponse } from "next/server"
 
-// Patterns to detect API keys in HTML/JS source
+// Patterns to detect API keys in HTML/JS source.
+// Each pattern MUST have a hard unique prefix — no broad/generic regexes that
+// match arbitrary alphanumeric strings (e.g. hashes, IDs, CSS classes).
 const KEY_PATTERNS: { label: string; pattern: RegExp }[] = [
-  // Google / Firebase — AIza prefix, 39 chars total
+  // ── Google / Firebase ────────────────────────────────────────────────────
+  // Firebase Web API key — always starts with AIza, exactly 39 chars total
   { label: "Google / Firebase API Key", pattern: /AIza[0-9A-Za-z\-_]{35}/g },
-  // Google Analytics measurement ID (non-secret, informational)
+  // Google Analytics Measurement ID
   { label: "Google Analytics ID", pattern: /G-[A-Z0-9]{8,12}/g },
-  // OpenAI
-  { label: "OpenAI API Key", pattern: /sk-[A-Za-z0-9]{20,60}/g },
-  // OpenAI Project key
-  { label: "OpenAI Project Key", pattern: /sk-proj-[A-Za-z0-9\-_]{40,100}/g },
-  // Anthropic Claude
-  { label: "Anthropic API Key", pattern: /sk-ant-[A-Za-z0-9\-_]{40,100}/g },
-  // HuggingFace
+  // Google Cloud service account / OAuth token
+  { label: "Google OAuth Token", pattern: /ya29\.[A-Za-z0-9\-_]{50,}/g },
+
+  // ── OpenAI ───────────────────────────────────────────────────────────────
+  // sk-proj- prefix (project scoped key) — check before generic sk- pattern
+  { label: "OpenAI Project Key", pattern: /sk-proj-[A-Za-z0-9\-_]{40,120}/g },
+  // Generic sk- (OpenAI personal key), min 48 chars to avoid matching short sk-ant etc.
+  { label: "OpenAI API Key", pattern: /sk-[A-Za-z0-9]{48,}/g },
+
+  // ── Anthropic Claude ─────────────────────────────────────────────────────
+  // All Claude keys use sk-ant- prefix
+  { label: "Anthropic API Key", pattern: /sk-ant-[A-Za-z0-9\-_]{40,120}/g },
+
+  // ── HuggingFace ──────────────────────────────────────────────────────────
   { label: "HuggingFace Token", pattern: /hf_[A-Za-z0-9]{30,50}/g },
-  // Groq
+
+  // ── Groq ─────────────────────────────────────────────────────────────────
   { label: "Groq API Key", pattern: /gsk_[A-Za-z0-9]{40,60}/g },
-  // Cohere
-  { label: "Cohere API Key", pattern: /[A-Za-z0-9]{40}(?=[^A-Za-z0-9]|$)/g },
-  // AWS Access Key
-  { label: "AWS Access Key", pattern: /(?:AKIA|AIPA|ASIA)[0-9A-Z]{16}/g },
-  // GitHub token
+
+  // ── Cohere ───────────────────────────────────────────────────────────────
+  // Real Cohere keys always start with a known prefix in their APIs
+  // v1 trial/prod keys look like: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" (no prefix)
+  // — too risky to match without prefix. Match only when assigned to a known var name.
+  { label: "Cohere API Key", pattern: /(?:cohere[_-]?api[_-]?key|CO_API_KEY|cohere[_-]?key)\s*[:=]\s*["']([A-Za-z0-9\-_]{32,64})['"]/gi },
+
+  // ── AWS ──────────────────────────────────────────────────────────────────
+  // Access key IDs always begin with AKIA, AIPA, or ASIA
+  { label: "AWS Access Key ID", pattern: /(?:AKIA|AIPA|ASIA)[0-9A-Z]{16}/g },
+  // Secret access keys are 40 chars but only meaningful when labelled
+  { label: "AWS Secret Key", pattern: /(?:aws[_-]?secret|AWS_SECRET_ACCESS_KEY)\s*[:=]\s*["']([A-Za-z0-9\/+]{40})['"]/gi },
+
+  // ── GitHub ───────────────────────────────────────────────────────────────
   { label: "GitHub Token", pattern: /ghp_[A-Za-z0-9]{36}/g },
-  { label: "GitHub Fine-grained Token", pattern: /github_pat_[A-Za-z0-9_]{82}/g },
-  // Stripe
-  { label: "Stripe Secret Key", pattern: /sk_live_[0-9a-zA-Z]{24}/g },
-  { label: "Stripe Publishable Key", pattern: /pk_live_[0-9a-zA-Z]{24}/g },
-  { label: "Stripe Test Key", pattern: /sk_test_[0-9a-zA-Z]{24}/g },
-  // Twilio
-  { label: "Twilio Account SID", pattern: /AC[a-zA-Z0-9]{32}/g },
-  { label: "Twilio Auth Token", pattern: /SK[a-zA-Z0-9]{32}/g },
-  // Generic Bearer tokens
-  { label: "Bearer Token", pattern: /Bearer\s+([A-Za-z0-9\-_\.]{20,})/g },
-  // Generic key= assignments
-  { label: "Generic API Key", pattern: /(?:api[_-]?key|apiKey|api_key|access[_-]?key)\s*[:=]\s*["']([A-Za-z0-9\-_\.]{16,})['"]/gi },
-  // Generic secret= assignments
-  { label: "Generic Secret", pattern: /(?:secret|secret[_-]?key|client[_-]?secret)\s*[:=]\s*["']([A-Za-z0-9\-_\.]{16,})['"]/gi },
-  // Generic token= assignments
-  { label: "Generic Token", pattern: /(?:token|access[_-]?token|auth[_-]?token)\s*[:=]\s*["']([A-Za-z0-9\-_\.]{20,})['"]/gi },
-  // Dahono Labs gateway key
+  { label: "GitHub Fine-grained Token", pattern: /github_pat_[A-Za-z0-9_]{59,}/g },
+  { label: "GitHub Actions Token", pattern: /ghs_[A-Za-z0-9]{36}/g },
+
+  // ── Stripe ───────────────────────────────────────────────────────────────
+  { label: "Stripe Secret Key",      pattern: /sk_live_[0-9a-zA-Z]{24,}/g },
+  { label: "Stripe Publishable Key", pattern: /pk_live_[0-9a-zA-Z]{24,}/g },
+  { label: "Stripe Test Secret Key", pattern: /sk_test_[0-9a-zA-Z]{24,}/g },
+  { label: "Stripe Test Pub Key",    pattern: /pk_test_[0-9a-zA-Z]{24,}/g },
+
+  // ── Twilio ───────────────────────────────────────────────────────────────
+  // Account SIDs always start with AC; auth tokens are long hex strings
+  { label: "Twilio Account SID",  pattern: /AC[a-f0-9]{32}/g },
+  { label: "Twilio API Key SID",  pattern: /SK[a-f0-9]{32}/g },
+
+  // ── Dahono Labs ──────────────────────────────────────────────────────────
+  // Gateway keys always start with "dahono-" per their docs
   { label: "Dahono API Key", pattern: /dahono-[A-Za-z0-9]{8,64}/g },
-  // DeepSeek
-  { label: "DeepSeek API Key", pattern: /sk-[a-f0-9]{32,64}/g },
-  // xAI Grok
+
+  // ── DeepSeek ─────────────────────────────────────────────────────────────
+  // DeepSeek uses sk- with exactly 32 lowercase hex chars
+  { label: "DeepSeek API Key", pattern: /sk-[a-f0-9]{32}(?![A-Za-z0-9])/g },
+
+  // ── xAI / Grok ───────────────────────────────────────────────────────────
   { label: "xAI API Key", pattern: /xai-[A-Za-z0-9\-_]{30,80}/g },
-  // MiniMax
-  { label: "MiniMax API Key", pattern: /eyJ[A-Za-z0-9\-_]{60,200}\.eyJ[A-Za-z0-9\-_]{60,200}\.[A-Za-z0-9\-_]{40,100}/g },
-  // Anthropic (additional variant)
-  { label: "Anthropic API Key", pattern: /sk-ant-api03-[A-Za-z0-9\-_]{80,120}/g },
-  // Together AI
-  { label: "Together AI Key", pattern: /[0-9a-f]{64}/g },
+
+  // ── MiniMax ──────────────────────────────────────────────────────────────
+  // MiniMax uses JWT-style tokens (three base64url segments)
+  { label: "MiniMax API Key", pattern: /eyJ[A-Za-z0-9\-_]{40,}\.eyJ[A-Za-z0-9\-_]{40,}\.[A-Za-z0-9\-_]{40,}/g },
+
+  // ── Together AI ──────────────────────────────────────────────────────────
+  // Together keys are assigned to known env var names
+  { label: "Together AI Key", pattern: /(?:TOGETHER_API_KEY|together[_-]?api[_-]?key)\s*[:=]\s*["']([A-Za-z0-9\-_]{40,80})['"]/gi },
+
+  // ── Mistral ──────────────────────────────────────────────────────────────
+  { label: "Mistral API Key", pattern: /(?:MISTRAL_API_KEY|mistral[_-]?api[_-]?key)\s*[:=]\s*["']([A-Za-z0-9]{32,64})['"]/gi },
+
+  // ── Replicate ────────────────────────────────────────────────────────────
+  { label: "Replicate API Token", pattern: /r8_[A-Za-z0-9]{37}/g },
+
+  // ── Perplexity ───────────────────────────────────────────────────────────
+  { label: "Perplexity API Key", pattern: /pplx-[A-Za-z0-9]{48}/g },
+
+  // ── Generic — only when assigned to a clearly named variable ─────────────
+  // This avoids matching random strings; requires a key/secret/token variable name
+  { label: "Generic API Key",  pattern: /(?:["']?api[_-]?key["']?\s*[:=]\s*["'])([A-Za-z0-9\-_\.]{24,})['"]/gi },
+  { label: "Generic Secret",   pattern: /(?:["']?(?:client[_-]?secret|app[_-]?secret)["']?\s*[:=]\s*["'])([A-Za-z0-9\-_\.]{24,})['"]/gi },
+  { label: "Generic Token",    pattern: /(?:["']?access[_-]?token["']?\s*[:=]\s*["'])([A-Za-z0-9\-_\.]{24,})['"]/gi },
 ]
 
 export interface ScrapedKey {
