@@ -123,11 +123,13 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { maxOutputTokens: 1024 },
   }),
-  // xAI Grok — OpenAI-compatible
+  // xAI Grok — Responses API (chat: grok-4.3, coding: grok-build-0.1)
   xai: (prompt) => ({
-    model: "grok-3-mini",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+    model: "grok-4.3",
+    input: [
+      { role: "system", content: "You are Grok, a highly intelligent, helpful AI assistant." },
+      { role: "user", content: prompt },
+    ],
   }),
   // DeepSeek — OpenAI-compatible
   deepseek: (prompt) => ({
@@ -304,11 +306,10 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
     }],
     generationConfig: { maxOutputTokens: 2048 },
   }),
-  // xAI Grok — OpenAI-compatible with vision
+  // xAI Grok — Responses API with vision (grok-4.3 supports multimodal)
   xai: (prompt, base64, mimeType) => ({
-    model: "grok-2-vision-1212",
-    max_tokens: 2048,
-    messages: [{
+    model: "grok-4.3",
+    input: [{
       role: "user",
       content: [
         { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },

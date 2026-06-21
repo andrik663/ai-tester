@@ -108,18 +108,22 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "xai",
     name: "Grok (xAI)",
-    endpoint: "https://api.x.ai/v1/chat/completions",
+    endpoint: "https://api.x.ai/v1/responses",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Chat: grok-4.3 | Coding: grok-build-0.1 | Image: grok-imagine-image-quality, grok-imagine-image-fast
+    // Voice: POST /v1/tts  { text, voice_id: "eve", language: "en" }
     bodyTemplate: JSON.stringify({
       model: "grok-4.3",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: "{{PROMPT}}" }],
+      input: [
+        { role: "system", content: "You are Grok, a highly intelligent, helpful AI assistant." },
+        { role: "user", content: "{{PROMPT}}" },
+      ],
     }, null, 2),
-    docsUrl: "https://docs.x.ai/docs/overview",
+    docsUrl: "https://docs.x.ai/developers/models",
     createKeyUrl: "https://console.x.ai/",
     color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
   },

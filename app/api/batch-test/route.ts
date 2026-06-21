@@ -215,29 +215,39 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: geminiReply,
   },
 
-  // ── xAI (Grok) ───────────────────────────────────────────────────────────
+  // ── xAI (Grok) — Responses API ───────────────────────────────────────────
   xai: {
     id: "xai",
     models: [
-      // Latest flagship (May 2026 forward)
+      // Chat models (Responses API)
       "grok-4.3",
       "grok-4.20-0309-reasoning",
       "grok-4.20-0309-non-reasoning",
-      // Prior generation (auto-redirects to grok-4.3 as of May 15 2026)
+      // Coding model (Responses API)
+      "grok-build-0.1",
+      // Prior generation chat
       "grok-3",
       "grok-3-fast",
       "grok-3-mini",
       "grok-3-mini-fast",
     ],
-    endpoint: "https://api.x.ai/v1/chat/completions",
+    endpoint: "https://api.x.ai/v1/responses",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model) => ({
       model,
-      max_tokens: MAX_TOKENS,
-      messages: [{ role: "user", content: TEST_PROMPT }],
+      input: [
+        { role: "system", content: "You are Grok, a highly intelligent, helpful AI assistant." },
+        { role: "user", content: TEST_PROMPT },
+      ],
     }),
-    extractReply: openaiReply,
+    // Responses API: output[].content[].text (output_text type)
+    extractReply: (p) => {
+      try {
+        const output = p.output as Array<{ content?: Array<{ type: string; text: string }> }>
+        return output?.[0]?.content?.find((c) => c.type === "output_text")?.text
+      } catch { return undefined }
+    },
   },
 
   // ── DeepSeek ──────────────────────────────────────────────────────────────
