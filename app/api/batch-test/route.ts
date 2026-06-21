@@ -121,33 +121,37 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   openai: {
     id: "openai",
     models: [
-      // Latest GPT-5 family (2025)
-      "gpt-5",
-      "gpt-5-mini",
-      // GPT-4o family
+      // GPT-5 flagship (Responses API, Jun 2026)
+      "gpt-5.5",
+      "gpt-5.4",
+      "gpt-5.4-mini",
+      "gpt-5.4-nano",
+      // GPT-4o family (still on Responses API)
       "gpt-4o",
       "gpt-4o-mini",
-      "gpt-4o-2024-11-20",
       // o-series reasoning models
       "o3",
       "o3-pro",
-      "o3-mini",
       "o4-mini",
+      "o3-mini",
       "o1",
       "o1-mini",
-      // Legacy
-      "gpt-4-turbo",
-      "gpt-3.5-turbo",
     ],
-    endpoint: "https://api.openai.com/v1/chat/completions",
+    // OpenAI Responses API (replaces /v1/chat/completions for GPT-5+)
+    endpoint: "https://api.openai.com/v1/responses",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model) => ({
       model,
-      max_tokens: MAX_TOKENS,
-      messages: [{ role: "user", content: TEST_PROMPT }],
+      input: TEST_PROMPT,
     }),
-    extractReply: openaiReply,
+    extractReply: (p) => {
+      try {
+        // Responses API: output[].content[].text
+        const output = p.output as Array<{ content?: Array<{ type: string; text: string }> }>
+        return output?.[0]?.content?.find((c) => c.type === "output_text")?.text
+      } catch { return undefined }
+    },
   },
 
   // ── Google Gemini ─────────────────────────────────────────────────────────
@@ -156,14 +160,17 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
     concurrencyLimit: 2,
     models: [
-      // Gemini 2.5 (active)
+      // ── Gemini 3.x (latest, 2026) ─────────────────────────
+      "gemini-3.5-flash",           // Stable — frontier-class, cost-efficient
+      "gemini-3-flash",             // Stable — high performance, lower cost
+      "gemini-3.1-pro",             // Preview — most advanced reasoning + coding
+      "gemini-3.1-flash-lite",      // Preview — fastest, budget-friendly
+      "gemini-3.1-flash-live",      // Preview — realtime audio/dialog
+      // ── Gemini 2.5.x (stable, still active) ─────────────
       "gemini-2.5-pro",
       "gemini-2.5-flash",
-      "gemini-2.5-flash-lite-preview-06-17",
-      // Gemini 2.0 (active)
-      "gemini-2.0-flash",
-      "gemini-2.0-flash-lite",
-      // NOTE: gemini-1.5-* are sunset — removed to prevent 404s
+      "gemini-2.5-flash-lite",
+      // NOTE: gemini-2.0-* and gemini-1.5-* are sunset — removed to prevent 404s
     ],
     endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent",
     authHeader: () => ({ "Content-Type": "application/json" }),

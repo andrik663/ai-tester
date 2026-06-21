@@ -67,32 +67,37 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "openai",
     name: "GPT (OpenAI)",
-    endpoint: "https://api.openai.com/v1/chat/completions",
+    endpoint: "https://api.openai.com/v1/responses",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Responses API — models: gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano,
+    //   gpt-4o, gpt-4o-mini, o3, o3-pro, o4-mini, o3-mini, o1, o1-mini
     bodyTemplate: JSON.stringify({
-      model: "gpt-4o-mini",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: "{{PROMPT}}" }],
+      model: "gpt-5.5",
+      input: "{{PROMPT}}",
     }, null, 2),
-    docsUrl: "https://platform.openai.com/docs/api-reference/chat",
+    docsUrl: "https://platform.openai.com/docs/api-reference/responses",
     createKeyUrl: "https://platform.openai.com/api-keys",
     color: "text-green-400 bg-green-400/10 border-green-400/30",
   },
   {
     id: "google",
     name: "Gemini (Google)",
-    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{API_KEY}}",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={{API_KEY}}",
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    // Models (Gemini 3.x): gemini-3.5-flash, gemini-3.1-pro, gemini-3-flash,
+    //   gemini-3.1-flash-lite, gemini-3.1-flash-live
+    // Models (Gemini 2.5.x): gemini-2.5-pro, gemini-2.5-flash, gemini-2.5-flash-lite
+    // Change model in the URL path above to switch models
     bodyTemplate: JSON.stringify({
       contents: [{ parts: [{ text: "{{PROMPT}}" }] }],
       generationConfig: { maxOutputTokens: 1024 },
     }, null, 2),
-    docsUrl: "https://ai.google.dev/gemini-api/docs/text-generation",
+    docsUrl: "https://ai.google.dev/gemini-api/docs/models",
     createKeyUrl: "https://aistudio.google.com/apikey",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
@@ -616,7 +621,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://console.upstage.ai/api-keys",
     color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
   },
-  // ── Tier 7: Enterprise / specialty providers ───────��──────────────────────
+  // ─�� Tier 7: Enterprise / specialty providers ───────��──────────────────────
   {
     id: "writer",
     name: "Writer AI (Palmyra)",

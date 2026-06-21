@@ -113,11 +113,10 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
-  // OpenAI-compatible (most providers share this)
+  // OpenAI Responses API (gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano, gpt-4o, o-series)
   openai: (prompt) => ({
-    model: "gpt-4o-mini",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+    model: "gpt-5.5",
+    input: prompt,
   }),
   // Google Gemini — unique contents/parts format
   google: (prompt) => ({
@@ -558,6 +557,16 @@ function extractChatReply(providerKey: string, data: unknown): string | undefine
   const d = data as Record<string, unknown>
 
   // OpenAI-compatible: OpenAI, Groq, Mistral, Perplexity, MiniMax, DeepSeek,
+  // OpenAI Responses API — output[].content[].text (output_text type)
+  if (Array.isArray(d?.output)) {
+    const output = d.output as Array<{ content?: Array<{ type: string; text: string }> }>
+    const text = output?.[0]?.content?.find((c) => c.type === "output_text")?.text
+    if (typeof text === "string") return text
+    // fallback: output_text at top level
+    const flat = output?.[0] as unknown as Record<string, unknown>
+    if (typeof flat?.text === "string") return flat.text as string
+  }
+
   //                    Qwen, Zhipu GLM, xAI Grok, Together AI, HuggingFace
   if (Array.isArray(d?.choices)) {
     const choices = d.choices as Array<Record<string, unknown>>
