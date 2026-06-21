@@ -5,7 +5,6 @@ import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
-import Chat, { GEMINI_CHAT_MODELS } from "@/components/chat"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
@@ -577,14 +576,6 @@ function ImageIcon() {
   )
 }
 
-function ChatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  )
-}
-
 function ScanIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
@@ -740,12 +731,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "gemini-chat" | "image-gen" | "video-gen">("vision")
-  // Gemini Chat config
-  const [geminiModel, setGeminiModel] = useState(GEMINI_CHAT_MODELS[0])
-  const [geminiTemperature, setGeminiTemperature] = useState(1.0)
-  const [geminiMaxTokens, setGeminiMaxTokens] = useState(2048)
-  const [geminiSystemPrompt, setGeminiSystemPrompt] = useState("")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen">("vision")
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1264,55 +1250,6 @@ export default function ManualKeyTester() {
             )}
           </div>
 
-          {/* ── Gemini Chat config — shown when gemini-chat tab is active ── */}
-          {activeTab === "gemini-chat" && (
-            <div className="flex flex-col gap-3 pt-1 border-t border-border">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gemini Chat Config</p>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
-                <select
-                  value={geminiModel}
-                  onChange={(e) => setGeminiModel(e.target.value)}
-                  className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {GEMINI_CHAT_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Temperature</label>
-                  <span className="text-[10px] font-mono text-primary">{geminiTemperature.toFixed(1)}</span>
-                </div>
-                <input type="range" min="0" max="2" step="0.1" value={geminiTemperature}
-                  onChange={(e) => setGeminiTemperature(parseFloat(e.target.value))}
-                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
-                <div className="flex justify-between text-[9px] text-muted-foreground/50">
-                  <span>Precise</span><span>Creative</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Max Tokens</label>
-                  <span className="text-[10px] font-mono text-primary">{geminiMaxTokens.toLocaleString()}</span>
-                </div>
-                <input type="range" min="128" max="8192" step="128" value={geminiMaxTokens}
-                  onChange={(e) => setGeminiMaxTokens(parseInt(e.target.value))}
-                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">System Prompt</label>
-                <textarea value={geminiSystemPrompt} onChange={(e) => setGeminiSystemPrompt(e.target.value)}
-                  placeholder="Optional system instruction..."
-                  rows={3}
-                  className="w-full rounded-md border border-border bg-background text-foreground text-[11px] px-2.5 py-1.5 resize-none placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed" />
-              </div>
-            </div>
-          )}
-
           {/* ── Image Gen config — provider-aware ── */}
           {activeTab === "image-gen" && (() => {
             const imageModels = getImageCapabilities(selectedPreset.id)
@@ -1468,7 +1405,6 @@ export default function ManualKeyTester() {
           {/* AI Generation tabs — icon only */}
           <div className="flex items-center gap-0.5 py-1.5 mr-2">
             {([
-              { id: "gemini-chat", icon: <GeminiIcon />, title: "AI Chat" },
               { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
               { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
             ] as const).map((t) => (
@@ -1788,20 +1724,6 @@ export default function ManualKeyTester() {
               </p>
             </div>
           </>
-        )}
-
-        {/* ── GEMINI CHAT TAB ──────────────────────────────────────────────── */}
-        {activeTab === "gemini-chat" && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <Chat
-              apiKey={apiKey}
-              model={geminiModel}
-              temperature={geminiTemperature}
-              maxTokens={geminiMaxTokens}
-              systemPrompt={geminiSystemPrompt}
-              providerName={selectedPreset.name}
-            />
-          </div>
         )}
 
         {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
