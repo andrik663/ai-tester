@@ -337,9 +337,9 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
       ],
     }],
   }),
-  // NVIDIA NIM — OpenAI-compatible
+  // NVIDIA NIM — OpenAI-compatible vision
   nvidia: (prompt, base64, mimeType) => ({
-    model: "meta/llama-3.2-11b-vision-instruct",
+    model: "meta/llama-3.2-90b-vision-instruct",
     max_tokens: 2048,
     messages: [{
       role: "user",
@@ -352,6 +352,186 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
   // Hyperbolic — OpenAI-compatible
   hyperbolic: (prompt, base64, mimeType) => ({
     model: "Qwen/Qwen2-VL-72B-Instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Moonshot Kimi — OpenAI-compatible vision
+  moonshot: (prompt, base64, mimeType) => ({
+    model: "kimi-k2.6",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Qwen VL — OpenAI-compatible vision (DashScope international)
+  qwen: (prompt, base64, mimeType) => ({
+    model: "qwen-vl-max",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Zhipu GLM-4V — OpenAI-compatible vision
+  zhipu: (prompt, base64, mimeType) => ({
+    model: "glm-4v-plus-0111",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Groq — supports vision via Llama 3.2 Vision (llama-3.2-11b-vision-preview)
+  groq: (prompt, base64, mimeType) => ({
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Together AI — vision via Llama-3.2-Vision
+  together: (prompt, base64, mimeType) => ({
+    model: "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Mistral Pixtral — vision via pixtral-12b-2409
+  mistral: (prompt, base64, mimeType) => ({
+    model: "pixtral-12b-2409",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // DeepSeek — vision via deepseek-vl2
+  deepseek: (prompt, base64, mimeType) => ({
+    model: "deepseek-vl2",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // MiniMax — vision via MiniMax-VL-01
+  minimax: (prompt, base64, mimeType) => ({
+    model: "MiniMax-VL-01",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Stepfun — vision via step-1v-32k
+  stepfun: (prompt, base64, mimeType) => ({
+    model: "step-1v-32k",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Tencent Hunyuan — vision via hunyuan-vision
+  hunyuan: (prompt, base64, mimeType) => ({
+    model: "hunyuan-vision",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Cerebras — vision via llama-4-scout (multimodal)
+  cerebras: (prompt, base64, mimeType) => ({
+    model: "llama-4-scout-17b-16e-instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // SambaNova — vision via Llama-3.2-11B-Vision-Instruct
+  sambanova: (prompt, base64, mimeType) => ({
+    model: "Llama-3.2-11B-Vision-Instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // Novita AI — vision via Qwen2-VL-7B
+  novita: (prompt, base64, mimeType) => ({
+    model: "qwen/qwen2-vl-7b-instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // HuggingFace — vision via Llama-3.2-11B-Vision
+  huggingface: (prompt, base64, mimeType) => ({
+    model: "meta-llama/Llama-3.2-11B-Vision-Instruct",
+    max_tokens: 2048,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: "text", text: prompt },
+      ],
+    }],
+  }),
+  // 01.AI (Yi) — vision via yi-vision-plus
+  yi: (prompt, base64, mimeType) => ({
+    model: "yi-vision-plus",
     max_tokens: 2048,
     messages: [{
       role: "user",

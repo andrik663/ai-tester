@@ -185,9 +185,230 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
       return { error: d.detail ?? d.error ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
     },
   },
+
+  // ── xAI Aurora ────────────────────────────────────────────────────────────
+  xai: {
+    buildUrl: () => "https://api.x.ai/v1/images/generations",
+    buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
+    buildBody: (prompt, model, aspectRatio) => ({
+      model,
+      prompt,
+      n: 1,
+      aspect_ratio: aspectRatio,
+      response_format: "b64_json",
+    }),
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ b64_json?: string; url?: string; revised_prompt?: string }> }
+      const item = d.data?.[0]
+      return {
+        imageData: item?.b64_json ?? null,
+        imageMimeType: "image/png",
+        textContent: item?.revised_prompt ?? "",
+      }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string; type?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: d.error?.type ?? "ERROR" }
+    },
+  },
+
+  // ── Zhipu CogView ─────────────────────────────────────────────────────────
+  zhipu: {
+    buildUrl: () => "https://open.bigmodel.cn/api/paas/v4/images/generations",
+    buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
+    buildBody: (prompt, model) => ({ model, prompt }),
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ url?: string; b64_json?: string }> }
+      const item = d.data?.[0]
+      return {
+        imageData: item?.b64_json ?? null,
+        imageMimeType: "image/png",
+        textContent: item?.url ?? "",
+      }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string; code?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: d.error?.code ?? "ERROR" }
+    },
+  },
+
+  // ── Qwen Wanx (DashScope) ────────────────────────────────────────────────
+  // Wanx uses the multimodal-generation endpoint with async task pattern
+  qwen: {
+    buildUrl: () => "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis",
+    buildHeaders: (apiKey) => ({
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+      "X-DashScope-Async": "enable",
+    }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const sizeMap: Record<string, string> = { "1:1": "1024*1024", "16:9": "1792*1024", "9:16": "1024*1792", "4:3": "1024*768" }
+      return {
+        model,
+        input: { prompt },
+        parameters: { size: sizeMap[aspectRatio] ?? "1024*1024", n: 1 },
+      }
+    },
+    extractImage: (data: unknown) => {
+      // Async: returns task_id — client will see URL in textContent
+      const d = data as {
+        output?: { task_id?: string; results?: Array<{ url?: string }>; task_status?: string }
+        request_id?: string
+      }
+      const url = d.output?.results?.[0]?.url ?? ""
+      return { imageData: null, imageMimeType: "image/png", textContent: url }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { message?: string; code?: string }
+      return { error: d.message ?? `HTTP ${status}`, errorCode: status, errorStatus: d.code ?? "ERROR" }
+    },
+  },
+
+  // ── Stepfun image generation ──────────────────────────────────────────────
+  stepfun: {
+    buildUrl: () => "https://api.stepfun.ai/v1/images/generations",
+    buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1920x1080", "9:16": "1080x1920", "4:3": "1024x768" }
+      return { model, prompt, n: 1, size: sizeMap[aspectRatio] ?? "1024x1024" }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ b64_json?: string; url?: string }> }
+      const item = d.data?.[0]
+      return { imageData: item?.b64_json ?? null, imageMimeType: "image/png", textContent: item?.url ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
+
+  // ── Black Forest Labs (native FLUX API) ──────────────────────────────────
+  bfl: {
+    buildUrl: (model) => {
+      const modelPath = model === "flux-2-pro" ? "flux-pro-2" :
+                        model === "flux-2-dev" ? "flux-dev-2" :
+                        model === "flux-1-kontext-pro" ? "flux-kontext-pro" :
+                        "flux-pro-1.1"
+      return `https://api.bfl.ai/v1/${modelPath}`
+    },
+    buildHeaders: (apiKey) => ({ "x-key": apiKey, "Content-Type": "application/json" }),
+    buildBody: (prompt, _model, aspectRatio) => {
+      const [w, h] = aspectRatio === "16:9" ? [1440, 816] : aspectRatio === "9:16" ? [816, 1440] : aspectRatio === "4:3" ? [1248, 936] : [1024, 1024]
+      return { prompt, width: w, height: h }
+    },
+    extractImage: (data: unknown) => {
+      // BFL returns a polling ID first; for simplicity we surface the result URL as textContent
+      const d = data as { id?: string; result?: { sample?: string }; status?: string }
+      return {
+        imageData: null,
+        imageMimeType: "image/jpeg",
+        textContent: d.result?.sample ?? d.id ?? JSON.stringify(d),
+      }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { detail?: string; message?: string }
+      return { error: d.detail ?? d.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
+
+  // ── Bytedance SeedDream (Volcengine Ark) ──────────────────────────────────
+  bytedance: {
+    buildUrl: () => "https://ark.cn-beijing.volces.com/api/v3/images/generations",
+    buildHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1792x1024", "9:16": "1024x1792", "4:3": "1024x768" }
+      return { model: model ?? "doubao-seedream-4.5", prompt, size: sizeMap[aspectRatio] ?? "1024x1024" }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ url?: string; b64_json?: string }> }
+      const item = d.data?.[0]
+      return { imageData: item?.b64_json ?? null, imageMimeType: "image/png", textContent: item?.url ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
+
+  // ── Recraft ───────────────────────────────────────────────────────────────
+  recraft: {
+    buildUrl: () => "https://external.api.recraft.ai/v1/images/generations",
+    buildHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1820x1024", "9:16": "1024x1820", "4:3": "1365x1024" }
+      return { model: model ?? "recraftv3", prompt, n: 1, size: sizeMap[aspectRatio] ?? "1024x1024" }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ url?: string; b64_json?: string }> }
+      const item = d.data?.[0]
+      return { imageData: item?.b64_json ?? null, imageMimeType: "image/png", textContent: item?.url ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
+
+  // ── Ideogram ─────────────────────────────────────────────────────────────
+  ideogram: {
+    buildUrl: () => "https://api.ideogram.ai/v1/ideogram-v3/generate",
+    buildHeaders: (apiKey) => ({ "Api-Key": apiKey, "Content-Type": "application/json" }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const arMap: Record<string, string> = { "1:1": "ASPECT_1_1", "16:9": "ASPECT_16_9", "9:16": "ASPECT_9_16", "4:3": "ASPECT_4_3" }
+      return { image_request: { prompt, model: model ?? "V_3", aspect_ratio: arMap[aspectRatio] ?? "ASPECT_1_1" } }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ url?: string }> }
+      return { imageData: null, imageMimeType: "image/png", textContent: d.data?.[0]?.url ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: string; message?: string }
+      return { error: d.error ?? d.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
+
+  // ── Luma Photon ───────────────────────────────────────────────────────────
+  luma: {
+    buildUrl: () => "https://api.lumalabs.ai/dream-machine/v1/generations/image",
+    buildHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const arMap: Record<string, string> = { "1:1": "1:1", "16:9": "16:9", "9:16": "9:16", "4:3": "4:3" }
+      return { model: model ?? "photon-1", prompt, aspect_ratio: arMap[aspectRatio] ?? "1:1" }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { assets?: { image?: string }; id?: string }
+      return { imageData: null, imageMimeType: "image/jpeg", textContent: d.assets?.image ?? d.id ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { detail?: Array<{ msg?: string }> | string; message?: string }
+      const msg = Array.isArray(d.detail) ? d.detail[0]?.msg : (d.detail as string) ?? d.message
+      return { error: msg ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
+
+  // ── Tencent Hunyuan image ─────────────────────────────────────────────────
+  hunyuan: {
+    buildUrl: () => "https://api.hunyuan.cloud.tencent.com/v1/images/generations",
+    buildHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1792x1024", "9:16": "1024x1792", "4:3": "1024x768" }
+      return { model: model ?? "hunyuan-image-3.0-instruct", prompt, n: 1, size: sizeMap[aspectRatio] ?? "1024x1024" }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ url?: string; b64_json?: string }> }
+      const item = d.data?.[0]
+      return { imageData: item?.b64_json ?? null, imageMimeType: "image/png", textContent: item?.url ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
 }
 
-// Alias: dahono uses openai-compatible image API  
+// Alias: dahono uses openai-compatible image API
+
 PROVIDER_CONFIGS.dahono = {
   ...PROVIDER_CONFIGS.openai,
   buildUrl: () => "https://gateway.dahono.com/v1/images/generations",

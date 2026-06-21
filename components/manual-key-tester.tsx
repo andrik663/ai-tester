@@ -5,7 +5,6 @@ import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
-import Chat, { GEMINI_CHAT_MODELS } from "@/components/chat"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
@@ -56,7 +55,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "claude-opus-4-8",
+      model: "claude-opus-4-5",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -162,7 +161,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "glm-4-flash",
+      model: "glm-5v-turbo",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -173,14 +172,14 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "minimax",
     name: "MiniMax (Hailuo)",
-    endpoint: "https://api.minimaxi.chat/v1/text/chatcompletion_v2",
+    endpoint: "https://api.minimax.io/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "MiniMax-Text-01",
+      model: "MiniMax-M3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -342,11 +341,11 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "jamba-1.6-large",
+      model: "jamba-large",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://docs.ai21.com/reference/jamba-16-chat-api-ref",
+    docsUrl: "https://docs.ai21.com/reference/jamba-chat-api-ref",
     createKeyUrl: "https://studio.ai21.com/account/api-key",
     color: "text-sky-300 bg-sky-300/10 border-sky-300/30",
   },
@@ -408,14 +407,14 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "cohere",
     name: "Cohere",
-    endpoint: "https://api.cohere.ai/v2/chat",
+    endpoint: "https://api.cohere.com/v2/chat",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "command-a",
+      model: "command-a-plus-05-2026",
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.cohere.com/reference/chat",
@@ -461,7 +460,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "replicate",
     name: "Replicate",
-    endpoint: "https://api.replicate.com/v1/models/meta/meta-llama-3-8b-instruct/predictions",
+    endpoint: "https://api.replicate.com/v1/predictions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
@@ -469,14 +468,291 @@ const PRESETS: ProviderPreset[] = [
       "Prefer": "wait",
     },
     bodyTemplate: JSON.stringify({
+      version: "meta/meta-llama-3-3-70b-instruct",
       input: {
         prompt: "{{PROMPT}}",
-        max_new_tokens: 512,
+        max_new_tokens: 1024,
       },
     }, null, 2),
     docsUrl: "https://replicate.com/docs/reference/http",
     createKeyUrl: "https://replicate.com/account/api-tokens",
     color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
+  },
+  // ── Tier 4: Additional Chinese / Asian providers ──────────────────────────
+  {
+    id: "moonshot",
+    name: "Moonshot AI (Kimi)",
+    endpoint: "https://api.moonshot.cn/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "kimi-k2.6",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.moonshot.cn/docs/api/chat",
+    createKeyUrl: "https://platform.moonshot.cn/console/api-keys",
+    color: "text-teal-300 bg-teal-300/10 border-teal-300/30",
+  },
+  {
+    id: "baidu",
+    name: "Baidu ERNIE (Qianfan)",
+    endpoint: "https://qianfan.baidubce.com/v2/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "ernie-4.5-turbo-128k-preview",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Nlks5zkzu",
+    createKeyUrl: "https://console.bce.baidu.com/iam/#/iam/accesslist",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/30",
+  },
+  {
+    id: "yi",
+    name: "01.AI (Yi)",
+    endpoint: "https://api.lingyiwanwu.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "yi-lightning",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.lingyiwanwu.com/docs",
+    createKeyUrl: "https://platform.lingyiwanwu.com/apikeys",
+    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/30",
+  },
+  {
+    id: "stepfun",
+    name: "Stepfun",
+    endpoint: "https://api.stepfun.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "step-3.7-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://platform.stepfun.ai/docs/Chat/chat_completion",
+    createKeyUrl: "https://platform.stepfun.ai/account-info",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+  },
+  {
+    id: "hunyuan",
+    name: "Tencent Hunyuan",
+    endpoint: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "hunyuan-turbos-latest",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://cloud.tencent.com/document/product/1729/111007",
+    createKeyUrl: "https://console.cloud.tencent.com/hunyuan/api-key",
+    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+  },
+  // ── Tier 5: Cloud providers ───────────────────────────────────────────────
+  {
+    id: "azure",
+    name: "Azure OpenAI",
+    endpoint: "https://{{AZURE_RESOURCE}}.openai.azure.com/openai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "api-key": "{{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "gpt-4o",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference",
+    createKeyUrl: "https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI",
+    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  },
+  // ── Tier 6: Korean / multilingual providers ───────────────────────────────
+  {
+    id: "upstage",
+    name: "Upstage Solar",
+    endpoint: "https://api.upstage.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "solar-pro3",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://developers.upstage.ai/docs/api-reference/chat-api",
+    createKeyUrl: "https://console.upstage.ai/api-keys",
+    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+  },
+  // ── Tier 7: Enterprise / specialty providers ──────────────────────────────
+  {
+    id: "writer",
+    name: "Writer AI (Palmyra)",
+    endpoint: "https://api.writer.com/v1/chat",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "palmyra-x5",
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://dev.writer.com/api-guides/chat",
+    createKeyUrl: "https://app.writer.com/aistudio/organization/api-keys",
+    color: "text-indigo-300 bg-indigo-300/10 border-indigo-300/20",
+  },
+  {
+    id: "lepton",
+    name: "LeptonAI",
+    endpoint: "https://api.lepton.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "llama3-3-70b",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://lepton.ai/references/llm_models",
+    createKeyUrl: "https://dashboard.lepton.ai/",
+    color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
+  },
+  // ── Tier 8: Image-first providers (Arena.ai) ─────────────────────────────
+  {
+    id: "bfl",
+    name: "Black Forest Labs (FLUX)",
+    endpoint: "https://api.bfl.ai/v1/flux-pro-1.1",
+    method: "POST",
+    headers: {
+      "x-key": "{{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      prompt: "{{PROMPT}}",
+      width: 1024,
+      height: 1024,
+    }, null, 2),
+    docsUrl: "https://docs.bfl.ai/quick_start",
+    createKeyUrl: "https://api.bfl.ai/auth/register",
+    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+  },
+  {
+    id: "bytedance",
+    name: "Bytedance (SeedDream)",
+    endpoint: "https://ark.cn-beijing.volces.com/api/v3/images/generations",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "doubao-seedream-4.5",
+      prompt: "{{PROMPT}}",
+      size: "1024x1024",
+    }, null, 2),
+    docsUrl: "https://www.volcengine.com/docs/82379/1399008",
+    createKeyUrl: "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
+    color: "text-red-300 bg-red-300/10 border-red-300/20",
+  },
+  {
+    id: "recraft",
+    name: "Recraft AI",
+    endpoint: "https://external.api.recraft.ai/v1/images/generations",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "recraftv3",
+      prompt: "{{PROMPT}}",
+      n: 1,
+      size: "1024x1024",
+    }, null, 2),
+    docsUrl: "https://www.recraft.ai/docs",
+    createKeyUrl: "https://www.recraft.ai/profile",
+    color: "text-pink-300 bg-pink-300/10 border-pink-300/20",
+  },
+  {
+    id: "ideogram",
+    name: "Ideogram AI",
+    endpoint: "https://api.ideogram.ai/v1/ideogram-v3/generate",
+    method: "POST",
+    headers: {
+      "Api-Key": "{{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      image_request: {
+        prompt: "{{PROMPT}}",
+        model: "V_3",
+        aspect_ratio: "ASPECT_1_1",
+      },
+    }, null, 2),
+    docsUrl: "https://developer.ideogram.ai/ideogram-v3",
+    createKeyUrl: "https://ideogram.ai/manage-api",
+    color: "text-purple-300 bg-purple-300/10 border-purple-300/20",
+  },
+  {
+    id: "luma",
+    name: "Luma AI (Photon)",
+    endpoint: "https://api.lumalabs.ai/dream-machine/v1/generations/image",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "photon-1",
+      prompt: "{{PROMPT}}",
+      aspect_ratio: "1:1",
+    }, null, 2),
+    docsUrl: "https://docs.lumalabs.ai/reference/create-image-generation",
+    createKeyUrl: "https://lumalabs.ai/dream-machine/api/keys",
+    color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
+  },
+  {
+    id: "amazon",
+    name: "Amazon Nova (Bedrock)",
+    endpoint: "https://bedrock-runtime.us-east-1.amazonaws.com/model/amazon.nova-pro-v1:0/converse",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Amz-Bedrock-Key": "{{API_KEY}}",
+    },
+    bodyTemplate: JSON.stringify({
+      messages: [{ role: "user", content: [{ text: "{{PROMPT}}" }] }],
+      inferenceConfig: { maxTokens: 1024 },
+    }, null, 2),
+    docsUrl: "https://docs.aws.amazon.com/nova/latest/userguide/using-nova-apis.html",
+    createKeyUrl: "https://console.aws.amazon.com/iam/home#/security_credentials",
+    color: "text-amber-300 bg-amber-300/10 border-amber-300/20",
   },
   // ── Custom ────────────────────────────────────────────────────────────────
   {
@@ -573,14 +849,6 @@ function ImageIcon() {
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <polyline points="21 15 16 10 5 21" />
-    </svg>
-  )
-}
-
-function ChatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   )
 }
@@ -740,12 +1008,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "gemini-chat" | "image-gen" | "video-gen">("vision")
-  // Gemini Chat config
-  const [geminiModel, setGeminiModel] = useState(GEMINI_CHAT_MODELS[0])
-  const [geminiTemperature, setGeminiTemperature] = useState(1.0)
-  const [geminiMaxTokens, setGeminiMaxTokens] = useState(2048)
-  const [geminiSystemPrompt, setGeminiSystemPrompt] = useState("")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen">("vision")
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1264,55 +1527,6 @@ export default function ManualKeyTester() {
             )}
           </div>
 
-          {/* ── Gemini Chat config — shown when gemini-chat tab is active ── */}
-          {activeTab === "gemini-chat" && (
-            <div className="flex flex-col gap-3 pt-1 border-t border-border">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gemini Chat Config</p>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
-                <select
-                  value={geminiModel}
-                  onChange={(e) => setGeminiModel(e.target.value)}
-                  className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {GEMINI_CHAT_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Temperature</label>
-                  <span className="text-[10px] font-mono text-primary">{geminiTemperature.toFixed(1)}</span>
-                </div>
-                <input type="range" min="0" max="2" step="0.1" value={geminiTemperature}
-                  onChange={(e) => setGeminiTemperature(parseFloat(e.target.value))}
-                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
-                <div className="flex justify-between text-[9px] text-muted-foreground/50">
-                  <span>Precise</span><span>Creative</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Max Tokens</label>
-                  <span className="text-[10px] font-mono text-primary">{geminiMaxTokens.toLocaleString()}</span>
-                </div>
-                <input type="range" min="128" max="8192" step="128" value={geminiMaxTokens}
-                  onChange={(e) => setGeminiMaxTokens(parseInt(e.target.value))}
-                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">System Prompt</label>
-                <textarea value={geminiSystemPrompt} onChange={(e) => setGeminiSystemPrompt(e.target.value)}
-                  placeholder="Optional system instruction..."
-                  rows={3}
-                  className="w-full rounded-md border border-border bg-background text-foreground text-[11px] px-2.5 py-1.5 resize-none placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed" />
-              </div>
-            </div>
-          )}
-
           {/* ── Image Gen config — provider-aware ── */}
           {activeTab === "image-gen" && (() => {
             const imageModels = getImageCapabilities(selectedPreset.id)
@@ -1468,7 +1682,6 @@ export default function ManualKeyTester() {
           {/* AI Generation tabs — icon only */}
           <div className="flex items-center gap-0.5 py-1.5 mr-2">
             {([
-              { id: "gemini-chat", icon: <GeminiIcon />, title: "AI Chat" },
               { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
               { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
             ] as const).map((t) => (
@@ -1788,20 +2001,6 @@ export default function ManualKeyTester() {
               </p>
             </div>
           </>
-        )}
-
-        {/* ── GEMINI CHAT TAB ──────────────────────────────────────────────── */}
-        {activeTab === "gemini-chat" && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <Chat
-              apiKey={apiKey}
-              model={geminiModel}
-              temperature={geminiTemperature}
-              maxTokens={geminiMaxTokens}
-              systemPrompt={geminiSystemPrompt}
-              providerName={selectedPreset.name}
-            />
-          </div>
         )}
 
         {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
