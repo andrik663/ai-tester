@@ -1,13 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import Chat from "@/components/chat"
-import VideoTester from "@/components/video-tester"
-import ImageTester from "@/components/image-tester"
 import ApiKeyScraper from "@/components/api-key-scraper"
 import ManualKeyTester from "@/components/manual-key-tester"
 
-type Tab = "manual" | "chat" | "image" | "video" | "scraper"
+type Tab = "manual" | "scraper"
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -20,31 +17,6 @@ function TerminalIcon({ className = "w-4 h-4" }: { className?: string }) {
   )
 }
 
-function MessageIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-    </svg>
-  )
-}
-
-function VideoIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-    </svg>
-  )
-}
-
-function PhotoIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
-  )
-}
 
 function KeyScanIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -82,28 +54,8 @@ const NAV_ITEMS: { id: Tab; label: string; description: string; icon: React.FC<{
   {
     id: "manual",
     label: "API Key Tester",
-    description: "Test any provider with your API key",
+    description: "Chat · Vision · OCR · Gemini · Image · Video",
     icon: TerminalIcon,
-  },
-  {
-    id: "chat",
-    label: "Gemini Chat",
-    description: "Chat using Gemini built-in key",
-    icon: MessageIcon,
-  },
-  {
-    id: "image",
-    label: "Image Generation",
-    description: "Generate images with Nano Banana",
-    icon: PhotoIcon,
-    badge: "Nano Banana",
-  },
-  {
-    id: "video",
-    label: "Video Generation",
-    description: "Generate video with Veo 3.1",
-    icon: VideoIcon,
-    badge: "Veo 3.1",
   },
   {
     id: "scraper",
@@ -252,15 +204,6 @@ export default function Page() {
         <div className="flex-1 min-h-0 overflow-hidden">
           <div className={tab === "manual" ? "h-full" : "hidden h-full"}>
             <ManualKeyTester />
-          </div>
-          <div className={tab === "chat" ? "h-full" : "hidden h-full"}>
-            <Chat />
-          </div>
-          <div className={tab === "image" ? "h-full" : "hidden h-full"}>
-            <ImageTester />
-          </div>
-          <div className={tab === "video" ? "h-full" : "hidden h-full"}>
-            <VideoTester />
           </div>
           <div className={tab === "scraper" ? "h-full" : "hidden h-full"}>
             <ApiKeyScraper />

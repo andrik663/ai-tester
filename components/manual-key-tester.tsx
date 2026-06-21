@@ -5,6 +5,9 @@ import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
+import Chat from "@/components/chat"
+import ImageTester from "@/components/image-tester"
+import VideoTester from "@/components/video-tester"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -602,6 +605,33 @@ function XIcon() {
   )
 }
 
+function GeminiIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M12 2C12 2 8 8 8 12s4 10 4 10 4-4 4-10S12 2 12 2z" />
+      <path d="M2 12c0 0 6-4 10-4s10 4 10 4-4 4-10 4S2 12 2 12z" />
+    </svg>
+  )
+}
+
+function PhotoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  )
+}
+
+function VideoTabIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+    </svg>
+  )
+}
+
 // ── Log level styles ───────────────────��──────────────────────────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
@@ -708,8 +738,8 @@ export default function ManualKeyTester() {
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
-  // Tab state: "chat" | "vision" | "ocr"
-  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr">("chat")
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "gemini-chat" | "image-gen" | "video-gen">("chat")
   // Vision / OCR state
   const [visionPrompt, setVisionPrompt] = useState("")
   const [visionImage, setVisionImage] = useState<{ dataUrl: string; mimeType: string; name: string } | null>(null)
@@ -1245,22 +1275,49 @@ export default function ManualKeyTester() {
             </svg>
           </button>
 
-          {/* Tabs */}
-          <div className="flex items-center gap-0.5 py-1.5 mr-2">
-            {(["chat", "vision", "ocr"] as const).map((t) => (
+          {/* API Tester tabs */}
+          <div className="flex items-center gap-0.5 py-1.5 mr-1">
+            {([
+              { id: "chat", icon: <ChatIcon />, label: "Chat" },
+              { id: "vision", icon: <ImageIcon />, label: "Vision" },
+              { id: "ocr", icon: <ScanIcon />, label: "OCR" },
+            ] as const).map((t) => (
               <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors capitalize ${
-                  activeTab === t
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors ${
+                  activeTab === t.id
                     ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 }`}
               >
-                {t === "chat" && <ChatIcon />}
-                {t === "vision" && <ImageIcon />}
-                {t === "ocr" && <ScanIcon />}
-                <span className="hidden sm:inline">{t === "chat" ? "Chat" : t === "vision" ? "Vision" : "OCR"}</span>
+                {t.icon}
+                <span className="hidden sm:inline">{t.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Divider between API tester and Gemini built-in tabs */}
+          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
+
+          {/* Gemini built-in tabs */}
+          <div className="flex items-center gap-0.5 py-1.5 mr-2">
+            {([
+              { id: "gemini-chat", icon: <GeminiIcon />, label: "Gemini" },
+              { id: "image-gen", icon: <PhotoIcon />, label: "Image" },
+              { id: "video-gen", icon: <VideoTabIcon />, label: "Video" },
+            ] as const).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors ${
+                  activeTab === t.id
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                {t.icon}
+                <span className="hidden sm:inline">{t.label}</span>
               </button>
             ))}
           </div>
@@ -1460,7 +1517,7 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── VISION TAB ───────────────────────────────────────────────────── */}
+        {/* ── VISION TAB ────────────��──────────────────────────────────────── */}
         {activeTab === "vision" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
@@ -1731,6 +1788,27 @@ export default function ManualKeyTester() {
               </p>
             </div>
           </>
+        )}
+
+        {/* ── GEMINI CHAT TAB ──────────────────────────────────────────────── */}
+        {activeTab === "gemini-chat" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Chat />
+          </div>
+        )}
+
+        {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
+        {activeTab === "image-gen" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ImageTester />
+          </div>
+        )}
+
+        {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
+        {activeTab === "video-gen" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <VideoTester />
+          </div>
         )}
 
       </div>
