@@ -673,9 +673,23 @@ export default function ManualKeyTester() {
 
           {/* API Key */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              API Key
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                API Key
+              </label>
+              {apiKey && (
+                <button
+                  onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
+                  className="text-[9px] text-muted-foreground/60 hover:text-destructive transition-colors flex items-center gap-0.5"
+                  title="Clear API key"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  Clear
+                </button>
+              )}
+            </div>
             <div className="relative">
               <input
                 type={showKey ? "text" : "password"}
@@ -687,6 +701,7 @@ export default function ManualKeyTester() {
               <button
                 onClick={() => setShowKey((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                title={showKey ? "Hide key" : "Show key"}
               >
                 <EyeIcon show={showKey} />
               </button>
