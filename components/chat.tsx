@@ -56,6 +56,7 @@ interface ChatProps {
   temperature?: number
   maxTokens?: number
   systemPrompt?: string
+  providerName?: string
 }
 
 export default function Chat({ apiKey = "", model = GEMINI_CHAT_MODELS[0], temperature = 1.0, maxTokens = 2048, systemPrompt = "" }: ChatProps) {

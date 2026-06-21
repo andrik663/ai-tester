@@ -6,8 +6,9 @@ import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
 import Chat, { GEMINI_CHAT_MODELS } from "@/components/chat"
-import ImageTester, { IMAGE_MODELS, IMAGE_ASPECT_RATIOS } from "@/components/image-tester"
-import VideoTester, { VIDEO_MODELS, VIDEO_ASPECT_RATIOS } from "@/components/video-tester"
+import ImageTester from "@/components/image-tester"
+import VideoTester from "@/components/video-tester"
+import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -187,7 +188,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
   },
-  // ── Meta / Llama providers ────────────────────────────────────────────────
+  // ── Meta / Llama providers ─────────────────────────────────────────────��──
   {
     id: "cerebras",
     name: "Cerebras (Llama)",
@@ -745,11 +746,11 @@ export default function ManualKeyTester() {
   const [geminiTemperature, setGeminiTemperature] = useState(1.0)
   const [geminiMaxTokens, setGeminiMaxTokens] = useState(2048)
   const [geminiSystemPrompt, setGeminiSystemPrompt] = useState("")
-  // Image Gen config
-  const [imageModel, setImageModel] = useState(IMAGE_MODELS[0].id)
+  // Image Gen config — default to first Google image model
+  const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
-  // Video Gen config
-  const [videoModel, setVideoModel] = useState(VIDEO_MODELS[0].id)
+  // Video Gen config — default to first Google video model
+  const [videoModel, setVideoModel] = useState(() => getVideoCapabilities("google").models[0]?.id ?? "")
   const [videoAspectRatio, setVideoAspectRatio] = useState("16:9")
   // Vision / OCR state
   const [visionPrompt, setVisionPrompt] = useState("")
@@ -922,8 +923,13 @@ export default function ManualKeyTester() {
       Object.entries(preset.headers).map(([key, value], i) => ({ key, value, id: i }))
     )
     setBodyTemplate(preset.bodyTemplate)
-  setResult(null)
-  setShowLog(false)
+    setResult(null)
+    setShowLog(false)
+    // Reset image/video model to first supported for the new provider
+    const imgModels = getImageCapabilities(preset.id)
+    if (imgModels.length > 0) setImageModel(imgModels[0].id)
+    const { models: vidModels } = getVideoCapabilities(preset.id)
+    if (vidModels.length > 0) setVideoModel(vidModels[0].id)
   }
 
   async function runTest() {
@@ -1307,88 +1313,105 @@ export default function ManualKeyTester() {
             </div>
           )}
 
-          {/* ── Image Gen config — shown when image-gen tab is active ── */}
-          {activeTab === "image-gen" && (
-            <div className="flex flex-col gap-3 pt-1 border-t border-border">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Image Gen Config</p>
+          {/* ── Image Gen config — provider-aware ── */}
+          {activeTab === "image-gen" && (() => {
+            const imageModels = getImageCapabilities(selectedPreset.id)
+            const isImageSupported = imageModels.length > 0
+            return (
+              <div className="flex flex-col gap-3 pt-1 border-t border-border">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Image Gen Config</p>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
-                {IMAGE_MODELS.map((m) => (
-                  <button key={m.id} onClick={() => setImageModel(m.id)}
-                    className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
-                      imageModel === m.id ? "border-primary/60 bg-primary/10" : "border-border hover:bg-secondary/40"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[11px] font-semibold text-foreground">{m.label}</span>
-                      <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-primary/20 text-primary">{m.tag}</span>
+                {!isImageSupported ? (
+                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
+                    {selectedPreset.name} does not support image generation. Switch to Gemini, OpenAI, Together AI, Fireworks, or Replicate.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                      {imageModels.map((m) => (
+                        <button key={m.id} onClick={() => setImageModel(m.id)}
+                          className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
+                            imageModel === m.id ? "border-primary/60 bg-primary/10" : "border-border hover:bg-secondary/40"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[11px] font-semibold text-foreground">{m.label}</span>
+                            <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-primary/20 text-primary">{m.tag}</span>
+                          </div>
+                          <p className="text-[9px] text-muted-foreground leading-snug">{m.description}</p>
+                        </button>
+                      ))}
                     </div>
-                    <p className="text-[9px] text-muted-foreground leading-snug">{m.description}</p>
-                  </button>
-                ))}
-              </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {IMAGE_ASPECT_RATIOS.map((r) => (
-                    <button key={r} onClick={() => setImageAspectRatio(r)}
-                      className={`py-1.5 rounded-md text-[11px] font-mono font-medium border transition-colors ${
-                        imageAspectRatio === r
-                          ? "bg-primary/20 border-primary/60 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {IMAGE_ASPECT_RATIOS.map((r) => (
+                          <button key={r} onClick={() => setImageAspectRatio(r)}
+                            className={`py-1.5 rounded-md text-[11px] font-mono font-medium border transition-colors ${
+                              imageAspectRatio === r
+                                ? "bg-primary/20 border-primary/60 text-primary"
+                                : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
-          )}
+            )
+          })()}
 
-          {/* ── Video Gen config — shown when video-gen tab is active ── */}
-          {activeTab === "video-gen" && (
-            <div className="flex flex-col gap-3 pt-1 border-t border-border">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Video Gen Config</p>
+          {/* ── Video Gen config — provider-aware ── */}
+          {activeTab === "video-gen" && (() => {
+            const { models: videoModels, aspectRatios: videoAspects } = getVideoCapabilities(selectedPreset.id)
+            const isVideoSupported = videoModels.length > 0
+            return (
+              <div className="flex flex-col gap-3 pt-1 border-t border-border">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Video Gen Config</p>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
-                <select
-                  value={videoModel}
-                  onChange={(e) => setVideoModel(e.target.value)}
-                  className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {VIDEO_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-                </select>
+                {!isVideoSupported ? (
+                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
+                    {selectedPreset.name} does not support video generation. Switch to Gemini (Google) for Veo 3.1 or MiniMax (Hailuo) for Hailuo Video.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                      <select
+                        value={videoModel}
+                        onChange={(e) => setVideoModel(e.target.value)}
+                        className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        {videoModels.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                      <div className="flex gap-2">
+                        {videoAspects.map((r) => (
+                          <button key={r} onClick={() => setVideoAspectRatio(r)}
+                            className={`flex-1 py-1.5 rounded-md border text-[11px] font-mono transition-colors ${
+                              videoAspectRatio === r
+                                ? "border-primary text-primary bg-primary/10"
+                                : "border-border text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
-                <div className="flex gap-2">
-                  {VIDEO_ASPECT_RATIOS.map((r) => (
-                    <button key={r} onClick={() => setVideoAspectRatio(r)}
-                      className={`flex-1 py-1.5 rounded-md border text-[11px] font-mono transition-colors ${
-                        videoAspectRatio === r
-                          ? "border-primary text-primary bg-primary/10"
-                          : "border-border text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1 text-[9px] text-muted-foreground/60 leading-relaxed">
-                <p>· 8-second 720p / 1080p / 4K output</p>
-                <p>· Natively synchronized audio</p>
-                <p>· Landscape &amp; portrait modes</p>
-                <p>· Requires paid Gemini API tier</p>
-              </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* Reset */}
           <button
@@ -1418,48 +1441,48 @@ export default function ManualKeyTester() {
             </svg>
           </button>
 
-          {/* API Tester tabs */}
+          {/* API Tester tabs — icon only */}
           <div className="flex items-center gap-0.5 py-1.5 mr-1">
             {([
-              { id: "vision", icon: <ImageIcon />, label: "Vision" },
-              { id: "ocr", icon: <ScanIcon />, label: "OCR" },
+              { id: "vision", icon: <ImageIcon />, title: "Vision" },
+              { id: "ocr", icon: <ScanIcon />, title: "OCR" },
             ] as const).map((t) => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors ${
+                title={t.title}
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                   activeTab === t.id
                     ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 }`}
               >
                 {t.icon}
-                <span className="hidden sm:inline">{t.label}</span>
               </button>
             ))}
           </div>
 
-          {/* Divider between API tester and Gemini built-in tabs */}
+          {/* Divider */}
           <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
 
-          {/* Gemini built-in tabs */}
+          {/* AI Generation tabs — icon only */}
           <div className="flex items-center gap-0.5 py-1.5 mr-2">
             {([
-              { id: "gemini-chat", icon: <GeminiIcon />, label: "Gemini" },
-              { id: "image-gen", icon: <PhotoIcon />, label: "Image" },
-              { id: "video-gen", icon: <VideoTabIcon />, label: "Video" },
+              { id: "gemini-chat", icon: <GeminiIcon />, title: "AI Chat" },
+              { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
+              { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
             ] as const).map((t) => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors ${
+                title={t.title}
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                   activeTab === t.id
                     ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 }`}
               >
                 {t.icon}
-                <span className="hidden sm:inline">{t.label}</span>
               </button>
             ))}
           </div>
@@ -1776,6 +1799,7 @@ export default function ManualKeyTester() {
               temperature={geminiTemperature}
               maxTokens={geminiMaxTokens}
               systemPrompt={geminiSystemPrompt}
+              providerName={selectedPreset.name}
             />
           </div>
         )}
@@ -1787,6 +1811,7 @@ export default function ManualKeyTester() {
               apiKey={apiKey}
               model={imageModel}
               aspectRatio={imageAspectRatio}
+              providerId={selectedPreset.id}
             />
           </div>
         )}
@@ -1798,6 +1823,7 @@ export default function ManualKeyTester() {
               apiKey={apiKey}
               model={videoModel}
               aspectRatio={videoAspectRatio}
+              providerId={selectedPreset.id}
             />
           </div>
         )}
