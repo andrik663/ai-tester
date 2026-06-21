@@ -27,6 +27,40 @@ export async function POST(req: Request) {
     return Response.json({ operationName: `minimax:${data.task_id}`, provider: "minimax" })
   }
 
+  // ── Together AI Wan 2.7 video ──────────────────────────────────────────────
+  if (providerId === "together") {
+    const selectedModel = model ?? "Wan-AI/wan2.7-t2v"
+    const res = await fetch("https://api.together.ai/v2/videos", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: selectedModel, prompt, resolution: "720P", ratio: aspectRatio ?? "16:9", seconds: "5" }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+      return Response.json({ error: err.error?.message ?? `HTTP ${res.status}` }, { status: res.status })
+    }
+    const data = await res.json() as { id?: string; error?: string }
+    if (!data.id) return Response.json({ error: data.error ?? "No job ID returned" }, { status: 500 })
+    return Response.json({ operationName: `together:${data.id}`, provider: "together" })
+  }
+
+  // ── Zhipu CogVideoX video ──────────────────────────────────────────────────
+  if (providerId === "zhipu") {
+    const selectedModel = model ?? "cogvideox-2"
+    const res = await fetch("https://open.bigmodel.cn/api/paas/v4/videos/generations", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: selectedModel, prompt }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+      return Response.json({ error: err.error?.message ?? `HTTP ${res.status}` }, { status: res.status })
+    }
+    const data = await res.json() as { id?: string; error?: { message?: string } }
+    if (!data.id) return Response.json({ error: data.error?.message ?? "No task ID returned" }, { status: 500 })
+    return Response.json({ operationName: `zhipu:${data.id}`, provider: "zhipu" })
+  }
+
   // ── Google Veo (default) ───────────────────────────────────────────────────
   const selectedModel = model ?? "veo-3.1-generate-preview"
   const response = await fetch(
@@ -64,6 +98,46 @@ export async function GET(req: Request) {
       status: 400,
       headers: { "Content-Type": "application/json" },
     })
+  }
+
+  // ── Together AI polling ───────────────────────────────────────────────────
+  if (operationName.startsWith("together:")) {
+    const jobId = operationName.slice("together:".length)
+    const res = await fetch(`https://api.together.ai/v2/videos/${jobId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    })
+    if (!res.ok) return Response.json({ done: true, error: `HTTP ${res.status}` })
+    const data = await res.json() as { status?: string; output?: { url?: string }; error?: string }
+    if (data.status === "error" || data.error) return Response.json({ done: true, error: data.error ?? "Generation failed" })
+    if (data.status !== "completed" || !data.output?.url) return Response.json({ done: false })
+    // Download and base64-encode
+    const videoRes = await fetch(data.output.url)
+    if (!videoRes.ok) return Response.json({ done: true, error: "Failed to download video" })
+    const buf = await videoRes.arrayBuffer()
+    const base64 = Buffer.from(buf).toString("base64")
+    return Response.json({ done: true, videoBase64: base64, mimeType: "video/mp4" })
+  }
+
+  // ── Zhipu CogVideoX polling ────────────────────────────────────────────────
+  if (operationName.startsWith("zhipu:")) {
+    const taskId = operationName.slice("zhipu:".length)
+    const res = await fetch(`https://open.bigmodel.cn/api/paas/v4/async-result/${taskId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    })
+    if (!res.ok) return Response.json({ done: true, error: `HTTP ${res.status}` })
+    const data = await res.json() as {
+      task_status?: string
+      video_result?: Array<{ url?: string; cover_image_url?: string }>
+      error?: { message?: string }
+    }
+    if (data.task_status === "FAIL") return Response.json({ done: true, error: data.error?.message ?? "Generation failed" })
+    if (data.task_status !== "SUCCESS" || !data.video_result?.[0]?.url) return Response.json({ done: false })
+    const videoUrl = data.video_result[0].url!
+    const videoRes = await fetch(videoUrl)
+    if (!videoRes.ok) return Response.json({ done: true, error: "Failed to download video" })
+    const buf = await videoRes.arrayBuffer()
+    const base64 = Buffer.from(buf).toString("base64")
+    return Response.json({ done: true, videoBase64: base64, mimeType: "video/mp4" })
   }
 
   // ── MiniMax polling ────────────────────────────────────────────────────────

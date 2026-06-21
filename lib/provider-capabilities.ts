@@ -89,7 +89,11 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
         description: "High-resolution creative image synthesis",
       },
     ],
-    video: [],
+    video: [
+      { id: "Wan-AI/wan2.7-t2v", label: "Wan 2.7 T2V", badge: "NEW" },
+      { id: "Wan-AI/wan2.7-i2v", label: "Wan 2.7 I2V", badge: "NEW" },
+    ],
+    videoAspectRatios: ["16:9", "9:16"],
   },
 
   fireworks: {
@@ -203,6 +207,81 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     ],
     videoAspectRatios: ["16:9", "9:16"],
   },
+
+  // ── xAI Aurora image generation ───────────────────────────────────────────
+  xai: {
+    image: [
+      {
+        id: "grok-imagine-image-quality",
+        label: "Aurora (Quality)",
+        tag: "Aurora",
+        description: "xAI Aurora high-quality image generation",
+      },
+      {
+        id: "grok-imagine-image-fast",
+        label: "Aurora (Fast)",
+        tag: "Aurora Fast",
+        description: "xAI Aurora fast image generation",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Zhipu CogView / CogVideoX ────────────────────────────────────────────
+  zhipu: {
+    image: [
+      {
+        id: "cogview-4",
+        label: "CogView-4",
+        tag: "CogView",
+        description: "Zhipu AI high-quality image generation",
+      },
+      {
+        id: "cogview-4-250304",
+        label: "CogView-4 Enhanced",
+        tag: "CogView Pro",
+        description: "Enhanced CogView-4 with richer detail",
+      },
+    ],
+    video: [
+      { id: "cogvideox-2", label: "CogVideoX-2", badge: "NEW" },
+      { id: "cogvideox", label: "CogVideoX", badge: "STABLE" },
+    ],
+    videoAspectRatios: ["16:9", "9:16"],
+  },
+
+  // ── Qwen Wanx image generation ───────────────────────────────────────────
+  qwen: {
+    image: [
+      {
+        id: "wan2.1-t2i-turbo",
+        label: "Wanx 2.1 Turbo",
+        tag: "Wanx",
+        description: "Fast high-quality text-to-image via Qwen/DashScope",
+      },
+      {
+        id: "wan2.1-t2i",
+        label: "Wanx 2.1",
+        tag: "Wanx",
+        description: "Detailed photorealistic image generation",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Stepfun image generation ─────────────────────────────────────────────
+  stepfun: {
+    image: [
+      {
+        id: "step-image-edit-2",
+        label: "Step Image Edit 2",
+        tag: "Stepfun",
+        description: "Stepfun high-quality image generation and editing",
+      },
+    ],
+    video: [],
+  },
+
 }
 
 // Providers that support image generation

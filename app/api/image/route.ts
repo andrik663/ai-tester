@@ -185,9 +185,107 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
       return { error: d.detail ?? d.error ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
     },
   },
+
+  // ── xAI Aurora ────────────────────────────────────────────────────────────
+  xai: {
+    buildUrl: () => "https://api.x.ai/v1/images/generations",
+    buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
+    buildBody: (prompt, model, aspectRatio) => ({
+      model,
+      prompt,
+      n: 1,
+      aspect_ratio: aspectRatio,
+      response_format: "b64_json",
+    }),
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ b64_json?: string; url?: string; revised_prompt?: string }> }
+      const item = d.data?.[0]
+      return {
+        imageData: item?.b64_json ?? null,
+        imageMimeType: "image/png",
+        textContent: item?.revised_prompt ?? "",
+      }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string; type?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: d.error?.type ?? "ERROR" }
+    },
+  },
+
+  // ── Zhipu CogView ─────────────────────────────────────────────────────────
+  zhipu: {
+    buildUrl: () => "https://open.bigmodel.cn/api/paas/v4/images/generations",
+    buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
+    buildBody: (prompt, model) => ({ model, prompt }),
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ url?: string; b64_json?: string }> }
+      const item = d.data?.[0]
+      return {
+        imageData: item?.b64_json ?? null,
+        imageMimeType: "image/png",
+        textContent: item?.url ?? "",
+      }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string; code?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: d.error?.code ?? "ERROR" }
+    },
+  },
+
+  // ── Qwen Wanx (DashScope) ────────────────────────────────────────────────
+  // Wanx uses the multimodal-generation endpoint with async task pattern
+  qwen: {
+    buildUrl: () => "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis",
+    buildHeaders: (apiKey) => ({
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+      "X-DashScope-Async": "enable",
+    }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const sizeMap: Record<string, string> = { "1:1": "1024*1024", "16:9": "1792*1024", "9:16": "1024*1792", "4:3": "1024*768" }
+      return {
+        model,
+        input: { prompt },
+        parameters: { size: sizeMap[aspectRatio] ?? "1024*1024", n: 1 },
+      }
+    },
+    extractImage: (data: unknown) => {
+      // Async: returns task_id — client will see URL in textContent
+      const d = data as {
+        output?: { task_id?: string; results?: Array<{ url?: string }>; task_status?: string }
+        request_id?: string
+      }
+      const url = d.output?.results?.[0]?.url ?? ""
+      return { imageData: null, imageMimeType: "image/png", textContent: url }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { message?: string; code?: string }
+      return { error: d.message ?? `HTTP ${status}`, errorCode: status, errorStatus: d.code ?? "ERROR" }
+    },
+  },
+
+  // ── Stepfun image generation ──────────────────────────────────────────────
+  stepfun: {
+    buildUrl: () => "https://api.stepfun.com/v1/images/generations",
+    buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1920x1080", "9:16": "1080x1920", "4:3": "1024x768" }
+      return { model, prompt, n: 1, size: sizeMap[aspectRatio] ?? "1024x1024" }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ b64_json?: string; url?: string }> }
+      const item = d.data?.[0]
+      return { imageData: item?.b64_json ?? null, imageMimeType: "image/png", textContent: item?.url ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { error?: { message?: string } }
+      return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
 }
 
-// Alias: dahono uses openai-compatible image API  
+// Alias: dahono uses openai-compatible image API
+
 PROVIDER_CONFIGS.dahono = {
   ...PROVIDER_CONFIGS.openai,
   buildUrl: () => "https://gateway.dahono.com/v1/images/generations",
