@@ -7,6 +7,7 @@ import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
+import WorkingKeysPanel from "@/components/working-keys-panel"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
@@ -615,7 +616,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://console.upstage.ai/api-keys",
     color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
   },
-  // ── Tier 7: Enterprise / specialty providers ──────────────────────────────
+  // ── Tier 7: Enterprise / specialty providers ───────��──────────────────────
   {
     id: "writer",
     name: "Writer AI (Palmyra)",
@@ -1016,7 +1017,9 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen">("vision")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys">("vision")
+  // Increment to force WorkingKeysPanel to re-load from localStorage
+  const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1495,7 +1498,12 @@ export default function ManualKeyTester() {
             <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Batch Model Test
             </label>
-            <ProviderBatchTest providerId={selectedPreset.id} apiKey={apiKey} />
+            <ProviderBatchTest
+              providerId={selectedPreset.id}
+              providerName={selectedPreset.name}
+              apiKey={apiKey}
+              onSaved={() => setWorkingKeysTick((t) => t + 1)}
+            />
           </div>
 
           {/* Headers */}
@@ -1688,7 +1696,7 @@ export default function ManualKeyTester() {
           <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
 
           {/* AI Generation tabs — icon only */}
-          <div className="flex items-center gap-0.5 py-1.5 mr-2">
+          <div className="flex items-center gap-0.5 py-1.5 mr-1">
             {([
               { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
               { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
@@ -1707,6 +1715,26 @@ export default function ManualKeyTester() {
               </button>
             ))}
           </div>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
+
+          {/* Working Keys tab */}
+          <button
+            onClick={() => setActiveTab("working-keys")}
+            title="Working Keys"
+            className={`relative flex items-center justify-center w-8 h-8 rounded transition-colors ${
+              activeTab === "working-keys"
+                ? "bg-green-400/15 text-green-400"
+                : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
+            }`}
+          >
+            {/* Key icon */}
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M8.5 8h6M12.5 8v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
 
           {/* Divider */}
           <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
@@ -2064,6 +2092,20 @@ export default function ManualKeyTester() {
             </div>
           )
         })()}
+
+        {/* ── WORKING KEYS TAB ──────────────────────────────────────────────── */}
+        {activeTab === "working-keys" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <WorkingKeysPanel
+              refreshTick={workingKeysTick}
+              onUseKey={(key) => {
+                // Pre-fill the API key field when user taps "Copy Key"
+                handleApiKeyChange(key)
+                setConfigOpen(true)
+              }}
+            />
+          </div>
+        )}
 
       </div>
     </div>

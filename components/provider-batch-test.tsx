@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import type { BatchModelResult, BatchTestResponse } from "@/app/api/batch-test/route"
 import { PROVIDER_CONFIGS } from "@/app/api/batch-test/route"
+import { appendWorkingResults } from "@/lib/working-keys-store"
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -262,6 +263,9 @@ function FilterTab({
 interface Props {
   providerId: string
   apiKey: string
+  providerName?: string
+  /** Called after passing results are saved — parent can refresh its Working Keys panel */
+  onSaved?: (savedCount: number) => void
 }
 
 // Providers without a static model list (Dahono fetches live)
@@ -274,12 +278,13 @@ const UNSUPPORTED_PROVIDERS = new Set([
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ProviderBatchTest({ providerId, apiKey }: Props) {
+export default function ProviderBatchTest({ providerId, apiKey, providerName, onSaved }: Props) {
   const [loading, setLoading]           = useState(false)
   const [data, setData]                 = useState<BatchTestResponse | null>(null)
   const [error, setError]               = useState<string | null>(null)
   const [filter, setFilter]             = useState<Filter>("all")
   const [skeletonCount, setSkeletonCount] = useState(0)
+  const [savedCount, setSavedCount]     = useState<number | null>(null)
 
   const canRun = apiKey.trim().length >= 4 && !UNSUPPORTED_PROVIDERS.has(providerId)
 
@@ -296,6 +301,7 @@ export default function ProviderBatchTest({ providerId, apiKey }: Props) {
     setError(null)
     setData(null)
     setFilter("all")
+    setSavedCount(null)
 
     // For Dahono, quickly fetch model count first for skeleton display
     let skelCount = estimatedCount
@@ -318,14 +324,32 @@ export default function ProviderBatchTest({ providerId, apiKey }: Props) {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`)
-      setData(json as BatchTestResponse)
+      const batchResult = json as BatchTestResponse
+      setData(batchResult)
+
+      // Auto-save all passing results to Working Keys store
+      const passing = batchResult.results.filter((r) => r.ok)
+      if (passing.length > 0) {
+        appendWorkingResults(
+          providerId,
+          providerName ?? providerId,
+          apiKey.trim(),
+          passing.map((r) => ({
+            modelId: r.modelId,
+            latencyMs: r.latencyMs,
+            tokenUsage: r.tokenUsage,
+          })),
+        )
+        setSavedCount(passing.length)
+        onSaved?.(passing.length)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error")
     } finally {
       setLoading(false)
       setSkeletonCount(0)
     }
-  }, [providerId, apiKey, loading, canRun, estimatedCount])
+  }, [providerId, apiKey, providerName, loading, canRun, estimatedCount, onSaved])
 
   const filtered = data?.results.filter((r) => {
     if (filter === "ok")   return r.ok
@@ -397,6 +421,21 @@ export default function ProviderBatchTest({ providerId, apiKey }: Props) {
       {/* Results */}
       {data && !loading && (
         <div className="flex flex-col gap-2">
+          {/* Saved banner */}
+          {savedCount !== null && savedCount > 0 && (
+            <div className="rounded-md border border-green-400/25 bg-green-400/8 px-3 py-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] text-green-300">
+                <span className="font-semibold">{savedCount} working model{savedCount > 1 ? "s" : ""}</span> saved to Working Keys tab
+              </span>
+              <button
+                onClick={() => setSavedCount(null)}
+                className="text-[9px] text-green-400/60 hover:text-green-400 transition-colors"
+              >
+                dismiss
+              </button>
+            </div>
+          )}
+
           {/* Summary bar */}
           <div className="rounded-md border border-border bg-card px-3 py-2 flex items-center gap-3 flex-wrap">
             <span className="text-[11px] font-semibold text-foreground">
