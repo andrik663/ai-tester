@@ -121,49 +121,89 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   openai: {
     id: "openai",
     models: [
-      // Latest GPT-5 family (2025)
-      "gpt-5",
-      "gpt-5-mini",
-      // GPT-4o family
-      "gpt-4o",
-      "gpt-4o-mini",
-      "gpt-4o-2024-11-20",
-      // o-series reasoning models
-      "o3",
-      "o3-pro",
-      "o3-mini",
+      // ── Active models ──────────────────────────────────────
+      "gpt-5.3-codex",      // Most capable agentic coding model
+      "gpt-5.2",            // Previous frontier for professional work
+      "gpt-5.2-pro",        // Previous pro model
+      "gpt-5.1",            // Best for coding & agentic tasks
+      "gpt-5",              // Previous intelligent reasoning model
+      "gpt-5-mini",         // Near-frontier, low latency, high volume
+      "gpt-5-nano",         // Fastest, most cost-efficient
+      "gpt-5-pro",          // Smarter and more precise responses
+      "o3-pro",             // o3 with more compute
+      "o3",                 // Reasoning model for complex tasks
+      "gpt-4.1",            // Smartest non-reasoning model
+      "gpt-4.1-mini",       // Smaller, faster version of GPT-4.1
+      // ── Deprecated (still callable) ──────────────────────
+      "gpt-5.3-chat",
+      "gpt-5.2-chat",
+      "gpt-5.2-codex",
+      "gpt-5.1-codex",
+      "gpt-5.1-codex-max",
+      "gpt-5.1-codex-mini",
+      "gpt-5.1-chat",
+      "gpt-5-codex",
+      "gpt-5-chat",
+      "gpt-4.1-nano",
       "o4-mini",
+      "o4-mini-deep-research",
+      "o3-deep-research",
+      "o3-mini",
+      "o1-pro",
       "o1",
       "o1-mini",
-      // Legacy
+      "o1-preview",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "gpt-4o-mini-search-preview",
+      "gpt-4o-search-preview",
+      "gpt-4.5-preview",
       "gpt-4-turbo",
+      "gpt-4-turbo-preview",
+      "gpt-4",
       "gpt-3.5-turbo",
+      "chatgpt-4o-latest",
+      "codex-mini-latest",
+      "computer-use-preview",
+      "babbage-002",
+      "davinci-002",
+      "omni-moderation-latest",
+      "text-moderation-latest",
     ],
-    endpoint: "https://api.openai.com/v1/chat/completions",
+    // OpenAI Responses API (replaces /v1/chat/completions for GPT-5+)
+    endpoint: "https://api.openai.com/v1/responses",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model) => ({
       model,
-      max_tokens: MAX_TOKENS,
-      messages: [{ role: "user", content: TEST_PROMPT }],
+      input: TEST_PROMPT,
     }),
-    extractReply: openaiReply,
+    extractReply: (p) => {
+      try {
+        // Responses API: output[].content[].text
+        const output = p.output as Array<{ content?: Array<{ type: string; text: string }> }>
+        return output?.[0]?.content?.find((c) => c.type === "output_text")?.text
+      } catch { return undefined }
+    },
   },
 
-  // ── Google Gemini ─────────────────────────────────────────────────────────
+  // ── Google Gemini ────────────────────────────────────────────────�����────────
   google: {
     id: "google",
     // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
     concurrencyLimit: 2,
     models: [
-      // Gemini 2.5 (active)
+      // ── Gemini 3.x (latest, 2026) ─────────────────────────
+      "gemini-3.5-flash",           // Stable — frontier-class, cost-efficient
+      "gemini-3-flash",             // Stable — high performance, lower cost
+      "gemini-3.1-pro",             // Preview — most advanced reasoning + coding
+      "gemini-3.1-flash-lite",      // Preview — fastest, budget-friendly
+      "gemini-3.1-flash-live",      // Preview — realtime audio/dialog
+      // ── Gemini 2.5.x (stable, still active) ─────────────
       "gemini-2.5-pro",
       "gemini-2.5-flash",
-      "gemini-2.5-flash-lite-preview-06-17",
-      // Gemini 2.0 (active)
-      "gemini-2.0-flash",
-      "gemini-2.0-flash-lite",
-      // NOTE: gemini-1.5-* are sunset — removed to prevent 404s
+      "gemini-2.5-flash-lite",
+      // NOTE: gemini-2.0-* and gemini-1.5-* are sunset — removed to prevent 404s
     ],
     endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent",
     authHeader: () => ({ "Content-Type": "application/json" }),
@@ -175,29 +215,39 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: geminiReply,
   },
 
-  // ── xAI (Grok) ───────────────────────────────────────────────────────────
+  // ── xAI (Grok) — Responses API ───────────────────────────────────────────
   xai: {
     id: "xai",
     models: [
-      // Latest flagship (May 2026 forward)
+      // Chat models (Responses API)
       "grok-4.3",
       "grok-4.20-0309-reasoning",
       "grok-4.20-0309-non-reasoning",
-      // Prior generation (auto-redirects to grok-4.3 as of May 15 2026)
+      // Coding model (Responses API)
+      "grok-build-0.1",
+      // Prior generation chat
       "grok-3",
       "grok-3-fast",
       "grok-3-mini",
       "grok-3-mini-fast",
     ],
-    endpoint: "https://api.x.ai/v1/chat/completions",
+    endpoint: "https://api.x.ai/v1/responses",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model) => ({
       model,
-      max_tokens: MAX_TOKENS,
-      messages: [{ role: "user", content: TEST_PROMPT }],
+      input: [
+        { role: "system", content: "You are Grok, a highly intelligent, helpful AI assistant." },
+        { role: "user", content: TEST_PROMPT },
+      ],
     }),
-    extractReply: openaiReply,
+    // Responses API: output[].content[].text (output_text type)
+    extractReply: (p) => {
+      try {
+        const output = p.output as Array<{ content?: Array<{ type: string; text: string }> }>
+        return output?.[0]?.content?.find((c) => c.type === "output_text")?.text
+      } catch { return undefined }
+    },
   },
 
   // ── DeepSeek ──────────────────────────────────────────────────────────────
@@ -293,9 +343,16 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   minimax: {
     id: "minimax",
     models: [
-      "MiniMax-M3",
-      "MiniMax-M1",
-      "MiniMax-Text-01",
+      // ── Active models ─────────────────────────────────────
+      "MiniMax-M3",             // Frontier multimodal coding, 1M context
+      "MiniMax-M2.7",           // Recursive self-improvement
+      "MiniMax-M2.7-highspeed", // Same quality as M2.7, faster
+      // ── Legacy (still callable) ───────────────────────────
+      "MiniMax-M2.5",
+      "MiniMax-M2.5-highspeed",
+      "MiniMax-M2.1",
+      "MiniMax-M2.1-highspeed",
+      "MiniMax-M2",
     ],
     endpoint: "https://api.minimax.io/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -344,23 +401,44 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   together: {
     id: "together",
     models: [
-      // Llama 4
-      "meta-llama/Llama-4-Scout-17B-16E-Instruct",
-      "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
-      // Llama 3.x
+      // ── MiniMax ───────────────────────────────────────────
+      "MiniMaxAI/MiniMax-M3",
+      "MiniMaxAI/MiniMax-M2.7",
+      // ── Moonshot (Kimi) ───────────────────────────────────
+      "moonshotai/Kimi-K2.7-Code",
+      "moonshotai/Kimi-K2.6",
+      // ── Z.ai (GLM) ────────────────────────────────────────
+      "zai-org/GLM-5.2",
+      "zai-org/GLM-5.1",
+      "zai-org/GLM-5",
+      // ── OpenAI OSS ────────────────────────────────────────
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      // ── DeepSeek ──────────────────────────────────────────
+      "deepseek-ai/DeepSeek-V4-Pro",
+      // ── NVIDIA ────────────────────────────────────────────
+      "nvidia/nemotron-3-ultra-550b-a55b",
+      // ── Qwen ──────────────────────────────────────────────
+      "Qwen/Qwen3.7-Max",
+      "Qwen/Qwen3.7-Plus",
+      "Qwen/Qwen3.6-Plus",
+      "Qwen/Qwen3.5-9B",
+      "Qwen/Qwen3.5-397B-A17B",
+      "Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
+      "Qwen/Qwen2.5-7B-Instruct-Turbo",
+      // ── Meta Llama ────────────────────────────────────────
       "meta-llama/Llama-3.3-70B-Instruct-Turbo",
       "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-      // DeepSeek
-      "deepseek-ai/DeepSeek-V3",
-      "deepseek-ai/DeepSeek-R1",
-      // Qwen
-      "Qwen/Qwen3-235B-A22B",
-      "Qwen/Qwen2.5-72B-Instruct-Turbo",
-      // Mistral
-      "mistralai/Mixtral-8x7B-Instruct-v0.1",
-      "mistralai/Mistral-7B-Instruct-v0.3",
-      // Google
-      "google/gemma-2-9b-it",
+      "meta-llama/Meta-Llama-3-8B-Instruct-Lite",
+      // ── Google ────────────────────────────────────────────
+      "google/gemma-4-31B-it",
+      "google/gemma-3n-E4B-it",
+      // ── Other ─────────────────────────────────────────────
+      "essentialai/rnj-1-instruct",
+      "deepcogito/cogito-v2-1-671b",
+      "LiquidAI/LFM2-24B-A2B",
+      "pearl-ai/gemma-4-31b-it",
+      "meta-llama/Llama-Guard-4-12B",
     ],
     endpoint: "https://api.together.ai/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -783,7 +861,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Tencent Hunyuan ───────────────────────────────────────────────────────
+  // ─�� Tencent Hunyuan ───────────────────────────────────────────────────────
   hunyuan: {
     id: "hunyuan",
     models: [

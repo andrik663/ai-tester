@@ -7,6 +7,7 @@ import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
+import WorkingKeysPanel from "@/components/working-keys-panel"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
@@ -66,50 +67,63 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "openai",
     name: "GPT (OpenAI)",
-    endpoint: "https://api.openai.com/v1/chat/completions",
+    endpoint: "https://api.openai.com/v1/responses",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Active: gpt-5.3-codex, gpt-5.2, gpt-5.2-pro, gpt-5.1, gpt-5, gpt-5-mini,
+    //   gpt-5-nano, gpt-5-pro, o3-pro, o3, gpt-4.1, gpt-4.1-mini
+    // Deprecated (still callable): gpt-5.3-chat, gpt-5.2-codex, gpt-5.1-codex,
+    //   gpt-5.1-codex-max, gpt-5.1-codex-mini, gpt-5-codex, gpt-4.1-nano,
+    //   o4-mini, o3-mini, o1-pro, o1, o1-mini, gpt-4o, gpt-4o-mini, gpt-4-turbo,
+    //   gpt-4, gpt-3.5-turbo, babbage-002, davinci-002, codex-mini-latest
     bodyTemplate: JSON.stringify({
-      model: "gpt-4o-mini",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: "{{PROMPT}}" }],
+      model: "gpt-5.3-codex",
+      input: "{{PROMPT}}",
     }, null, 2),
-    docsUrl: "https://platform.openai.com/docs/api-reference/chat",
+    docsUrl: "https://platform.openai.com/docs/api-reference/responses",
     createKeyUrl: "https://platform.openai.com/api-keys",
     color: "text-green-400 bg-green-400/10 border-green-400/30",
   },
   {
     id: "google",
     name: "Gemini (Google)",
-    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{API_KEY}}",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={{API_KEY}}",
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    // Models (Gemini 3.x): gemini-3.5-flash, gemini-3.1-pro, gemini-3-flash,
+    //   gemini-3.1-flash-lite, gemini-3.1-flash-live
+    // Models (Gemini 2.5.x): gemini-2.5-pro, gemini-2.5-flash, gemini-2.5-flash-lite
+    // Change model in the URL path above to switch models
     bodyTemplate: JSON.stringify({
       contents: [{ parts: [{ text: "{{PROMPT}}" }] }],
       generationConfig: { maxOutputTokens: 1024 },
     }, null, 2),
-    docsUrl: "https://ai.google.dev/gemini-api/docs/text-generation",
+    docsUrl: "https://ai.google.dev/gemini-api/docs/models",
     createKeyUrl: "https://aistudio.google.com/apikey",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
   {
     id: "xai",
     name: "Grok (xAI)",
-    endpoint: "https://api.x.ai/v1/chat/completions",
+    endpoint: "https://api.x.ai/v1/responses",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Chat: grok-4.3 | Coding: grok-build-0.1 | Image: grok-imagine-image-quality, grok-imagine-image-fast
+    // Voice: POST /v1/tts  { text, voice_id: "eve", language: "en" }
     bodyTemplate: JSON.stringify({
       model: "grok-4.3",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: "{{PROMPT}}" }],
+      input: [
+        { role: "system", content: "You are Grok, a highly intelligent, helpful AI assistant." },
+        { role: "user", content: "{{PROMPT}}" },
+      ],
     }, null, 2),
-    docsUrl: "https://docs.x.ai/docs/overview",
+    docsUrl: "https://docs.x.ai/developers/models",
     createKeyUrl: "https://console.x.ai/",
     color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
   },
@@ -171,20 +185,22 @@ const PRESETS: ProviderPreset[] = [
   },
   {
     id: "minimax",
-    name: "MiniMax (Hailuo)",
+    name: "MiniMax",
     endpoint: "https://api.minimax.io/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Active: MiniMax-M3, MiniMax-M2.7, MiniMax-M2.7-highspeed
+    // Legacy: MiniMax-M2.5, MiniMax-M2.5-highspeed, MiniMax-M2.1, MiniMax-M2.1-highspeed, MiniMax-M2
     bodyTemplate: JSON.stringify({
       model: "MiniMax-M3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://platform.minimaxi.com/document/ChatCompletion%20v2",
-    createKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key",
+    docsUrl: "https://platform.minimax.io/docs/guides/models-intro",
+    createKeyUrl: "https://platform.minimax.io/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
   },
   // ── Meta / Llama providers ─────────────────────────────────────────────��──
@@ -385,12 +401,29 @@ const PRESETS: ProviderPreset[] = [
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
+    // Chat models (exact API strings):
+    //   MiniMaxAI/MiniMax-M3, MiniMaxAI/MiniMax-M2.7
+    //   moonshotai/Kimi-K2.7-Code, moonshotai/Kimi-K2.6
+    //   zai-org/GLM-5.2, zai-org/GLM-5.1, zai-org/GLM-5
+    //   openai/gpt-oss-120b, openai/gpt-oss-20b
+    //   deepseek-ai/DeepSeek-V4-Pro
+    //   nvidia/nemotron-3-ultra-550b-a55b
+    //   Qwen/Qwen3.7-Max, Qwen/Qwen3.7-Plus, Qwen/Qwen3.6-Plus
+    //   Qwen/Qwen3.5-9B, Qwen/Qwen3.5-397B-A17B
+    //   Qwen/Qwen3-235B-A22B-Instruct-2507-tput
+    //   Qwen/Qwen2.5-7B-Instruct-Turbo
+    //   meta-llama/Llama-3.3-70B-Instruct-Turbo
+    //   meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo
+    //   meta-llama/Meta-Llama-3-8B-Instruct-Lite
+    //   google/gemma-4-31B-it, google/gemma-3n-E4B-it
+    //   essentialai/rnj-1-instruct, deepcogito/cogito-v2-1-671b
+    //   LiquidAI/LFM2-24B-A2B, pearl-ai/gemma-4-31b-it
     bodyTemplate: JSON.stringify({
-      model: "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      model: "MiniMaxAI/MiniMax-M3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://docs.together.ai/reference/chat-completions-1",
+    docsUrl: "https://docs.together.ai/docs/serverless-models",
     createKeyUrl: "https://api.together.ai/settings/api-keys",
     color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
   },
@@ -615,7 +648,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://console.upstage.ai/api-keys",
     color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
   },
-  // ── Tier 7: Enterprise / specialty providers ──────────────────────────────
+  // ─�� Tier 7: Enterprise / specialty providers ───────��──────────────────────
   {
     id: "writer",
     name: "Writer AI (Palmyra)",
@@ -1016,7 +1049,9 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen">("vision")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys">("vision")
+  // Increment to force WorkingKeysPanel to re-load from localStorage
+  const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1495,7 +1530,12 @@ export default function ManualKeyTester() {
             <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               Batch Model Test
             </label>
-            <ProviderBatchTest providerId={selectedPreset.id} apiKey={apiKey} />
+            <ProviderBatchTest
+              providerId={selectedPreset.id}
+              providerName={selectedPreset.name}
+              apiKey={apiKey}
+              onSaved={() => setWorkingKeysTick((t) => t + 1)}
+            />
           </div>
 
           {/* Headers */}
@@ -1688,7 +1728,7 @@ export default function ManualKeyTester() {
           <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
 
           {/* AI Generation tabs — icon only */}
-          <div className="flex items-center gap-0.5 py-1.5 mr-2">
+          <div className="flex items-center gap-0.5 py-1.5 mr-1">
             {([
               { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
               { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
@@ -1707,6 +1747,26 @@ export default function ManualKeyTester() {
               </button>
             ))}
           </div>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
+
+          {/* Working Keys tab */}
+          <button
+            onClick={() => setActiveTab("working-keys")}
+            title="Working Keys"
+            className={`relative flex items-center justify-center w-8 h-8 rounded transition-colors ${
+              activeTab === "working-keys"
+                ? "bg-green-400/15 text-green-400"
+                : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
+            }`}
+          >
+            {/* Key icon */}
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M8.5 8h6M12.5 8v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
 
           {/* Divider */}
           <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
@@ -2064,6 +2124,20 @@ export default function ManualKeyTester() {
             </div>
           )
         })()}
+
+        {/* ── WORKING KEYS TAB ──────────────────────────────────────────────── */}
+        {activeTab === "working-keys" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <WorkingKeysPanel
+              refreshTick={workingKeysTick}
+              onUseKey={(key) => {
+                // Pre-fill the API key field when user taps "Copy Key"
+                handleApiKeyChange(key)
+                setConfigOpen(true)
+              }}
+            />
+          </div>
+        )}
 
       </div>
     </div>

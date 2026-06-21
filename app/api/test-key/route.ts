@@ -549,12 +549,12 @@ async function testReplicate(key: string): Promise<TestKeyResult> {
 
 async function testMinimax(key: string): Promise<TestKeyResult> {
   const { log, logs, start } = makeLogger()
-  const url = "https://api.minimax.chat/v1/text/chatcompletion_v2"
+  const url = "https://api.minimax.io/v1/chat/completions"
   const headers = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }
-  const body = { model: "abab6.5s-chat", max_tokens: 1, messages: [{ role: "user", content: "hi" }] }
+  const body = { model: "MiniMax-M3", max_tokens: 1, messages: [{ role: "user", content: "hi" }] }
 
   log("info", "Provider: MiniMax")
-  log("info", "Endpoint: POST /v1/text/chatcompletion_v2")
+  log("info", "Endpoint: POST https://api.minimax.io/v1/chat/completions")
   log("curl", buildCurl({ method: "POST", url, headers, body, maskKey: true }))
   log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
 

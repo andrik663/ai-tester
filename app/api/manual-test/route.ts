@@ -113,22 +113,23 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
-  // OpenAI-compatible (most providers share this)
+  // OpenAI Responses API (gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano, gpt-4o, o-series)
   openai: (prompt) => ({
-    model: "gpt-4o-mini",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+    model: "gpt-5.5",
+    input: prompt,
   }),
   // Google Gemini — unique contents/parts format
   google: (prompt) => ({
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { maxOutputTokens: 1024 },
   }),
-  // xAI Grok — OpenAI-compatible
+  // xAI Grok — Responses API (chat: grok-4.3, coding: grok-build-0.1)
   xai: (prompt) => ({
-    model: "grok-3-mini",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+    model: "grok-4.3",
+    input: [
+      { role: "system", content: "You are Grok, a highly intelligent, helpful AI assistant." },
+      { role: "user", content: prompt },
+    ],
   }),
   // DeepSeek — OpenAI-compatible
   deepseek: (prompt) => ({
@@ -149,9 +150,9 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
-  // MiniMax chatcompletion_v2 — OpenAI-compatible
+  // MiniMax — OpenAI-compatible endpoint api.minimax.io/v1/chat/completions
   minimax: (prompt) => ({
-    model: "MiniMax-Text-01",
+    model: "MiniMax-M3",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
@@ -161,9 +162,9 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
-  // Together AI — OpenAI-compatible
+  // Together AI — OpenAI-compatible (default: MiniMaxAI/MiniMax-M3)
   together: (prompt) => ({
-    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    model: "MiniMaxAI/MiniMax-M3",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
@@ -305,11 +306,10 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
     }],
     generationConfig: { maxOutputTokens: 2048 },
   }),
-  // xAI Grok — OpenAI-compatible with vision
+  // xAI Grok — Responses API with vision (grok-4.3 supports multimodal)
   xai: (prompt, base64, mimeType) => ({
-    model: "grok-2-vision-1212",
-    max_tokens: 2048,
-    messages: [{
+    model: "grok-4.3",
+    input: [{
       role: "user",
       content: [
         { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
@@ -449,9 +449,9 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
       ],
     }],
   }),
-  // MiniMax — vision via MiniMax-VL-01
+  // MiniMax — vision via MiniMax-M3 (frontier multimodal model)
   minimax: (prompt, base64, mimeType) => ({
-    model: "MiniMax-VL-01",
+    model: "MiniMax-M3",
     max_tokens: 2048,
     messages: [{
       role: "user",
@@ -558,6 +558,16 @@ function extractChatReply(providerKey: string, data: unknown): string | undefine
   const d = data as Record<string, unknown>
 
   // OpenAI-compatible: OpenAI, Groq, Mistral, Perplexity, MiniMax, DeepSeek,
+  // OpenAI Responses API — output[].content[].text (output_text type)
+  if (Array.isArray(d?.output)) {
+    const output = d.output as Array<{ content?: Array<{ type: string; text: string }> }>
+    const text = output?.[0]?.content?.find((c) => c.type === "output_text")?.text
+    if (typeof text === "string") return text
+    // fallback: output_text at top level
+    const flat = output?.[0] as unknown as Record<string, unknown>
+    if (typeof flat?.text === "string") return flat.text as string
+  }
+
   //                    Qwen, Zhipu GLM, xAI Grok, Together AI, HuggingFace
   if (Array.isArray(d?.choices)) {
     const choices = d.choices as Array<Record<string, unknown>>
