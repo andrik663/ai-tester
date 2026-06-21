@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import type { ScrapedKey } from "@/app/api/scrape-keys/route"
-import type { TestKeyResult } from "@/app/api/test-key/route"
+import type { TestKeyResult, LogEntry } from "@/app/api/test-key/route"
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -136,12 +136,69 @@ function labelColor(label: string) {
 
 type TestState = "idle" | "testing" | "done"
 
+// ── Log level styles ───────────────────────────────────────────────────────
+
+const LOG_STYLES: Record<LogEntry["level"], string> = {
+  info: "text-muted-foreground",
+  req:  "text-blue-400",
+  res:  "text-yellow-400",
+  ok:   "text-green-400",
+  err:  "text-red-400",
+  curl: "text-cyan-400",
+}
+
+const LOG_PREFIX: Record<LogEntry["level"], string> = {
+  info: "  ",
+  req:  "→ ",
+  res:  "← ",
+  ok:   "✓ ",
+  err:  "✗ ",
+  curl: "$ ",
+}
+
+function LogPanel({ logs, loading }: { logs: LogEntry[]; loading: boolean }) {
+  return (
+    <div className="border-t border-border bg-[#0a0a0a] px-3.5 pt-2.5 pb-3 font-mono">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+          Test Log
+        </span>
+        <div className="flex gap-1">
+          <span className="w-2 h-2 rounded-full bg-red-500/60" />
+          <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
+          <span className="w-2 h-2 rounded-full bg-green-500/60" />
+        </div>
+      </div>
+      <div className="flex flex-col gap-0.5 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+        {logs.map((entry, i) => (
+          <div key={i} className="flex gap-2 items-start">
+            <span className="text-[9px] text-muted-foreground/40 w-8 flex-shrink-0 pt-px tabular-nums">
+              {entry.ts}ms
+            </span>
+            <span className={`text-[10px] leading-relaxed ${LOG_STYLES[entry.level]} whitespace-pre-wrap break-all`}>
+              <span className="opacity-60">{LOG_PREFIX[entry.level]}</span>
+              {entry.text}
+            </span>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex gap-2 items-center mt-1">
+            <span className="text-[9px] text-muted-foreground/40 w-8 flex-shrink-0">...</span>
+            <span className="text-[10px] text-muted-foreground animate-pulse">waiting for response...</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
   const [copied, setCopied] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [masked, setMasked] = useState(true)
   const [testState, setTestState] = useState<TestState>("idle")
   const [testResult, setTestResult] = useState<TestKeyResult | null>(null)
+  const [showLog, setShowLog] = useState(false)
 
   function copy() {
     navigator.clipboard.writeText(item.value).then(() => {
@@ -154,6 +211,7 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
     if (testState === "testing") return
     setTestState("testing")
     setTestResult(null)
+    setShowLog(true)
     try {
       const res = await fetch("/api/test-key", {
         method: "POST",
@@ -167,6 +225,7 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
         valid: false,
         provider: item.label,
         message: err instanceof Error ? err.message : "Request failed",
+        logs: [],
       })
     } finally {
       setTestState("done")
@@ -176,7 +235,7 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
   const maskedValue =
     item.value.slice(0, 6) + "•".repeat(Math.max(4, item.value.length - 10)) + item.value.slice(-4)
 
-  // Derive test status badge styles
+  // Derive test status badge
   const testBadge = (() => {
     if (testState === "idle") return null
     if (testState === "testing")
@@ -249,7 +308,7 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded border border-transparent hover:border-primary/30 transition-colors disabled:opacity-50"
           >
             <FlaskIcon />
-            Test
+            {testState === "testing" ? "Testing..." : "Test"}
           </button>
           <button
             onClick={() => setExpanded((v) => !v)}
@@ -261,7 +320,7 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
         </div>
       </div>
 
-      {/* Test result row */}
+      {/* Test result summary row */}
       {testState !== "idle" && (
         <div
           className={`px-3.5 py-2 border-t border-border flex items-start gap-2 ${
@@ -274,25 +333,47 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
         >
           {testBadge}
           {testResult && (
-            <div className="flex flex-col gap-0.5 min-w-0">
+            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
               <span className="text-[11px] text-foreground">{testResult.message}</span>
               {testResult.detail && (
                 <span className="text-[10px] font-mono text-muted-foreground">{testResult.detail}</span>
               )}
             </div>
           )}
-          {testState !== "testing" && (
-            <button
-              onClick={() => { setTestState("idle"); setTestResult(null) }}
-              className="ml-auto text-[10px] text-muted-foreground hover:text-foreground flex-shrink-0 hover:bg-secondary px-1.5 py-0.5 rounded transition-colors"
-            >
-              Clear
-            </button>
-          )}
+          <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
+            {testResult?.logs && testResult.logs.length > 0 && (
+              <button
+                onClick={() => setShowLog((v) => !v)}
+                className={`text-[10px] px-1.5 py-0.5 rounded transition-colors border ${
+                  showLog
+                    ? "text-primary border-primary/30 bg-primary/10"
+                    : "text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                {showLog ? "Hide log" : "Show log"}
+              </button>
+            )}
+            {testState !== "testing" && (
+              <button
+                onClick={() => { setTestState("idle"); setTestResult(null); setShowLog(false) }}
+                className="text-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary px-1.5 py-0.5 rounded transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Context row */}
+      {/* Terminal log panel */}
+      {showLog && (
+        <LogPanel
+          logs={testResult?.logs ?? []}
+          loading={testState === "testing"}
+        />
+      )}
+
+      {/* Source context row */}
       {expanded && (
         <div className="px-3.5 pb-3 border-t border-border pt-2.5 bg-card">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
