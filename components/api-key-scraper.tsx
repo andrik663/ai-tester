@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import type { ScrapedKey } from "@/app/api/scrape-keys/route"
+import type { TestKeyResult } from "@/app/api/test-key/route"
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,43 @@ function DownloadIcon() {
   )
 }
 
+function FlaskIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <path d="M9 3h6" />
+      <path d="M10 3v6l-4 9a1 1 0 0 0 .92 1.4h10.16A1 1 0 0 0 18 18l-4-9V3" />
+    </svg>
+  )
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 12l3 3 5-5" />
+    </svg>
+  )
+}
+
+function XCircleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M15 9l-6 6M9 9l6 6" />
+    </svg>
+  )
+}
+
+function HelpCircleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <circle cx="12" cy="17" r="0.5" fill="currentColor" />
+    </svg>
+  )
+}
+
 function GlobeIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
@@ -96,10 +134,14 @@ function labelColor(label: string) {
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
+type TestState = "idle" | "testing" | "done"
+
 function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
   const [copied, setCopied] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [masked, setMasked] = useState(true)
+  const [testState, setTestState] = useState<TestState>("idle")
+  const [testResult, setTestResult] = useState<TestKeyResult | null>(null)
 
   function copy() {
     navigator.clipboard.writeText(item.value).then(() => {
@@ -108,15 +150,74 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
     })
   }
 
-  const maskedValue = item.value.slice(0, 6) + "•".repeat(Math.max(4, item.value.length - 10)) + item.value.slice(-4)
+  async function runTest() {
+    if (testState === "testing") return
+    setTestState("testing")
+    setTestResult(null)
+    try {
+      const res = await fetch("/api/test-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: item.label, value: item.value }),
+      })
+      const data: TestKeyResult = await res.json()
+      setTestResult(data)
+    } catch (err) {
+      setTestResult({
+        valid: false,
+        provider: item.label,
+        message: err instanceof Error ? err.message : "Request failed",
+      })
+    } finally {
+      setTestState("done")
+    }
+  }
+
+  const maskedValue =
+    item.value.slice(0, 6) + "•".repeat(Math.max(4, item.value.length - 10)) + item.value.slice(-4)
+
+  // Derive test status badge styles
+  const testBadge = (() => {
+    if (testState === "idle") return null
+    if (testState === "testing")
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground bg-muted/40">
+          <SpinnerIcon />
+          Testing...
+        </span>
+      )
+    if (!testResult) return null
+    if (testResult.valid === null)
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-yellow-500/40 text-yellow-400 bg-yellow-400/10">
+          <HelpCircleIcon />
+          Unsupported
+        </span>
+      )
+    if (testResult.valid)
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-green-500/40 text-green-400 bg-green-400/10">
+          <CheckCircleIcon />
+          Valid
+        </span>
+      )
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-red-500/40 text-red-400 bg-red-400/10">
+        <XCircleIcon />
+        Invalid
+      </span>
+    )
+  })()
 
   return (
     <div className="rounded-lg border border-border bg-background overflow-hidden">
       {/* Header row */}
-      <div className="flex items-center gap-3 px-3.5 py-2.5">
+      <div className="flex items-center gap-3 px-3.5 py-2.5 flex-wrap gap-y-1.5">
         <span className="text-[10px] font-mono text-muted-foreground w-5 flex-shrink-0">{index + 1}</span>
 
-        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${labelColor(item.label)} flex-shrink-0`}>
+        <span
+          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${labelColor(item.label)} flex-shrink-0`}
+        >
           <KeyIcon />
           {item.label}
         </span>
@@ -142,6 +243,15 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
             {copied ? "Copied!" : "Copy"}
           </button>
           <button
+            onClick={runTest}
+            disabled={testState === "testing"}
+            title="Test this key live"
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded border border-transparent hover:border-primary/30 transition-colors disabled:opacity-50"
+          >
+            <FlaskIcon />
+            Test
+          </button>
+          <button
             onClick={() => setExpanded((v) => !v)}
             title="Toggle context"
             className="text-muted-foreground hover:text-foreground p-0.5 rounded hover:bg-secondary transition-colors"
@@ -151,10 +261,43 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
         </div>
       </div>
 
+      {/* Test result row */}
+      {testState !== "idle" && (
+        <div
+          className={`px-3.5 py-2 border-t border-border flex items-start gap-2 ${
+            testResult?.valid === true
+              ? "bg-green-500/5"
+              : testResult?.valid === false
+              ? "bg-red-500/5"
+              : "bg-muted/30"
+          }`}
+        >
+          {testBadge}
+          {testResult && (
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[11px] text-foreground">{testResult.message}</span>
+              {testResult.detail && (
+                <span className="text-[10px] font-mono text-muted-foreground">{testResult.detail}</span>
+              )}
+            </div>
+          )}
+          {testState !== "testing" && (
+            <button
+              onClick={() => { setTestState("idle"); setTestResult(null) }}
+              className="ml-auto text-[10px] text-muted-foreground hover:text-foreground flex-shrink-0 hover:bg-secondary px-1.5 py-0.5 rounded transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Context row */}
       {expanded && (
         <div className="px-3.5 pb-3 border-t border-border pt-2.5 bg-card">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Source context</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
+            Source context
+          </p>
           <pre className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">
             {item.context}
           </pre>
@@ -337,11 +480,11 @@ export default function ApiKeyScraper() {
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">How it works</p>
             <ul className="flex flex-col gap-1">
               {[
-                "Fetches the page HTML",
-                "Discovers inline script tags",
-                "Fetches up to 5 external JS files",
-                "Matches 18+ key patterns",
+                "Fetches real page HTML server-side",
+                "Discovers & fetches up to 5 JS files",
+                "Matches 18+ real key patterns",
                 "Deduplicates results",
+                "Test button calls provider APIs live",
               ].map((step) => (
                 <li key={step} className="flex items-start gap-1.5 text-[10px] text-muted-foreground">
                   <span className="text-primary mt-0.5">›</span>
@@ -349,6 +492,9 @@ export default function ApiKeyScraper() {
                 </li>
               ))}
             </ul>
+            <p className="text-[9px] text-muted-foreground/60 mt-1 leading-relaxed">
+              Scraping and key testing are real — keys are validated by calling each provider&apos;s API directly.
+            </p>
           </div>
         </div>
       </aside>
