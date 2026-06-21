@@ -52,7 +52,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "claude-opus-4-5",
+      model: "claude-opus-4-8",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -81,7 +81,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "google",
     name: "Gemini (Google)",
-    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{API_KEY}}",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{API_KEY}}",
     method: "POST",
     headers: { "Content-Type": "application/json" },
     bodyTemplate: JSON.stringify({
@@ -102,7 +102,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "grok-3-mini",
+      model: "grok-4.3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -121,7 +121,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "deepseek-chat",
+      model: "deepseek-v4-flash",
       max_tokens: 1024,
       stream: false,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
@@ -140,7 +140,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "qwen-plus",
+      model: "qwen3-235b-a22b",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -195,7 +195,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "llama-3.1-8b-instant",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -213,7 +213,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      model: "meta-llama/Llama-4-Scout-17B-16E-Instruct",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -249,7 +249,7 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "command-r-plus",
+      model: "command-a",
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://docs.cohere.com/reference/chat",

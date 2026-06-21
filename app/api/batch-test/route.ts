@@ -205,8 +205,18 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   deepseek: {
     id: "deepseek",
     models: [
-      "deepseek-chat",        // DeepSeek-V3 (latest)
-      "deepseek-reasoner",    // DeepSeek-R1 (latest)
+      // V4 — current production models (as of June 2026)
+      // Note: deepseek-chat / deepseek-reasoner are aliases deprecated on 2026-07-24
+      "deepseek-v4-flash",       // non-thinking mode (formerly deepseek-chat)
+      "deepseek-v4-flash:thinking", // thinking mode (formerly deepseek-reasoner)
+      "deepseek-v4-pro",         // flagship multi-step reasoning
+      // V3 — previous generation (still accessible)
+      "deepseek-chat",           // alias → deepseek-v4-flash (deprecated 2026-07-24)
+      "deepseek-reasoner",       // alias → deepseek-v4-flash thinking (deprecated 2026-07-24)
+      // Coder & specialised
+      "deepseek-coder",
+      "deepseek-coder-v2",
+      "deepseek-coder-v2-instruct",
     ],
     endpoint: "https://api.deepseek.com/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
