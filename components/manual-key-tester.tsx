@@ -102,23 +102,6 @@ const PRESETS: ProviderPreset[] = [
     docsUrl: "https://docs.x.ai/docs/overview",
     color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
   },
-  {
-    id: "xai",
-    name: "Grok (xAI)",
-    endpoint: "https://api.x.ai/v1/chat/completions",
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer {{API_KEY}}",
-      "Content-Type": "application/json",
-    },
-    bodyTemplate: JSON.stringify({
-      model: "grok-3-mini",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: "{{PROMPT}}" }],
-    }, null, 2),
-    docsUrl: "https://docs.x.ai/docs/overview",
-    color: "text-zinc-300 bg-zinc-400/10 border-zinc-400/30",
-  },
   // ── Tier 2: Chinese / Asian providers ────────────────────────────────────
   {
     id: "deepseek",
@@ -418,7 +401,7 @@ const LOG_PREFIX: Record<LogEntry["level"], string> = {
   curl: "$ ",
 }
 
-// ── Header row editor ─────────────────────────────────────────────────────────
+// ── Header row editor ────────────────────────────────────────────────��────────
 
 interface HeaderRow { key: string; value: string; id: number }
 
