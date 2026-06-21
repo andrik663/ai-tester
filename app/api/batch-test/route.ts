@@ -187,7 +187,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
-  // ── Google Gemini ────────────────────────────────────────────────���������────────
+  // ── Google Gemini ────────────────────────────────────────────────�����������────────
   google: {
     id: "google",
     // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
@@ -397,7 +397,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Together AI ─────────────────────────────────────────────���─���─���─────────
+  // ── Together AI ─────────────────────────────────────────────�����─���─���─────────
   together: {
     id: "together",
     models: [
@@ -660,7 +660,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "qwen/qwen3-vl-8b-instruct",                         // Qwen3 VL 8B Instruct  $0.08/$0.5/Mt
       "qwen/qwen2.5-vl-72b-instruct",                      // Qwen2.5-VL 72B  $0.38/$0.4/Mt  32K ctx
       "qwen/qwen-mt-plus",                                 // Qwen MT Plus  $0.25/$0.75/Mt  16K ctx
-      // ── GLM / Zai-org Family ─────────────────────────────────────────────
+      // ── GLM / Zai-org Family ────────────────────────────────────��────────
       "zai-org/glm-5-1",                                   // GLM-5.1  $1.38/$4.4/Mt  200K ctx 128K out
       "zai-org/glm-5",                                     // GLM-5  $1/$3.2/Mt  202K ctx
       "zai-org/glm-4-7-flash",                             // GLM-4.7-Flash  $0.07/$0.4/Mt  200K ctx
@@ -776,23 +776,346 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── OpenRouter ────────────────────────────────────────────────────────────
+  // ── OpenRouter (340 models — https://openrouter.ai/api/v1/models, sorted by popularity 2026-06) ──
   openrouter: {
     id: "openrouter",
     models: [
-      "anthropic/claude-opus-4",
-      "anthropic/claude-sonnet-4",
-      "openai/gpt-4o",
-      "openai/gpt-4o-mini",
-      "google/gemini-2.5-pro",
-      "google/gemini-2.5-flash",
-      "meta-llama/llama-4-maverick",
-      "meta-llama/llama-4-scout",
-      "deepseek/deepseek-v3",
-      "deepseek/deepseek-r1",
-      "qwen/qwen3-235b-a22b",
-      "mistralai/mistral-large",
-      "x-ai/grok-3",
+      "deepseek/deepseek-v4-flash",                                          // $0.090/$0.180/Mt 1048K ctx
+      "minimax/minimax-m3",                                                  // $0.300/$1.200/Mt 1048K ctx
+      "xiaomi/mimo-v2.5",                                                    // $0.140/$0.280/Mt 1048K ctx
+      "tencent/hy3-preview",                                                 // $0.063/$0.210/Mt 262K ctx
+      "anthropic/claude-opus-4.7",                                           // $5.000/$25.000/Mt 1000K ctx
+      "openrouter/owl-alpha",                                                // FREE
+      "deepseek/deepseek-v4-pro",                                            // $0.435/$0.870/Mt 1048K ctx
+      "anthropic/claude-opus-4.8",                                           // $5.000/$25.000/Mt 1000K ctx
+      "anthropic/claude-sonnet-4.6",                                         // $3.000/$15.000/Mt 1000K ctx
+      "z-ai/glm-5.2",                                                        // $1.200/$4.100/Mt 1048K ctx
+      "deepseek/deepseek-v3.2",                                              // $0.229/$0.343/Mt 131K ctx
+      "z-ai/glm-5.1",                                                        // $0.980/$3.080/Mt 202K ctx
+      "google/gemini-3-flash-preview",                                       // $0.500/$3.000/Mt 1048K ctx
+      "openai/gpt-5.5",                                                      // $5.000/$30.000/Mt 1050K ctx
+      "stepfun/step-3.7-flash",                                              // $0.200/$1.150/Mt 256K ctx
+      "google/gemini-2.5-flash-lite",                                        // $0.100/$0.400/Mt 1048K ctx
+      "nvidia/nemotron-3-ultra-550b-a55b:free",                              // FREE
+      "nex-agi/nex-n2-pro:free",                                             // FREE
+      "google/gemini-2.5-flash",                                             // $0.300/$2.500/Mt 1048K ctx
+      "moonshotai/kimi-k2.6",                                                // $0.660/$3.410/Mt 262K ctx
+      "poolside/laguna-m.1:free",                                            // FREE
+      "xiaomi/mimo-v2.5-pro",                                                // $0.435/$0.870/Mt 1048K ctx
+      "openai/gpt-4o-mini",                                                  // $0.150/$0.600/Mt 128K ctx
+      "google/gemini-3.1-flash-lite",                                        // $0.250/$1.500/Mt 1048K ctx
+      "openai/gpt-oss-120b",                                                 // $0.039/$0.180/Mt 131K ctx
+      "google/gemini-3.5-flash",                                             // $1.500/$9.000/Mt 1048K ctx
+      "nvidia/nemotron-3-super-120b-a12b:free",                              // FREE
+      "openai/gpt-5.4",                                                      // $2.500/$15.000/Mt 1050K ctx
+      "anthropic/claude-opus-4.6",                                           // $5.000/$25.000/Mt 1000K ctx
+      "google/gemma-4-26b-a4b-it",                                           // $0.060/$0.330/Mt 262K ctx
+      "anthropic/claude-haiku-4.5",                                          // $1.000/$5.000/Mt 200K ctx
+      "google/gemini-3.1-pro-preview",                                       // $2.000/$12.000/Mt 1048K ctx
+      "moonshotai/kimi-k2.7-code",                                           // $0.612/$3.069/Mt 262K ctx
+      "minimax/minimax-m2.7",                                                // $0.250/$1.000/Mt 204K ctx
+      "mistralai/mistral-nemo",                                              // $0.020/$0.030/Mt 131K ctx
+      "openai/gpt-5.4-mini",                                                 // $0.750/$4.500/Mt 400K ctx
+      "openai/gpt-5-mini",                                                   // $0.250/$2.000/Mt 400K ctx
+      "openai/gpt-oss-120b:free",                                            // FREE
+      "google/gemma-4-31b-it",                                               // $0.120/$0.350/Mt 262K ctx
+      "google/gemini-3.1-flash-lite-preview",                                // $0.250/$1.500/Mt 1048K ctx
+      "z-ai/glm-5",                                                          // $0.600/$1.920/Mt 202K ctx
+      "moonshotai/kimi-k2.5",                                                // $0.375/$2.025/Mt 262K ctx
+      "qwen/qwen3.7-plus",                                                   // $0.320/$1.280/Mt 1000K ctx
+      "qwen/qwen3.7-max",                                                    // $1.250/$3.750/Mt 1000K ctx
+      "openai/gpt-5.3-codex",                                                // $1.750/$14.000/Mt 400K ctx
+      "openai/gpt-5.4-nano",                                                 // $0.200/$1.250/Mt 400K ctx
+      "anthropic/claude-sonnet-4.5",                                         // $3.000/$15.000/Mt 1000K ctx
+      "poolside/laguna-xs.2:free",                                           // FREE
+      "openai/gpt-oss-20b",                                                  // $0.029/$0.140/Mt 131K ctx
+      "openai/gpt-5.2",                                                      // $1.750/$14.000/Mt 400K ctx
+      "qwen/qwen3-235b-a22b-2507",                                           // $0.090/$0.100/Mt 262K ctx
+      "openai/gpt-4.1-mini",                                                 // $0.400/$1.600/Mt 1047K ctx
+      "x-ai/grok-4.3",                                                       // $1.250/$2.500/Mt 1000K ctx
+      "qwen/qwen3-next-80b-a3b-instruct",                                    // $0.090/$1.100/Mt 262K ctx
+      "z-ai/glm-4.7",                                                        // $0.400/$1.750/Mt 202K ctx
+      "qwen/qwen3.6-plus",                                                   // $0.325/$1.950/Mt 1000K ctx
+      "google/gemini-2.5-pro",                                               // $1.250/$10.000/Mt 1048K ctx
+      "meta-llama/llama-3.1-8b-instruct",                                    // $0.020/$0.030/Mt 131K ctx
+      "qwen/qwen3.5-flash-02-23",                                            // $0.065/$0.260/Mt 1000K ctx
+      "openai/gpt-5-nano",                                                   // $0.050/$0.400/Mt 400K ctx
+      "deepseek/deepseek-chat-v3-0324",                                      // $0.200/$0.770/Mt 163K ctx
+      "minimax/minimax-m2.5",                                                // $0.150/$0.900/Mt 204K ctx
+      "openai/gpt-oss-20b:free",                                             // FREE
+      "openai/gpt-5.1",                                                      // $1.250/$10.000/Mt 400K ctx
+      "qwen/qwen3.6-35b-a3b",                                                // $0.140/$1.000/Mt 262K ctx
+      "deepseek/deepseek-chat-v3.1",                                         // $0.210/$0.790/Mt 163K ctx
+      "anthropic/claude-opus-4.5",                                           // $5.000/$25.000/Mt 200K ctx
+      "z-ai/glm-4.7-flash",                                                  // $0.060/$0.400/Mt 202K ctx
+      "openai/gpt-4.1",                                                      // $2.000/$8.000/Mt 1047K ctx
+      "anthropic/claude-opus-4.8-fast",                                      // $10.000/$50.000/Mt 1000K ctx
+      "inclusionai/ling-2.6-flash",                                          // $0.010/$0.030/Mt 262K ctx
+      "google/gemma-4-31b-it:free",                                          // FREE
+      "qwen/qwen3.6-27b",                                                    // $0.289/$3.170/Mt 262K ctx
+      "qwen/qwen3.5-35b-a3b",                                                // $0.140/$1.000/Mt 262K ctx
+      "qwen/qwen3-coder",                                                    // $0.220/$1.800/Mt 1048K ctx
+      "meta-llama/llama-4-maverick",                                         // $0.150/$0.600/Mt 1048K ctx
+      "anthropic/claude-sonnet-4",                                           // $3.000/$15.000/Mt 1000K ctx
+      "x-ai/grok-4.20",                                                      // $1.250/$2.500/Mt 2000K ctx
+      "nvidia/nemotron-3-nano-30b-a3b:free",                                 // FREE
+      "amazon/nova-micro-v1",                                                // $0.035/$0.140/Mt 128K ctx
+      "qwen/qwen3.5-397b-a17b",                                              // $0.385/$2.450/Mt 256K ctx
+      "google/gemini-2.5-flash-lite-preview-09-2025",                        // $0.100/$0.400/Mt 1048K ctx
+      "deepseek/deepseek-v3.1-terminus",                                     // $0.270/$0.950/Mt 163K ctx
+      "mistralai/mistral-small-3.2-24b-instruct",                            // $0.075/$0.200/Mt 128K ctx
+      "nvidia/nemotron-3-ultra-550b-a55b",                                   // $0.500/$2.200/Mt 1000K ctx
+      "openai/gpt-4.1-nano",                                                 // $0.100/$0.400/Mt 1047K ctx
+      "meta-llama/llama-3.3-70b-instruct",                                   // $0.100/$0.320/Mt 131K ctx
+      "openai/gpt-5",                                                        // $1.250/$10.000/Mt 400K ctx
+      "deepseek/deepseek-chat",                                              // $0.200/$0.800/Mt 131K ctx
+      "bytedance-seed/seed-2.0-mini",                                        // $0.100/$0.400/Mt 262K ctx
+      "z-ai/glm-4.5-air",                                                    // $0.130/$0.850/Mt 131K ctx
+      "mistralai/mistral-small-2603",                                        // $0.150/$0.600/Mt 262K ctx
+      "nvidia/nemotron-3-super-120b-a12b",                                   // $0.090/$0.450/Mt 1000K ctx
+      "qwen/qwen3-coder-next",                                               // $0.110/$0.800/Mt 262K ctx
+      "google/gemma-3-27b-it",                                               // $0.080/$0.160/Mt 131K ctx
+      "qwen/qwen3.6-flash",                                                  // $0.188/$1.125/Mt 1000K ctx
+      "qwen/qwen3.5-9b",                                                     // $0.100/$0.150/Mt 262K ctx
+      "nvidia/nemotron-3-nano-30b-a3b",                                      // $0.050/$0.200/Mt 262K ctx
+      "qwen/qwen3.5-27b",                                                    // $0.195/$1.560/Mt 262K ctx
+      "deepseek/deepseek-v3.2-exp",                                          // $0.270/$0.410/Mt 163K ctx
+      "openai/gpt-4o-mini-2024-07-18",                                       // $0.150/$0.600/Mt 128K ctx
+      "amazon/nova-2-lite-v1",                                               // $0.300/$2.500/Mt 1000K ctx
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",                  // FREE
+      "openai/gpt-4o",                                                       // $2.500/$10.000/Mt 128K ctx
+      "qwen/qwen3-32b",                                                      // $0.080/$0.280/Mt 131K ctx
+      "cohere/north-mini-code:free",                                         // FREE
+      "google/gemma-3-12b-it",                                               // $0.050/$0.150/Mt 131K ctx
+      "qwen/qwen3-30b-a3b-instruct-2507",                                    // $0.048/$0.193/Mt 131K ctx
+      "qwen/qwen3-vl-32b-instruct",                                          // $0.104/$0.416/Mt 262K ctx
+      "mistralai/mistral-small-24b-instruct-2501",                           // $0.050/$0.080/Mt 32K ctx
+      "qwen/qwen3-vl-235b-a22b-instruct",                                    // $0.200/$0.880/Mt 262K ctx
+      "z-ai/glm-5-turbo",                                                    // $1.200/$4.000/Mt 262K ctx
+      "nvidia/nemotron-nano-9b-v2:free",                                     // FREE
+      "deepseek/deepseek-r1-0528",                                           // $0.500/$2.150/Mt 163K ctx
+      "moonshotai/kimi-k2-0905",                                             // $0.600/$2.500/Mt 262K ctx
+      "nvidia/nemotron-nano-12b-v2-vl:free",                                 // FREE
+      "qwen/qwen-2.5-7b-instruct",                                           // $0.040/$0.100/Mt 131K ctx
+      "qwen/qwen3-235b-a22b-thinking-2507",                                  // $0.100/$0.100/Mt 262K ctx
+      "qwen/qwen3.5-122b-a10b",                                              // $0.260/$2.080/Mt 262K ctx
+      "stepfun/step-3.5-flash",                                              // $0.090/$0.300/Mt 262K ctx
+      "openai/o3-mini",                                                      // $1.100/$4.400/Mt 200K ctx
+      "meta-llama/llama-4-scout",                                            // $0.100/$0.300/Mt 10000K ctx
+      "qwen/qwen3-vl-8b-instruct",                                           // $0.080/$0.500/Mt 256K ctx
+      "aion-labs/aion-2.0",                                                  // $0.800/$1.600/Mt 131K ctx
+      "z-ai/glm-4.6",                                                        // $0.430/$1.740/Mt 202K ctx
+      "google/gemini-2.5-flash-image",                                       // $0.300/$2.500/Mt 32K ctx
+      "liquid/lfm-2-24b-a2b",                                                // $0.030/$0.120/Mt 128K ctx
+      "openai/gpt-oss-safeguard-20b",                                        // $0.075/$0.300/Mt 131K ctx
+      "openai/gpt-5.3-chat",                                                 // $1.750/$14.000/Mt 128K ctx
+      "bytedance/ui-tars-1.5-7b",                                            // $0.100/$0.200/Mt 128K ctx
+      "anthropic/claude-3.5-haiku",                                          // $0.800/$4.000/Mt 200K ctx
+      "qwen/qwen3-coder-30b-a3b-instruct",                                   // $0.070/$0.270/Mt 160K ctx
+      "x-ai/grok-build-0.1",                                                 // $1.000/$2.000/Mt 256K ctx
+      "mistralai/mistral-large-2512",                                        // $0.500/$1.500/Mt 262K ctx
+      "qwen/qwen3-vl-30b-a3b-instruct",                                      // $0.130/$0.520/Mt 262K ctx
+      "qwen/qwen-2.5-72b-instruct",                                          // $0.360/$0.400/Mt 131K ctx
+      "sao10k/l3-lunaris-8b",                                                // $0.040/$0.050/Mt 8K ctx
+      "mistralai/mistral-medium-3-5",                                        // $1.500/$7.500/Mt 262K ctx
+      "google/gemini-3.1-flash-image-preview",                               // $0.500/$3.000/Mt 131K ctx
+      "mistralai/ministral-8b-2512",                                         // $0.150/$0.150/Mt 262K ctx
+      "inclusionai/ring-2.6-1t",                                             // $0.075/$0.625/Mt 262K ctx
+      "qwen/qwen3.6-max-preview",                                            // $1.040/$6.240/Mt 262K ctx
+      "google/gemini-3.1-pro-preview-customtools",                           // $2.000/$12.000/Mt 1048K ctx
+      "amazon/nova-lite-v1",                                                 // $0.060/$0.240/Mt 300K ctx
+      "inception/mercury-2",                                                 // $0.250/$0.750/Mt 128K ctx
+      "openai/gpt-5.1-codex-mini",                                           // $0.250/$2.000/Mt 400K ctx
+      "ibm-granite/granite-4.1-8b",                                          // $0.050/$0.100/Mt 131K ctx
+      "meta-llama/llama-3.1-70b-instruct",                                   // $0.400/$0.400/Mt 131K ctx
+      "qwen/qwen3-8b",                                                       // $0.050/$0.400/Mt 131K ctx
+      "mistralai/ministral-14b-2512",                                        // $0.200/$0.200/Mt 262K ctx
+      "qwen/qwen3.5-plus-02-15",                                             // $0.260/$1.560/Mt 1000K ctx
+      "qwen/qwen-plus",                                                      // $0.260/$0.780/Mt 1000K ctx
+      "microsoft/phi-4",                                                     // $0.065/$0.140/Mt 16K ctx
+      "mistralai/devstral-2512",                                             // $0.400/$2.000/Mt 262K ctx
+      "deepseek/deepseek-r1",                                                // $0.700/$2.500/Mt 163K ctx
+      "google/gemma-4-26b-a4b-it:free",                                      // FREE
+      "openai/gpt-5.2-chat",                                                 // $1.750/$14.000/Mt 128K ctx
+      "google/gemma-3-4b-it",                                                // $0.050/$0.100/Mt 131K ctx
+      "openai/gpt-5.5-pro",                                                  // $30.000/$180.000/Mt 1050K ctx
+      "qwen/qwen3-coder-plus",                                               // $0.650/$3.250/Mt 1000K ctx
+      "moonshotai/kimi-k2",                                                  // $0.570/$2.300/Mt 131K ctx
+      "qwen/qwen3.5-plus-20260420",                                          // $0.300/$1.800/Mt 1000K ctx
+      "anthropic/claude-opus-4.7-fast",                                      // $30.000/$150.000/Mt 1000K ctx
+      "openai/o4-mini",                                                      // $1.100/$4.400/Mt 200K ctx
+      "openai/gpt-5-codex",                                                  // $1.250/$10.000/Mt 400K ctx
+      "moonshotai/kimi-k2-thinking",                                         // $0.600/$2.500/Mt 262K ctx
+      "openai/gpt-5.1-chat",                                                 // $1.250/$10.000/Mt 128K ctx
+      "qwen/qwen3-30b-a3b",                                                  // $0.120/$0.500/Mt 131K ctx
+      "openai/gpt-5-chat",                                                   // $1.250/$10.000/Mt 128K ctx
+      "google/gemini-3-pro-image-preview",                                   // $2.000/$12.000/Mt 65K ctx
+      "qwen/qwen3-235b-a22b",                                                // $0.455/$1.820/Mt 131K ctx
+      "qwen/qwen2.5-vl-72b-instruct",                                        // $0.800/$1.000/Mt 131K ctx
+      "openai/gpt-5.1-codex",                                                // $1.250/$10.000/Mt 400K ctx
+      "meta-llama/llama-guard-4-12b",                                        // $0.180/$0.180/Mt 163K ctx
+      "bytedance-seed/seed-1.6-flash",                                       // $0.075/$0.300/Mt 262K ctx
+      "openai/gpt-5.2-codex",                                                // $1.750/$14.000/Mt 400K ctx
+      "poolside/laguna-m.1",                                                 // $0.200/$0.400/Mt 262K ctx
+      "mistralai/mistral-medium-3.1",                                        // $0.400/$2.000/Mt 131K ctx
+      "nousresearch/hermes-4-70b",                                           // $0.130/$0.400/Mt 131K ctx
+      "x-ai/grok-4.20-multi-agent",                                          // $1.250/$2.500/Mt 2000K ctx
+      "mistralai/ministral-3b-2512",                                         // $0.100/$0.100/Mt 131K ctx
+      "anthropic/claude-3-haiku",                                            // $0.250/$1.250/Mt 200K ctx
+      "openai/gpt-4o-2024-11-20",                                            // $2.500/$10.000/Mt 128K ctx
+      "perplexity/sonar",                                                    // $1.000/$1.000/Mt 127K ctx
+      "openai/gpt-5.4-image-2",                                              // $8.000/$15.000/Mt 272K ctx
+      "minimax/minimax-m2.1",                                                // $0.290/$0.950/Mt 204K ctx
+      "bytedance-seed/seed-2.0-lite",                                        // $0.250/$2.000/Mt 262K ctx
+      "qwen/qwen3-coder-flash",                                              // $0.195/$0.975/Mt 1000K ctx
+      "qwen/qwen3-max",                                                      // $0.780/$3.900/Mt 262K ctx
+      "liquid/lfm-2.5-1.2b-thinking:free",                                   // FREE
+      "qwen/qwen3-30b-a3b-thinking-2507",                                    // $0.080/$0.400/Mt 131K ctx
+      "perplexity/sonar-pro",                                                // $3.000/$15.000/Mt 200K ctx
+      "meta-llama/llama-3.2-3b-instruct",                                    // $0.051/$0.335/Mt 131K ctx
+      "thedrummer/cydonia-24b-v4.1",                                         // $0.300/$0.500/Mt 131K ctx
+      "minimax/minimax-m2",                                                  // $0.255/$1.000/Mt 204K ctx
+      "openai/gpt-4o-2024-08-06",                                            // $2.500/$10.000/Mt 128K ctx
+      "liquid/lfm-2.5-1.2b-instruct:free",                                   // FREE
+      "kwaipilot/kat-coder-pro-v2",                                          // $0.300/$1.200/Mt 256K ctx
+      "openai/gpt-5.1-codex-max",                                            // $1.250/$10.000/Mt 400K ctx
+      "arcee-ai/trinity-large-thinking",                                     // $0.250/$0.800/Mt 262K ctx
+      "z-ai/glm-4.5",                                                        // $0.600/$2.200/Mt 131K ctx
+      "z-ai/glm-4.6v",                                                       // $0.300/$0.900/Mt 131K ctx
+      "anthropic/claude-opus-4",                                             // $15.000/$75.000/Mt 200K ctx
+      "nvidia/nemotron-3.5-content-safety:free",                             // FREE
+      "google/gemma-3n-e4b-it",                                              // $0.060/$0.120/Mt 32K ctx
+      "qwen/qwen3-14b",                                                      // $0.100/$0.240/Mt 131K ctx
+      "upstage/solar-pro-3",                                                 // $0.150/$0.600/Mt 128K ctx
+      "qwen/qwen3-max-thinking",                                             // $0.780/$3.900/Mt 262K ctx
+      "gryphe/mythomax-l2-13b",                                              // $0.060/$0.060/Mt 4K ctx
+      "inclusionai/ling-2.6-1t",                                             // $0.075/$0.625/Mt 262K ctx
+      "mistralai/codestral-2508",                                            // $0.300/$0.900/Mt 256K ctx
+      "openai/o3",                                                           // $2.000/$8.000/Mt 200K ctx
+      "thedrummer/unslopnemo-12b",                                           // $0.400/$0.400/Mt 32K ctx
+      "microsoft/wizardlm-2-8x22b",                                          // $0.620/$0.620/Mt 65K ctx
+      "openai/gpt-3.5-turbo",                                                // $0.500/$1.500/Mt 16K ctx
+      "anthropic/claude-opus-4.6-fast",                                      // $30.000/$150.000/Mt 1000K ctx
+      "meta-llama/llama-3.2-11b-vision-instruct",                            // $0.345/$0.345/Mt 131K ctx
+      "nousresearch/hermes-3-llama-3.1-405b",                                // $1.000/$1.000/Mt 131K ctx
+      "openai/gpt-chat-latest",                                              // $5.000/$30.000/Mt 400K ctx
+      "mistralai/mistral-large",                                             // $2.000/$6.000/Mt 128K ctx
+      "anthropic/claude-opus-4.1",                                           // $15.000/$75.000/Mt 200K ctx
+      "qwen/qwen3-next-80b-a3b-instruct:free",                               // FREE
+      "morph/morph-v3-large",                                                // $0.900/$1.900/Mt 262K ctx
+      "qwen/qwen3-vl-235b-a22b-thinking",                                    // $0.260/$2.600/Mt 131K ctx
+      "meta-llama/llama-3-8b-instruct",                                      // $0.140/$0.140/Mt 8K ctx
+      "bytedance-seed/seed-1.6",                                             // $0.250/$2.000/Mt 262K ctx
+      "openai/gpt-4o-2024-05-13",                                            // $5.000/$15.000/Mt 128K ctx
+      "mistralai/mistral-small-3.1-24b-instruct",                            // $0.351/$0.555/Mt 128K ctx
+      "nousresearch/hermes-3-llama-3.1-70b",                                 // $0.700/$0.700/Mt 131K ctx
+      "sao10k/l3.3-euryale-70b",                                             // $0.650/$0.750/Mt 131K ctx
+      "meta-llama/llama-3.3-70b-instruct:free",                              // FREE
+      "perplexity/sonar-pro-search",                                         // $3.000/$15.000/Mt 200K ctx
+      "nousresearch/hermes-4-405b",                                          // $1.000/$3.000/Mt 131K ctx
+      "perceptron/perceptron-mk1",                                           // $0.150/$1.500/Mt 32K ctx
+      "arcee-ai/trinity-mini",                                               // $0.045/$0.150/Mt 131K ctx
+      "ai21/jamba-large-1.7",                                                // $2.000/$8.000/Mt 256K ctx
+      "minimax/minimax-01",                                                  // $0.200/$1.100/Mt 1000K ctx
+      "ibm-granite/granite-4.0-h-micro",                                     // $0.017/$0.112/Mt 131K ctx
+      "thedrummer/rocinante-12b",                                            // $0.170/$0.430/Mt 32K ctx
+      "qwen/qwen-plus-2025-07-28",                                           // $0.260/$0.780/Mt 1000K ctx
+      "meta-llama/llama-3.2-1b-instruct",                                    // $0.027/$0.201/Mt 131K ctx
+      "minimax/minimax-m2-her",                                              // $0.300/$1.200/Mt 65K ctx
+      "minimax/minimax-m1",                                                  // $0.400/$2.200/Mt 1000K ctx
+      "sao10k/l3.1-euryale-70b",                                             // $0.850/$0.850/Mt 131K ctx
+      "openai/gpt-5-image-mini",                                             // $2.500/$2.000/Mt 400K ctx
+      "qwen/qwen3-vl-30b-a3b-thinking",                                      // $0.130/$1.560/Mt 131K ctx
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5",                            // $0.400/$0.400/Mt 131K ctx
+      "openai/gpt-audio-mini",                                               // $0.600/$2.400/Mt 128K ctx
+      "qwen/qwen3-next-80b-a3b-thinking",                                    // $0.098/$0.780/Mt 262K ctx
+      "thedrummer/skyfall-36b-v2",                                           // $0.550/$0.800/Mt 32K ctx
+      "mistralai/mixtral-8x22b-instruct",                                    // $2.000/$6.000/Mt 65K ctx
+      "microsoft/phi-4-mini-instruct",                                       // $0.080/$0.350/Mt 131K ctx
+      "poolside/laguna-xs.2",                                                // $0.100/$0.200/Mt 262K ctx
+      "google/gemini-3.1-flash-image",                                       // $0.500/$3.000/Mt 131K ctx
+      "google/gemini-3-pro-image",                                           // $2.000/$12.000/Mt 65K ctx
+      "cohere/command-r-08-2024",                                            // $0.150/$0.600/Mt 128K ctx
+      "mistralai/voxtral-small-24b-2507",                                    // $0.100/$0.300/Mt 32K ctx
+      "cohere/command-r7b-12-2024",                                          // $0.037/$0.150/Mt 128K ctx
+      "mistralai/mistral-medium-3",                                          // $0.400/$2.000/Mt 131K ctx
+      "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",       // FREE
+      "undi95/remm-slerp-l2-13b",                                            // $0.450/$0.650/Mt 6K ctx
+      "perplexity/sonar-deep-research",                                      // $2.000/$8.000/Mt 128K ctx
+      "openai/gpt-5-image",                                                  // $10.000/$10.000/Mt 400K ctx
+      "deepcogito/cogito-v2.1-671b",                                         // $1.250/$1.250/Mt 128K ctx
+      "meta-llama/llama-3.2-3b-instruct:free",                               // FREE
+      "qwen/qwen3-vl-8b-thinking",                                           // $0.117/$1.365/Mt 256K ctx
+      "perplexity/sonar-reasoning-pro",                                      // $2.000/$8.000/Mt 128K ctx
+      "mistralai/mistral-large-2407",                                        // $2.000/$6.000/Mt 131K ctx
+      "deepseek/deepseek-r1-distill-llama-70b",                              // $0.800/$0.800/Mt 128K ctx
+      "nousresearch/hermes-3-llama-3.1-405b:free",                           // FREE
+      "tencent/hunyuan-a13b-instruct",                                       // $0.140/$0.570/Mt 131K ctx
+      "openai/gpt-5.2-pro",                                                  // $21.000/$168.000/Mt 400K ctx
+      "openai/gpt-5.4-pro",                                                  // $30.000/$180.000/Mt 1050K ctx
+      "anthracite-org/magnum-v4-72b",                                        // $3.000/$5.000/Mt 32K ctx
+      "openai/o4-mini-high",                                                 // $1.100/$4.400/Mt 200K ctx
+      "google/gemma-2-27b-it",                                               // $0.650/$0.650/Mt 8K ctx
+      "amazon/nova-pro-v1",                                                  // $0.800/$3.200/Mt 300K ctx
+      "amazon/nova-premier-v1",                                              // $2.500/$12.500/Mt 1000K ctx
+      "z-ai/glm-4.5v",                                                       // $0.600/$1.800/Mt 65K ctx
+      "cohere/command-r-plus-08-2024",                                       // $2.500/$10.000/Mt 128K ctx
+      "morph/morph-v3-fast",                                                 // $0.800/$1.200/Mt 81K ctx
+      "openai/gpt-4-turbo",                                                  // $10.000/$30.000/Mt 128K ctx
+      "qwen/qwen-2.5-coder-32b-instruct",                                    // $0.660/$1.000/Mt 128K ctx
+      "baidu/ernie-4.5-vl-424b-a47b",                                        // $0.420/$1.250/Mt 131K ctx
+      "openai/gpt-4o-mini-search-preview",                                   // $0.150/$0.600/Mt 128K ctx
+      "cohere/command-a",                                                    // $2.500/$10.000/Mt 256K ctx
+      "writer/palmyra-x5",                                                   // $0.600/$6.000/Mt 1040K ctx
+      "openai/o4-mini-deep-research",                                        // $2.000/$8.000/Mt 200K ctx
+      "prime-intellect/intellect-3",                                         // $0.200/$1.100/Mt 131K ctx
+      "openai/gpt-4",                                                        // $30.000/$60.000/Mt 8K ctx
+      "qwen/qwen-plus-2025-07-28:thinking",                                  // $0.260/$0.780/Mt 1000K ctx
+      "openai/gpt-3.5-turbo-0613",                                           // $1.000/$2.000/Mt 4K ctx
+      "relace/relace-apply-3",                                               // $0.850/$1.250/Mt 256K ctx
+      "openai/gpt-4o-search-preview",                                        // $2.500/$10.000/Mt 128K ctx
+      "openai/o3-deep-research",                                             // $10.000/$40.000/Mt 200K ctx
+      "openai/o1",                                                           // $15.000/$60.000/Mt 200K ctx
+      "aion-labs/aion-rp-llama-3.1-8b",                                      // $0.800/$1.600/Mt 32K ctx
+      "openai/o3-mini-high",                                                 // $1.100/$4.400/Mt 200K ctx
+      "mistralai/mistral-saba",                                              // $0.200/$0.600/Mt 32K ctx
+      "openai/gpt-audio",                                                    // $2.500/$10.000/Mt 128K ctx
+      "aion-labs/aion-1.0",                                                  // $4.000/$8.000/Mt 131K ctx
+      "openai/gpt-5-pro",                                                    // $15.000/$120.000/Mt 400K ctx
+      "essentialai/rnj-1-instruct",                                          // $0.150/$0.150/Mt 32K ctx
+      "rekaai/reka-flash-3",                                                 // $0.100/$0.200/Mt 65K ctx
+      "rekaai/reka-edge",                                                    // $0.100/$0.100/Mt 16K ctx
+      "openai/o3-pro",                                                       // $20.000/$80.000/Mt 200K ctx
+      "mancer/weaver",                                                       // $0.750/$1.000/Mt 8K ctx
+      "sao10k/l3.1-70b-hanami-x1",                                           // $3.000/$3.000/Mt 16K ctx
+      "google/lyria-3-pro-preview",                                          // FREE
+      "google/lyria-3-clip-preview",                                         // FREE
+      "relace/relace-search",                                                // $1.000/$3.000/Mt 256K ctx
+      "aion-labs/aion-1.0-mini",                                             // $0.700/$1.400/Mt 131K ctx
+      "openai/gpt-3.5-turbo-instruct",                                       // $1.500/$2.000/Mt 4K ctx
+      "openai/gpt-3.5-turbo-16k",                                            // $3.000/$4.000/Mt 16K ctx
+      "switchpoint/router",                                                  // $0.850/$3.400/Mt 131K ctx
+      "openai/o1-pro",                                                       // $150.000/$600.000/Mt 200K ctx
+      "~anthropic/claude-fable-latest",                                      // $10.000/$50.000/Mt 1000K ctx
+      "anthropic/claude-fable-5",                                            // $10.000/$50.000/Mt 1000K ctx
+      "~anthropic/claude-haiku-latest",                                      // $1.000/$5.000/Mt 200K ctx
+      "~openai/gpt-mini-latest",                                             // $0.750/$4.500/Mt 400K ctx
+      "~google/gemini-pro-latest",                                           // $2.000/$12.000/Mt 1048K ctx
+      "~moonshotai/kimi-latest",                                             // $0.660/$3.410/Mt 262K ctx
+      "~google/gemini-flash-latest",                                         // $1.500/$9.000/Mt 1048K ctx
+      "~anthropic/claude-sonnet-latest",                                     // $3.000/$15.000/Mt 1000K ctx
+      "~openai/gpt-latest",                                                  // $5.000/$30.000/Mt 1050K ctx
+      "~anthropic/claude-opus-latest",                                       // $5.000/$25.000/Mt 1000K ctx
+      "openrouter/free",                                                     // FREE
+      "allenai/olmo-3-32b-think",                                            // $0.150/$0.500/Mt 65K ctx
+      "qwen/qwen3-coder:free",                                               // FREE
+      "google/gemini-2.5-pro-preview",                                       // $1.250/$10.000/Mt 1048K ctx
+      "google/gemini-2.5-pro-preview-05-06",                                 // $1.250/$10.000/Mt 1048K ctx
+      "arcee-ai/virtuoso-large",                                             // $0.750/$1.200/Mt 131K ctx
+      "arcee-ai/coder-large",                                                // $0.500/$0.800/Mt 32K ctx
+      "inflection/inflection-3-productivity",                                // $2.500/$10.000/Mt 8K ctx
+      "inflection/inflection-3-pi",                                          // $2.500/$10.000/Mt 8K ctx
+      "openai/gpt-4-turbo-preview",                                          // $10.000/$30.000/Mt 128K ctx
     ],
     endpoint: "https://openrouter.ai/api/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),

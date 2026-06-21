@@ -223,7 +223,7 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     max_tokens: 1024,
   }),
   openrouter: (prompt) => ({
-    model: "meta-llama/llama-3.3-70b-instruct",
+    model: "google/gemini-2.5-flash",   // popular free-tier model; any openrouter model id works
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
