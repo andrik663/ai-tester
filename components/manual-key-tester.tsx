@@ -5,9 +5,9 @@ import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
 import ProviderBatchTest from "@/components/provider-batch-test"
-import Chat from "@/components/chat"
-import ImageTester from "@/components/image-tester"
-import VideoTester from "@/components/video-tester"
+import Chat, { GEMINI_CHAT_MODELS } from "@/components/chat"
+import ImageTester, { IMAGE_MODELS, IMAGE_ASPECT_RATIOS } from "@/components/image-tester"
+import VideoTester, { VIDEO_MODELS, VIDEO_ASPECT_RATIOS } from "@/components/video-tester"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -740,6 +740,17 @@ export default function ManualKeyTester() {
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
   const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "gemini-chat" | "image-gen" | "video-gen">("vision")
+  // Gemini Chat config
+  const [geminiModel, setGeminiModel] = useState(GEMINI_CHAT_MODELS[0])
+  const [geminiTemperature, setGeminiTemperature] = useState(1.0)
+  const [geminiMaxTokens, setGeminiMaxTokens] = useState(2048)
+  const [geminiSystemPrompt, setGeminiSystemPrompt] = useState("")
+  // Image Gen config
+  const [imageModel, setImageModel] = useState(IMAGE_MODELS[0].id)
+  const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
+  // Video Gen config
+  const [videoModel, setVideoModel] = useState(VIDEO_MODELS[0].id)
+  const [videoAspectRatio, setVideoAspectRatio] = useState("16:9")
   // Vision / OCR state
   const [visionPrompt, setVisionPrompt] = useState("")
   const [visionImage, setVisionImage] = useState<{ dataUrl: string; mimeType: string; name: string } | null>(null)
@@ -1247,6 +1258,138 @@ export default function ManualKeyTester() {
             )}
           </div>
 
+          {/* ── Gemini Chat config — shown when gemini-chat tab is active ── */}
+          {activeTab === "gemini-chat" && (
+            <div className="flex flex-col gap-3 pt-1 border-t border-border">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gemini Chat Config</p>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                <select
+                  value={geminiModel}
+                  onChange={(e) => setGeminiModel(e.target.value)}
+                  className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  {GEMINI_CHAT_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Temperature</label>
+                  <span className="text-[10px] font-mono text-primary">{geminiTemperature.toFixed(1)}</span>
+                </div>
+                <input type="range" min="0" max="2" step="0.1" value={geminiTemperature}
+                  onChange={(e) => setGeminiTemperature(parseFloat(e.target.value))}
+                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
+                <div className="flex justify-between text-[9px] text-muted-foreground/50">
+                  <span>Precise</span><span>Creative</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Max Tokens</label>
+                  <span className="text-[10px] font-mono text-primary">{geminiMaxTokens.toLocaleString()}</span>
+                </div>
+                <input type="range" min="128" max="8192" step="128" value={geminiMaxTokens}
+                  onChange={(e) => setGeminiMaxTokens(parseInt(e.target.value))}
+                  className="w-full h-1 rounded-full appearance-none bg-secondary accent-primary cursor-pointer" />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">System Prompt</label>
+                <textarea value={geminiSystemPrompt} onChange={(e) => setGeminiSystemPrompt(e.target.value)}
+                  placeholder="Optional system instruction..."
+                  rows={3}
+                  className="w-full rounded-md border border-border bg-background text-foreground text-[11px] px-2.5 py-1.5 resize-none placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed" />
+              </div>
+            </div>
+          )}
+
+          {/* ── Image Gen config — shown when image-gen tab is active ── */}
+          {activeTab === "image-gen" && (
+            <div className="flex flex-col gap-3 pt-1 border-t border-border">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Image Gen Config</p>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                {IMAGE_MODELS.map((m) => (
+                  <button key={m.id} onClick={() => setImageModel(m.id)}
+                    className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
+                      imageModel === m.id ? "border-primary/60 bg-primary/10" : "border-border hover:bg-secondary/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[11px] font-semibold text-foreground">{m.label}</span>
+                      <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-primary/20 text-primary">{m.tag}</span>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground leading-snug">{m.description}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {IMAGE_ASPECT_RATIOS.map((r) => (
+                    <button key={r} onClick={() => setImageAspectRatio(r)}
+                      className={`py-1.5 rounded-md text-[11px] font-mono font-medium border transition-colors ${
+                        imageAspectRatio === r
+                          ? "bg-primary/20 border-primary/60 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Video Gen config — shown when video-gen tab is active ── */}
+          {activeTab === "video-gen" && (
+            <div className="flex flex-col gap-3 pt-1 border-t border-border">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Video Gen Config</p>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                <select
+                  value={videoModel}
+                  onChange={(e) => setVideoModel(e.target.value)}
+                  className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  {VIDEO_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                <div className="flex gap-2">
+                  {VIDEO_ASPECT_RATIOS.map((r) => (
+                    <button key={r} onClick={() => setVideoAspectRatio(r)}
+                      className={`flex-1 py-1.5 rounded-md border text-[11px] font-mono transition-colors ${
+                        videoAspectRatio === r
+                          ? "border-primary text-primary bg-primary/10"
+                          : "border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1 text-[9px] text-muted-foreground/60 leading-relaxed">
+                <p>· 8-second 720p / 1080p / 4K output</p>
+                <p>· Natively synchronized audio</p>
+                <p>· Landscape &amp; portrait modes</p>
+                <p>· Requires paid Gemini API tier</p>
+              </div>
+            </div>
+          )}
+
           {/* Reset */}
           <button
             onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
@@ -1627,21 +1770,35 @@ export default function ManualKeyTester() {
         {/* ── GEMINI CHAT TAB ──────────────────────────────────────────────── */}
         {activeTab === "gemini-chat" && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            <Chat />
+            <Chat
+              apiKey={apiKey}
+              model={geminiModel}
+              temperature={geminiTemperature}
+              maxTokens={geminiMaxTokens}
+              systemPrompt={geminiSystemPrompt}
+            />
           </div>
         )}
 
         {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
         {activeTab === "image-gen" && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            <ImageTester />
+            <ImageTester
+              apiKey={apiKey}
+              model={imageModel}
+              aspectRatio={imageAspectRatio}
+            />
           </div>
         )}
 
         {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
         {activeTab === "video-gen" && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            <VideoTester />
+            <VideoTester
+              apiKey={apiKey}
+              model={videoModel}
+              aspectRatio={videoAspectRatio}
+            />
           </div>
         )}
 

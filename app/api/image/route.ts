@@ -22,17 +22,17 @@ interface GeminiResponse {
 export async function POST(req: Request) {
   const {
     prompt,
-    // The correct model for Gemini image generation (as of 2025)
     model = "gemini-2.0-flash-preview-image-generation",
     aspectRatio = "1:1",
+    apiKey: bodyApiKey,
   } = await req.json()
 
-  // Accept either GEMINI_API_KEY or GOOGLE_API_KEY
-  const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY
+  // Prefer key from request body, fall back to env var
+  const apiKey = bodyApiKey?.trim() || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
   if (!apiKey) {
     return Response.json(
-      { error: "No API key configured. Set GEMINI_API_KEY or GOOGLE_API_KEY in environment variables." },
-      { status: 500 }
+      { error: "No API key provided. Enter your Gemini API key in the left panel." },
+      { status: 400 }
     )
   }
 

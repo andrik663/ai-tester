@@ -1,7 +1,8 @@
 export async function POST(req: Request) {
-  const { messages, model, temperature, maxOutputTokens, systemPrompt } = await req.json()
+  const { messages, model, temperature, maxOutputTokens, systemPrompt, apiKey: bodyApiKey } = await req.json()
 
   const selectedModel = model ?? "gemini-2.5-flash"
+  const apiKey = bodyApiKey?.trim() || process.env.GEMINI_API_KEY || ""
 
   // Build the contents array matching the cURL structure exactly
   const contents = messages.map((msg: { role: string; content: string }) => ({
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-goog-api-key": process.env.GEMINI_API_KEY ?? "",
+        "X-goog-api-key": apiKey,
       },
       body: JSON.stringify(body),
     }

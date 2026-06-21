@@ -1,8 +1,9 @@
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
 export async function POST(req: Request) {
-  const { prompt, model, aspectRatio } = await req.json()
+  const { prompt, model, aspectRatio, apiKey: bodyApiKey } = await req.json()
   const selectedModel = model ?? "veo-3.1-generate-preview"
+  const apiKey = bodyApiKey?.trim() || process.env.GEMINI_API_KEY || ""
 
   // Initiate long-running video generation — mirrors the cURL exactly
   const response = await fetch(
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-goog-api-key": process.env.GEMINI_API_KEY ?? "",
+        "x-goog-api-key": apiKey,
       },
       body: JSON.stringify({
         instances: [{ prompt }],
@@ -39,6 +40,8 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const operationName = searchParams.get("operation")
+  const queryApiKey = searchParams.get("apiKey")
+  const apiKey = queryApiKey?.trim() || process.env.GEMINI_API_KEY || ""
 
   if (!operationName) {
     return new Response(JSON.stringify({ error: "Missing operation name" }), {
@@ -50,7 +53,7 @@ export async function GET(req: Request) {
   // Poll the operation status
   const response = await fetch(`${BASE_URL}/${operationName}`, {
     headers: {
-      "x-goog-api-key": process.env.GEMINI_API_KEY ?? "",
+      "x-goog-api-key": apiKey,
     },
   })
 
@@ -83,7 +86,7 @@ export async function GET(req: Request) {
 
   // Fetch the video bytes and return as base64 so the browser can play it
   const videoRes = await fetch(videoUri, {
-    headers: { "x-goog-api-key": process.env.GEMINI_API_KEY ?? "" },
+    headers: { "x-goog-api-key": apiKey },
   })
 
   if (!videoRes.ok) {

@@ -2,12 +2,12 @@
 
 import { useRef, useState } from "react"
 
-const VIDEO_MODELS = [
+export const VIDEO_MODELS = [
   { id: "veo-3.1-generate-preview", label: "Veo 3.1 (Latest)", badge: "NEW" },
   { id: "veo-3.1-lite-generate-preview", label: "Veo 3.1 Lite", badge: "FAST" },
 ]
 
-const ASPECT_RATIOS = ["16:9", "9:16"]
+export const VIDEO_ASPECT_RATIOS = ["16:9", "9:16"]
 
 const EXAMPLE_PROMPTS = [
   "A drone shot over a misty mountain forest at sunrise, golden light breaking through the trees",
@@ -43,18 +43,14 @@ function DownloadIcon() {
   )
 }
 
-function ChevronDown() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
+interface VideoTesterProps {
+  apiKey?: string
+  model?: string
+  aspectRatio?: string
 }
 
-export default function VideoTester() {
+export default function VideoTester({ apiKey = "", model = VIDEO_MODELS[0].id, aspectRatio = "16:9" }: VideoTesterProps) {
   const [prompt, setPrompt] = useState("")
-  const [model, setModel] = useState(VIDEO_MODELS[0].id)
-  const [aspectRatio, setAspectRatio] = useState("16:9")
   const [status, setStatus] = useState<Status>("idle")
   const [error, setError] = useState<string | null>(null)
   const [videoBase64, setVideoBase64] = useState<string | null>(null)
@@ -67,6 +63,9 @@ export default function VideoTester() {
   const pollInterval = useRef<ReturnType<typeof setTimeout> | null>(null)
   const startTimeRef = useRef<number>(0)
 
+  const hasKey = !!apiKey.trim()
+  const isRunning = status === "submitting" || status === "polling"
+
   function stopPolling() {
     if (pollInterval.current) {
       clearTimeout(pollInterval.current)
@@ -77,7 +76,9 @@ export default function VideoTester() {
   async function pollStatus(opName: string) {
     setPollCount((c) => c + 1)
     try {
-      const res = await fetch(`/api/video?operation=${encodeURIComponent(opName)}`)
+      const params = new URLSearchParams({ operation: opName })
+      if (apiKey.trim()) params.set("apiKey", apiKey.trim())
+      const res = await fetch(`/api/video?${params.toString()}`)
       const data = await res.json()
 
       setRawResponse(data)
@@ -101,7 +102,6 @@ export default function VideoTester() {
         }
         stopPolling()
       } else {
-        // Still processing — poll again in 10 seconds
         pollInterval.current = setTimeout(() => pollStatus(opName), 10000)
       }
     } catch (err) {
@@ -114,7 +114,7 @@ export default function VideoTester() {
 
   async function generateVideo() {
     const text = prompt.trim()
-    if (!text || status === "submitting" || status === "polling") return
+    if (!text || isRunning || !hasKey) return
 
     stopPolling()
     setStatus("submitting")
@@ -125,13 +125,11 @@ export default function VideoTester() {
     setRawResponse(null)
     startTimeRef.current = Date.now()
 
-    const requestBody = { prompt: text, model, aspectRatio }
-
     try {
       const res = await fetch("/api/video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ prompt: text, model, aspectRatio, apiKey: apiKey.trim() }),
       })
 
       const data = await res.json()
@@ -145,7 +143,6 @@ export default function VideoTester() {
 
       setOperationName(data.operationName)
       setStatus("polling")
-      // Start polling after 10s — video gen takes ~30-90s
       pollInterval.current = setTimeout(() => pollStatus(data.operationName), 10000)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed")
@@ -173,8 +170,6 @@ export default function VideoTester() {
     setElapsedMs(null)
   }
 
-  const isRunning = status === "submitting" || status === "polling"
-
   const requestJson = JSON.stringify({
     endpoint: `https://generativelanguage.googleapis.com/v1beta/models/${model}:predictLongRunning`,
     body: {
@@ -186,125 +181,30 @@ export default function VideoTester() {
   return (
     <div className="flex h-full bg-background text-foreground font-sans overflow-hidden">
 
-      {/* LEFT — Config */}
-      <aside className="w-64 flex-shrink-0 flex flex-col border-r border-border bg-card overflow-y-auto">
-        <div className="px-4 py-4 border-b border-border flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-            <VideoIcon />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-foreground leading-none">Video Gen</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Veo via Gemini API</p>
-          </div>
-        </div>
-
-        <div className="flex-1 px-4 py-4 flex flex-col gap-5">
-
-          {/* Model selector */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Model</label>
-            <div className="relative">
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                disabled={isRunning}
-                className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-xs px-3 py-2 pr-7 font-mono focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
-              >
-                {VIDEO_MODELS.map((m) => (
-                  <option key={m.id} value={m.id}>{m.label}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
-                <ChevronDown />
-              </span>
-            </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Veo 3.1 generates 8-second 720p–4K videos with native audio.
-            </p>
-          </div>
-
-          {/* Aspect ratio */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Aspect Ratio</label>
-            <div className="flex gap-2">
-              {ASPECT_RATIOS.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setAspectRatio(r)}
-                  disabled={isRunning}
-                  className={`flex-1 py-1.5 rounded-md border text-xs font-mono transition-colors disabled:opacity-50 ${
-                    aspectRatio === r
-                      ? "border-primary text-primary bg-primary/10"
-                      : "border-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Status card */}
-          <div className="rounded-md border border-border bg-background p-3 flex flex-col gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Status</p>
-            <div className="flex items-center gap-2">
-              {isRunning && <SpinnerIcon className="w-3 h-3 text-primary" />}
-              <span className={`text-xs font-mono font-semibold ${
-                status === "done" ? "text-chart-2" :
-                status === "error" ? "text-destructive" :
-                isRunning ? "text-primary" :
-                "text-muted-foreground"
-              }`}>
-                {status === "idle" && "Ready"}
-                {status === "submitting" && "Submitting..."}
-                {status === "polling" && `Generating... (${pollCount} poll${pollCount !== 1 ? "s" : ""})`}
-                {status === "done" && "Done"}
-                {status === "error" && "Error"}
-              </span>
-            </div>
-            {elapsedMs !== null && (
-              <p className="text-[10px] text-muted-foreground font-mono">{(elapsedMs / 1000).toFixed(1)}s total</p>
-            )}
-            {operationName && (
-              <p className="text-[9px] text-muted-foreground font-mono break-all leading-relaxed">{operationName}</p>
-            )}
-          </div>
-
-          {/* Capability notes */}
-          <div className="flex flex-col gap-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Veo 3.1 Capabilities</p>
-            <ul className="flex flex-col gap-1">
-              {["8-second 720p / 1080p / 4K output", "Natively synchronized audio", "Landscape & portrait modes", "Cinematic realism & animation"].map((c) => (
-                <li key={c} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-relaxed">
-                  <span className="text-primary mt-0.5 flex-shrink-0">·</span>
-                  {c}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="px-4 pb-4">
-          <p className="text-[9px] text-muted-foreground font-mono break-all leading-relaxed">
-            POST generativelanguage.googleapis.com/v1beta
-          </p>
-        </div>
-      </aside>
-
       {/* CENTER — Generator */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-card flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-2.5 border-b border-border bg-card flex-shrink-0">
           <div className="flex items-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${isRunning ? "bg-chart-3 animate-pulse" : status === "done" ? "bg-chart-2" : "bg-muted-foreground"}`} />
-            <span className="text-xs font-mono text-muted-foreground">{model}</span>
-            <span className="text-[10px] font-mono text-muted-foreground border border-border rounded px-1.5 py-0.5">{aspectRatio}</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              isRunning ? "bg-chart-3 animate-pulse" :
+              status === "done" ? "bg-green-400" :
+              hasKey ? "bg-green-400" :
+              "bg-muted-foreground"
+            }`} />
+            <span className="text-[11px] font-mono text-muted-foreground">{model}</span>
+            <span className="text-[10px] font-mono text-muted-foreground/60 border border-border rounded px-1.5 py-0.5">{aspectRatio}</span>
+            {isRunning && (
+              <span className="text-[10px] font-mono text-primary">
+                {status === "submitting" ? "Submitting..." : `Polling... (${pollCount})`}
+              </span>
+            )}
+            {elapsedMs !== null && !isRunning && (
+              <span className="text-[10px] font-mono text-muted-foreground/60">{(elapsedMs / 1000).toFixed(1)}s</span>
+            )}
           </div>
           {(status === "done" || status === "error") && (
-            <button
-              onClick={reset}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-md hover:bg-secondary"
-            >
+            <button onClick={reset} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded hover:bg-secondary">
               Reset
             </button>
           )}
@@ -313,10 +213,14 @@ export default function VideoTester() {
         {/* Video area */}
         <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col items-center justify-center gap-6">
 
-          {/* Empty state */}
           {status === "idle" && (
             <div className="flex flex-col items-center gap-4 text-center max-w-lg">
-              <div className="w-16 h-16 rounded-2xl border border-border bg-card flex items-center justify-center text-muted-foreground">
+              {!hasKey && (
+                <div className="text-[11px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-4 py-2.5 rounded-lg">
+                  Enter your Gemini API key in the left panel to generate video.
+                </div>
+              )}
+              <div className="w-14 h-14 rounded-2xl border border-border bg-card flex items-center justify-center text-muted-foreground">
                 <VideoIcon />
               </div>
               <div>
@@ -325,27 +229,28 @@ export default function VideoTester() {
                   Describe a scene below. Video generation takes 30–90 seconds.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {EXAMPLE_PROMPTS.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPrompt(p)}
-                    className="text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring transition-colors text-left"
-                  >
-                    {p.length > 60 ? p.slice(0, 57) + "..." : p}
-                  </button>
-                ))}
-              </div>
+              {hasKey && (
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {EXAMPLE_PROMPTS.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPrompt(p)}
+                      className="text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring transition-colors text-left"
+                    >
+                      {p.length > 60 ? p.slice(0, 57) + "..." : p}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Loading state */}
           {isRunning && (
             <div className="flex flex-col items-center gap-5 text-center">
               <div className="relative w-20 h-20">
                 <div className="absolute inset-0 rounded-full border-2 border-border" />
                 <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                   <VideoIcon />
                 </div>
               </div>
@@ -367,7 +272,6 @@ export default function VideoTester() {
             </div>
           )}
 
-          {/* Error state */}
           {status === "error" && (
             <div className="max-w-lg w-full flex flex-col gap-3">
               <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4">
@@ -380,7 +284,6 @@ export default function VideoTester() {
             </div>
           )}
 
-          {/* Done — video player */}
           {status === "done" && videoBase64 && (
             <div className="flex flex-col items-center gap-4 w-full max-w-2xl">
               <video
@@ -428,14 +331,14 @@ export default function VideoTester() {
                     generateVideo()
                   }
                 }}
-                placeholder="Describe the video you want to generate... (Enter to submit)"
+                placeholder={hasKey ? "Describe the video you want to generate..." : "Enter API key in left panel first..."}
                 rows={2}
-                disabled={isRunning}
+                disabled={isRunning || !hasKey}
                 className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none leading-relaxed disabled:opacity-50"
               />
               <button
                 onClick={generateVideo}
-                disabled={isRunning || !prompt.trim()}
+                disabled={isRunning || !prompt.trim() || !hasKey}
                 aria-label="Generate video"
                 className="flex-shrink-0 px-4 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40 hover:opacity-85 transition-opacity whitespace-nowrap flex items-center gap-1.5"
               >
@@ -451,7 +354,7 @@ export default function VideoTester() {
 
       {/* RIGHT — Inspector */}
       <aside className="w-72 flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
+        <div className="px-4 py-3 border-b border-border flex-shrink-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Inspector</p>
         </div>
 
@@ -472,26 +375,21 @@ export default function VideoTester() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
-          <pre className="text-[10px] font-mono text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+          <pre className="text-[10px] font-mono text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">
             {inspectorTab === "request"
               ? requestJson
               : rawResponse
                 ? JSON.stringify(rawResponse, null, 2)
-                : "(no response yet)"}
+                : status === "idle"
+                  ? "Submit a prompt to see the request and response here."
+                  : "Waiting for response..."}
           </pre>
         </div>
 
-        {/* cURL preview */}
-        {inspectorTab === "request" && (
-          <div className="border-t border-border p-3 flex-shrink-0">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Equivalent cURL</p>
-            <pre className="text-[9px] font-mono text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
-{`curl "${`https://generativelanguage.googleapis.com/v1beta/models/${model}:predictLongRunning`}" \\
-  -H 'Content-Type: application/json' \\
-  -H 'x-goog-api-key: YOUR_KEY' \\
-  -X POST \\
-  -d '{"instances":[{"prompt":"${(prompt || "...").slice(0, 40)}"}],"parameters":{"aspectRatio":"${aspectRatio}"}}'`}
-            </pre>
+        {operationName && (
+          <div className="flex-shrink-0 border-t border-border p-3">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Operation</p>
+            <p className="text-[9px] font-mono text-muted-foreground break-all leading-relaxed">{operationName}</p>
           </div>
         )}
       </aside>
