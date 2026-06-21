@@ -309,7 +309,7 @@ export default function Chat() {
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Max Tokens</label>
-              <span className="text-xs font-mono text-primary">{maxTokens.toLocaleString()}</span>
+              <span className="text-xs font-mono text-primary">{maxTokens.toLocaleString("en-US")}</span>
             </div>
             <input
               type="range"
