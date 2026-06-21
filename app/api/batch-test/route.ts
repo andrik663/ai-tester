@@ -187,7 +187,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
-  // ── Google Gemini ────────────────────────────────────────────────�������────────
+  // ── Google Gemini ────────────────────────────────────────────────���������────────
   google: {
     id: "google",
     // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
@@ -397,7 +397,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Together AI ─────────────────────────────────────────────────���─────────
+  // ── Together AI ───────────────────────────────────────────────���─���─────────
   together: {
     id: "together",
     models: [
@@ -618,14 +618,25 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   novita: {
     id: "novita",
     models: [
-      "meta-llama/llama-3.3-70b-instruct",
-      "meta-llama/llama-3.1-8b-instruct",
-      "qwen/qwen3-235b-a22b",
-      "qwen/qwen3-32b",
-      "deepseek/deepseek-v3",
-      "deepseek/deepseek-r1",
-      "microsoft/phi-4",
-      "google/gemma-3-27b-it",
+      // ── Code & Reasoning ─────────────────────────────────────────────────
+      "deepseek/deepseek-r1-0528",                         // DeepSeek-R1 05/28
+      "deepseek/deepseek-v3-0324",                         // DeepSeek-V3 03/24
+      "qwen/qwen3-coder-480b-a35b-instruct",               // Qwen3-Coder 480B A35B
+      "qwen/qwen3-235b-a22b-instruct-2507",                // Qwen3-235B A22B 2507
+      "moonshotai/kimi-k2-instruct",                       // Kimi K2 Instruct
+      "thudm/glm-4-5",                                     // GLM-4.5
+      // ── General ──────────────────────────────────────────────────────────
+      "meta-llama/llama-3.3-70b-instruct",                 // Llama 3.3 70B
+      "meta-llama/llama-4-maverick-17b-128e-instruct-fp8", // Llama 4 Maverick FP8
+      "meta-llama/llama-4-scout-17b-16e-instruct",         // Llama 4 Scout
+      "qwen/qwen3-235b-a22b-fp8",                          // Qwen3-235B A22B FP8
+      "qwen/qwen3-30b-a3b",                                // Qwen3-30B A3B
+      "deepseek/deepseek-r1",                              // DeepSeek-R1
+      "deepseek/deepseek-v3",                              // DeepSeek-V3
+      // ── Vision ───────────────────────────────────────────────────────────
+      "qwen/qwen2.5-vl-72b-instruct",                      // Qwen2.5-VL 72B
+      // ── Fast / Small ─────────────────────────────────────────────────────
+      "meta-llama/llama-3.1-8b-instruct",                  // Llama 3.1 8B
     ],
     endpoint: "https://api.novita.ai/v3/openai/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),

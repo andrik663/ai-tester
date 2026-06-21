@@ -214,7 +214,7 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
     messages: [{ role: "user", content: prompt }],
   }),
   novita: (prompt) => ({
-    model: "meta-llama/llama-3.3-70b-instruct",
+    model: "deepseek/deepseek-r1-0528",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   }),
@@ -513,9 +513,9 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
       ],
     }],
   }),
-  // Novita AI — vision via Qwen2-VL-7B
+  // Novita AI — vision via Qwen2.5-VL-72B
   novita: (prompt, base64, mimeType) => ({
-    model: "qwen/qwen2-vl-7b-instruct",
+    model: "qwen/qwen2.5-vl-72b-instruct",
     max_tokens: 2048,
     messages: [{
       role: "user",

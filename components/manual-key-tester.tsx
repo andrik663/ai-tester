@@ -258,11 +258,11 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "meta-llama/llama-3.3-70b-instruct",
+      model: "deepseek/deepseek-r1-0528",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://novita.ai/docs/api-reference/llm-openai-compatible-apis",
+    docsUrl: "https://novita.ai/docs/guides/llm-api",
     createKeyUrl: "https://novita.ai/settings/key-management",
     color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
   },
