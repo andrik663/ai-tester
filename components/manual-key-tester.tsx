@@ -739,7 +739,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "gemini-chat" | "image-gen" | "video-gen">("chat")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "gemini-chat" | "image-gen" | "video-gen">("vision")
   // Vision / OCR state
   const [visionPrompt, setVisionPrompt] = useState("")
   const [visionImage, setVisionImage] = useState<{ dataUrl: string; mimeType: string; name: string } | null>(null)
@@ -1278,7 +1278,6 @@ export default function ManualKeyTester() {
           {/* API Tester tabs */}
           <div className="flex items-center gap-0.5 py-1.5 mr-1">
             {([
-              { id: "chat", icon: <ChatIcon />, label: "Chat" },
               { id: "vision", icon: <ImageIcon />, label: "Vision" },
               { id: "ocr", icon: <ScanIcon />, label: "OCR" },
             ] as const).map((t) => (
@@ -1337,185 +1336,20 @@ export default function ManualKeyTester() {
             </span>
           )}
 
-          {/* Response status */}
-          {(activeTab === "chat" ? result : activeTab === "vision" ? visionResult : null) && (
+          {/* Response status — shown for Vision and OCR tabs only */}
+          {activeTab === "vision" && visionResult && (
             <div className="flex items-center gap-2 ml-auto flex-shrink-0 pr-1">
-              {(activeTab === "chat" ? result : visionResult)?.tokenUsage?.totalTokens && (
+              {visionResult.tokenUsage?.totalTokens && (
                 <span className="text-[10px] font-mono text-muted-foreground hidden md:block">
-                  {(activeTab === "chat" ? result : visionResult)?.tokenUsage?.totalTokens}t
+                  {visionResult.tokenUsage.totalTokens}t
                 </span>
               )}
-              <span className={`text-[10px] font-mono ${(activeTab === "chat" ? result : visionResult)?.ok ? "text-green-400" : "text-red-400"}`}>
-                {(activeTab === "chat" ? result : visionResult)?.status} · {(activeTab === "chat" ? result : visionResult)?.durationMs}ms
+              <span className={`text-[10px] font-mono ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
+                {visionResult.status} · {visionResult.durationMs}ms
               </span>
             </div>
           )}
         </div>
-
-        {/* ── CHAT TAB ─────────────────────────────────────────────────────── */}
-        {activeTab === "chat" && (
-          <>
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
-              {chatHistory.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
-                    <span className="text-lg font-bold">{selectedPreset.name[0]}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{selectedPreset.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      Enter your API key and send a message to test the endpoint.
-                    </p>
-                    {!apiKey && (
-                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
-                        API key required — enter it in the left panel
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {chatHistory.map((msg, i) => (
-                <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                  <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-border text-foreground"
-                  }`}>
-                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
-                  </div>
-                  <span className="text-[9px] text-muted-foreground/50 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
-                </div>
-              ))}
-
-              {loading && (
-                <div className="flex items-start gap-2">
-                  <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
-                    <SpinnerIcon />
-                    <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Log / Raw toggle row */}
-            {result && (
-              <div className="flex items-center gap-2 px-4 py-1.5 border-t border-border bg-card/50 flex-shrink-0">
-                <button
-                  onClick={() => { setShowLog((v) => !v); if (showRawResponse) setShowRawResponse(false) }}
-                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
-                    showLog ? "text-cyan-400 border-cyan-400/30 bg-cyan-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
-                  }`}
-                >
-                  <span className="font-mono">$</span> Test Log ({result.logs.length})
-                </button>
-                <button
-                  onClick={() => { setShowRawResponse((v) => !v); if (showLog) setShowLog(false) }}
-                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors ${
-                    showRawResponse ? "text-yellow-400 border-yellow-400/30 bg-yellow-400/10" : "text-muted-foreground border-transparent hover:bg-secondary"
-                  }`}
-                >
-                  {"{ }"} Raw Response
-                </button>
-                {result.curlCommand && (
-                  <div className="flex items-center gap-1 ml-auto">
-                    <button onClick={copyCurl} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors">
-                      <CopyIcon /> {copiedCurl ? "Copied!" : "cURL (masked)"}
-                    </button>
-                    {result.curlFull && (
-                      <button onClick={copyCurlFull} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
-                        <CopyIcon /> {copiedCurlFull ? "Copied!" : "cURL (full)"}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Terminal log */}
-            {showLog && result && (
-              <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-48 overflow-y-auto">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Request Log — {result.durationMs}ms</span>
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 rounded-full bg-red-500/60" />
-                    <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
-                    <span className="w-2 h-2 rounded-full bg-green-500/60" />
-                  </div>
-                </div>
-                {result.logs.map((entry, i) => (
-                  <div key={i} className="flex gap-2 items-start mb-0.5">
-                    <span className="text-[9px] text-muted-foreground/40 w-8 flex-shrink-0 pt-px tabular-nums">{entry.ts}ms</span>
-                    <span className={`text-[10px] leading-relaxed ${LOG_STYLES[entry.level]} whitespace-pre-wrap break-all`}>
-                      <span className="opacity-60">{LOG_PREFIX[entry.level]}</span>{entry.text}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Raw response */}
-            {showRawResponse && result && (
-              <div className="border-t border-border bg-[#0a0a0a] px-4 pt-2.5 pb-3 font-mono flex-shrink-0 max-h-48 overflow-y-auto">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Raw JSON Response</span>
-                  <span className={`text-[9px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}>HTTP {result.status}</span>
-                </div>
-                <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">{result.responseBody}</pre>
-              </div>
-            )}
-
-            {/* Token usage */}
-            {result?.ok && (result.tokenUsage || (result.responseHeaders && Object.keys(result.responseHeaders).length > 0)) && (
-              <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4 flex-wrap">
-                {result.tokenUsage && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
-                    {result.tokenUsage.promptTokens !== undefined && (
-                      <span className="text-[10px] font-mono text-muted-foreground">in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span></span>
-                    )}
-                    {result.tokenUsage.completionTokens !== undefined && (
-                      <span className="text-[10px] font-mono text-muted-foreground">out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span></span>
-                    )}
-                    {result.tokenUsage.totalTokens !== undefined && (
-                      <span className="text-[10px] font-mono text-primary font-semibold">total: {result.tokenUsage.totalTokens}</span>
-                    )}
-                  </div>
-                )}
-                {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
-                  <span className="text-[10px] font-mono text-muted-foreground">rl-remaining: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span></span>
-                )}
-              </div>
-            )}
-
-            {/* Chat input bar */}
-            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
-              <div className="flex gap-2 items-end">
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={apiKey ? "Type a message and press Enter..." : "Enter API key first..."}
-                  disabled={!apiKey.trim() || loading}
-                  rows={2}
-                  className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40"
-                />
-                <button
-                  onClick={runTest}
-                  disabled={!apiKey.trim() || !prompt.trim() || loading}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity flex-shrink-0"
-                >
-                  {loading ? <SpinnerIcon /> : <SendIcon />}
-                  {loading ? "Sending" : "Send"}
-                </button>
-              </div>
-              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
-                Enter sends · Shift+Enter for newline · <code>{"{{PROMPT}}"}</code> in body template is replaced with your message
-              </p>
-            </div>
-          </>
-        )}
 
         {/* ── VISION TAB ────────────��──────────────────────────────────────── */}
         {activeTab === "vision" && (
