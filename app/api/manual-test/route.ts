@@ -199,8 +199,12 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
   }),
   // ── Meta / Llama providers (OpenAI-compatible) ────────────────────────────
   cerebras: (prompt) => ({
-    model: "llama-3.3-70b",
-    max_tokens: 1024,
+    model: "gpt-oss-120b",
+    max_completion_tokens: 1024,
+    temperature: 0.2,
+    top_p: 1,
+    stream: false,
+    reasoning_effort: "medium",
     messages: [{ role: "user", content: prompt }],
   }),
   fireworks: (prompt) => ({

@@ -190,7 +190,7 @@ const PRESETS: ProviderPreset[] = [
   // ── Meta / Llama providers ─────────────────────────────────────────────��──
   {
     id: "cerebras",
-    name: "Cerebras (Llama)",
+    name: "Cerebras",
     endpoint: "https://api.cerebras.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -198,8 +198,12 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "llama-3.3-70b",
-      max_tokens: 1024,
+      model: "gpt-oss-120b",
+      max_completion_tokens: 1024,
+      temperature: 0.2,
+      top_p: 1,
+      stream: false,
+      reasoning_effort: "medium",
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     docsUrl: "https://inference-docs.cerebras.ai/api-reference/chat-completions",
