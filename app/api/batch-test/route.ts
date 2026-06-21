@@ -43,8 +43,9 @@ export interface ProviderConfig {
   keyInUrl?: boolean
 }
 
-const TEST_PROMPT = "halo"
-const MAX_TOKENS  = 64
+const TEST_PROMPT       = "halo"
+const MAX_TOKENS        = 64
+const DEFAULT_TIMEOUT_MS = 8_000   // per-model timeout — reduced from 20s to prevent hangs
 
 // Standard OpenAI-style reply extractor
 function openaiReply(p: Record<string, unknown>): string | undefined {
@@ -90,17 +91,14 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   anthropic: {
     id: "anthropic",
     models: [
-      // Latest — 4.8 / 4.7 / 4.6 generation (dateless IDs)
-      "claude-opus-4-8",
-      "claude-opus-4-7",
-      "claude-opus-4-6",
-      "claude-fable-5",
-      "claude-sonnet-4-6",
-      "claude-haiku-4-5-20251001",
-      // 4.x dated snapshots still active
+      // Claude 4 — confirmed dated snapshot IDs (from Anthropic docs)
       "claude-opus-4-5",
+      "claude-opus-4-5-20251101",
       "claude-sonnet-4-5",
-      // 3.x legacy still widely used
+      "claude-sonnet-4-5-20251022",
+      "claude-haiku-4-5",
+      "claude-haiku-4-5-20251022",
+      // Claude 3.x — still widely supported
       "claude-3-5-sonnet-20241022",
       "claude-3-5-haiku-20241022",
       "claude-3-opus-20240229",
@@ -153,18 +151,17 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Google Gemini ─────────────────────────────────────────────────────────
   google: {
     id: "google",
+    // concurrencyLimit 2 — Gemini free-tier rate-limits aggressively
+    concurrencyLimit: 2,
     models: [
-      // Gemini 2.5 stable
+      // Gemini 2.5 (active)
       "gemini-2.5-pro",
       "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      // Gemini 2.0
+      "gemini-2.5-flash-lite-preview-06-17",
+      // Gemini 2.0 (active)
       "gemini-2.0-flash",
       "gemini-2.0-flash-lite",
-      // Gemini 1.5 legacy
-      "gemini-1.5-pro",
-      "gemini-1.5-flash",
-      "gemini-1.5-flash-8b",
+      // NOTE: gemini-1.5-* are sunset — removed to prevent 404s
     ],
     endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent",
     authHeader: () => ({ "Content-Type": "application/json" }),
