@@ -1,10 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import ApiKeyScraper from "@/components/api-key-scraper"
 import ManualKeyTester from "@/components/manual-key-tester"
-
-type Tab = "manual" | "scraper"
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -13,18 +10,6 @@ function TerminalIcon({ className = "w-4 h-4" }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <polyline points="4 17 10 11 4 5" />
       <line x1="12" y1="19" x2="20" y2="19" />
-    </svg>
-  )
-}
-
-
-function KeyScanIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="7.5" cy="15.5" r="5.5" />
-      <path d="M21 8.5l-5-5-5.5 5.5" />
-      <path d="M15.5 2.5l1 1" />
-      <path d="M18 5l1 1" />
     </svg>
   )
 }
@@ -50,18 +35,12 @@ function CloseIcon({ className = "w-5 h-5" }: { className?: string }) {
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS: { id: Tab; label: string; description: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
+const NAV_ITEMS: { id: string; label: string; description: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
   {
     id: "manual",
     label: "API Key Tester",
     description: "Chat · Vision · OCR · Gemini · Image · Video",
     icon: TerminalIcon,
-  },
-  {
-    id: "scraper",
-    label: "API Key Scraper",
-    description: "Find leaked API keys in repos",
-    icon: KeyScanIcon,
   },
 ]
 
@@ -72,8 +51,8 @@ function Sidebar({
   onSelect,
   onClose,
 }: {
-  tab: Tab
-  onSelect: (t: Tab) => void
+  tab: string
+  onSelect: (t: string) => void
   onClose?: () => void
 }) {
   return (
@@ -148,7 +127,7 @@ function Sidebar({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Page() {
-  const [tab, setTab] = useState<Tab>("manual")
+  const [tab, setTab] = useState("manual")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const activeItem = NAV_ITEMS.find((n) => n.id === tab)!
@@ -200,14 +179,9 @@ export default function Page() {
           )}
         </div>
 
-        {/* Content panels */}
+        {/* Content panel */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className={tab === "manual" ? "h-full" : "hidden h-full"}>
-            <ManualKeyTester />
-          </div>
-          <div className={tab === "scraper" ? "h-full" : "hidden h-full"}>
-            <ApiKeyScraper />
-          </div>
+          <ManualKeyTester />
         </div>
 
       </div>
