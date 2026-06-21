@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import type { ScrapedKey } from "@/app/api/scrape-keys/route"
+import { useState, useCallback } from "react"
+import type { ScrapedKey, ScrapeResponse } from "@/app/api/scrape-keys/route"
 import type { TestKeyResult, LogEntry } from "@/app/api/test-key/route"
 
 // ── Icons ──────────────────────────────────────────────────────────────────
@@ -236,6 +236,7 @@ function LogPanel({ logs, loading }: { logs: LogEntry[]; loading: boolean }) {
 
 function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
   const [copied, setCopied] = useState(false)
+  const [copiedCurl, setCopiedCurl] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [masked, setMasked] = useState(true)
   const [testState, setTestState] = useState<TestState>("idle")
@@ -246,6 +247,14 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
     navigator.clipboard.writeText(item.value).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
+  function copyCurlFull() {
+    if (!testResult?.curlFull) return
+    navigator.clipboard.writeText(testResult.curlFull).then(() => {
+      setCopiedCurl(true)
+      setTimeout(() => setCopiedCurl(false), 1500)
     })
   }
 
@@ -377,12 +386,30 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
           {testResult && (
             <div className="flex flex-col gap-0.5 min-w-0 flex-1">
               <span className="text-[11px] text-foreground">{testResult.message}</span>
-              {testResult.detail && (
-                <span className="text-[10px] font-mono text-muted-foreground">{testResult.detail}</span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                {testResult.detail && (
+                  <span className="text-[10px] font-mono text-muted-foreground">{testResult.detail}</span>
+                )}
+                {testResult.latencyMs !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground/60">{testResult.latencyMs}ms</span>
+                )}
+                {testResult.tokenUsage?.totalTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground/60">{testResult.tokenUsage.totalTokens} tokens</span>
+                )}
+              </div>
             </div>
           )}
           <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
+            {testResult?.valid && testResult?.curlFull && (
+              <button
+                onClick={copyCurlFull}
+                title="Copy working cURL command with real key"
+                className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+              >
+                <CopyIcon size="xs" />
+                {copiedCurl ? "Copied!" : "cURL"}
+              </button>
+            )}
             {testResult?.logs && testResult.logs.length > 0 && (
               <button
                 onClick={() => setShowLog((v) => !v)}
@@ -430,16 +457,13 @@ function KeyCard({ item, index }: { item: ScrapedKey; index: number }) {
   )
 }
 
-// ── Main component ─────────────────────────────────────────────────────────
+// ── History entry ──────────────────────────────────────────────────────────
 
-interface ScrapeResult {
+interface HistoryEntry {
   url: string
   fetchedAt: string
   totalFound: number
-  keys: ScrapedKey[]
   scannedBytes: number
-  scannedJsFiles: number
-  warning?: string
 }
 
 const EXAMPLE_URLS = [
@@ -448,21 +472,43 @@ const EXAMPLE_URLS = [
   "https://console.anthropic.com",
 ]
 
+const HISTORY_KEY = "api-scraper-history"
+
+function loadHistory(): HistoryEntry[] {
+  if (typeof window === "undefined") return []
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]")
+  } catch { return [] }
+}
+
+function saveHistory(entry: HistoryEntry) {
+  const existing = loadHistory().filter((h) => h.url !== entry.url)
+  const updated = [entry, ...existing].slice(0, 20)
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
+}
+
 export default function ApiKeyScraper() {
   const [url, setUrl] = useState("")
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<ScrapeResult | null>(null)
+  const [result, setResult] = useState<ScrapeResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [filterText, setFilterText] = useState("")
   const [copiedAll, setCopiedAll] = useState(false)
+  const [history, setHistory] = useState<HistoryEntry[]>([])
 
-  async function runScrape() {
-    const trimmed = url.trim()
+  // Load history on mount
+  useState(() => {
+    setHistory(loadHistory())
+  })
+
+  const runScrape = useCallback(async (targetUrl?: string) => {
+    const trimmed = (targetUrl ?? url).trim()
     if (!trimmed || loading) return
 
     let target = trimmed
     if (!/^https?:\/\//i.test(target)) target = "https://" + target
 
+    setUrl(target)
     setLoading(true)
     setError(null)
     setResult(null)
@@ -475,13 +521,17 @@ export default function ApiKeyScraper() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`)
-      setResult(data as ScrapeResult)
+      const r = data as ScrapeResponse
+      setResult(r)
+      const entry: HistoryEntry = { url: r.url, fetchedAt: r.fetchedAt, totalFound: r.totalFound, scannedBytes: r.scannedBytes }
+      saveHistory(entry)
+      setHistory(loadHistory())
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
     } finally {
       setLoading(false)
     }
-  }
+  }, [url, loading])
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") runScrape()
@@ -496,19 +546,38 @@ export default function ApiKeyScraper() {
     })
   }
 
-  function downloadAll() {
+  function downloadTxt() {
     if (!result) return
     const lines = [`# API Keys scraped from: ${result.url}`, `# Date: ${result.fetchedAt}`, `# Total: ${result.totalFound}`, ""]
     result.keys.forEach((k, i) => {
       lines.push(`## ${i + 1}. ${k.label}`)
       lines.push(`VALUE: ${k.value}`)
       lines.push(`CONTEXT: ${k.context}`)
+      lines.push(`SOURCE: ${k.source ?? "page"}`)
       lines.push("")
     })
-    const blob = new Blob([lines.join("\n")], { type: "text/plain" })
+    triggerDownload(lines.join("\n"), "scraped-keys.txt", "text/plain")
+  }
+
+  function downloadJson() {
+    if (!result) return
+    const payload = {
+      scrapedFrom: result.url,
+      fetchedAt: result.fetchedAt,
+      totalFound: result.totalFound,
+      scannedBytes: result.scannedBytes,
+      scannedJsFiles: result.scannedJsFiles,
+      scannedSources: result.scannedSources,
+      keys: result.keys,
+    }
+    triggerDownload(JSON.stringify(payload, null, 2), "scraped-keys.json", "application/json")
+  }
+
+  function triggerDownload(content: string, filename: string, mime: string) {
+    const blob = new Blob([content], { type: mime })
     const a = document.createElement("a")
     a.href = URL.createObjectURL(blob)
-    a.download = "scraped-keys.txt"
+    a.download = filename
     a.click()
   }
 
@@ -553,7 +622,7 @@ export default function ApiKeyScraper() {
 
           {/* Run button */}
           <button
-            onClick={runScrape}
+            onClick={() => { void runScrape() }}
             disabled={loading || !url.trim()}
             className="flex items-center justify-center gap-2 w-full rounded-md bg-primary text-primary-foreground text-xs font-semibold py-2.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
@@ -600,8 +669,8 @@ export default function ApiKeyScraper() {
               <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                 <StatItem label="Keys found" value={result.totalFound.toString()} highlight={result.totalFound > 0} />
                 <StatItem label="JS files" value={result.scannedJsFiles.toString()} />
+                <StatItem label="Sources" value={(result.scannedSources?.length ?? 0).toString()} />
                 <StatItem label="Scanned" value={formatBytes(result.scannedBytes)} />
-                <StatItem label="Fetched" value={new Date(result.fetchedAt).toLocaleTimeString()} />
               </div>
             </div>
           )}
@@ -612,9 +681,12 @@ export default function ApiKeyScraper() {
             <ul className="flex flex-col gap-1">
               {[
                 "Fetches real page HTML server-side",
-                "Discovers & fetches up to 5 JS files",
-                "Matches 25+ provider-specific patterns",
-                "Deduplicates results",
+                "Scans __NEXT_DATA__, window.__ENV__, __NUXT__",
+                "Discovers & fetches up to 20 JS chunks",
+                "Decodes base64-encoded secrets",
+                "Checks robots.txt, manifest.json, sitemap.xml",
+                "Matches 30+ provider-specific key patterns",
+                "SSRF-protected — blocks private IPs",
                 "Test button calls provider APIs live",
               ].map((step) => (
                 <li key={step} className="flex items-start gap-1.5 text-[10px] text-muted-foreground">
@@ -624,9 +696,45 @@ export default function ApiKeyScraper() {
               ))}
             </ul>
             <p className="text-[9px] text-muted-foreground/60 mt-1 leading-relaxed">
-              Scraping and key testing are real — keys are validated by calling each provider&apos;s API directly.
+              All scraping and key tests hit real endpoints — no fake data.
             </p>
           </div>
+
+          {/* Scan history */}
+          {history.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Recent</p>
+                <button
+                  onClick={() => { localStorage.removeItem(HISTORY_KEY); setHistory([]) }}
+                  className="text-[9px] text-muted-foreground/50 hover:text-destructive transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                {history.slice(0, 8).map((h) => (
+                  <button
+                    key={h.url + h.fetchedAt}
+                    onClick={() => { void runScrape(h.url) }}
+                    className="text-left px-2 py-1.5 rounded hover:bg-secondary transition-colors group"
+                  >
+                    <p className="text-[10px] font-mono text-muted-foreground truncate group-hover:text-foreground">
+                      {h.url.replace(/^https?:\/\//, "")}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/40">
+                      {h.totalFound > 0 ? (
+                        <span className="text-primary">{h.totalFound} found</span>
+                      ) : (
+                        "0 found"
+                      )}{" "}
+                      · {formatBytes(h.scannedBytes)}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -671,11 +779,18 @@ export default function ApiKeyScraper() {
                 {copiedAll ? "Copied!" : "Copy All"}
               </button>
               <button
-                onClick={downloadAll}
+                onClick={downloadTxt}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-md hover:bg-secondary transition-colors"
               >
                 <DownloadIcon />
-                Export
+                .txt
+              </button>
+              <button
+                onClick={downloadJson}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-md hover:bg-secondary transition-colors"
+              >
+                <DownloadIcon />
+                .json
               </button>
             </div>
           )}
@@ -763,7 +878,7 @@ export default function ApiKeyScraper() {
   )
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Helpers ─────────────────��──────────────────────────────────────────────
 
 function StatItem({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (

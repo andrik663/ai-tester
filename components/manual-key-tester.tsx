@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
 
@@ -468,6 +469,7 @@ interface ChatMessage {
 export default function ManualKeyTester() {
   const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(PRESETS[0])
   const [apiKey, setApiKey] = useState("")
+  const [debouncedApiKey, setDebouncedApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
   const [endpoint, setEndpoint] = useState(PRESETS[0].endpoint)
   const [method, setMethod] = useState<"GET" | "POST" | "PUT" | "DELETE">(PRESETS[0].method)
@@ -483,38 +485,48 @@ export default function ManualKeyTester() {
   const [showRawResponse, setShowRawResponse] = useState(false)
   const [showBodyEditor, setShowBodyEditor] = useState(false)
   const [copiedCurl, setCopiedCurl] = useState(false)
-  const [dahonoModels, setDahonoModels] = useState<{ id: string; tier: string; free: boolean }[]>([])
-  const [dahonoModelsFetching, setDahonoModelsFetching] = useState(false)
+  const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounce API key changes by 400ms
+  const handleApiKeyChange = useCallback((val: string) => {
+    setApiKey(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedApiKey(val), 400)
+  }, [])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatHistory, loading])
 
-  // When Dahono is selected and user has a key, fetch live models
+  // SWR key — only fetches when Dahono is selected AND key is long enough
+  const dahonoSWRKey =
+    selectedPreset.id === "dahono" && debouncedApiKey.trim().length >= 8
+      ? ["/api/dahono-models", debouncedApiKey.trim()]
+      : null
+
+  const { data: dahonoData, isLoading: dahonoModelsFetching } = useSWR(
+    dahonoSWRKey,
+    ([url, key]: [string, string]) =>
+      fetch(url, { headers: { Authorization: `Bearer ${key}` } }).then((r) => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 30_000 }
+  )
+
+  const dahonoModels: { id: string; tier: string; free: boolean }[] = dahonoData?.models ?? []
+
+  // Auto-select first free model when models load
   useEffect(() => {
-    if (selectedPreset.id !== "dahono" || !apiKey.trim() || apiKey.trim().length < 8) return
-    setDahonoModelsFetching(true)
-    fetch("/api/dahono-models", {
-      headers: { Authorization: `Bearer ${apiKey.trim()}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.models) {
-          setDahonoModels(data.models)
-          // Default to first free model
-          const firstFree = data.models.find((m: { free: boolean }) => m.free)
-          if (firstFree) {
-            setSelectedDahonoModel(firstFree.id)
-            updateDahonoBodyModel(firstFree.id)
-          }
-        }
-      })
-      .catch(() => {})
-      .finally(() => setDahonoModelsFetching(false))
+    if (dahonoModels.length > 0) {
+      const firstFree = dahonoModels.find((m) => m.free)
+      if (firstFree) {
+        setSelectedDahonoModel(firstFree.id)
+        updateDahonoBodyModel(firstFree.id)
+      }
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPreset.id, apiKey])
+  }, [dahonoData])
 
   function updateDahonoBodyModel(modelId: string) {
     setBodyTemplate(JSON.stringify({
@@ -532,9 +544,8 @@ export default function ManualKeyTester() {
       Object.entries(preset.headers).map(([key, value], i) => ({ key, value, id: i }))
     )
     setBodyTemplate(preset.bodyTemplate)
-    setResult(null)
-    setShowLog(false)
-    if (preset.id !== "dahono") setDahonoModels([])
+  setResult(null)
+  setShowLog(false)
   }
 
   async function runTest() {
@@ -616,6 +627,14 @@ export default function ManualKeyTester() {
     })
   }
 
+  function copyCurlFull() {
+    if (!result?.curlFull) return
+    navigator.clipboard.writeText(result.curlFull).then(() => {
+      setCopiedCurlFull(true)
+      setTimeout(() => setCopiedCurlFull(false), 1500)
+    })
+  }
+
   return (
     <div className="flex h-full bg-background text-foreground font-sans overflow-hidden">
 
@@ -660,7 +679,7 @@ export default function ManualKeyTester() {
               <input
                 type={showKey ? "text" : "password"}
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={(e) => handleApiKeyChange(e.target.value)}
                 placeholder="sk-ant-... / sk-... / AIza..."
                 className="w-full rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
               />
@@ -816,11 +835,18 @@ export default function ManualKeyTester() {
             </span>
           )}
           {result && (
-            <span
-              className={`text-[10px] font-mono ml-auto flex-shrink-0 ${result.ok ? "text-green-400" : "text-red-400"}`}
-            >
-              HTTP {result.status} · {result.durationMs}ms
-            </span>
+            <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+              {result.tokenUsage?.totalTokens && (
+                <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
+                  {result.tokenUsage.totalTokens} tokens
+                </span>
+              )}
+              <span
+                className={`text-[10px] font-mono ${result.ok ? "text-green-400" : "text-red-400"}`}
+              >
+                HTTP {result.status} · {result.durationMs}ms
+              </span>
+            </div>
           )}
         </div>
 
@@ -895,13 +921,26 @@ export default function ManualKeyTester() {
               {"{ }"} Raw Response
             </button>
             {result.curlCommand && (
-              <button
-                onClick={copyCurl}
-                className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors ml-auto"
-              >
-                <CopyIcon />
-                {copiedCurl ? "Copied!" : "Copy cURL"}
-              </button>
+              <div className="flex items-center gap-1 ml-auto">
+                <button
+                  onClick={copyCurl}
+                  title="Copy cURL with masked key"
+                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border text-muted-foreground border-transparent hover:bg-secondary transition-colors"
+                >
+                  <CopyIcon />
+                  {copiedCurl ? "Copied!" : "cURL (masked)"}
+                </button>
+                {result.curlFull && (
+                  <button
+                    onClick={copyCurlFull}
+                    title="Copy cURL with real key — safe since you own this key"
+                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                  >
+                    <CopyIcon />
+                    {copiedCurlFull ? "Copied!" : "cURL (full)"}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -947,6 +986,42 @@ export default function ManualKeyTester() {
             <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all leading-relaxed">
               {result.responseBody}
             </pre>
+          </div>
+        )}
+
+        {/* Token usage + response headers mini-panel */}
+        {result?.ok && (result.tokenUsage || (result.responseHeaders && Object.keys(result.responseHeaders).length > 0)) && (
+          <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4 flex-wrap">
+            {result.tokenUsage && (
+              <div className="flex items-center gap-3">
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
+                {result.tokenUsage.promptTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span>
+                  </span>
+                )}
+                {result.tokenUsage.completionTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span>
+                  </span>
+                )}
+                {result.tokenUsage.totalTokens !== undefined && (
+                  <span className="text-[10px] font-mono text-primary font-semibold">
+                    total: {result.tokenUsage.totalTokens}
+                  </span>
+                )}
+              </div>
+            )}
+            {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
+              <span className="text-[10px] font-mono text-muted-foreground">
+                rl-remaining: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
+              </span>
+            )}
+            {result.responseHeaders?.["x-request-id"] && (
+              <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">
+                req-id: <span className="text-foreground">{result.responseHeaders["x-request-id"]}</span>
+              </span>
+            )}
           </div>
         )}
 

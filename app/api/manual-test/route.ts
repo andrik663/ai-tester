@@ -20,9 +20,12 @@ export interface ManualTestResult {
   responseBody: string
   chatReply?: string    // extracted assistant message if applicable
   logs: LogEntry[]
-  curlCommand: string
+  curlCommand: string      // masked — safe for display
+  curlFull: string         // real key — for user copy-paste (they own the key)
   requestBodySent: string
   durationMs: number
+  tokenUsage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number }
+  responseHeaders?: Record<string, string>
 }
 
 // ── Logger helper ─────────────────────────────────────────────────────────────
@@ -42,18 +45,61 @@ function buildCurl(
   method: string,
   url: string,
   headers: Record<string, string>,
-  body?: string
+  body?: string,
+  maskKey = false
 ): string {
   const parts: string[] = [`curl -X ${method} '${url}'`]
   for (const [k, v] of Object.entries(headers)) {
-    // Mask Authorization header values
-    const display = k.toLowerCase() === "authorization" || k.toLowerCase() === "x-api-key"
-      ? v.slice(0, 14) + "..."
-      : v
+    const display =
+      maskKey && (k.toLowerCase() === "authorization" || k.toLowerCase() === "x-api-key")
+        ? v.slice(0, 14) + "..."
+        : v
     parts.push(`  -H '${k}: ${display}'`)
   }
   if (body) parts.push(`  -d '${body.replace(/'/g, "'\\''")}'`)
   return parts.join(" \\\n")
+}
+
+// ── Token usage extractor ─────────────────────────────────────────────────────
+function extractTokenUsage(data: unknown): ManualTestResult["tokenUsage"] {
+  if (!data || typeof data !== "object") return undefined
+  const d = data as Record<string, unknown>
+  if (d.usage && typeof d.usage === "object") {
+    const u = d.usage as Record<string, unknown>
+    const result: ManualTestResult["tokenUsage"] = {}
+    if (typeof u.prompt_tokens === "number") result.promptTokens = u.prompt_tokens
+    else if (typeof u.input_tokens === "number") result.promptTokens = u.input_tokens
+    if (typeof u.completion_tokens === "number") result.completionTokens = u.completion_tokens
+    else if (typeof u.output_tokens === "number") result.completionTokens = u.output_tokens
+    if (typeof u.total_tokens === "number") result.totalTokens = u.total_tokens
+    return Object.keys(result).length > 0 ? result : undefined
+  }
+  return undefined
+}
+
+// ── Response headers capture ──────────────────────────────────────────────────
+const IMPORTANT_RESPONSE_HEADERS = [
+  "x-ratelimit-limit-requests",
+  "x-ratelimit-remaining-requests",
+  "x-ratelimit-reset-requests",
+  "x-ratelimit-limit-tokens",
+  "x-ratelimit-remaining-tokens",
+  "x-request-id",
+  "cf-ray",
+  "openai-processing-ms",
+  "anthropic-ratelimit-requests-remaining",
+  "retry-after",
+  "server",
+  "content-type",
+]
+
+function captureResponseHeaders(res: Response): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const k of IMPORTANT_RESPONSE_HEADERS) {
+    const v = res.headers.get(k)
+    if (v) out[k] = v
+  }
+  return out
 }
 
 // ── Body builder: inject prompt into provider templates ───────────────────────
@@ -294,7 +340,8 @@ export async function POST(req: NextRequest) {
 
   // ── Build cURL ────────────────────────────────────────────────────────────
 
-  const curlCommand = buildCurl(method, endpoint, finalHeaders, finalBody)
+  const curlCommand = buildCurl(method, endpoint, finalHeaders, finalBody, true)  // masked
+  const curlFull    = buildCurl(method, endpoint, finalHeaders, finalBody, false) // full key
   log("curl", curlCommand)
   log("req", `Sending ${method} → ${endpoint}`)
   if (finalBody) {
@@ -314,16 +361,17 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     log("err", `Fetch failed: ${msg}`)
-    return NextResponse.json({
-      ok: false,
-      status: 0,
-      statusText: "Network Error",
-      responseBody: msg,
-      logs,
-      curlCommand,
-      requestBodySent,
-      durationMs: Date.now() - start,
-    } satisfies ManualTestResult)
+  return NextResponse.json({
+    ok: false,
+    status: 0,
+    statusText: "Network Error",
+    responseBody: msg,
+    logs,
+    curlCommand,
+    curlFull,
+    requestBodySent,
+    durationMs: Date.now() - start,
+  } satisfies ManualTestResult)
   }
 
   const durationMs = Date.now() - start
@@ -343,6 +391,8 @@ export async function POST(req: NextRequest) {
   }
 
   const chatReply = parsedData ? extractChatReply(providerKey, parsedData) : undefined
+  const tokenUsage = parsedData ? extractTokenUsage(parsedData) : undefined
+  const responseHeaders = captureResponseHeaders(res)
 
   if (res.ok) {
     if (chatReply) {
@@ -350,6 +400,11 @@ export async function POST(req: NextRequest) {
     } else {
       log("ok", `Success — HTTP ${res.status}`)
     }
+    if (tokenUsage?.totalTokens) {
+      log("info", `Tokens used — prompt: ${tokenUsage.promptTokens ?? "?"}, completion: ${tokenUsage.completionTokens ?? "?"}, total: ${tokenUsage.totalTokens}`)
+    }
+    const rl = responseHeaders["x-ratelimit-remaining-requests"] ?? responseHeaders["anthropic-ratelimit-requests-remaining"]
+    if (rl) log("info", `Rate limit remaining: ${rl} requests`)
   } else {
     const errMsg =
       (parsedData as Record<string, unknown>)?.error?.toString?.() ??
@@ -365,7 +420,10 @@ export async function POST(req: NextRequest) {
     chatReply,
     logs,
     curlCommand,
+    curlFull,
     requestBodySent,
     durationMs,
+    tokenUsage,
+    responseHeaders,
   } satisfies ManualTestResult)
 }
