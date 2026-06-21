@@ -264,9 +264,13 @@ interface Props {
   apiKey: string
 }
 
-// Providers without a static model list (Dahono fetches live; custom/replicate not supported)
+// Providers without a static model list (Dahono fetches live)
 const DYNAMIC_PROVIDERS = new Set(["dahono"])
-const UNSUPPORTED_PROVIDERS = new Set(["replicate", "custom"])
+// Image/video-only or non-standard providers — no batch chat test
+const UNSUPPORTED_PROVIDERS = new Set([
+  "replicate", "custom", "azure",
+  "bfl", "bytedance", "recraft", "ideogram", "luma", "amazon",
+])
 
 // ── Main component ────────────────────────────────────────────────────────────
 

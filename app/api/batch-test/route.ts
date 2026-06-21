@@ -41,6 +41,8 @@ export interface ProviderConfig {
   extractReply?: (parsed: Record<string, unknown>) => string | undefined
   /** Whether to append ?key=... to the URL instead of using a header */
   keyInUrl?: boolean
+  /** Max concurrent requests for rate-limited providers */
+  concurrencyLimit?: number
 }
 
 const TEST_PROMPT       = "halo"
@@ -262,15 +264,19 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   zhipu: {
     id: "zhipu",
     models: [
-      "glm-4-flash",
-      "glm-4-air",
-      "glm-4-airx",
-      "glm-4-plus",
-      "glm-4",
+      // GLM 5 (2025)
+      "glm-5.1",
+      "glm-5.1-air",
+      // GLM Z1 reasoning
       "glm-z1-flash",
       "glm-z1-air",
       "glm-z1-airx",
       "glm-z1-plus",
+      // GLM 4 legacy
+      "glm-4-flash",
+      "glm-4-air",
+      "glm-4-plus",
+      "glm-4",
     ],
     endpoint: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -287,13 +293,11 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   minimax: {
     id: "minimax",
     models: [
+      "MiniMax-M3",
       "MiniMax-M1",
       "MiniMax-Text-01",
-      "abab6.5s-chat",
-      "abab6.5g-chat",
-      "abab6.5t-chat",
     ],
-    endpoint: "https://api.minimaxi.chat/v1/text/chatcompletion_v2",
+    endpoint: "https://api.minimax.io/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model) => ({
@@ -399,14 +403,14 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   cohere: {
     id: "cohere",
     models: [
-      "command-a",          // Latest 2025 flagship
+      "command-a-plus-05-2026",  // Latest 2026 flagship
       "command-r-plus",
       "command-r",
       "command-r7b-12-2024",
       "command",
       "command-light",
     ],
-    endpoint: "https://api.cohere.ai/v2/chat",
+    endpoint: "https://api.cohere.com/v2/chat",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model) => ({
@@ -466,6 +470,400 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     }),
     extractReply: openaiReply,
   },
+
+  // ── Cerebras ──────────────────────────────────────────────────────────────
+  cerebras: {
+    id: "cerebras",
+    models: [
+      "kimi-k2.6",
+      "glm-5.1",
+      "minimax-m2.5",
+      "zai-glm-4.7",
+      "gpt-oss-120b",
+      "gemma-4-31b",
+      "qwen3-32b",
+    ],
+    endpoint: "https://api.cerebras.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_completion_tokens: MAX_TOKENS,
+      temperature: 0.2,
+      top_p: 1,
+      stream: false,
+      reasoning_effort: "medium",
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Fireworks AI ──────────────────────────────────────────────────────────
+  fireworks: {
+    id: "fireworks",
+    models: [
+      "accounts/fireworks/models/llama-v3p3-70b-instruct",
+      "accounts/fireworks/models/llama-v3p1-8b-instruct",
+      "accounts/fireworks/models/llama-v3p2-3b-instruct",
+      "accounts/fireworks/models/qwen3-235b-a22b",
+      "accounts/fireworks/models/deepseek-v3",
+      "accounts/fireworks/models/deepseek-r1",
+      "accounts/fireworks/models/mixtral-8x7b-instruct",
+      "accounts/fireworks/models/gemma2-9b-it",
+    ],
+    endpoint: "https://api.fireworks.ai/inference/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Novita AI ─────────────────────────────────────────────────────────────
+  novita: {
+    id: "novita",
+    models: [
+      "meta-llama/llama-3.3-70b-instruct",
+      "meta-llama/llama-3.1-8b-instruct",
+      "qwen/qwen3-235b-a22b",
+      "qwen/qwen3-32b",
+      "deepseek/deepseek-v3",
+      "deepseek/deepseek-r1",
+      "microsoft/phi-4",
+      "google/gemma-3-27b-it",
+    ],
+    endpoint: "https://api.novita.ai/v3/openai/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Cloudflare Workers AI ─────────────────────────────────────────────────
+  // Key format: "accountId|apiToken" — endpoint uses {{ACCOUNT_ID}} replaced in route handler
+  cloudflare: {
+    id: "cloudflare",
+    models: [
+      "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "@cf/meta/llama-3.1-8b-instruct",
+      "@cf/meta/llama-4-scout-17b-16e-instruct-fp8",
+      "@cf/qwen/qwen2.5-72b-instruct",
+      "@cf/deepseek-ai/deepseek-r1-distill-llama-70b",
+      "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+      "@cf/google/gemma-3-12b-it",
+      "@hf/mistralai/mistral-7b-instruct-v0.2",
+    ],
+    endpoint: "https://api.cloudflare.com/client/v4/accounts/{{ACCOUNT_ID}}/ai/v1/chat/completions",
+    authHeader: (key) => {
+      const token = key.includes("|") ? key.split("|")[1] : key
+      return { Authorization: `Bearer ${token}` }
+    },
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── OpenRouter ────────────────────────────────────────────────────────────
+  openrouter: {
+    id: "openrouter",
+    models: [
+      "anthropic/claude-opus-4",
+      "anthropic/claude-sonnet-4",
+      "openai/gpt-4o",
+      "openai/gpt-4o-mini",
+      "google/gemini-2.5-pro",
+      "google/gemini-2.5-flash",
+      "meta-llama/llama-4-maverick",
+      "meta-llama/llama-4-scout",
+      "deepseek/deepseek-v3",
+      "deepseek/deepseek-r1",
+      "qwen/qwen3-235b-a22b",
+      "mistralai/mistral-large",
+      "x-ai/grok-3",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: {
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://ai-tester.vercel.app",
+      "X-Title": "AI Tester",
+    },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── SambaNova ─────────────────────────────────────────────────────────────
+  sambanova: {
+    id: "sambanova",
+    models: [
+      "Meta-Llama-3.3-70B-Instruct",
+      "Meta-Llama-3.1-8B-Instruct",
+      "Meta-Llama-3.2-3B-Instruct",
+      "Qwen3-32B",
+      "Qwen2.5-72B-Instruct",
+      "DeepSeek-R1",
+      "DeepSeek-V3-0324",
+      "Llama-4-Scout-17B-16E-Instruct",
+      "Llama-4-Maverick-17B-128E-Instruct",
+    ],
+    endpoint: "https://api.sambanova.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── NVIDIA NIM ────────────────────────────────────────────────────────────
+  nvidia: {
+    id: "nvidia",
+    models: [
+      "meta/llama-4-scout-17b-16e-instruct",
+      "meta/llama-4-maverick-17b-128e-instruct",
+      "meta/llama-3.3-70b-instruct",
+      "meta/llama-3.1-8b-instruct",
+      "qwen/qwen3-235b-a22b",
+      "deepseek-ai/deepseek-r1",
+      "deepseek-ai/deepseek-v3",
+      "microsoft/phi-4",
+      "mistralai/mistral-large-2-instruct",
+      "google/gemma-3-27b-it",
+    ],
+    endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Hyperbolic ────────────────────────────────────────────────────────────
+  hyperbolic: {
+    id: "hyperbolic",
+    models: [
+      "meta-llama/Llama-3.3-70B-Instruct",
+      "meta-llama/Llama-3.1-8B-Instruct",
+      "Qwen/Qwen3-235B-A22B",
+      "Qwen/Qwen2.5-72B-Instruct",
+      "deepseek-ai/DeepSeek-V3",
+      "deepseek-ai/DeepSeek-R1",
+      "mistralai/Mistral-7B-Instruct-v0.3",
+      "NovaSky-AI/Sky-T1-32B-Preview",
+    ],
+    endpoint: "https://api.hyperbolic.xyz/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── AI21 Labs (Jamba) ──────────────────────────────────────────────────────
+  ai21: {
+    id: "ai21",
+    models: [
+      "jamba-large",
+      "jamba-mini",
+    ],
+    endpoint: "https://api.ai21.com/studio/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Moonshot (Kimi) ───────────────────────────────────────────────────────
+  moonshot: {
+    id: "moonshot",
+    models: [
+      "kimi-k2",
+      "moonshot-v1-8k",
+      "moonshot-v1-32k",
+      "moonshot-v1-128k",
+    ],
+    endpoint: "https://api.moonshot.cn/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Baidu ERNIE ───────────────────────────────────────────────────────────
+  baidu: {
+    id: "baidu",
+    models: [
+      "ernie-4.5-8k",
+      "ernie-4.0-8k",
+      "ernie-speed-128k",
+      "ernie-lite-8k",
+      "ernie-tiny-8k",
+    ],
+    endpoint: "https://qianfan.baidubce.com/v2/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── 01.AI (Yi) ────────────────────────────────────────────────────────────
+  yi: {
+    id: "yi",
+    models: [
+      "yi-large",
+      "yi-medium",
+      "yi-large-turbo",
+      "yi-spark",
+      "yi-large-rag",
+    ],
+    endpoint: "https://api.lingyiwanwu.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Stepfun ───────────────────────────────────────────────────────────────
+  stepfun: {
+    id: "stepfun",
+    models: [
+      "step-3",
+      "step-3.7-flash",
+      "step-2-16k",
+      "step-1-8k",
+      "step-1v-8k",
+    ],
+    endpoint: "https://api.stepfun.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Tencent Hunyuan ───────────────────────────────────────────────────────
+  hunyuan: {
+    id: "hunyuan",
+    models: [
+      "hunyuan-turbos-latest",
+      "hunyuan-turbo",
+      "hunyuan-large",
+      "hunyuan-standard",
+      "hunyuan-lite",
+    ],
+    endpoint: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Upstage Solar ─────────────────────────────────────────────────────────
+  upstage: {
+    id: "upstage",
+    models: [
+      "solar-pro",
+      "solar-mini",
+    ],
+    endpoint: "https://api.upstage.ai/v1/solar/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Writer (Palmyra) ──────────────────────────────────────────────────────
+  writer: {
+    id: "writer",
+    models: [
+      "palmyra-x5",
+      "palmyra-x4",
+      "palmyra-med",
+      "palmyra-fin",
+    ],
+    endpoint: "https://api.writer.com/v1/chat",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── LeptonAI ──────────────────────────────────────────────────────────────
+  lepton: {
+    id: "lepton",
+    models: [
+      "llama3-3-70b",
+      "llama3-1-405b",
+      "llama3-1-70b",
+      "qwen3-235b-a22b",
+      "deepseek-v3",
+      "deepseek-r1",
+      "mistral-7b",
+    ],
+    endpoint: "https://{{MODEL}}.lepton.run/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model) => ({
+      model,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: TEST_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
 }
 
 // ── cURL builder ──────────────────────────────────────────────────────────────
@@ -491,8 +889,11 @@ async function testModel(
   cfg: ProviderConfig,
   apiKey: string,
 ): Promise<BatchModelResult> {
-  // Build URL (handle {{MODEL}} templates and keyInUrl)
-  let url = cfg.endpoint.replace("{{MODEL}}", encodeURIComponent(modelId))
+  // Build URL (handle {{MODEL}}, {{ACCOUNT_ID}} templates and keyInUrl)
+  const accountId = apiKey.includes("|") ? apiKey.split("|")[0] : ""
+  let url = cfg.endpoint
+    .replace("{{MODEL}}", encodeURIComponent(modelId))
+    .replace("{{ACCOUNT_ID}}", encodeURIComponent(accountId))
   if (cfg.keyInUrl) {
     url += `?key=${encodeURIComponent(apiKey)}`
   }

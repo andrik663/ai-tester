@@ -197,10 +197,14 @@ const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
       max_new_tokens: 512,
     },
   }),
-  // ── Meta / Llama providers (OpenAI-compatible) ────────────────────────────
+  // ── Cerebras (public models: kimi-k2.6, glm-5.1, minimax-m2.5, zai-glm-4.7, gpt-oss-120b, gemma-4-31b, qwen3-32b)
   cerebras: (prompt) => ({
-    model: "llama-3.3-70b",
-    max_tokens: 1024,
+    model: "kimi-k2.6",
+    max_completion_tokens: 1024,
+    temperature: 0.2,
+    top_p: 1,
+    stream: false,
+    reasoning_effort: "medium",
     messages: [{ role: "user", content: prompt }],
   }),
   fireworks: (prompt) => ({
@@ -481,10 +485,14 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
       ],
     }],
   }),
-  // Cerebras — vision via llama-4-scout (multimodal)
+  // Cerebras — vision via kimi-k2.6 (multimodal per official Cerebras model guide)
   cerebras: (prompt, base64, mimeType) => ({
-    model: "llama-4-scout-17b-16e-instruct",
-    max_tokens: 2048,
+    model: "kimi-k2.6",
+    max_completion_tokens: 2048,
+    temperature: 0.2,
+    top_p: 1,
+    stream: false,
+    reasoning_effort: "medium",
     messages: [{
       role: "user",
       content: [

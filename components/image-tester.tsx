@@ -272,24 +272,24 @@ export default function ImageTester({
 
         {/* Prompt input */}
         {isSupported && (
-          <div className="flex-shrink-0 border-t border-border p-4 bg-card">
-            <div className="flex gap-3 items-end">
+          <div className="flex-shrink-0 border-t border-border px-3 sm:px-4 pt-3 pb-4 bg-card">
+            <div className="flex gap-2 items-end">
               <div className="flex-1 relative">
                 <textarea
                   ref={textareaRef}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) generate() }}
-                  placeholder={hasKey ? "Describe the image you want to generate..." : "Enter API key in left panel first..."}
+                  placeholder={hasKey ? "Describe the image to generate..." : "Open config (menu icon) and enter API key first..."}
                   rows={2}
                   disabled={!hasKey}
-                  className="w-full resize-none rounded-xl bg-secondary/60 border border-border text-sm text-foreground placeholder:text-muted-foreground px-4 py-3 outline-none focus:border-primary/60 transition-colors font-sans leading-relaxed disabled:opacity-50"
+                  className="w-full resize-none rounded-xl bg-secondary/60 border border-border text-sm text-foreground placeholder:text-muted-foreground px-3 py-2.5 outline-none focus:border-primary/60 transition-colors font-sans leading-relaxed disabled:opacity-50"
                 />
               </div>
               <button
                 onClick={generate}
                 disabled={!prompt.trim() || loading || !hasKey}
-                className="flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 h-[46px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all min-w-[90px]"
               >
                 {loading ? (
                   <span className="flex gap-1">
@@ -307,7 +307,7 @@ export default function ImageTester({
                 )}
               </button>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">
+            <p className="text-[10px] text-muted-foreground mt-2 hidden sm:block">
               Ctrl+Enter to generate
             </p>
           </div>
