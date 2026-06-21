@@ -1733,9 +1733,9 @@ export default function ManualKeyTester() {
         {/* ── VISION TAB ────────────��──────────────────────────────────────── */}
         {activeTab === "vision" && (
           <>
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
               {visionHistory.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
                   <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
                     <ImageIcon />
                   </div>
@@ -1749,7 +1749,7 @@ export default function ManualKeyTester() {
                     </p>
                     {!apiKey && (
                       <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
-                        API key required — enter it in the left panel
+                        API key required — tap the menu icon to open config
                       </p>
                     )}
                   </div>
@@ -1802,10 +1802,10 @@ export default function ManualKeyTester() {
             )}
 
             {/* Vision input */}
-            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+            <div className="border-t border-border px-3 sm:px-4 py-3 flex-shrink-0 bg-card safe-area-bottom">
               {/* Image preview / drop zone */}
               <div
-                className="mb-2 relative"
+                className="mb-2.5 relative"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault()
@@ -1819,7 +1819,7 @@ export default function ManualKeyTester() {
                     <img
                       src={visionImage.dataUrl}
                       alt="Vision input"
-                      className="max-h-32 rounded-lg border border-border object-contain"
+                      className="max-h-28 rounded-lg border border-border object-contain"
                     />
                     <button
                       onClick={() => setVisionImage(null)}
@@ -1834,9 +1834,9 @@ export default function ManualKeyTester() {
                 ) : (
                   <button
                     onClick={() => visionFileRef.current?.click()}
-                    className="w-full border border-dashed border-border rounded-lg px-4 py-3 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
+                    className="w-full border border-dashed border-border rounded-lg px-4 py-3 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 active:bg-secondary/30 transition-colors flex items-center justify-center gap-2"
                   >
-                    <ImageIcon /> Click or drag an image here (JPG, PNG, WebP, GIF)
+                    <ImageIcon /> Tap or drag an image here (JPG, PNG, WebP, GIF)
                   </button>
                 )}
                 <input
@@ -1857,22 +1857,22 @@ export default function ManualKeyTester() {
                   value={visionPrompt}
                   onChange={(e) => setVisionPrompt(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); runVisionTest() } }}
-                  placeholder={visionImage ? "Optional: add a question about the image..." : "Upload an image first..."}
+                  placeholder={visionImage ? "Optional: ask about the image..." : "Upload an image first..."}
                   disabled={!apiKey.trim() || !visionImage || visionLoading}
                   rows={2}
-                  className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40"
+                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runVisionTest}
                   disabled={!apiKey.trim() || !visionImage || visionLoading}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity flex-shrink-0"
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 min-w-[80px] h-[42px]"
                 >
                   {visionLoading ? <SpinnerIcon /> : <SendIcon />}
-                  {visionLoading ? "Analyzing" : "Analyze"}
+                  {visionLoading ? "..." : "Analyze"}
                 </button>
               </div>
               <p className="text-[9px] text-muted-foreground/40 mt-1.5">
-                Prompt is optional — defaults to &quot;Describe this image in detail.&quot;
+                Prompt optional — defaults to &quot;Describe this image in detail.&quot;
               </p>
             </div>
           </>
@@ -1881,9 +1881,9 @@ export default function ManualKeyTester() {
         {/* ── OCR TAB ──────────────────────────────────────────────────────── */}
         {activeTab === "ocr" && (
           <>
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
               {!ocrResult && !ocrLoading && (
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
                   <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${selectedPreset.color}`}>
                     <ScanIcon />
                   </div>
@@ -1894,7 +1894,7 @@ export default function ManualKeyTester() {
                     </p>
                     {!apiKey && (
                       <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
-                        API key required — enter it in the left panel
+                        API key required — tap the menu icon to open config
                       </p>
                     )}
                   </div>
@@ -1948,9 +1948,9 @@ export default function ManualKeyTester() {
             </div>
 
             {/* OCR input */}
-            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+            <div className="border-t border-border px-3 sm:px-4 py-3 flex-shrink-0 bg-card">
               <div
-                className="mb-2"
+                className="mb-2.5"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault()
@@ -1959,20 +1959,20 @@ export default function ManualKeyTester() {
                 }}
               >
                 {ocrImage ? (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-secondary/50 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-secondary/50 rounded-xl border border-border">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ocrImage.dataUrl} alt="OCR preview" className="h-8 w-8 object-cover rounded border border-border flex-shrink-0" />
+                    <img src={ocrImage.dataUrl} alt="OCR preview" className="h-9 w-9 object-cover rounded border border-border flex-shrink-0" />
                     <span className="text-[10px] font-mono text-foreground truncate flex-1 min-w-0">{ocrImage.name}</span>
-                    <button onClick={() => setOcrImage(null)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                    <button onClick={() => setOcrImage(null)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 p-1">
                       <XIcon />
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => ocrFileRef.current?.click()}
-                    className="w-full border border-dashed border-border rounded-lg px-4 py-3 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
+                    className="w-full border border-dashed border-border rounded-xl px-4 py-3.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/50 active:bg-secondary/30 transition-colors flex items-center justify-center gap-2"
                   >
-                    <ScanIcon /> Upload image with text (JPG, PNG, WebP, PDF screenshot)
+                    <ScanIcon /> Tap or drag an image with text here
                   </button>
                 )}
                 <input
@@ -1991,7 +1991,7 @@ export default function ManualKeyTester() {
               <button
                 onClick={runOcrTest}
                 disabled={!apiKey.trim() || !ocrImage || ocrLoading}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all"
               >
                 {ocrLoading ? <SpinnerIcon /> : <ScanIcon />}
                 {ocrLoading ? "Extracting text..." : "Extract Text"}
@@ -2004,28 +2004,58 @@ export default function ManualKeyTester() {
         )}
 
         {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
-        {activeTab === "image-gen" && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <ImageTester
-              apiKey={apiKey}
-              model={imageModel}
-              aspectRatio={imageAspectRatio}
-              providerId={selectedPreset.id}
-            />
-          </div>
-        )}
+        {activeTab === "image-gen" && (() => {
+          const imageModels = getImageCapabilities(selectedPreset.id)
+          const isImageSupported = imageModels.length > 0
+          return (
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              {/* Mobile-visible unsupported banner */}
+              {!isImageSupported && (
+                <div className="md:hidden flex-shrink-0 mx-3 mt-3 px-3 py-3 rounded-xl border border-yellow-400/25 bg-yellow-400/8 text-yellow-300 text-[11px] leading-relaxed">
+                  <p className="font-semibold mb-0.5">Image generation not supported</p>
+                  <p className="text-yellow-400/70">
+                    <strong>{selectedPreset.name}</strong> has no image API. Open config (menu icon) and switch to Google, OpenAI, Together AI, Fireworks, BFL, Recraft, or Ideogram.
+                  </p>
+                </div>
+              )}
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <ImageTester
+                  apiKey={apiKey}
+                  model={imageModel}
+                  aspectRatio={imageAspectRatio}
+                  providerId={selectedPreset.id}
+                />
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
-        {activeTab === "video-gen" && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <VideoTester
-              apiKey={apiKey}
-              model={videoModel}
-              aspectRatio={videoAspectRatio}
-              providerId={selectedPreset.id}
-            />
-          </div>
-        )}
+        {activeTab === "video-gen" && (() => {
+          const { models: videoModels } = getVideoCapabilities(selectedPreset.id)
+          const isVideoSupported = videoModels.length > 0
+          return (
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              {/* Mobile-visible unsupported banner */}
+              {!isVideoSupported && (
+                <div className="md:hidden flex-shrink-0 mx-3 mt-3 px-3 py-3 rounded-xl border border-yellow-400/25 bg-yellow-400/8 text-yellow-300 text-[11px] leading-relaxed">
+                  <p className="font-semibold mb-0.5">Video generation not supported</p>
+                  <p className="text-yellow-400/70">
+                    <strong>{selectedPreset.name}</strong> has no video API. Open config and switch to Google (Veo 3), MiniMax (Hailuo), Together AI (Wan 2.7), or Zhipu (CogVideoX).
+                  </p>
+                </div>
+              )}
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <VideoTester
+                  apiKey={apiKey}
+                  model={videoModel}
+                  aspectRatio={videoAspectRatio}
+                  providerId={selectedPreset.id}
+                />
+              </div>
+            </div>
+          )
+        })()}
 
       </div>
     </div>
