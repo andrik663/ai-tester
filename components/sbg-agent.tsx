@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 
@@ -252,6 +252,135 @@ function inlineFormat(text: string): React.ReactNode {
   })
 }
 
+// ── Simple message type for Ollama direct mode ───────────────────────────────
+
+interface SimpleMessage {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  isStreaming?: boolean
+}
+
+// ── Ollama direct client-side chat (bypasses server entirely) ─────────────────
+// Ollama runs on user's local machine, so we must call it from the browser.
+// The server (Vercel) cannot reach localhost:11434 on the user's computer.
+
+function useOllamaChat(ollamaUrl: string, model: string) {
+  const [messages, setMessages] = useState<SimpleMessage[]>([])
+  const [status, setStatus] = useState<"idle" | "streaming" | "error">("idle")
+  const [error, setError] = useState<Error | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
+
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || status === "streaming") return
+
+    setError(null)
+    const userMsg: SimpleMessage = { id: Date.now().toString(), role: "user", content: text }
+    const assistantId = (Date.now() + 1).toString()
+
+    setMessages((prev) => [
+      ...prev,
+      userMsg,
+      { id: assistantId, role: "assistant", content: "", isStreaming: true },
+    ])
+    setStatus("streaming")
+
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    // Build history for Ollama: include all prior messages + new user message
+    const history = [
+      { role: "system", content: SBG_SYSTEM_BRIEF },
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+      { role: "user", content: text },
+    ]
+
+    try {
+      const baseUrl = ollamaUrl.replace(/\/$/, "")
+      const res = await fetch(`${baseUrl}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model,
+          messages: history,
+          stream: true,
+        }),
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        throw new Error(
+          res.status === 0 || !res.status
+            ? `Cannot connect to Ollama at ${baseUrl}. Make sure Ollama is running and CORS is enabled (set OLLAMA_ORIGINS=* env var).`
+            : `Ollama error ${res.status}: ${errText}`
+        )
+      }
+
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      if (!reader) throw new Error("No response body from Ollama")
+
+      let accumulated = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        // Ollama streams newline-delimited JSON
+        const lines = chunk.split("\n").filter(Boolean)
+        for (const line of lines) {
+          try {
+            const parsed = JSON.parse(line)
+            const token: string = parsed?.message?.content ?? ""
+            accumulated += token
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId ? { ...m, content: accumulated, isStreaming: !parsed.done } : m
+              )
+            )
+          } catch {
+            // skip malformed JSON lines
+          }
+        }
+      }
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === assistantId ? { ...m, isStreaming: false } : m))
+      )
+      setStatus("idle")
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setStatus("idle")
+        return
+      }
+      const msg =
+        err instanceof Error
+          ? err.message.includes("Failed to fetch") || err.message.includes("NetworkError")
+            ? `Cannot connect to Ollama at ${ollamaUrl}. Make sure:\n1. Ollama is running (ollama serve)\n2. The model is pulled (ollama pull ${model})\n3. CORS is enabled: set OLLAMA_ORIGINS=* before starting Ollama`
+            : err.message
+          : "Unknown error"
+      setError(new Error(msg))
+      setMessages((prev) =>
+        prev.map((m) => (m.id === assistantId ? { ...m, isStreaming: false } : m))
+      )
+      setStatus("error")
+    }
+  }, [messages, status, ollamaUrl, model])
+
+  const clearMessages = useCallback(() => {
+    abortRef.current?.abort()
+    setMessages([])
+    setStatus("idle")
+    setError(null)
+  }, [])
+
+  return { messages, sendMessage, status, error, clearMessages }
+}
+
+// Brief system prompt for direct Ollama (no tool descriptions needed)
+const SBG_SYSTEM_BRIEF = `You are SBG, an expert AI assistant specialised in research and software engineering. Answer clearly and concisely using markdown formatting when helpful.`
+
 // ── Main SBG Agent component ──────────────────────────────────────────────────
 
 interface SBGAgentProps {
@@ -278,7 +407,8 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
 
   const modelList = provider === "ollama" ? OLLAMA_MODELS : OPENROUTER_MODELS
 
-  const { messages, sendMessage, status, error, setMessages } = useChat({
+  // ── OpenRouter path: use AI SDK useChat via server route ──────────────────
+  const orChat = useChat({
     transport: new DefaultChatTransport({
       api: "/api/sbg",
       prepareSendMessagesRequest: ({ id, messages: msgs }) => ({
@@ -287,25 +417,52 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           messages: msgs,
           model: selectedModel,
           apiKey: apiKey.trim(),
-          provider,
-          ollamaUrl: ollamaUrl.trim(),
+          provider: "openrouter",
         },
       }),
     }),
   })
+
+  // ── Ollama path: call Ollama directly from the browser ────────────────────
+  const ollamaChat = useOllamaChat(ollamaUrl, selectedModel)
+
+  // ── Unified interface based on active provider ────────────────────────────
+  const isOllama = provider === "ollama"
+
+  // Normalise Ollama messages to match AI SDK message shape for rendering
+  const ollamaMessages = ollamaChat.messages.map((m) => ({
+    id: m.id,
+    role: m.role as "user" | "assistant",
+    parts: [{ type: "text" as const, text: m.content }],
+    isStreamingOllama: m.isStreaming,
+  }))
+
+  const messages = isOllama ? ollamaMessages : orChat.messages
+  const isStreaming = isOllama
+    ? ollamaChat.status === "streaming"
+    : orChat.status === "streaming" || orChat.status === "submitted"
+  const error = isOllama ? ollamaChat.error : orChat.error
+
+  function clearMessages() {
+    if (isOllama) ollamaChat.clearMessages()
+    else orChat.setMessages([])
+  }
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const isStreaming = status === "streaming" || status === "submitted"
   const selectedModelMeta = modelList.find((m) => m.id === selectedModel) ?? modelList[0]
 
   function handleSend() {
     const text = input.trim()
     if (!text || isStreaming) return
-    sendMessage({ text })
+    if (isOllama) {
+      ollamaChat.sendMessage(text)
+    } else {
+      orChat.sendMessage({ text })
+    }
     setInput("")
   }
 
@@ -409,7 +566,7 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           {/* Clear chat */}
           {messages.length > 0 && (
             <button
-              onClick={() => setMessages([])}
+              onClick={clearMessages}
               title="Clear conversation"
               className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded hover:bg-destructive/10"
             >
@@ -432,14 +589,19 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
         </div>
       )}
       {provider === "ollama" && (
-        <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-emerald-400/5 border-b border-emerald-400/15 text-[11px]">
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-emerald-400 flex-shrink-0" aria-hidden>
-            <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4" />
-            <path d="M5 7l1.5 1.5L9.5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="text-emerald-400/80">
-            Ollama mode — no API key needed. Make sure Ollama is running and the model is pulled locally.
-          </span>
+        <div className="flex-shrink-0 flex flex-col gap-0.5 px-4 py-2 bg-emerald-400/5 border-b border-emerald-400/15 text-[11px]">
+          <div className="flex items-center gap-2">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-emerald-400 flex-shrink-0" aria-hidden>
+              <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M5 7l1.5 1.5L9.5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-emerald-400/80 font-medium">
+              Ollama — browser connects directly to your local Ollama instance.
+            </span>
+          </div>
+          <p className="text-muted-foreground/50 pl-5 text-[10px]">
+            Requires: <code className="font-mono">ollama serve</code> + <code className="font-mono">OLLAMA_ORIGINS=*</code> env var to allow browser CORS.
+          </p>
         </div>
       )}
 
@@ -546,22 +708,33 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           </div>
         ))}
 
-        {/* Streaming indicator */}
+        {/* Streaming indicator — only show when no content yet */}
         {isStreaming && (
-          <div className="flex items-center gap-2 text-muted-foreground/60 pl-1">
-            <SpinnerIcon className="w-3.5 h-3.5" />
-            <span className="text-[11px]">SBG is thinking&hellip;</span>
-          </div>
+          (() => {
+            const lastMsg = messages[messages.length - 1]
+            const firstPart = lastMsg?.parts?.[0]
+            const lastText = firstPart?.type === "text" ? firstPart.text : ""
+            return !lastText ? (
+              <div className="flex items-center gap-2 text-muted-foreground/60 pl-1">
+                <SpinnerIcon className="w-3.5 h-3.5" />
+                <span className="text-[11px]">SBG is thinking&hellip;</span>
+              </div>
+            ) : null
+          })()
         )}
 
         {/* Error state */}
         {error && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20 text-[11px] text-destructive">
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-[11px] text-destructive">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="flex-shrink-0 mt-0.5" aria-hidden>
               <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4" />
               <path d="M7 4v4M7 9.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
-            <span>{error.message ?? "An error occurred. Check your API key and try again."}</span>
+            <div className="flex flex-col gap-0.5">
+              {(error.message ?? "An error occurred.").split("\n").map((line, i) => (
+                <span key={i} className={i === 0 ? "font-medium" : "text-destructive/70 text-[10px]"}>{line}</span>
+              ))}
+            </div>
           </div>
         )}
 
