@@ -1347,19 +1347,6 @@ export default function ManualKeyTester() {
   const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("chat")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
-  // Quick Validate state
-  const [validateLoading, setValidateLoading] = useState(false)
-  const [validateResult, setValidateResult] = useState<{
-    valid: boolean | null
-    provider: string
-    message: string
-    latencyMs?: number
-    modelCount?: number
-    modelList?: string[]
-    balance?: string
-    username?: string
-    errorReason?: string | null
-  } | null>(null)
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1384,7 +1371,6 @@ export default function ManualKeyTester() {
   // Debounce API key changes by 400ms
   const handleApiKeyChange = useCallback((val: string) => {
     setApiKey(val)
-    setValidateResult(null)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => setDebouncedApiKey(val), 400)
   }, [])
@@ -1432,7 +1418,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ───���──────────────────────────��─────────────────────
+  // ── Vision / OCR helpers ───���────────────────────────��─��─────────────────────
 
   function handleImageFile(
     file: File,
@@ -1539,42 +1525,12 @@ export default function ManualKeyTester() {
     )
     setBodyTemplate(preset.bodyTemplate)
     setResult(null)
-    setValidateResult(null)
     setShowLog(false)
     // Reset image/video model to first supported for the new provider
     const imgModels = getImageCapabilities(preset.id)
     if (imgModels.length > 0) setImageModel(imgModels[0].id)
     const { models: vidModels } = getVideoCapabilities(preset.id)
     if (vidModels.length > 0) setVideoModel(vidModels[0].id)
-  }
-
-  async function runValidate() {
-    if (!apiKey.trim() || validateLoading) return
-    setValidateLoading(true)
-    setValidateResult(null)
-    try {
-      const res = await fetch("/api/test-key", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: apiKey.trim(), provider: selectedPreset.id }),
-      })
-      const data = await res.json()
-      setValidateResult({
-        valid: data.valid,
-        provider: data.provider ?? selectedPreset.name,
-        message: data.message,
-        latencyMs: data.latencyMs,
-        modelCount: data.modelCount,
-        modelList: data.modelList,
-        balance: data.balance,
-        username: data.username,
-        errorReason: data.errorReason,
-      })
-    } catch {
-      setValidateResult({ valid: false, provider: selectedPreset.name, message: "Request failed — check network connection" })
-    } finally {
-      setValidateLoading(false)
-    }
   }
 
   async function runTest() {
@@ -1769,18 +1725,12 @@ export default function ManualKeyTester() {
           {/* API Key */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                 API Key
-                {validateResult && (
-                  <span className={`inline-block w-1.5 h-1.5 rounded-full ${
-                    validateResult.valid === true ? "bg-green-400" :
-                    validateResult.valid === false ? "bg-red-400" : "bg-yellow-400"
-                  }`} />
-                )}
               </label>
               {apiKey && (
                 <button
-                  onClick={() => { handleApiKeyChange(""); setShowKey(false); setValidateResult(null) }}
+                  onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
                   className="text-[9px] text-muted-foreground/60 hover:text-destructive transition-colors flex items-center gap-0.5"
                   title="Clear API key"
                 >
@@ -1807,102 +1757,6 @@ export default function ManualKeyTester() {
                 <EyeIcon show={showKey} />
               </button>
             </div>
-
-            {/* Quick Validate Button */}
-            <button
-              onClick={runValidate}
-              disabled={!apiKey.trim() || validateLoading}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border bg-secondary/40 hover:bg-secondary hover:border-ring/50 text-[11px] font-semibold text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              {validateLoading ? (
-                <>
-                  <SpinnerIcon />
-                  <span>Validating...</span>
-                </>
-              ) : (
-                <>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-primary">
-                    <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Validate Key
-                </>
-              )}
-            </button>
-
-            {/* Validate Result Card */}
-            {validateResult && (
-              <div className={`rounded-lg border px-3 py-2.5 flex flex-col gap-2 ${
-                validateResult.valid === true
-                  ? "border-green-500/25 bg-green-500/8"
-                  : validateResult.valid === false
-                  ? "border-red-500/25 bg-red-500/8"
-                  : "border-yellow-500/25 bg-yellow-500/8"
-              }`}>
-                {/* Status row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {validateResult.valid === true ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-green-400 flex-shrink-0">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-red-400 flex-shrink-0">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    )}
-                    <span className={`text-[11px] font-bold ${
-                      validateResult.valid === true ? "text-green-400" : "text-red-400"
-                    }`}>
-                      {validateResult.valid === true ? "VALID" : "INVALID"}
-                    </span>
-                  </div>
-                  {validateResult.latencyMs !== undefined && (
-                    <span className="text-[10px] font-mono text-muted-foreground">{validateResult.latencyMs}ms</span>
-                  )}
-                </div>
-
-                {/* Message */}
-                <p className="text-[10px] text-muted-foreground leading-relaxed">{validateResult.message}</p>
-
-                {/* Stats grid */}
-                {(validateResult.modelCount || validateResult.balance || validateResult.username) && (
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {validateResult.modelCount !== undefined && (
-                      <div className="flex flex-col gap-0.5 bg-card/60 rounded px-2 py-1.5 border border-border/50">
-                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Models</span>
-                        <span className="text-[13px] font-semibold text-foreground tabular-nums">{validateResult.modelCount}</span>
-                      </div>
-                    )}
-                    {validateResult.balance && (
-                      <div className="flex flex-col gap-0.5 bg-card/60 rounded px-2 py-1.5 border border-border/50">
-                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Balance</span>
-                        <span className="text-[13px] font-semibold text-foreground tabular-nums">{validateResult.balance}</span>
-                      </div>
-                    )}
-                    {validateResult.username && (
-                      <div className="col-span-2 flex flex-col gap-0.5 bg-card/60 rounded px-2 py-1.5 border border-border/50">
-                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Account</span>
-                        <span className="text-[11px] font-medium text-foreground truncate">{validateResult.username}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Model list preview */}
-                {validateResult.modelList && validateResult.modelList.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {validateResult.modelList.slice(0, 4).map((m) => (
-                      <span key={m} className="text-[9px] font-mono bg-card/80 border border-border/60 px-1.5 py-0.5 rounded text-muted-foreground truncate max-w-full">
-                        {m}
-                      </span>
-                    ))}
-                    {(validateResult.modelCount ?? 0) > 4 && (
-                      <span className="text-[9px] text-muted-foreground/60">+{(validateResult.modelCount ?? 0) - 4} more</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Create API key link */}
             {selectedPreset.createKeyUrl && (
@@ -2231,7 +2085,7 @@ export default function ManualKeyTester() {
 
           {/* Reset */}
           <button
-            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false); setValidateResult(null) }}
+            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
             className="text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary px-3 py-2 rounded transition-colors border border-border/50 hover:border-border w-full text-left"
           >
             Clear All History
@@ -2267,21 +2121,6 @@ export default function ManualKeyTester() {
                 <span className="text-[9px] font-mono text-muted-foreground/40 uppercase hidden sm:block">{selectedPreset.country}</span>
               )}
             </span>
-
-            {/* Key validity indicator */}
-            {validateResult && (
-              <span className={`hidden sm:flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-full border flex-shrink-0 ${
-                validateResult.valid === true
-                  ? "text-green-400 border-green-500/25 bg-green-500/8"
-                  : "text-red-400 border-red-500/25 bg-red-500/8"
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${validateResult.valid === true ? "bg-green-400" : "bg-red-400"}`} />
-                {validateResult.valid === true ? "Key Valid" : "Key Invalid"}
-                {validateResult.latencyMs !== undefined && (
-                  <span className="text-muted-foreground ml-0.5">{validateResult.latencyMs}ms</span>
-                )}
-              </span>
-            )}
 
             {/* Response status chip — vision/chat result */}
             {activeTab === "vision" && visionResult && (
@@ -2400,13 +2239,13 @@ export default function ManualKeyTester() {
                     <div>
                       <p className="text-lg font-semibold text-foreground text-balance">{selectedPreset.name}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {apiKey ? "Key entered — click Validate Key or send a message" : "Enter your API key on the left to get started"}
+                        {apiKey ? "Key entered — send a message below to test it" : "Enter your API key on the left to get started"}
                       </p>
                     </div>
                   </div>
 
                   {/* Key status / CTA */}
-                  {!apiKey ? (
+                  {!apiKey && (
                     <div className="flex flex-col items-center gap-3 w-full max-w-sm">
                       <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-secondary/30 text-left w-full">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5">
@@ -2424,102 +2263,16 @@ export default function ManualKeyTester() {
                       {/* What you get */}
                       <div className="grid grid-cols-2 gap-2 w-full">
                         {[
-                          { icon: "✓", label: "Valid / Invalid status", color: "text-green-400" },
-                          { icon: "⚡", label: "Response latency (ms)", color: "text-yellow-400" },
-                          { icon: "◉", label: "Accessible model count", color: "text-primary" },
-                          { icon: "⊘", label: "Rate limit remaining", color: "text-sky-400" },
+                          { icon: "✓", label: "Response latency (ms)", color: "text-green-400" },
+                          { icon: "⚡", label: "Token usage", color: "text-yellow-400" },
+                          { icon: "◉", label: "Rate limit remaining", color: "text-primary" },
+                          { icon: "⊘", label: "Raw JSON response", color: "text-sky-400" },
                         ].map((item) => (
                           <div key={item.label} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/40">
                             <span className={`text-[13px] ${item.color} flex-shrink-0`}>{item.icon}</span>
                             <span className="text-[10px] text-muted-foreground leading-tight">{item.label}</span>
                           </div>
                         ))}
-                      </div>
-                    </div>
-                  ) : validateResult ? (
-                    /* Validate result summary in the main area */
-                    <div className={`w-full max-w-sm rounded-xl border p-4 flex flex-col gap-3 ${
-                      validateResult.valid === true
-                        ? "border-green-500/30 bg-green-500/6"
-                        : "border-red-500/30 bg-red-500/6"
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            validateResult.valid === true ? "bg-green-500/15 border border-green-500/25" : "bg-red-500/15 border border-red-500/25"
-                          }`}>
-                            {validateResult.valid === true ? (
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-green-400">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            ) : (
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-red-400">
-                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                              </svg>
-                            )}
-                          </div>
-                          <div>
-                            <p className={`text-sm font-bold ${validateResult.valid === true ? "text-green-400" : "text-red-400"}`}>
-                              {validateResult.valid === true ? "Key Valid" : "Key Invalid"}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">{validateResult.provider}</p>
-                          </div>
-                        </div>
-                        {validateResult.latencyMs !== undefined && (
-                          <div className="text-right">
-                            <p className="text-sm font-bold text-foreground tabular-nums">{validateResult.latencyMs}<span className="text-xs font-normal text-muted-foreground">ms</span></p>
-                            <p className="text-[10px] text-muted-foreground">latency</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {(validateResult.modelCount || validateResult.balance || validateResult.username) && (
-                        <div className="grid grid-cols-3 gap-2">
-                          {validateResult.modelCount !== undefined && (
-                            <div className="bg-card/60 rounded-lg p-2 border border-border/50 text-center">
-                              <p className="text-lg font-bold text-foreground tabular-nums">{validateResult.modelCount}</p>
-                              <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Models</p>
-                            </div>
-                          )}
-                          {validateResult.balance && (
-                            <div className="bg-card/60 rounded-lg p-2 border border-border/50 text-center">
-                              <p className="text-sm font-bold text-foreground truncate">{validateResult.balance}</p>
-                              <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Balance</p>
-                            </div>
-                          )}
-                          {validateResult.username && (
-                            <div className="bg-card/60 rounded-lg p-2 border border-border/50 text-center col-span-2">
-                              <p className="text-xs font-medium text-foreground truncate">{validateResult.username}</p>
-                              <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Account</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {validateResult.modelList && validateResult.modelList.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {validateResult.modelList.slice(0, 6).map((m) => (
-                            <span key={m} className="text-[9px] font-mono bg-card/80 border border-border/60 px-2 py-1 rounded text-muted-foreground">
-                              {m}
-                            </span>
-                          ))}
-                          {(validateResult.modelCount ?? 0) > 6 && (
-                            <span className="text-[9px] text-muted-foreground/60 self-center">+{(validateResult.modelCount ?? 0) - 6} more</span>
-                          )}
-                        </div>
-                      )}
-
-                      <p className="text-[10px] text-muted-foreground">{validateResult.message}</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-                      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/8 text-center">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-primary flex-shrink-0">
-                          <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-[11px] text-primary/80">
-                          Click <span className="font-semibold text-primary">Validate Key</span> in the sidebar to check your key
-                        </p>
                       </div>
                     </div>
                   )}
