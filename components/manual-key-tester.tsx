@@ -2069,176 +2069,122 @@ export default function ManualKeyTester() {
       {/* ── RIGHT: Tabbed panel ────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
-        {/* Tab bar + status */}
-        <div className="flex items-center gap-0 px-2 border-b border-border bg-card flex-shrink-0 min-h-[44px]">
+        {/* ── HEADER: mobile config toggle + tab bar ──────────────────────── */}
+        <div className="flex flex-col border-b border-border bg-card flex-shrink-0">
 
-          {/* Mobile: config toggle button */}
-          <button
-            onClick={() => setConfigOpen(true)}
-            className="md:hidden flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground px-2 py-2 mr-1 flex-shrink-0 transition-colors"
-            aria-label="Open configuration"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
+          {/* Top row — mobile menu + provider badge + response status */}
+          <div className="flex items-center gap-2 px-3 h-10 border-b border-border/50">
+            {/* Mobile: config drawer toggle */}
+            <button
+              onClick={() => setConfigOpen(true)}
+              className="md:hidden flex items-center justify-center w-7 h-7 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex-shrink-0"
+              aria-label="Open configuration"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
 
-          {/* Chat tab */}
-          <button
-            onClick={() => setActiveTab("chat")}
-            title="Chat — Test with prompt"
-            className={`flex items-center gap-1.5 px-2.5 h-8 rounded text-[10px] font-semibold transition-colors mr-1 ${
-              activeTab === "chat"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 flex-shrink-0">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            Chat
-          </button>
-
-          {/* Divider */}
-          <div className="w-px h-4 bg-border flex-shrink-0 mx-0.5" />
-
-          {/* API Tester tabs — icon only */}
-          <div className="flex items-center gap-0.5 py-1.5 mr-1">
-            {([
-              { id: "vision", icon: <ImageIcon />, title: "Vision" },
-              { id: "ocr", icon: <ScanIcon />, title: "OCR" },
-            ] as const).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                title={t.title}
-                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                  activeTab === t.id
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                {t.icon}
-              </button>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
-
-          {/* AI Generation tabs — icon only */}
-          <div className="flex items-center gap-0.5 py-1.5 mr-1">
-            {([
-              { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
-              { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
-            ] as const).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                title={t.title}
-                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                  activeTab === t.id
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                {t.icon}
-              </button>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
-
-          {/* Working Keys tab */}
-          <button
-            onClick={() => setActiveTab("working-keys")}
-            title="Working Keys"
-            className={`relative flex items-center justify-center w-8 h-8 rounded transition-colors ${
-              activeTab === "working-keys"
-                ? "bg-green-400/15 text-green-400"
-                : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
-            }`}
-          >
-            {/* Key icon */}
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-              <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M8.5 8h6M12.5 8v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-
-          {/* Divider */}
-          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
-
-          {/* SBG Agent tab */}
-          <button
-            onClick={() => setActiveTab("sbg-agent")}
-            title="SBG Agent — Research & Coding Helper"
-            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold font-mono transition-colors ${
-              activeTab === "sbg-agent"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-            }`}
-          >
-            SBG
-            {activeTab !== "sbg-agent" && (
-              <span className="text-[7px] font-bold px-0.5 rounded bg-primary/10 text-primary leading-none py-px">AI</span>
-            )}
-          </button>
-
-          {/* Multi-Key Batch tab */}
-          <button
-            onClick={() => setActiveTab("multi-batch")}
-            title="Multi-Key Batch — Test all providers at once"
-            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold transition-colors ${
-              activeTab === "multi-batch"
-                ? "bg-emerald-500/15 text-emerald-400"
-                : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
-            }`}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0" aria-hidden>
-              <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              <circle cx="10" cy="3" r="1.5" fill="currentColor" />
-              <circle cx="10" cy="6" r="1.5" fill="currentColor" />
-              <circle cx="10" cy="9" r="1.5" fill="currentColor" />
-            </svg>
-            Batch
-          </button>
-
-          {/* Divider */}
-          <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
-
-          {/* Provider badge — with logo and country flag */}
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate max-w-[200px] flex-shrink-0">
-            <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70" />
-            {selectedPreset.name}
-            {selectedPreset.country && (
-              <span className="text-[9px] font-mono font-semibold tracking-wider text-muted-foreground/40 uppercase">
-                {selectedPreset.country}
-              </span>
-            )}
-          </span>
-
-          {/* Endpoint */}
-          {endpoint && (
-            <span className="hidden md:block text-[10px] font-mono text-muted-foreground/50 truncate flex-1 min-w-0 ml-2">
-              {method} {endpoint.replace(/\?key=.*/, "?key=…")}
-            </span>
-          )}
-
-          {/* Response status — shown for Vision tab only */}
-          {activeTab === "vision" && visionResult && (
-            <div className="flex items-center gap-2 ml-auto flex-shrink-0 pr-1">
-              {visionResult.tokenUsage?.totalTokens && (
-                <span className="text-[10px] font-mono text-muted-foreground hidden md:block">
-                  {visionResult.tokenUsage.totalTokens}t
-                </span>
+            {/* Provider badge */}
+            <span className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate min-w-0 flex-1">
+              <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
+              <span className="truncate hidden sm:block">{selectedPreset.name}</span>
+              {selectedPreset.country && (
+                <span className="text-[9px] font-mono text-muted-foreground/40 uppercase hidden sm:block">{selectedPreset.country}</span>
               )}
-              <span className={`text-[10px] font-mono ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
+            </span>
+
+            {/* Response status chip — vision/chat result */}
+            {activeTab === "vision" && visionResult && (
+              <span className={`text-[10px] font-mono flex-shrink-0 ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
                 {visionResult.status} · {visionResult.durationMs}ms
               </span>
-            </div>
-          )}
+            )}
+            {activeTab === "chat" && result && (
+              <span className={`text-[10px] font-mono flex-shrink-0 ${result.ok ? "text-green-400" : "text-red-400"}`}>
+                {result.status} · {result.durationMs}ms
+              </span>
+            )}
+          </div>
+
+          {/* Tab row — scrollable on mobile */}
+          <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9">
+            {([
+              {
+                id: "chat" as const,
+                label: "Chat",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                ),
+              },
+              {
+                id: "vision" as const,
+                label: "Vision",
+                icon: <ImageIcon />,
+              },
+              {
+                id: "ocr" as const,
+                label: "OCR",
+                icon: <ScanIcon />,
+              },
+              {
+                id: "image-gen" as const,
+                label: "Image",
+                icon: <PhotoIcon />,
+              },
+              {
+                id: "video-gen" as const,
+                label: "Video",
+                icon: <VideoTabIcon />,
+              },
+              {
+                id: "working-keys" as const,
+                label: "Keys",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M8.5 8h6M12.5 8v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                ),
+              },
+              {
+                id: "sbg-agent" as const,
+                label: "SBG",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                  </svg>
+                ),
+              },
+              {
+                id: "multi-batch" as const,
+                label: "Batch",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                    <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    <circle cx="10" cy="3" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="6" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="9" r="1.5" fill="currentColor" />
+                  </svg>
+                ),
+              },
+            ]).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
+                  activeTab === t.id
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ── CHAT TAB ─────────────────────────────────────────────────────── */}
