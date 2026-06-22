@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import type { MultiKeyResult, MultiKeyTestResponse, TokenUsage } from "@/app/api/multi-key-test/route"
 import { PROVIDER_MODELS, maskApiKey } from "@/app/api/multi-key-test/route"
+import type { KeyAllModelsResult, MultiKeyAllResponse, ModelTestResult } from "@/app/api/multi-key-batch-all/route"
 import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
 
 // ── Provider format catalogue ─────────────────────────────────────────────────
@@ -570,6 +571,228 @@ function DesktopRow({
   )
 }
 
+// ── All-models mode sub-components ───────────────────────────────────────────
+
+function CopyIcon2() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
+function AllModelRow({ r }: { r: ModelTestResult }) {
+  const [expanded, setExpanded] = useState(false)
+  const [copiedCurl, setCopiedCurl]   = useState(false)
+  const [copiedReply, setCopiedReply] = useState(false)
+
+  function copyCurl(e: React.MouseEvent) {
+    e.stopPropagation()
+    navigator.clipboard.writeText(r.curlFull).then(() => { setCopiedCurl(true); setTimeout(() => setCopiedCurl(false), 1400) })
+  }
+  function copyReply(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!r.reply) return
+    navigator.clipboard.writeText(r.reply).then(() => { setCopiedReply(true); setTimeout(() => setCopiedReply(false), 1400) })
+  }
+
+  return (
+    <div className={`border-b border-border/30 last:border-0 ${r.ok ? "" : "bg-red-950/10"}`}>
+      <div
+        className="flex items-start gap-2 px-3 py-2 cursor-pointer hover:bg-secondary/30 transition-colors select-none"
+        onClick={() => setExpanded((v) => !v)}
+        role="button" tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(e) => e.key === "Enter" && setExpanded((v) => !v)}
+      >
+        {/* Status circle */}
+        <span className={`flex-shrink-0 flex items-center justify-center w-4 h-4 rounded-full border mt-0.5 ${
+          r.ok ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/10" : "text-red-400 border-red-400/30 bg-red-400/10"
+        }`}>
+          {r.ok
+            ? <svg width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden><path d="M2 5l2.2 2.2L8 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            : <svg width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden><path d="M3 3l4 4M7 3l-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          }
+        </span>
+
+        {/* Model name + curl preview */}
+        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+          <span className="text-[11px] font-mono text-foreground break-all leading-snug">{r.modelId}</span>
+          <span className="text-[9px] font-mono text-muted-foreground/45 truncate leading-tight">{r.curlPreview}</span>
+        </div>
+
+        {/* Right stats */}
+        <div className="flex flex-col items-end gap-0.5 flex-shrink-0 ml-1">
+          <span className={`text-[10px] font-mono font-semibold ${r.ok ? "text-emerald-400" : "text-red-400"}`}>
+            {r.status > 0 ? r.status : "ERR"}
+          </span>
+          <span className="text-[10px] font-mono text-muted-foreground/60">{r.latencyMs}ms</span>
+          {r.tokenUsage?.total !== undefined && (
+            <span className="text-[9px] font-mono text-muted-foreground/40">{r.tokenUsage.total}tok</span>
+          )}
+        </div>
+
+        {/* Chevron */}
+        <span className={`flex-shrink-0 text-muted-foreground/30 mt-0.5 transition-transform ${expanded ? "rotate-180" : ""}`}>
+          <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 flex flex-col gap-2.5 border-t border-border/40 bg-secondary/10">
+          {/* cURL */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">cURL</span>
+              <button onClick={copyCurl} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
+                <CopyIcon2 />
+                {copiedCurl ? "Copied!" : "Copy cURL"}
+              </button>
+            </div>
+            <pre className="text-[9px] font-mono text-muted-foreground bg-background rounded px-2.5 py-2 border border-border overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
+              {r.curlFull}
+            </pre>
+          </div>
+
+          {/* Reply */}
+          {r.ok && r.reply && (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Reply</span>
+                <button onClick={copyReply} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                  <CopyIcon2 />
+                  {copiedReply ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <p className="text-[11px] text-foreground bg-secondary/50 rounded-md px-2.5 py-2 leading-relaxed">{r.reply}</p>
+            </div>
+          )}
+
+          {/* Error */}
+          {!r.ok && r.errorMsg && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Error</span>
+              <p className="text-[10px] font-mono text-red-400 bg-red-400/5 rounded px-2.5 py-2 border border-red-400/15 break-all">{r.errorMsg}</p>
+            </div>
+          )}
+
+          {/* Tokens */}
+          {r.tokenUsage && (r.tokenUsage.prompt !== undefined || r.tokenUsage.completion !== undefined) && (
+            <div className="flex items-center gap-3">
+              <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest">Tokens</span>
+              {r.tokenUsage.prompt !== undefined && (
+                <span className="text-[10px] font-mono text-muted-foreground">in: <span className="text-foreground">{r.tokenUsage.prompt}</span></span>
+              )}
+              {r.tokenUsage.completion !== undefined && (
+                <span className="text-[10px] font-mono text-muted-foreground">out: <span className="text-foreground">{r.tokenUsage.completion}</span></span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type AllModelFilter = "all" | "ok" | "fail"
+
+function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
+  const [open, setOpen] = useState(false)
+  const [filter, setFilter] = useState<AllModelFilter>("all")
+
+  const pf = PROVIDER_FORMATS.find((p) => p.id === keyResult.provider)
+  const rowBg = keyResult.passed > 0
+    ? "border-l-2 border-l-emerald-500/40 bg-emerald-500/[0.02]"
+    : "border-l-2 border-l-red-500/30"
+
+  const filtered = keyResult.models.filter((m) => {
+    if (filter === "ok")   return m.ok
+    if (filter === "fail") return !m.ok
+    return true
+  })
+
+  return (
+    <div className={`border border-border/60 rounded-xl overflow-hidden ${rowBg}`}>
+      {/* Card header */}
+      <div
+        className="flex items-start gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-secondary/20 transition-colors select-none"
+        onClick={() => setOpen((v) => !v)}
+        role="button" tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && setOpen((v) => !v)}
+      >
+        {/* Flag + name */}
+        <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {pf && <span className="text-sm leading-none select-none" aria-hidden>{pf.flag}</span>}
+            <span className="text-[12px] font-semibold text-foreground leading-none">{pf?.label ?? keyResult.provider}</span>
+            <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${
+              keyResult.modelSource === "live"
+                ? "border-teal-500/30 text-teal-400 bg-teal-500/10"
+                : "border-border/40 text-muted-foreground/50"
+            }`}>
+              {keyResult.modelSource === "live" ? "live" : "static"}
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-muted-foreground/50 truncate">{keyResult.apiKeyMasked}</span>
+        </div>
+
+        {/* Stats */}
+        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-mono font-bold text-emerald-400">{keyResult.passed} ok</span>
+            <span className="text-muted-foreground/30 text-[10px]">/</span>
+            <span className="text-[11px] font-mono font-bold text-red-400">{keyResult.failed} fail</span>
+          </div>
+          <span className="text-[9px] font-mono text-muted-foreground/40 tabular-nums">{keyResult.total} models · {keyResult.durationMs}ms</span>
+          {keyResult.fetchError && (
+            <span className="text-[9px] text-yellow-400/70 font-mono truncate max-w-[140px]">{keyResult.fetchError}</span>
+          )}
+        </div>
+
+        {/* Chevron */}
+        <span className={`flex-shrink-0 text-muted-foreground/40 mt-0.5 transition-transform ${open ? "rotate-180" : ""}`}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+
+      {/* Expanded model list */}
+      {open && keyResult.models.length > 0 && (
+        <div className="border-t border-border/40">
+          {/* Filter tabs */}
+          <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border/30 bg-secondary/30">
+            {(["all", "ok", "fail"] as AllModelFilter[]).map((f) => {
+              const count = f === "all" ? keyResult.total : f === "ok" ? keyResult.passed : keyResult.failed
+              return (
+                <button
+                  key={f}
+                  onClick={(e) => { e.stopPropagation(); setFilter(f) }}
+                  className={`text-[10px] px-2 py-0.5 rounded border transition-colors capitalize ${
+                    filter === f
+                      ? f === "ok"   ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                      : f === "fail" ? "border-red-500/30 text-red-400 bg-red-500/10"
+                      :                "border-border bg-secondary text-foreground"
+                      : "border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  }`}
+                >
+                  {f === "all" ? `All ${count}` : f === "ok" ? `OK ${count}` : `Fail ${count}`}
+                </button>
+              )
+            })}
+          </div>
+          {filtered.map((m) => (
+            <AllModelRow key={m.modelId} r={m} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MultiKeyBatch() {
@@ -586,6 +809,11 @@ export default function MultiKeyBatch() {
   const [copiedId, setCopiedId]       = useState<string | null>(null)
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set())
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // All-models mode
+  const [testMode, setTestMode]             = useState<"quick" | "all">("quick")
+  const [allModelsResults, setAllModelsResults] = useState<KeyAllModelsResult[]>([])
+  const [allModelsSummary, setAllModelsSummary] = useState<{ totalPassed: number; totalFailed: number; totalModels: number; totalMs: number } | null>(null)
 
   function toggleExpand(idx: number) {
     setExpandedIdx((prev) => {
@@ -670,6 +898,39 @@ export default function MultiKeyBatch() {
       const data: MultiKeyTestResponse = await res.json()
       setResults(data.results)
       setSummary({ passed: data.passed, failed: data.failed, totalMs: data.totalMs })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Request failed")
+    } finally {
+      setRunning(false)
+    }
+  }, [entries, prompt, running])
+
+  const runAllModels = useCallback(async () => {
+    const valid = entries.filter((e) => !e.unknown && e.provider !== "?")
+    if (!valid.length || running) return
+
+    setRunning(true)
+    setAllModelsResults([])
+    setAllModelsSummary(null)
+    setError(null)
+
+    try {
+      const res = await fetch("/api/multi-key-batch-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt.trim() || "halo",
+          entries: valid.map((e) => ({ provider: e.provider, apiKey: e.apiKey })),
+        }),
+      })
+      const data: MultiKeyAllResponse = await res.json()
+      setAllModelsResults(data.results)
+      setAllModelsSummary({
+        totalPassed: data.totalPassed,
+        totalFailed: data.totalFailed,
+        totalModels: data.totalModels,
+        totalMs: data.totalMs,
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed")
     } finally {
@@ -921,36 +1182,90 @@ export default function MultiKeyBatch() {
         {entries.length > 0 && (
           <div className="flex flex-col gap-3">
 
-            {/* Prompt + Run */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
-              <div className="flex-1 min-w-0">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 block mb-1">
-                  Test Prompt
-                </label>
-                <input
-                  type="text"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="halo"
-                  className="w-full rounded-lg border border-border bg-background text-foreground text-[12px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <button
-                onClick={runAll}
-                disabled={running || validCount === 0}
-                className="flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
-              >
-                {running ? <Spinner size={12} /> : (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-                    <path d="M2 2l8 4-8 4V2z" fill="currentColor" />
+            {/* Mode toggle + Prompt + Run */}
+            <div className="flex flex-col gap-2">
+              {/* Mode selector */}
+              <div className="flex items-center gap-1 p-0.5 rounded-lg border border-border bg-secondary/30 self-start">
+                <button
+                  onClick={() => setTestMode("quick")}
+                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                    testMode === "quick"
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Quick (1 model)
+                </button>
+                <button
+                  onClick={() => setTestMode("all")}
+                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 ${
+                    testMode === "all"
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+                    <rect x="1" y="1" width="3.5" height="3.5" rx="0.5" stroke="currentColor" strokeWidth="1.1" />
+                    <rect x="5.5" y="1" width="3.5" height="3.5" rx="0.5" stroke="currentColor" strokeWidth="1.1" />
+                    <rect x="1" y="5.5" width="3.5" height="3.5" rx="0.5" stroke="currentColor" strokeWidth="1.1" />
+                    <rect x="5.5" y="5.5" width="3.5" height="3.5" rx="0.5" stroke="currentColor" strokeWidth="1.1" />
                   </svg>
-                )}
-                {running ? "Testing…" : `Run All (${validCount})`}
-              </button>
+                  All Models
+                </button>
+              </div>
+
+              {testMode === "all" && (
+                <p className="text-[9px] text-muted-foreground/50 leading-relaxed">
+                  Tests every model for each key (live-fetched). Dahono will test all 70+ models simultaneously across all your keys.
+                </p>
+              )}
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+                <div className="flex-1 min-w-0">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 block mb-1">
+                    Test Prompt
+                  </label>
+                  <input
+                    type="text"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="halo"
+                    className="w-full rounded-lg border border-border bg-background text-foreground text-[12px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                  />
+                </div>
+                <button
+                  onClick={testMode === "all" ? runAllModels : runAll}
+                  disabled={running || validCount === 0}
+                  className="flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
+                >
+                  {running ? <Spinner size={12} /> : (
+                    testMode === "all"
+                      ? (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                          <rect x="1" y="1" width="4" height="4" rx="0.7" fill="currentColor" opacity=".7" />
+                          <rect x="7" y="1" width="4" height="4" rx="0.7" fill="currentColor" opacity=".7" />
+                          <rect x="1" y="7" width="4" height="4" rx="0.7" fill="currentColor" opacity=".7" />
+                          <rect x="7" y="7" width="4" height="4" rx="0.7" fill="currentColor" />
+                        </svg>
+                      )
+                      : (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                          <path d="M2 2l8 4-8 4V2z" fill="currentColor" />
+                        </svg>
+                      )
+                  )}
+                  {running
+                    ? "Testing…"
+                    : testMode === "all"
+                      ? `Run All Models (${validCount} keys)`
+                      : `Run All (${validCount})`
+                  }
+                </button>
+              </div>
             </div>
 
             {/* ── Summary stats ─────────────────────────────────────────────── */}
-            {summary && (
+            {testMode === "quick" && summary && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400/50">Passed</span>
@@ -973,6 +1288,35 @@ export default function MultiKeyBatch() {
                   <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Avg Latency</span>
                   <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">{avgLatency}ms</span>
                   <span className="text-[9px] text-muted-foreground/30 tabular-nums">{summary.totalMs}ms total</span>
+                </div>
+              </div>
+            )}
+
+            {testMode === "all" && allModelsSummary && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400/50">Models Passed</span>
+                  <span className="text-xl font-bold font-mono text-emerald-400 leading-none tabular-nums">{allModelsSummary.totalPassed}</span>
+                  <span className="text-[9px] text-emerald-400/40 tabular-nums">
+                    {allModelsSummary.totalModels > 0 ? Math.round((allModelsSummary.totalPassed / allModelsSummary.totalModels) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-red-500/5 border border-red-500/20">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">Models Failed</span>
+                  <span className="text-xl font-bold font-mono text-red-400 leading-none tabular-nums">{allModelsSummary.totalFailed}</span>
+                  <span className="text-[9px] text-red-400/40 tabular-nums">
+                    {allModelsSummary.totalModels > 0 ? Math.round((allModelsSummary.totalFailed / allModelsSummary.totalModels) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Total Models</span>
+                  <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">{allModelsSummary.totalModels}</span>
+                  <span className="text-[9px] text-muted-foreground/30">across {validCount} keys</span>
+                </div>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Total Time</span>
+                  <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">{(allModelsSummary.totalMs / 1000).toFixed(1)}s</span>
+                  <span className="text-[9px] text-muted-foreground/30 tabular-nums">{allModelsSummary.totalMs}ms</span>
                 </div>
               </div>
             )}
@@ -1000,6 +1344,22 @@ export default function MultiKeyBatch() {
                 <span className="text-[10px] text-yellow-400/60">{unknownCount} unknown</span>
               )}
             </div>
+
+            {/* ── All-models results ────────────────────────────────────────── */}
+            {testMode === "all" && allModelsResults.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                  Results — {allModelsResults.length} {allModelsResults.length === 1 ? "key" : "keys"} tested
+                </span>
+                {allModelsResults.map((kr, i) => (
+                  <KeyAllModelsCard key={i} keyResult={kr} />
+                ))}
+              </div>
+            )}
+
+            {/* ── Quick mode tables ─────────────────────────────────────────── */}
+            {testMode === "quick" && (
+            <>
 
             {/* ── Mobile card list ──────────────────────────────────────────── */}
             <div className="block sm:hidden rounded-xl border border-border overflow-hidden">
@@ -1082,6 +1442,9 @@ export default function MultiKeyBatch() {
                 {unknownCount} {unknownCount === 1 ? "entry" : "entries"} skipped — provider could not be detected. Use format:{" "}
                 <code className="font-mono">provider:apikey</code>
               </p>
+            )}
+
+            </> /* end quick mode */
             )}
 
           </div>
