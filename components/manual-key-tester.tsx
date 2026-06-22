@@ -370,7 +370,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "meta-llama/llama-4-scout-17b-16e-instruct",         label: "Llama 4 Scout",               tag: "Meta",       ctx: "131K ctx", in: "$0.18/Mt",  out: "$0.59/Mt",  cache: "" },
       { id: "meta-llama/llama-3.3-70b-instruct",                 label: "Llama 3.3 70B",               tag: "Meta",       ctx: "131K ctx", in: "$0.135/Mt", out: "$0.4/Mt",   cache: "" },
       { id: "meta-llama/llama-3.1-8b-instruct",                  label: "Llama 3.1 8B",                tag: "Meta",       ctx: "16K ctx",  in: "$0.02/Mt",  out: "$0.05/Mt",  cache: "" },
-      // ── OpenAI OSS ───────────────────────────────────────────────────────
+      // ── OpenAI OSS ──────────────────────────────────────────��────────────
       { id: "openai/openai-gpt-oss-120b",                        label: "OpenAI GPT OSS 120B",         tag: "OpenAI",     ctx: "131K ctx", in: "$0.05/Mt",  out: "$0.25/Mt",  cache: "" },
       { id: "openai/openai-gpt-oss-20b",                         label: "OpenAI GPT OSS 20B",          tag: "OpenAI",     ctx: "131K ctx", in: "$0.04/Mt",  out: "$0.15/Mt",  cache: "" },
     ],
@@ -2315,7 +2315,7 @@ export default function ManualKeyTester() {
           </div>
         </div>
 
-        {/* ── CHAT TAB ─────────────────────────────────────────────────────── */}
+        {/* ��─ CHAT TAB ─────────────────────────────────────────────────────── */}
         {activeTab === "chat" && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
@@ -2585,7 +2585,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��──────────────────────────────────��───��─ */}
+        {/* ── VISION TAB ────────────��──────────────────────────────────����───��─ */}
         {activeTab === "vision" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
@@ -3006,28 +3006,28 @@ export default function ManualKeyTester() {
                 <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                   Paste API key to identify
                 </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    value={detectInput}
-                    onChange={(e) => setDetectInput(e.target.value)}
-                    placeholder="sk-ant-api03-… or AIzaSy… or gsk_…"
-                    className="w-full bg-secondary/40 border border-border rounded-md px-3 py-2 pr-10 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                  {detectInput && (
-                    <button
-                      onClick={() => setDetectInput("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                      aria-label="Clear"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
+                <input
+                  type="password"
+                  value={detectInput}
+                  onChange={(e) => setDetectInput(e.target.value)}
+                  placeholder="sk-ant-api03-… or AIzaSy… or gsk_…"
+                  className="w-full bg-secondary/40 border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                {detectInput && (
+                  <button
+                    onClick={() => setDetectInput("")}
+                    className="flex items-center gap-1.5 self-start px-2.5 py-1.5 rounded-md text-[11px] font-medium text-red-400 bg-red-500/8 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/40 transition-all"
+                    aria-label="Delete key"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                    </svg>
+                    Delete key
+                  </button>
+                )}
               </div>
 
               {/* Live result card */}
