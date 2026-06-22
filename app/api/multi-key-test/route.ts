@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 
 export const maxDuration = 60
 
+// ── Shared key-masking helper (single source of truth) ───────────────────────
+// Exposes exactly 8 chars of prefix + 6 mask dots. Used by both route and UI.
+export function maskApiKey(apiKey: string): string {
+  const prefix = apiKey.slice(0, 8)
+  const dots = "•".repeat(Math.min(6, Math.max(0, apiKey.length - 8)))
+  return `${prefix}${dots}`
+}
+
 // ── Exported types ────────────────────────────────────────────────────────────
 
 export interface MultiKeyEntry {
@@ -123,97 +131,49 @@ export const PROVIDER_MODELS: Record<string, { id: string; label: string; defaul
   anyscale:    [{ id: "meta-llama/Meta-Llama-3.1-8B-Instruct", label: "Llama 3.1 8B", default: true }],
   neets:       [{ id: "meta-llama/Meta-Llama-3-8B-Instruct", label: "Llama 3 8B", default: true }],
   lamini:      [{ id: "meta-llama/Meta-Llama-3-8B-Instruct", label: "Llama 3 8B", default: true }],
+  // Issue 6 fix: cloudflare + azure exist in PROVIDER_FORMATS but need PROVIDER_MODELS entries
+  // so the guide renders models and the dev-time warning is silenced. They are still "Skipped"
+  // at runtime (resolveEndpoint returns null) until account-ID config is added.
+  cloudflare:  [{ id: "@cf/meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", default: true }, { id: "@cf/mistral/mistral-7b-instruct-v0.1", label: "Mistral 7B" }],
+  azure:       [{ id: "gpt-4o-mini", label: "GPT-4o Mini", default: true }, { id: "gpt-4o", label: "GPT-4o" }],
 }
 
 // ── Body builders ─────────────────────────────────────────────────────────────
 
 function buildBody(provider: string, prompt: string, modelOverride?: string): object {
+  // Single source of truth: always derive default model from PROVIDER_MODELS catalogue.
+  // The hardcoded string in each case has been removed — model() resolves it automatically.
   const models = PROVIDER_MODELS[provider] ?? []
-  const defaultModel = models.find((m) => m.default)?.id ?? models[0]?.id
-
-  function model(fallback: string) {
-    return modelOverride ?? defaultModel ?? fallback
-  }
+  const defaultModelId = models.find((m) => m.default)?.id ?? models[0]?.id ?? ""
+  const m = modelOverride ?? defaultModelId
 
   switch (provider) {
     case "anthropic":
-      return { model: model("claude-haiku-4-5"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "openai":
-      return { model: model("gpt-4o-mini"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
+      return { model: m, max_tokens: 256, messages: [{ role: "user", content: prompt }] }
     case "google":
       return { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 256 } }
-    case "xai":
-      return { model: model("grok-3-mini"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "deepseek":
-      return { model: model("deepseek-chat"), max_tokens: 256, stream: false, messages: [{ role: "user", content: prompt }] }
-    case "qwen":
-      return { model: model("qwen-plus"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "zhipu":
-      return { model: model("glm-4-flash"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "minimax":
-      return { model: model("MiniMax-M1-mini"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
     case "cerebras":
-      return { model: model("llama3.1-8b"), max_completion_tokens: 256, stream: false, messages: [{ role: "user", content: prompt }] }
-    case "fireworks":
-      return { model: model("accounts/fireworks/models/llama-v3p1-8b-instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "novita":
-      return { model: model("meta-llama/llama-3.1-8b-instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "cloudflare":
-      return { messages: [{ role: "user", content: prompt }], max_tokens: 256 }
-    case "openrouter":
-      return { model: model("google/gemini-2.5-flash-lite"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "sambanova":
-      return { model: model("Meta-Llama-3.1-8B-Instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "nvidia":
-      return { model: model("meta/llama-3.1-8b-instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "hyperbolic":
-      return { model: model("meta-llama/Llama-3.2-3B-Instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "ai21":
-      return { model: model("jamba-mini-1.6"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "groq":
-      return { model: model("llama-3.1-8b-instant"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "together":
-      return { model: model("meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "mistral":
-      return { model: model("mistral-small-latest"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "cohere":
-      return { model: model("command-r7b-12-2024"), messages: [{ role: "user", content: prompt }] }
-    case "perplexity":
-      return { model: model("sonar"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "huggingface":
-      return { model: model("meta-llama/Llama-3.1-8B-Instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
+      return { model: m, max_completion_tokens: 256, stream: false, messages: [{ role: "user", content: prompt }] }
+    case "deepseek":
+      return { model: m, max_tokens: 256, stream: false, messages: [{ role: "user", content: prompt }] }
     case "replicate":
       return { input: { prompt, max_new_tokens: 256 } }
-    case "moonshot":
-      return { model: model("moonshot-v1-8k"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
+    case "cloudflare":
+      return { messages: [{ role: "user", content: prompt }], max_tokens: 256 }
+    case "cohere":
+      return { model: m, messages: [{ role: "user", content: prompt }] }
     case "baidu":
-      return { model: model("ernie-4.5-8k"), max_output_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "yi":
-      return { model: model("yi-lightning"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "stepfun":
-      return { model: model("step-2-mini"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "hunyuan":
-      return { model: model("hunyuan-lite"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "upstage":
-      return { model: model("solar-mini"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "writer":
-      return { model: model("palmyra-x5-mini"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "lepton":
-      return { model: model("llama3.1-8b"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "inception":
-      return { model: model("mercury-coder-small"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
+      return { model: m, max_output_tokens: 256, messages: [{ role: "user", content: prompt }] }
     case "ibm":
-      return { model_id: model("ibm/granite-3-8b-instruct"), messages: [{ role: "user", content: prompt }], parameters: { max_new_tokens: 256 } }
-    case "deepinfra":
-      return { model: model("meta-llama/Meta-Llama-3.1-8B-Instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "anyscale":
-      return { model: model("meta-llama/Meta-Llama-3.1-8B-Instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
-    case "neets":
-      return { model: model("meta-llama/Meta-Llama-3-8B-Instruct"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
+      return { model_id: m, messages: [{ role: "user", content: prompt }], parameters: { max_new_tokens: 256 } }
     case "lamini":
-      return { model_name: model("meta-llama/Meta-Llama-3-8B-Instruct"), prompt, max_new_tokens: 256 }
-    default: // dahono + fallback
-      return { model: model("dahono/deepseek-v4-flash"), max_tokens: 256, messages: [{ role: "user", content: prompt }] }
+      return { model_name: m, prompt, max_new_tokens: 256 }
+    default:
+      // Standard OpenAI-compatible: openai, xai, groq, mistral, together, novita,
+      // fireworks, openrouter, sambanova, nvidia, hyperbolic, ai21, qwen, zhipu,
+      // minimax, perplexity, huggingface, moonshot, yi, stepfun, hunyuan, upstage,
+      // writer, lepton, inception, deepinfra, anyscale, neets, dahono, etc.
+      return { model: m, max_tokens: 256, messages: [{ role: "user", content: prompt }] }
   }
 }
 
@@ -360,11 +320,29 @@ function resolveEndpoint(provider: string, apiKey: string): string | null {
 
 // ── Test a single entry ───────────────────────────────────────────────────────
 
+// ── Nested error message extractor ───────────────────────────────────────────
+// Handles { error: "string" }, { error: { message: "string" } }, and plain strings.
+function extractErrorMessage(raw: unknown, httpStatus: number): string {
+  if (!raw || typeof raw !== "object") return `HTTP ${httpStatus}`
+  const d = raw as Record<string, unknown>
+  const err = d.error
+  if (typeof err === "string") return err
+  if (err && typeof err === "object") {
+    const e = err as Record<string, unknown>
+    if (typeof e.message === "string") return e.message
+    if (typeof e.description === "string") return e.description
+  }
+  if (typeof d.message === "string") return d.message
+  if (typeof d.detail === "string") return d.detail
+  return `HTTP ${httpStatus}`
+}
+
 async function testOne(entry: MultiKeyEntry, prompt: string, modelOverride?: string): Promise<MultiKeyResult> {
   const start = Date.now()
   const provider = entry.provider.toLowerCase()
   const label = entry.label ?? provider
-  const masked = entry.apiKey.slice(0, 8) + "••••"
+  // Issue 2 fix: use shared maskApiKey so backend and frontend masks are identical
+  const masked = maskApiKey(entry.apiKey)
 
   const endpoint = resolveEndpoint(provider, entry.apiKey)
   if (!endpoint) {
@@ -391,9 +369,8 @@ async function testOne(entry: MultiKeyEntry, prompt: string, modelOverride?: str
     }
 
     const extracted = parsedData ? extractResponse(provider, parsedData) : {}
-    const errMsg = !res.ok
-      ? (parsedData as Record<string, unknown>)?.error?.toString?.() ?? `HTTP ${res.status}`
-      : undefined
+    // Issue 8 fix: properly parse nested error objects instead of .toString()
+    const errMsg = !res.ok ? extractErrorMessage(parsedData, res.status) : undefined
 
     return {
       provider,
@@ -419,7 +396,8 @@ async function testOne(entry: MultiKeyEntry, prompt: string, modelOverride?: str
 export async function POST(req: NextRequest) {
   const body = await req.json()
   const entries: MultiKeyEntry[] = body.entries ?? []
-  const prompt: string = body.prompt?.trim() || "Reply with one short sentence."
+  // Issue 7 fix: single default prompt "halo" consistent with client-side useState default
+  const prompt: string = body.prompt?.trim() || "halo"
   const modelOverride: string | undefined = body.modelOverride
 
   if (!entries.length) {
@@ -435,7 +413,7 @@ export async function POST(req: NextRequest) {
     if (s.status === "fulfilled") return s.value
     return {
       provider: capped[i].provider,
-      apiKeyMasked: capped[i].apiKey.slice(0, 8) + "••••",
+      apiKeyMasked: maskApiKey(capped[i].apiKey),
       label: capped[i].label ?? capped[i].provider,
       ok: false,
       status: 0,

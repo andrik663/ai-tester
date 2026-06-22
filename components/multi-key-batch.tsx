@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react"
 import type { MultiKeyResult, MultiKeyTestResponse, TokenUsage } from "@/app/api/multi-key-test/route"
-import { PROVIDER_MODELS } from "@/app/api/multi-key-test/route"
+import { PROVIDER_MODELS, maskApiKey } from "@/app/api/multi-key-test/route"
 
 // ── Provider format catalogue ─────────────────────────────────────────────────
 
@@ -32,14 +32,14 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "cloudflare",  label: "Cloudflare Workers AI", country: "US", flag: "🇺🇸", example: "cloudflare:YOUR_KEY",     keyHint: "CF token" },
   { id: "openrouter",  label: "OpenRouter",            country: "US", flag: "🇺🇸", example: "openrouter:sk-or-v1-...", keyHint: "sk-or-...", autoDetect: true },
   { id: "sambanova",   label: "SambaNova",             country: "US", flag: "🇺🇸", example: "sambanova:YOUR_KEY",      keyHint: "API key" },
-  { id: "nvidia",      label: "NVIDIA NIM",            country: "US", flag: "🇺🇸", example: "nvidia:nvapi-...",        keyHint: "nvapi-..." },
+  { id: "nvidia",      label: "NVIDIA NIM",            country: "US", flag: "🇺🇸", example: "nvidia:nvapi-...",        keyHint: "nvapi-...",  autoDetect: true },
   { id: "hyperbolic",  label: "Hyperbolic",            country: "US", flag: "🇺🇸", example: "hyperbolic:YOUR_KEY",     keyHint: "API key" },
   { id: "ai21",        label: "AI21 Labs",             country: "IL", flag: "🇮🇱", example: "ai21:YOUR_KEY",           keyHint: "API key" },
   { id: "groq",        label: "Groq",                  country: "US", flag: "🇺🇸", example: "groq:gsk_...",            keyHint: "gsk_...",    autoDetect: true },
   { id: "together",    label: "Together AI",           country: "US", flag: "🇺🇸", example: "together:YOUR_KEY",       keyHint: "API key" },
   { id: "mistral",     label: "Mistral AI",            country: "FR", flag: "🇫🇷", example: "mistral:YOUR_KEY",        keyHint: "API key" },
   { id: "cohere",      label: "Cohere",                country: "CA", flag: "🇨🇦", example: "cohere:YOUR_KEY",         keyHint: "API key" },
-  { id: "perplexity",  label: "Perplexity",            country: "US", flag: "🇺🇸", example: "perplexity:pplx-...",     keyHint: "pplx-..." },
+  { id: "perplexity",  label: "Perplexity",            country: "US", flag: "🇺🇸", example: "perplexity:pplx-...",     keyHint: "pplx-...",   autoDetect: true },
   { id: "huggingface", label: "HuggingFace",           country: "US", flag: "🇺🇸", example: "huggingface:hf_...",      keyHint: "hf_...",     autoDetect: true },
   { id: "replicate",   label: "Replicate",             country: "US", flag: "🇺🇸", example: "replicate:r8_...",        keyHint: "r8_...",     autoDetect: true },
   { id: "moonshot",    label: "Moonshot (Kimi)",       country: "CN", flag: "🇨🇳", example: "moonshot:YOUR_KEY",       keyHint: "API key" },
@@ -54,12 +54,22 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "inception",   label: "Inception (Mercury)",   country: "US", flag: "🇺🇸", example: "inception:YOUR_KEY",      keyHint: "API key" },
   { id: "ibm",         label: "IBM Granite (WatsonX)", country: "US", flag: "🇺🇸", example: "ibm:YOUR_KEY",            keyHint: "IAM token" },
   { id: "deepinfra",   label: "Deep Infra",            country: "US", flag: "🇺🇸", example: "deepinfra:YOUR_KEY",      keyHint: "API key" },
-  { id: "anyscale",    label: "Anyscale",              country: "US", flag: "🇺🇸", example: "anyscale:esecret_...",    keyHint: "esecret_..." },
+  { id: "anyscale",    label: "Anyscale",              country: "US", flag: "🇺🇸", example: "anyscale:esecret_...",    keyHint: "esecret_...", autoDetect: true },
   { id: "neets",       label: "Neets AI",              country: "US", flag: "🇺🇸", example: "neets:YOUR_KEY",          keyHint: "API key" },
   { id: "lamini",      label: "Lamini AI",             country: "US", flag: "🇺🇸", example: "lamini:YOUR_KEY",         keyHint: "API key" },
 ]
 
 const KNOWN_PROVIDERS = PROVIDER_FORMATS.map((p) => p.id)
+
+// Issue 6 fix: dev-time consistency check — every PROVIDER_FORMATS entry should have
+// a matching PROVIDER_MODELS entry so the model catalogue is never silently missing.
+if (process.env.NODE_ENV === "development") {
+  PROVIDER_FORMATS.forEach((pf) => {
+    if (!PROVIDER_MODELS[pf.id]) {
+      console.warn(`[batch] No PROVIDER_MODELS entry for provider "${pf.id}". Add it to route.ts.`)
+    }
+  })
+}
 
 // ── Parser ────────────────────────────────────────────────────────────────────
 
@@ -117,14 +127,6 @@ function parseLines(text: string): ParsedEntry[] {
       }
       return { provider: "?", apiKey: raw, raw, detected: false, unknown: true }
     })
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function maskKey(apiKey: string) {
-  const prefix = apiKey.slice(0, 8)
-  const dots = "•".repeat(Math.min(6, Math.max(0, apiKey.length - 8)))
-  return `${prefix}${dots}`
 }
 
 // ── Token badge (inline compact) ─────────────────────────────────────────────
@@ -305,14 +307,7 @@ function ExpandedDetail({
         </div>
       )}
 
-      {/* Model used */}
-      {result?.modelUsed && (
-        <div className="text-[9px] font-mono text-muted-foreground/40">
-          Model: <span className="text-muted-foreground/60">{result.modelUsed}</span>
-        </div>
-      )}
-
-      {/* Available models */}
+      {/* Available models — active model is already highlighted in the chip list below (issue 5: removed duplicate plain-text "Model:" line) */}
       {models.length > 0 && (
         <div className="flex flex-col gap-1">
           <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">
@@ -398,7 +393,7 @@ function MobileRow({
               </>
             )}
           </div>
-          <span className="text-[10px] font-mono text-muted-foreground/45">{maskKey(entry.apiKey)}</span>
+          <span className="text-[10px] font-mono text-muted-foreground/45">{maskApiKey(entry.apiKey)}</span>
           {/* Model line */}
           {!entry.unknown && activeModel && (
             <span className="text-[9px] text-muted-foreground/50 truncate max-w-[160px]">
@@ -418,15 +413,8 @@ function MobileRow({
           ) : (
             <>
               <StatusPill result={result} />
-              {result?.tokenUsage && (
-                <div className="flex items-center gap-1.5 text-[9px] font-mono tabular-nums">
-                  <span className="text-sky-400/70">+{result.tokenUsage.promptTokens ?? 0}</span>
-                  <span className="text-violet-400/70">-{result.tokenUsage.completionTokens ?? 0}</span>
-                </div>
-              )}
-              {result && !result.tokenUsage && (
-                <span className="text-[9px] text-muted-foreground/25">—</span>
-              )}
+              {/* Issue 4 fix: use shared TokenBadge instead of duplicate inline token display */}
+              <TokenBadge usage={result?.tokenUsage} />
             </>
           )}
         </div>
@@ -507,7 +495,7 @@ function DesktopRow({
 
         {/* Key */}
         <td className="px-2 py-2.5 font-mono text-muted-foreground/45 text-[10px] w-32 max-w-[128px]">
-          <span className="truncate block">{maskKey(entry.apiKey)}</span>
+          <span className="truncate block">{maskApiKey(entry.apiKey)}</span>
         </td>
 
         {/* Model */}
@@ -647,6 +635,8 @@ export default function MultiKeyBatch() {
   function handleManualApply() {
     loadText(manualInput)
     setShowManual(false)
+    // Issue 9 fix: clear the textarea so reopening manual input starts fresh
+    setManualInput("")
   }
 
   function removeEntry(idx: number) {
@@ -711,9 +701,12 @@ export default function MultiKeyBatch() {
     ? Math.round(results.reduce((a, r) => a + r.durationMs, 0) / results.length)
     : 0
 
+  // Issue 10 fix: match by exact masked key (consistent with maskApiKey) instead of
+  // fragile 8-char prefix which would collide for keys sharing the same prefix.
   function getResult(entry: ParsedEntry) {
+    const masked = maskApiKey(entry.apiKey)
     return results.find(
-      (r) => r.provider === entry.provider && r.apiKeyMasked.startsWith(entry.apiKey.slice(0, 8))
+      (r) => r.provider === entry.provider && r.apiKeyMasked === masked
     ) ?? null
   }
 
