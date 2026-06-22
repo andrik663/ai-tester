@@ -5,10 +5,13 @@ import useSWR from "swr"
 import type { TestKeyResult } from "@/app/api/test-key/route"
 
 // ── Supported providers for the quick tester ──────────────────────────────────
+// NOTE: `testerLabel` must match a key in the TESTERS map in /api/test-key/route.ts
 
 interface QuickProvider {
   id: string
   name: string
+  /** Must match a key in the route's TESTERS map exactly */
+  testerLabel: string
   keyPrefix?: string
   keyExample: string
   color: string
@@ -16,16 +19,19 @@ interface QuickProvider {
 }
 
 const QUICK_PROVIDERS: QuickProvider[] = [
-  { id: "openai",      name: "OpenAI",       keyPrefix: "sk-",       keyExample: "sk-...",         color: "text-green-400",    dotColor: "bg-green-400"   },
-  { id: "anthropic",   name: "Anthropic",    keyPrefix: "sk-ant-",   keyExample: "sk-ant-...",     color: "text-orange-400",   dotColor: "bg-orange-400"  },
-  { id: "google",      name: "Google Gemini",keyPrefix: "AIza",      keyExample: "AIzaSy...",      color: "text-blue-400",     dotColor: "bg-blue-400"    },
-  { id: "groq",        name: "Groq",         keyPrefix: "gsk_",      keyExample: "gsk_...",        color: "text-cyan-400",     dotColor: "bg-cyan-400"    },
-  { id: "mistral",     name: "Mistral",      keyPrefix: undefined,   keyExample: "••••••••",       color: "text-red-400",      dotColor: "bg-red-400"     },
-  { id: "cohere",      name: "Cohere",       keyPrefix: undefined,   keyExample: "••••••••",       color: "text-emerald-400",  dotColor: "bg-emerald-400" },
-  { id: "huggingface", name: "HuggingFace",  keyPrefix: "hf_",       keyExample: "hf_...",         color: "text-yellow-400",   dotColor: "bg-yellow-400"  },
-  { id: "github",      name: "GitHub",       keyPrefix: "ghp_",      keyExample: "ghp_...",        color: "text-foreground",   dotColor: "bg-foreground"  },
-  { id: "stripe",      name: "Stripe",       keyPrefix: "sk_",       keyExample: "sk_live_...",    color: "text-violet-400",   dotColor: "bg-violet-400"  },
-  { id: "xai",         name: "xAI (Grok)",   keyPrefix: undefined,   keyExample: "xai-...",        color: "text-zinc-300",     dotColor: "bg-zinc-300"    },
+  { id: "openai",      name: "OpenAI",        testerLabel: "OpenAI API Key",           keyPrefix: "sk-",       keyExample: "sk-...",        color: "text-green-400",   dotColor: "bg-green-400"   },
+  { id: "anthropic",   name: "Anthropic",     testerLabel: "Anthropic API Key",        keyPrefix: "sk-ant-",   keyExample: "sk-ant-...",    color: "text-orange-400",  dotColor: "bg-orange-400"  },
+  { id: "google",      name: "Google Gemini", testerLabel: "Google Gemini Key",        keyPrefix: "AIza",      keyExample: "AIzaSy...",     color: "text-blue-400",    dotColor: "bg-blue-400"    },
+  { id: "groq",        name: "Groq",          testerLabel: "Groq API Key",             keyPrefix: "gsk_",      keyExample: "gsk_...",       color: "text-cyan-400",    dotColor: "bg-cyan-400"    },
+  { id: "mistral",     name: "Mistral",       testerLabel: "Mistral API Key",          keyPrefix: undefined,   keyExample: "••••••••",      color: "text-red-400",     dotColor: "bg-red-400"     },
+  { id: "cohere",      name: "Cohere",        testerLabel: "Cohere API Key",           keyPrefix: undefined,   keyExample: "••••••••",      color: "text-emerald-400", dotColor: "bg-emerald-400" },
+  { id: "huggingface", name: "HuggingFace",   testerLabel: "HuggingFace Token",        keyPrefix: "hf_",       keyExample: "hf_...",        color: "text-yellow-400",  dotColor: "bg-yellow-400"  },
+  { id: "github",      name: "GitHub",        testerLabel: "GitHub Token",             keyPrefix: "ghp_",      keyExample: "ghp_...",       color: "text-foreground",  dotColor: "bg-foreground"  },
+  { id: "stripe",      name: "Stripe",        testerLabel: "Stripe Secret Key",        keyPrefix: "sk_",       keyExample: "sk_live_...",   color: "text-violet-400",  dotColor: "bg-violet-400"  },
+  { id: "xai",         name: "xAI (Grok)",    testerLabel: "xAI API Key",              keyPrefix: undefined,   keyExample: "xai-...",       color: "text-zinc-300",    dotColor: "bg-zinc-300"    },
+  { id: "deepseek",    name: "DeepSeek",      testerLabel: "DeepSeek API Key",         keyPrefix: undefined,   keyExample: "sk-...",        color: "text-sky-400",     dotColor: "bg-sky-400"     },
+  { id: "together",    name: "Together AI",   testerLabel: "Together AI Key",          keyPrefix: undefined,   keyExample: "••••••••",      color: "text-pink-400",    dotColor: "bg-pink-400"    },
+  { id: "dahono",      name: "Dahono Gateway",testerLabel: "Dahono API Key",           keyPrefix: undefined,   keyExample: "dk-...",        color: "text-primary",     dotColor: "bg-primary"     },
 ]
 
 // ── Auto-detect provider from key prefix ──────────────────────────────────────
@@ -33,13 +39,16 @@ const QUICK_PROVIDERS: QuickProvider[] = [
 function detectProvider(key: string): QuickProvider | undefined {
   if (!key || key.length < 4) return undefined
   const k = key.trim()
-  if (k.startsWith("sk-ant-"))      return QUICK_PROVIDERS.find((p) => p.id === "anthropic")
-  if (k.startsWith("AIza"))         return QUICK_PROVIDERS.find((p) => p.id === "google")
-  if (k.startsWith("gsk_"))         return QUICK_PROVIDERS.find((p) => p.id === "groq")
-  if (k.startsWith("hf_"))          return QUICK_PROVIDERS.find((p) => p.id === "huggingface")
+  // Most specific prefixes first
+  if (k.startsWith("sk-ant-"))                             return QUICK_PROVIDERS.find((p) => p.id === "anthropic")
+  if (k.startsWith("AIza"))                               return QUICK_PROVIDERS.find((p) => p.id === "google")
+  if (k.startsWith("gsk_"))                               return QUICK_PROVIDERS.find((p) => p.id === "groq")
+  if (k.startsWith("hf_"))                                return QUICK_PROVIDERS.find((p) => p.id === "huggingface")
   if (k.startsWith("ghp_") || k.startsWith("github_pat_")) return QUICK_PROVIDERS.find((p) => p.id === "github")
   if (k.startsWith("sk_live_") || k.startsWith("sk_test_")) return QUICK_PROVIDERS.find((p) => p.id === "stripe")
-  if (k.startsWith("sk-") && !k.startsWith("sk_")) return QUICK_PROVIDERS.find((p) => p.id === "openai")
+  if (k.startsWith("xai-"))                               return QUICK_PROVIDERS.find((p) => p.id === "xai")
+  // OpenAI sk- (after stripe sk_ and anthropic sk-ant- are already caught above)
+  if (k.startsWith("sk-") && !k.startsWith("sk_"))        return QUICK_PROVIDERS.find((p) => p.id === "openai")
   return undefined
 }
 
@@ -196,11 +205,23 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
     setResult(null)
 
     try {
+      // Route expects { label, value } — label must match TESTERS keys in the route
       const res = await fetch("/api/test-key", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: provider.id, apiKey: key }),
+        body: JSON.stringify({ label: provider.testerLabel, value: key }),
       })
+      if (!res.ok) {
+        const errText = await res.text().catch(() => `HTTP ${res.status}`)
+        setResult({
+          valid: false,
+          provider: provider.name,
+          message: `Server error (${res.status})`,
+          detail: errText.slice(0, 200),
+          logs: [],
+        })
+        return
+      }
       const data: TestKeyResult = await res.json()
       setResult(data)
       onValidated?.(provider.id, key, data)
@@ -208,7 +229,8 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
       setResult({
         valid: false,
         provider: provider.name,
-        message: err instanceof Error ? err.message : "Request failed",
+        message: err instanceof Error ? err.message : "Network request failed",
+        detail: "Check your connection and try again.",
         logs: [],
       })
     } finally {
@@ -318,7 +340,8 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
           </div>
           <button
             onClick={runTest}
-            disabled={!apiKey.trim() || !effectiveProvider || loading}
+            disabled={!apiKey.trim() || loading}
+            title={!effectiveProvider ? "Select a provider above first" : undefined}
             className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           >
             {loading ? (
@@ -339,7 +362,10 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
             )}
           </button>
         </div>
-        {apiKey.length >= 4 && (
+        {apiKey.length >= 4 && !effectiveProvider && (
+          <p className="text-[10px] text-yellow-400/80">Select a provider above to test this key.</p>
+        )}
+        {apiKey.length >= 4 && effectiveProvider && (
           <p className="text-[9px] font-mono text-muted-foreground/50">{keyMasked}</p>
         )}
       </div>
