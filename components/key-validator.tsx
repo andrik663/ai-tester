@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import useSWR from "swr"
 import type { TestKeyResult } from "@/app/api/test-key/route"
 
@@ -171,20 +171,54 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
   const [showCurl, setShowCurl]       = useState(false)
   const [showModels, setShowModels]   = useState(false)
   const [showHeaders, setShowHeaders] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [copiedShare, setCopiedShare] = useState(false)
+  const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const autoRunRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inputRef     = useRef<HTMLInputElement | null>(null)
 
-  // Debounce key input for auto-detect
+  // Debounce key input for auto-detect + auto-run
   const handleKeyChange = useCallback((val: string) => {
     setApiKey(val)
+    setResult(null)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       setDebouncedKey(val)
       const detected = detectProvider(val)
-      if (detected && !manualProvider) setSelectedProvider(detected)
+      if (detected && !manualProvider) {
+        setSelectedProvider(detected)
+        // Auto-run: fire the test 600ms after provider is detected and key looks complete (≥20 chars)
+        if (val.trim().length >= 20) {
+          if (autoRunRef.current) clearTimeout(autoRunRef.current)
+          autoRunRef.current = setTimeout(() => {
+            // Use detected provider directly (state may not be updated yet)
+            runTestWith(detected, val.trim())
+          }, 600)
+        }
+      }
     }, 300)
-    // Clear result when key changes
-    setResult(null)
-  }, [manualProvider])
+  }, [manualProvider]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Global keyboard shortcut: "/" focuses the key input, Ctrl/Cmd+Enter triggers test
+  useEffect(() => {
+    function onGlobalKey(e: KeyboardEvent) {
+      // "/" focuses input if not already in an input/textarea
+      if (
+        e.key === "/" &&
+        !(e.target instanceof HTMLInputElement) &&
+        !(e.target instanceof HTMLTextAreaElement)
+      ) {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+      // Ctrl/Cmd + Enter triggers test from anywhere on the page
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault()
+        runTestWithCurrent()
+      }
+    }
+    window.addEventListener("keydown", onGlobalKey)
+    return () => window.removeEventListener("keydown", onGlobalKey)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const effectiveProvider = manualProvider
     ? QUICK_PROVIDERS.find((p) => p.id === manualProvider)
@@ -196,16 +230,12 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
       ? ["/api/test-key", effectiveProvider.id, debouncedKey.trim()]
       : null
 
-  async function runTest() {
-    const key = apiKey.trim()
-    const provider = effectiveProvider
+  // Core test runner — accepts provider and key directly so it works for both auto-run and manual
+  async function runTestWith(provider: QuickProvider, key: string) {
     if (!key || !provider || loading) return
-
     setLoading(true)
     setResult(null)
-
     try {
-      // Route expects { label, value } — label must match TESTERS keys in the route
       const res = await fetch("/api/test-key", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -213,29 +243,43 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
       })
       if (!res.ok) {
         const errText = await res.text().catch(() => `HTTP ${res.status}`)
-        setResult({
-          valid: false,
-          provider: provider.name,
-          message: `Server error (${res.status})`,
-          detail: errText.slice(0, 200),
-          logs: [],
-        })
+        setResult({ valid: false, provider: provider.name, message: `Server error (${res.status})`, detail: errText.slice(0, 200), logs: [] })
         return
       }
       const data: TestKeyResult = await res.json()
       setResult(data)
       onValidated?.(provider.id, key, data)
     } catch (err) {
-      setResult({
-        valid: false,
-        provider: provider.name,
-        message: err instanceof Error ? err.message : "Network request failed",
-        detail: "Check your connection and try again.",
-        logs: [],
-      })
+      setResult({ valid: false, provider: provider.name, message: err instanceof Error ? err.message : "Network request failed", detail: "Check your connection and try again.", logs: [] })
     } finally {
       setLoading(false)
     }
+  }
+
+  // Convenience wrapper that reads current state — used by button + Ctrl+Enter shortcut
+  function runTestWithCurrent() {
+    const key = apiKey.trim()
+    const provider = effectiveProvider
+    if (!key || !provider) return
+    runTestWith(provider, key)
+  }
+
+  // Share result: copy formatted summary to clipboard
+  function shareResult() {
+    if (!result) return
+    const lines = [
+      `API Key Test Result — ${result.provider}`,
+      `Status: ${result.valid ? "VALID" : "INVALID"}`,
+      `Message: ${result.message}`,
+      result.detail ? `Detail: ${result.detail}` : null,
+      result.latencyMs !== undefined ? `Latency: ${result.latencyMs}ms` : null,
+      result.tokenUsage?.totalTokens !== undefined ? `Total Tokens: ${result.tokenUsage.totalTokens}` : null,
+      result.curlDisplay ? `\ncURL:\n${result.curlDisplay}` : null,
+    ].filter(Boolean).join("\n")
+    navigator.clipboard.writeText(lines).then(() => {
+      setCopiedShare(true)
+      setTimeout(() => setCopiedShare(false), 2000)
+    })
   }
 
   const rateLimits = parseRateLimits(result?.responseHeaders)
@@ -312,11 +356,12 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
         <div className="flex gap-2">
           <div className="relative flex-1">
             <input
+              ref={inputRef}
               type={showKey ? "text" : "password"}
               value={apiKey}
               onChange={(e) => handleKeyChange(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") runTest() }}
-              placeholder={effectiveProvider?.keyExample ?? "sk-... / AIza... / gsk_..."}
+              onKeyDown={(e) => { if (e.key === "Enter") runTestWithCurrent() }}
+              placeholder={effectiveProvider?.keyExample ?? "Paste key — / to focus, Ctrl+Enter to test"}
               autoComplete="off"
               spellCheck={false}
               className="w-full rounded-md border border-border bg-card text-foreground text-[11px] font-mono px-3 py-2 pr-9 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 transition-colors"
@@ -341,9 +386,9 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
             </button>
           </div>
           <button
-            onClick={runTest}
+            onClick={runTestWithCurrent}
             disabled={!apiKey.trim() || loading}
-            title={!effectiveProvider ? "Select a provider above first" : undefined}
+            title={!effectiveProvider ? "Select a provider above first" : "Test key (Enter)"}
             className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-bold tracking-wide transition-all hover:brightness-110 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed flex-shrink-0 shadow-[0_0_12px_oklch(0.76_0.17_192_/_0.25)]"
           >
             {loading ? (
@@ -364,12 +409,19 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
             )}
           </button>
         </div>
-        {apiKey.length >= 4 && !effectiveProvider && (
-          <p className="text-[10px] text-yellow-400/80">Select a provider above to test this key.</p>
-        )}
-        {apiKey.length >= 4 && effectiveProvider && (
-          <p className="text-[9px] font-mono text-muted-foreground/50">{keyMasked}</p>
-        )}
+        <div className="flex items-center justify-between">
+          <p className="text-[9px] text-muted-foreground/40">
+            {apiKey.length >= 4 && !effectiveProvider
+              ? <span className="text-yellow-400/70">Select a provider above</span>
+              : apiKey.length >= 4
+              ? <span className="font-mono">{keyMasked}</span>
+              : <span>Press <kbd className="px-1 py-px rounded bg-secondary border border-border text-[8px] font-mono">/</kbd> to focus &middot; <kbd className="px-1 py-px rounded bg-secondary border border-border text-[8px] font-mono">Ctrl+Enter</kbd> to test</span>
+            }
+          </p>
+          {loading && (
+            <p className="text-[9px] text-primary/60 animate-pulse">Auto-testing...</p>
+          )}
+        </div>
       </div>
 
       {/* ── Result panel ─────────────────────────────────────────────────── */}
@@ -384,7 +436,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
 
           {/* Status row */}
           <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2">
                 {result.valid === true && (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-green-400 flex-shrink-0">
@@ -402,7 +454,31 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
                 <p className="text-[11px] text-muted-foreground ml-6">{result.detail}</p>
               )}
             </div>
-            <StatusBadge valid={result.valid ?? null} />
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <StatusBadge valid={result.valid ?? null} />
+              {/* Share result — copy formatted summary to clipboard */}
+              <button
+                onClick={shareResult}
+                title="Copy result to clipboard"
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-secondary border border-transparent hover:border-border"
+              >
+                {copiedShare ? (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-green-400">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span className="text-green-400">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                    Share
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Metrics row: latency + tokens */}
