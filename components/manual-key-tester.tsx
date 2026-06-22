@@ -1374,7 +1374,10 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("chat")
+  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect">("chat")
+  // Auto-detect tab state
+  const [detectInput, setDetectInput]   = useState("")
+  const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown"; prefix: string; reason: string } | null>(null)
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Increment to trigger a fresh KeyInfoPanel fetch (bumped after successful chat)
@@ -2284,6 +2287,17 @@ export default function ManualKeyTester() {
                   </svg>
                 ),
               },
+              {
+                id: "auto-detect" as const,
+                label: "Detect",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M21 21l-4.35-4.35" />
+                    <path d="M11 8v6M8 11h6" />
+                  </svg>
+                ),
+              },
             ]).map((t) => (
               <button
                 key={t.id}
@@ -2918,6 +2932,230 @@ export default function ManualKeyTester() {
             <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
           </div>
         )}
+
+        {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────── */}
+        {activeTab === "auto-detect" && (() => {
+          // Full provider pattern table — mirrors detectProviderFromKey but with metadata
+          const DETECT_PATTERNS: Array<{
+            prefix: string
+            providerId: string
+            providerName: string
+            example: string
+            confidence: "high" | "low"
+            note?: string
+          }> = [
+            { prefix: "sk-ant-api",  providerId: "anthropic",    providerName: "Claude (Anthropic)",    example: "sk-ant-api03-…",     confidence: "high" },
+            { prefix: "sk-ant-",     providerId: "anthropic",    providerName: "Claude (Anthropic)",    example: "sk-ant-…",           confidence: "high" },
+            { prefix: "AIzaSy",      providerId: "google",       providerName: "Gemini (Google)",       example: "AIzaSy…",            confidence: "high" },
+            { prefix: "gsk_",        providerId: "groq",         providerName: "Groq",                  example: "gsk_…",              confidence: "high" },
+            { prefix: "hf_",         providerId: "huggingface",  providerName: "HuggingFace",           example: "hf_…",               confidence: "high" },
+            { prefix: "xai-",        providerId: "xai",          providerName: "Grok (xAI)",            example: "xai-…",              confidence: "high" },
+            { prefix: "sk-proj-",    providerId: "openai",       providerName: "GPT (OpenAI)",          example: "sk-proj-…",          confidence: "high" },
+            { prefix: "sk-None-",    providerId: "openai",       providerName: "GPT (OpenAI)",          example: "sk-None-…",          confidence: "high" },
+            { prefix: "pplx-",       providerId: "perplexity",   providerName: "Perplexity",            example: "pplx-…",             confidence: "high" },
+            { prefix: "or-",         providerId: "openrouter",   providerName: "OpenRouter",            example: "or-v1-…",            confidence: "high" },
+            { prefix: "fw-",         providerId: "fireworks",    providerName: "Fireworks AI",          example: "fw-…",               confidence: "high" },
+            { prefix: "nvapi-",      providerId: "nvidia",       providerName: "NVIDIA NIM",            example: "nvapi-…",            confidence: "high" },
+            { prefix: "dk-",         providerId: "dahono",       providerName: "Dahono Labs Gateway",   example: "dk-…",               confidence: "high" },
+            { prefix: "dc-",         providerId: "dahono",       providerName: "Dahono Labs Gateway",   example: "dc-…",               confidence: "high" },
+            { prefix: "sk-",         providerId: "openai",       providerName: "GPT (OpenAI) / DeepSeek", example: "sk-… (>40 chars)", confidence: "low",  note: "Could also be DeepSeek — key length and context used as tiebreaker" },
+          ]
+
+          function runDetect(raw: string): typeof detectResult {
+            if (!raw.trim()) return null
+            const k = raw.trim()
+            for (const p of DETECT_PATTERNS) {
+              if (k.startsWith(p.prefix)) {
+                // For generic sk- check length
+                if (p.prefix === "sk-" && k.length <= 40) continue
+                const preset = PRESETS.find((pr) => pr.id === p.providerId)
+                return {
+                  providerId: p.providerId,
+                  providerName: p.providerName,
+                  confidence: p.confidence,
+                  prefix: k.slice(0, Math.min(p.prefix.length + 4, k.length)) + "…",
+                  reason: p.note ?? `Key starts with "${p.prefix}" — exclusive to ${p.providerName}`,
+                }
+              }
+            }
+            return {
+              providerId: null,
+              providerName: null,
+              confidence: "unknown",
+              prefix: k.slice(0, 10) + (k.length > 10 ? "…" : ""),
+              reason: "No matching prefix found. Provider could not be determined from key format alone.",
+            }
+          }
+
+          const liveResult = runDetect(detectInput)
+          const detectedPreset = liveResult?.providerId ? PRESETS.find((p) => p.id === liveResult.providerId) : null
+
+          return (
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 py-5 flex flex-col gap-5">
+
+              {/* Title */}
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Auto-detect Provider</h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Paste any API key and the system identifies the provider from its prefix.
+                </p>
+              </div>
+
+              {/* Input */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Paste API key to identify
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={detectInput}
+                    onChange={(e) => setDetectInput(e.target.value)}
+                    placeholder="sk-ant-api03-… or AIzaSy… or gsk_…"
+                    className="w-full bg-secondary/40 border border-border rounded-md px-3 py-2 pr-10 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  {detectInput && (
+                    <button
+                      onClick={() => setDetectInput("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      aria-label="Clear"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Live result card */}
+              {liveResult && (
+                <div className={`rounded-lg border p-4 flex flex-col gap-3 transition-all ${
+                  liveResult.confidence === "high"    ? "border-green-500/30 bg-green-500/5"
+                  : liveResult.confidence === "low"   ? "border-yellow-500/30 bg-yellow-500/5"
+                  : "border-border bg-secondary/20"
+                }`}>
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {detectedPreset && (
+                        <ProviderLogo providerId={detectedPreset.id} className="w-5 h-5 flex-shrink-0" />
+                      )}
+                      <span className="text-sm font-semibold text-foreground truncate">
+                        {liveResult.providerName ?? "Unknown Provider"}
+                      </span>
+                    </div>
+                    <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                      liveResult.confidence === "high"  ? "text-green-400 bg-green-400/10 border-green-400/30"
+                      : liveResult.confidence === "low" ? "text-yellow-400 bg-yellow-400/10 border-yellow-400/30"
+                      : "text-muted-foreground bg-secondary border-border"
+                    }`}>
+                      {liveResult.confidence === "high" ? "High confidence" : liveResult.confidence === "low" ? "Low confidence" : "Unrecognised"}
+                    </span>
+                  </div>
+
+                  {/* Detected prefix */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest w-14 flex-shrink-0">Prefix</span>
+                    <code className="text-[11px] font-mono bg-secondary/60 px-2 py-0.5 rounded text-foreground">{liveResult.prefix}</code>
+                  </div>
+
+                  {/* Reason */}
+                  <div className="flex items-start gap-2">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest w-14 flex-shrink-0 pt-0.5">Reason</span>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{liveResult.reason}</p>
+                  </div>
+
+                  {/* CTA — use this provider */}
+                  {detectedPreset && (
+                    <button
+                      onClick={() => {
+                        handleApiKeyChange(detectInput)
+                        setActiveTab("chat")
+                        const preset = PRESETS.find((p) => p.id === detectedPreset.id)
+                        if (preset) {
+                          setSelectedPreset(preset)
+                          setEndpoint(preset.endpoint)
+                          setMethod(preset.method)
+                          setHeaderRows(Object.entries(preset.headers).map(([k, v], i) => ({ key: k, value: v, id: i })))
+                          setBodyTemplate(preset.bodyTemplate)
+                        }
+                      }}
+                      className="mt-1 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-[11px] font-semibold bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition-all"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                      Use as {detectedPreset.name} key and go to Chat
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Pattern reference table */}
+              <div className="flex flex-col gap-2">
+                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Known key prefixes ({DETECT_PATTERNS.length})
+                </h3>
+                <div className="rounded-md border border-border overflow-hidden">
+                  <table className="w-full text-[11px]">
+                    <thead>
+                      <tr className="border-b border-border bg-secondary/40">
+                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Prefix</th>
+                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Provider</th>
+                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground hidden sm:table-cell">Example</th>
+                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Conf.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DETECT_PATTERNS.map((p, i) => {
+                        const isActive = liveResult?.providerId === p.providerId && detectInput.trim().startsWith(p.prefix)
+                        return (
+                          <tr
+                            key={i}
+                            className={`border-b border-border/50 last:border-0 transition-colors ${
+                              isActive ? "bg-primary/8" : "hover:bg-secondary/30"
+                            }`}
+                          >
+                            <td className="px-3 py-2">
+                              <code className={`font-mono font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>
+                                {p.prefix}
+                              </code>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-1.5">
+                                <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
+                                <span className="text-muted-foreground truncate max-w-[120px]">{p.providerName}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 hidden sm:table-cell">
+                              <code className="text-muted-foreground/60 font-mono">{p.example}</code>
+                            </td>
+                            <td className="px-3 py-2">
+                              <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                                p.confidence === "high"
+                                  ? "text-green-400 bg-green-400/10"
+                                  : "text-yellow-400 bg-yellow-400/10"
+                              }`}>
+                                {p.confidence}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-[10px] text-muted-foreground/50">
+                  Providers with random or UUID-style keys (Replicate, Cohere, Together AI, etc.) cannot be identified by prefix alone.
+                </p>
+              </div>
+
+            </div>
+          )
+        })()}
 
         {/* ── MULTI-KEY BATCH TAB ───────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
