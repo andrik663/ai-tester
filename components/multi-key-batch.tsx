@@ -6,6 +6,7 @@ import { PROVIDER_MODELS, maskApiKey } from "@/app/api/multi-key-test/route"
 import type { KeyAllModelsResult, MultiKeyAllResponse, ModelTestResult } from "@/app/api/multi-key-batch-all/route"
 import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
 import { copyToClipboard } from "@/lib/clipboard"
+import { appendWorkingResults } from "@/lib/working-keys-store"
 
 // ── Provider format catalogue ─────────────────────────────────────────────────
 
@@ -796,7 +797,7 @@ function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function MultiKeyBatch() {
+export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => void }) {
   const [entries, setEntries]         = useState<ParsedEntry[]>([])
   const [prompt, setPrompt]           = useState("halo")
   const [running, setRunning]         = useState(false)
@@ -899,12 +900,40 @@ export default function MultiKeyBatch() {
       const data: MultiKeyTestResponse = await res.json()
       setResults(data.results)
       setSummary({ passed: data.passed, failed: data.failed, totalMs: data.totalMs })
+
+      // Save successful keys to the Keys dashboard
+      const passing = data.results.filter((r) => r.ok)
+      if (passing.length > 0) {
+        const pf = PROVIDER_FORMATS
+        passing.forEach((r) => {
+          // Recover the raw key from entries by matching provider + masked key
+          const entry = entries.find(
+            (e) => e.provider === r.provider && maskApiKey(e.apiKey) === r.apiKeyMasked,
+          )
+          if (!entry) return
+          const label = pf.find((p) => p.id === r.provider)?.label ?? r.provider
+          appendWorkingResults(r.provider, label, entry.apiKey, [
+            {
+              modelId: r.modelUsed ?? "unknown",
+              latencyMs: r.durationMs,
+              tokenUsage: r.tokenUsage
+                ? {
+                    prompt: r.tokenUsage.promptTokens ?? undefined,
+                    completion: r.tokenUsage.completionTokens ?? undefined,
+                    total: r.tokenUsage.totalTokens ?? undefined,
+                  }
+                : undefined,
+            },
+          ])
+        })
+        onKeysSaved?.()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed")
     } finally {
       setRunning(false)
     }
-  }, [entries, prompt, running])
+  }, [entries, prompt, running, onKeysSaved])
 
   const runAllModels = useCallback(async () => {
     const valid = entries.filter((e) => !e.unknown && e.provider !== "?")
@@ -932,12 +961,41 @@ export default function MultiKeyBatch() {
         totalModels: data.totalModels,
         totalMs: data.totalMs,
       })
+
+      // Save successful keys to the Keys dashboard
+      const passingProviders = data.results.filter((kr) => kr.passed > 0)
+      if (passingProviders.length > 0) {
+        const pf = PROVIDER_FORMATS
+        passingProviders.forEach((kr) => {
+          // Recover raw key from entries
+          const entry = entries.find(
+            (e) => e.provider === kr.provider && maskApiKey(e.apiKey) === kr.apiKeyMasked,
+          )
+          if (!entry) return
+          const label = pf.find((p) => p.id === kr.provider)?.label ?? kr.provider
+          const passingModels = kr.models
+            .filter((m) => m.ok)
+            .map((m) => ({
+              modelId: m.modelId,
+              latencyMs: m.latencyMs,
+              tokenUsage: m.tokenUsage
+                ? {
+                    prompt: m.tokenUsage.prompt,
+                    completion: m.tokenUsage.completion,
+                    total: m.tokenUsage.total,
+                  }
+                : undefined,
+            }))
+          appendWorkingResults(kr.provider, label, entry.apiKey, passingModels)
+        })
+        onKeysSaved?.()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed")
     } finally {
       setRunning(false)
     }
-  }, [entries, prompt, running])
+  }, [entries, prompt, running, onKeysSaved])
 
   function exportResults() {
     if (!results.length) return

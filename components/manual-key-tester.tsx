@@ -1236,7 +1236,7 @@ function VideoTabIcon() {
   )
 }
 
-// ── Log level styles ───────────────────��─��───────────────────��────────────────
+// ── Log level styles ──���────────────────��─��───────────────────��────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -1432,7 +1432,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ───���────────────────────────────────────────────────
+  // ── Vision / OCR helpers ───���──────────────────────────��─────────────────────
 
   function handleImageFile(
     file: File,
@@ -3021,7 +3021,12 @@ export default function ManualKeyTester() {
         {/* ── MULTI-KEY BATCH TAB ───────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            <MultiKeyBatch />
+            <MultiKeyBatch
+              onKeysSaved={() => {
+                setWorkingKeysTick((t) => t + 1)
+                setActiveTab("working-keys")
+              }}
+            />
           </div>
         )}
 
