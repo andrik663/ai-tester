@@ -249,19 +249,26 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
     <div className="flex flex-col gap-4">
 
       {/* ── Security notice ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-400/5 border border-green-400/15">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-green-400 flex-shrink-0">
+      <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg border border-border bg-secondary/40">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-primary flex-shrink-0 mt-px">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         </svg>
-        <span className="text-[10px] text-green-400/80">
-          Your key is never stored or logged — requests are proxied and discarded immediately.
+        <span className="text-[10px] text-muted-foreground leading-relaxed">
+          Key is <span className="text-foreground font-medium">never stored or logged</span> — proxied and discarded immediately.
         </span>
       </div>
 
       {/* ── Provider selector ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Provider</label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Provider</label>
+          {selectedProvider && !manualProvider && (
+            <span className="text-[9px] text-primary/70 font-medium">
+              Auto-detected: {selectedProvider.name}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1">
           {QUICK_PROVIDERS.map((p) => {
             const isActive = (manualProvider ?? selectedProvider?.id) === p.id
             return (
@@ -272,23 +279,18 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
                   setSelectedProvider(p)
                   setResult(null)
                 }}
-                className={`flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all ${
+                className={`flex items-center gap-1 text-[10px] font-medium px-2 py-[3px] rounded border transition-all ${
                   isActive
-                    ? "border-primary/50 bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground"
+                    ? "border-primary/60 bg-primary/12 text-primary shadow-[0_0_0_1px_oklch(0.76_0.17_192_/_0.2)]"
+                    : "border-border/60 text-muted-foreground/70 hover:border-border hover:text-foreground bg-secondary/20"
                 }`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? "bg-primary" : `${p.dotColor} opacity-50`}`} />
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? "bg-primary" : `${p.dotColor} opacity-40`}`} />
                 {p.name}
               </button>
             )
           })}
         </div>
-        {selectedProvider && !manualProvider && (
-          <p className="text-[10px] text-primary/70">
-            Auto-detected: <span className="font-semibold">{selectedProvider.name}</span>
-          </p>
-        )}
       </div>
 
       {/* ── API key input ─────────────────────────────────────────────────── */}
@@ -317,7 +319,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
               placeholder={effectiveProvider?.keyExample ?? "sk-... / AIza... / gsk_..."}
               autoComplete="off"
               spellCheck={false}
-              className="w-full rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-3 py-2 pr-9 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+              className="w-full rounded-md border border-border bg-card text-foreground text-[11px] font-mono px-3 py-2 pr-9 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 transition-colors"
             />
             <button
               onClick={() => setShowKey((v) => !v)}
@@ -342,7 +344,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
             onClick={runTest}
             disabled={!apiKey.trim() || loading}
             title={!effectiveProvider ? "Select a provider above first" : undefined}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-bold tracking-wide transition-all hover:brightness-110 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed flex-shrink-0 shadow-[0_0_12px_oklch(0.76_0.17_192_/_0.25)]"
           >
             {loading ? (
               <>
