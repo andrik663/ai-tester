@@ -8,6 +8,7 @@ import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
+import SBGAgent from "@/components/sbg-agent"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
@@ -1176,7 +1177,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys">("vision")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent">("vision")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
@@ -1957,6 +1958,25 @@ export default function ManualKeyTester() {
           </button>
 
           {/* Divider */}
+          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
+
+          {/* SBG Agent tab */}
+          <button
+            onClick={() => setActiveTab("sbg-agent")}
+            title="SBG Agent — Research & Coding Helper"
+            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold font-mono transition-colors ${
+              activeTab === "sbg-agent"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+            }`}
+          >
+            SBG
+            {activeTab !== "sbg-agent" && (
+              <span className="text-[7px] font-bold px-0.5 rounded bg-primary/10 text-primary leading-none py-px">AI</span>
+            )}
+          </button>
+
+          {/* Divider */}
           <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
 
           {/* Provider badge — with logo */}
@@ -2325,6 +2345,13 @@ export default function ManualKeyTester() {
                 setConfigOpen(true)
               }}
             />
+          </div>
+        )}
+
+        {/* ── SBG AGENT TAB ─────────────────────────────────────────────────── */}
+        {activeTab === "sbg-agent" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
           </div>
         )}
 
