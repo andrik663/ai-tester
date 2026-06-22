@@ -79,14 +79,19 @@ interface ParsedEntry {
 
 function detectProvider(key: string): string | null {
   const k = key.trim()
-  if (k.startsWith("sk-ant-"))             return "anthropic"
-  if (k.startsWith("sk-") && k.length > 40) return "openai"
+  if (k.startsWith("sk-ant-"))              return "anthropic"
+  if (k.startsWith("sk-or-"))              return "openrouter"
+  if (k.startsWith("sk-proj-"))            return "openai"
+  if (k.startsWith("sk-") && k.length > 30) return "openai"
   if (k.startsWith("AIza"))               return "google"
   if (k.startsWith("xai-"))               return "xai"
-  if (k.startsWith("sk-or-"))             return "openrouter"
   if (k.startsWith("gsk_"))               return "groq"
   if (k.startsWith("r8_"))                return "replicate"
   if (k.startsWith("pat-"))               return "huggingface"
+  if (k.startsWith("hf_"))                return "huggingface"
+  if (k.startsWith("nvapi-"))             return "nvidia"
+  if (k.startsWith("pplx-"))              return "perplexity"
+  if (k.startsWith("esecret_"))           return "anyscale"
   return null
 }
 
@@ -130,7 +135,7 @@ function parseLines(text: string): ParsedEntry[] {
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
-function StatusBadge({ result }: { result: MultiKeyResult | null; running?: boolean }) {
+function StatusBadge({ result }: { result: MultiKeyResult | null }) {
   if (!result) return <span className="text-[10px] text-muted-foreground/40">—</span>
   if (result.ok) {
     return (
@@ -139,17 +144,18 @@ function StatusBadge({ result }: { result: MultiKeyResult | null; running?: bool
           <circle cx="4" cy="4" r="3" fill="currentColor" opacity=".3" />
           <path d="M2 4l1.3 1.3L6 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {result.status}
+        {result.status} OK
       </span>
     )
   }
+  const label = result.statusText === "Skipped" ? "Skip" : (result.status || result.statusText || "Err")
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-mono text-red-400">
       <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden>
         <circle cx="4" cy="4" r="3" fill="currentColor" opacity=".3" />
         <path d="M2.5 2.5l3 3M5.5 2.5l-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
       </svg>
-      {result.status || "Err"}
+      {label}
     </span>
   )
 }
@@ -264,7 +270,7 @@ export default function MultiKeyBatch() {
   function exportResults() {
     if (!results.length) return
     const lines = results.map((r) =>
-      `${r.provider} | ${r.apiKey} | ${r.ok ? "OK" : "FAIL"} | ${r.status} | ${r.durationMs}ms | ${r.chatReply ? r.chatReply.slice(0, 60).replace(/\n/g, " ") : r.error ?? ""}`
+      `${r.provider} | ${r.apiKeyMasked} | ${r.ok ? "OK" : "FAIL"} | ${r.status} | ${r.durationMs}ms | ${r.chatReply ? r.chatReply.slice(0, 60).replace(/\n/g, " ") : r.error ?? ""}`
     )
     const blob = new Blob([lines.join("\n")], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
@@ -542,7 +548,7 @@ export default function MultiKeyBatch() {
                 <tbody>
                   {entries.map((entry, idx) => {
                     const res = results.find(
-                      (r) => r.provider === entry.provider && r.apiKey.startsWith(entry.apiKey.slice(0, 8))
+                      (r) => r.provider === entry.provider && r.apiKeyMasked.startsWith(entry.apiKey.slice(0, 8))
                     )
                     const isRunning = running && !res
                     return (
@@ -571,8 +577,12 @@ export default function MultiKeyBatch() {
                         <td className="px-3 py-2">
                           {isRunning ? <Spinner /> : <StatusBadge result={res ?? null} />}
                         </td>
-                        <td className="px-3 py-2 text-muted-foreground/70 max-w-[180px] truncate hidden sm:table-cell">
-                          {res?.chatReply ? res.chatReply.slice(0, 60) : res?.error ?? ""}
+                        <td className="px-3 py-2 max-w-[180px] truncate hidden sm:table-cell">
+                          {res?.chatReply
+                            ? <span className="text-muted-foreground/70">{res.chatReply.slice(0, 60)}</span>
+                            : res?.error
+                              ? <span className="text-red-400/70 text-[10px]">{res.error.slice(0, 80)}</span>
+                              : null}
                         </td>
                         <td className="px-3 py-2 text-muted-foreground/50 font-mono hidden sm:table-cell">
                           {res?.durationMs ? `${res.durationMs}` : ""}
