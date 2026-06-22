@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import type { LogEntry } from "@/app/api/test-key/route"
+import { PROVIDER_CONFIGS, DEFAULT_PROMPT, MANUAL_MAX_TOKENS } from "@/lib/providers"
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -104,156 +105,64 @@ function captureResponseHeaders(res: Response): Record<string, string> {
   return out
 }
 
-// ── Body builder: inject prompt into provider templates ───────────────────────
+// ── Body builder: derive from shared PROVIDER_CONFIGS in lib/providers.ts ─────
+// This replaces the old hardcoded BODY_TEMPLATES to ensure manual-test uses the
+// same models and formats as batch-test and multi-key-test.
 
-const BODY_TEMPLATES: Record<string, (prompt: string) => object> = {
-  // Anthropic Messages API — unique format
-  anthropic: (prompt) => ({
-    model: "claude-opus-4-5",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // OpenAI Responses API (gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano, gpt-4o, o-series)
-  openai: (prompt) => ({
-    model: "gpt-5.5",
-    input: prompt,
-  }),
-  // Google Gemini — unique contents/parts format
-  google: (prompt) => ({
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { maxOutputTokens: 1024 },
-  }),
-  // xAI Grok — Responses API (chat: grok-4.3, coding: grok-build-0.1)
-  xai: (prompt) => ({
-    model: "grok-4.3",
-    input: [
-      { role: "system", content: "You are Grok, a highly intelligent, helpful AI assistant." },
-      { role: "user", content: prompt },
-    ],
-  }),
-  // DeepSeek — OpenAI-compatible
-  deepseek: (prompt) => ({
-    model: "deepseek-chat",
-    max_tokens: 1024,
-    stream: false,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Qwen / Alibaba DashScope — OpenAI-compatible (intl endpoint)
-  qwen: (prompt) => ({
-    model: "qwen-plus",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Zhipu GLM — OpenAI-compatible
-  zhipu: (prompt) => ({
-    model: "glm-4-flash",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // MiniMax — OpenAI-compatible endpoint api.minimax.io/v1/chat/completions
-  minimax: (prompt) => ({
-    model: "MiniMax-M3",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Groq — OpenAI-compatible
-  groq: (prompt) => ({
-    model: "llama-3.1-8b-instant",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Together AI — OpenAI-compatible (default: MiniMaxAI/MiniMax-M3)
-  together: (prompt) => ({
-    model: "MiniMaxAI/MiniMax-M3",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Mistral — OpenAI-compatible
-  mistral: (prompt) => ({
-    model: "mistral-small-latest",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Cohere v2 chat — messages array (not message string in v2)
-  cohere: (prompt) => ({
-    model: "command-r-plus",
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Perplexity — OpenAI-compatible
-  perplexity: (prompt) => ({
-    model: "sonar",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // HuggingFace Inference API — OpenAI-compatible
-  huggingface: (prompt) => ({
-    model: "meta-llama/Llama-3.3-70B-Instruct",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Replicate — predictions input format
-  replicate: (prompt) => ({
-    input: {
-      prompt,
-      max_new_tokens: 512,
-    },
-  }),
-  // ── Cerebras (public models: kimi-k2.6, glm-5.1, minimax-m2.5, zai-glm-4.7, gpt-oss-120b, gemma-4-31b, qwen3-32b)
-  cerebras: (prompt) => ({
-    model: "kimi-k2.6",
-    max_completion_tokens: 1024,
-    temperature: 0.2,
-    top_p: 1,
-    stream: false,
-    reasoning_effort: "medium",
-    messages: [{ role: "user", content: prompt }],
-  }),
-  fireworks: (prompt) => ({
-    model: "accounts/fireworks/models/llama-v3p3-70b-instruct",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  novita: (prompt) => ({
-    model: "deepseek/deepseek-r1-0528",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  cloudflare: (prompt) => ({
-    messages: [{ role: "user", content: prompt }],
-    max_tokens: 1024,
-  }),
-  openrouter: (prompt) => ({
-    model: "google/gemini-2.5-flash",   // popular free-tier model; any openrouter model id works
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  sambanova: (prompt) => ({
-    model: "Meta-Llama-3.3-70B-Instruct",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  nvidia: (prompt) => ({
-    model: "meta/llama-3.3-70b-instruct",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  hyperbolic: (prompt) => ({
-    model: "meta-llama/Llama-3.3-70B-Instruct",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  ai21: (prompt) => ({
-    model: "jamba-1.6-large",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
-  // Dahono gateway — OpenAI-compatible
-  dahono: (prompt) => ({
-    model: "dahono/deepseek-v4-flash",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  }),
+function buildManualBody(providerKey: string, prompt: string): object {
+  const cfg = PROVIDER_CONFIGS[providerKey]
+  if (!cfg) {
+    // Unknown provider — generic OpenAI-compat fallback
+    return { model: "gpt-4o-mini", max_tokens: MANUAL_MAX_TOKENS, messages: [{ role: "user", content: prompt }] }
+  }
+  // Build with the provider's default model + MANUAL_MAX_TOKENS
+  const body = cfg.buildBody(cfg.models[0], MANUAL_MAX_TOKENS) as Record<string, unknown>
+  // Substitute in the actual user prompt
+  if (Array.isArray(body.messages)) {
+    body.messages = [{ role: "user", content: prompt }]
+  }
+  if (body.input !== undefined) {
+    // Responses API (openai, xai)
+    if (Array.isArray(body.input)) {
+      body.input = [
+        ...(body.input as Record<string, unknown>[]).filter((m) => (m as Record<string, unknown>).role === "system"),
+        { role: "user", content: prompt },
+      ]
+    } else {
+      body.input = prompt
+    }
+  }
+  if (body.contents !== undefined) {
+    body.contents = [{ parts: [{ text: prompt }] }]
+  }
+  if (body.model_id !== undefined) {
+    delete body.model
+  }
+  if (body.model_name !== undefined) {
+    body.prompt = prompt
+  }
+  if (body.input && typeof body.input === "object" && !Array.isArray(body.input) && (body.input as Record<string, unknown>).prompt !== undefined) {
+    // Replicate predictions
+    ;(body.input as Record<string, unknown>).prompt = prompt
+  }
+  return body
 }
+
+// Keep BODY_TEMPLATES as a thin wrapper so the handler code below can still call it
+const BODY_TEMPLATES: Record<string, (prompt: string) => object> = new Proxy(
+  {} as Record<string, (prompt: string) => object>,
+  {
+    get(_target, providerKey: string) {
+      if (PROVIDER_CONFIGS[providerKey]) {
+        return (prompt: string) => buildManualBody(providerKey, prompt)
+      }
+      return undefined
+    },
+    has(_target, providerKey: string) {
+      return providerKey in PROVIDER_CONFIGS
+    },
+  }
+)
 
 // ── Vision body builders ──────────────────────────────────────────────────────
 // Builds the request body with image content for vision requests.

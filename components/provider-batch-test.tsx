@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import type { BatchModelResult, BatchTestResponse } from "@/app/api/batch-test/route"
 import { PROVIDER_CONFIGS } from "@/app/api/batch-test/route"
+import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
 import { appendWorkingResults } from "@/lib/working-keys-store"
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -268,8 +269,9 @@ interface Props {
   onSaved?: (savedCount: number) => void
 }
 
-// Providers without a static model list (Dahono fetches live)
-const DYNAMIC_PROVIDERS = new Set(["dahono"])
+// Providers that fetch live model list from the gateway (Dahono, OpenAI, Groq, etc.)
+// Imported directly from lib/providers.ts — single source of truth.
+const DYNAMIC_PROVIDERS = PROVIDERS_WITH_LIVE_MODELS
 // Image/video-only or non-standard providers — no batch chat test
 const UNSUPPORTED_PROVIDERS = new Set([
   "replicate", "custom", "azure",
@@ -303,15 +305,17 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
     setFilter("all")
     setSavedCount(null)
 
-    // For Dahono, quickly fetch model count first for skeleton display
+    // For providers with live model lists, quickly fetch model count for skeleton display
     let skelCount = estimatedCount
-    if (providerId === "dahono") {
+    if (DYNAMIC_PROVIDERS.has(providerId)) {
       try {
-        const r = await fetch("/api/dahono-models", {
-          headers: { Authorization: `Bearer ${apiKey.trim()}` },
+        const r = await fetch("/api/fetch-models", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider: providerId, apiKey: apiKey.trim() }),
         })
         const d = await r.json()
-        skelCount = d?.models?.length ?? 14
+        skelCount = d?.total ?? d?.models?.length ?? 14
       } catch { skelCount = 14 }
     }
     setSkeletonCount(skelCount || 8)
@@ -441,6 +445,14 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
             <span className="text-[11px] font-semibold text-foreground">
               {data.total} models
             </span>
+            {(data as BatchTestResponse & { modelSource?: string }).modelSource === "live" && (
+              <span
+                title="Model list was fetched live from the provider API"
+                className="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold"
+              >
+                live
+              </span>
+            )}
             <span className="text-[11px] text-green-400 font-mono font-semibold">
               {data.passed} passed
             </span>
