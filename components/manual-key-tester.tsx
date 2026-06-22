@@ -9,6 +9,7 @@ import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
 import SBGAgent from "@/components/sbg-agent"
+import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
@@ -1234,7 +1235,7 @@ function VideoTabIcon() {
   )
 }
 
-// ── Log level styles ───────────────────��──────────────────────────────────────
+// ── Log level styles ───────────────────��─────────────────────��────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -1341,7 +1342,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent">("vision")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("vision")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
@@ -2132,7 +2133,7 @@ export default function ManualKeyTester() {
           {/* SBG Agent tab */}
           <button
             onClick={() => setActiveTab("sbg-agent")}
-            title="SBG Agent �� Research & Coding Helper"
+            title="SBG Agent — Research & Coding Helper"
             className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold font-mono transition-colors ${
               activeTab === "sbg-agent"
                 ? "bg-primary/15 text-primary"
@@ -2143,6 +2144,25 @@ export default function ManualKeyTester() {
             {activeTab !== "sbg-agent" && (
               <span className="text-[7px] font-bold px-0.5 rounded bg-primary/10 text-primary leading-none py-px">AI</span>
             )}
+          </button>
+
+          {/* Multi-Key Batch tab */}
+          <button
+            onClick={() => setActiveTab("multi-batch")}
+            title="Multi-Key Batch — Test all providers at once"
+            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold transition-colors ${
+              activeTab === "multi-batch"
+                ? "bg-emerald-500/15 text-emerald-400"
+                : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+            }`}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0" aria-hidden>
+              <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <circle cx="10" cy="3" r="1.5" fill="currentColor" />
+              <circle cx="10" cy="6" r="1.5" fill="currentColor" />
+              <circle cx="10" cy="9" r="1.5" fill="currentColor" />
+            </svg>
+            Batch
           </button>
 
           {/* Divider */}
@@ -2526,6 +2546,13 @@ export default function ManualKeyTester() {
         {activeTab === "sbg-agent" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
+          </div>
+        )}
+
+        {/* ── MULTI-KEY BATCH TAB ───────────────────────────────────────────── */}
+        {activeTab === "multi-batch" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <MultiKeyBatch />
           </div>
         )}
 
