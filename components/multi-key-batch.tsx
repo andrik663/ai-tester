@@ -119,37 +119,37 @@ function parseLines(text: string): ParsedEntry[] {
     })
 }
 
-// ── Token usage display ───────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function maskKey(apiKey: string) {
+  const prefix = apiKey.slice(0, 8)
+  const dots = "•".repeat(Math.min(6, Math.max(0, apiKey.length - 8)))
+  return `${prefix}${dots}`
+}
+
+// ── Token badge (inline compact) ─────────────────────────────────────────────
 
 function TokenBadge({ usage }: { usage?: TokenUsage }) {
   if (!usage) return <span className="text-[10px] text-muted-foreground/30">—</span>
-
   const hasData = usage.promptTokens !== null || usage.completionTokens !== null || usage.totalTokens !== null
-
   if (!hasData) return <span className="text-[10px] text-muted-foreground/30">—</span>
 
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
       {usage.totalTokens !== null && (
-        <span className="text-[11px] font-semibold font-mono text-foreground/80 leading-none">
+        <span className="text-[11px] font-bold font-mono text-foreground/75 leading-none tabular-nums">
           {usage.totalTokens.toLocaleString()}
         </span>
       )}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-1.5">
         {usage.promptTokens !== null && (
-          <span className="inline-flex items-center gap-0.5 text-[9px] font-mono text-sky-400/70 leading-none">
-            <svg width="6" height="6" viewBox="0 0 6 6" fill="none" aria-hidden>
-              <path d="M1 3h4M3 1v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-            {usage.promptTokens.toLocaleString()}
+          <span className="text-[9px] font-mono text-sky-400/70 leading-none tabular-nums">
+            +{usage.promptTokens.toLocaleString()}
           </span>
         )}
         {usage.completionTokens !== null && (
-          <span className="inline-flex items-center gap-0.5 text-[9px] font-mono text-violet-400/70 leading-none">
-            <svg width="6" height="6" viewBox="0 0 6 6" fill="none" aria-hidden>
-              <path d="M1 3h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-            {usage.completionTokens.toLocaleString()}
+          <span className="text-[9px] font-mono text-violet-400/70 leading-none tabular-nums">
+            -{usage.completionTokens.toLocaleString()}
           </span>
         )}
       </div>
@@ -164,44 +164,39 @@ function StatusPill({ result }: { result: MultiKeyResult | null }) {
 
   if (result.statusText === "Skipped") {
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold font-mono bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 whitespace-nowrap">
         SKIP
       </span>
     )
   }
 
-  if (result.ok) {
-    return (
-      <div className="flex flex-col gap-0.5">
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+  const ok = result.ok
+  return (
+    <div className="flex flex-col gap-0.5 items-start">
+      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono whitespace-nowrap border ${
+        ok
+          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+          : "bg-red-500/10 text-red-400 border-red-500/20"
+      }`}>
+        {ok ? (
           <svg width="7" height="7" viewBox="0 0 8 8" fill="none" aria-hidden>
             <path d="M1.5 4l1.8 1.8L6.5 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {result.status} OK
-        </span>
-        {result.durationMs > 0 && (
-          <span className="text-[9px] font-mono text-muted-foreground/40 pl-0.5">{result.durationMs}ms</span>
+        ) : (
+          <svg width="7" height="7" viewBox="0 0 8 8" fill="none" aria-hidden>
+            <path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
         )}
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold font-mono bg-red-500/10 text-red-400 border border-red-500/20">
-        <svg width="7" height="7" viewBox="0 0 8 8" fill="none" aria-hidden>
-          <path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-        </svg>
         {result.status || "ERR"}
       </span>
       {result.durationMs > 0 && (
-        <span className="text-[9px] font-mono text-muted-foreground/40 pl-0.5">{result.durationMs}ms</span>
+        <span className="text-[9px] font-mono text-muted-foreground/40 tabular-nums">{result.durationMs}ms</span>
       )}
     </div>
   )
 }
 
-// ── Model list cell ───────────────────────────────────────────────────────────
+// ── Model cell ────────────────────────────────────────────────────────────────
 
 function ModelCell({ provider, result }: { provider: string; result: MultiKeyResult | null }) {
   const models = PROVIDER_MODELS[provider] ?? []
@@ -209,31 +204,25 @@ function ModelCell({ provider, result }: { provider: string; result: MultiKeyRes
   const activeModelId = result?.modelUsed ?? defaultModel?.id ?? ""
   const activeModel = models.find((m) => m.id === activeModelId) ?? defaultModel
 
-  if (!models.length) {
-    return (
-      <span className="text-[10px] text-muted-foreground/30 font-mono">—</span>
-    )
-  }
+  if (!models.length) return <span className="text-[10px] text-muted-foreground/30 font-mono">—</span>
 
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
-      {/* Active model */}
-      <span className="text-[10px] font-medium text-foreground/80 truncate leading-tight">
+      <span className="text-[10px] font-medium text-foreground/80 truncate leading-tight max-w-[100px]">
         {activeModel?.label ?? activeModelId.split("/").pop() ?? "—"}
       </span>
-      {/* Other models (collapsed chip list) */}
       {models.length > 1 && (
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center gap-0.5 flex-wrap">
           {models
             .filter((m) => m.id !== activeModel?.id)
             .slice(0, 2)
             .map((m) => (
               <span
                 key={m.id}
-                className="text-[8px] font-mono text-muted-foreground/35 border border-border/30 rounded px-1 py-0 leading-tight truncate max-w-[80px]"
+                className="text-[8px] font-mono text-muted-foreground/30 border border-border/25 rounded px-0.5 py-0 leading-tight"
                 title={m.label}
               >
-                {m.label}
+                {m.label.split(/[\s-]/)[0]}
               </span>
             ))}
           {models.length > 3 && (
@@ -262,103 +251,333 @@ function Spinner({ size = 12 }: { size?: number }) {
   )
 }
 
-// ── Expanded detail row ───────────────────────────────────────────────────────
+// ── Expanded detail panel ─────────────────────────────────────────────────────
 
-function ExpandedRow({
+function ExpandedDetail({
   entry,
   result,
-  colSpan,
 }: {
   entry: ParsedEntry
   result: MultiKeyResult | null
-  colSpan: number
 }) {
   const models = PROVIDER_MODELS[entry.provider] ?? []
 
   return (
-    <tr className="bg-secondary/20 border-b border-border/30">
-      <td colSpan={colSpan} className="px-4 py-3">
-        <div className="flex flex-col gap-2.5 text-[11px]">
+    <div className="px-3 py-3 flex flex-col gap-3 bg-secondary/20 border-t border-border/20">
+      {/* Reply / Error */}
+      {result?.chatReply && (
+        <div className="flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Reply</span>
+          <p className="text-[11px] text-foreground/70 leading-relaxed">{result.chatReply}</p>
+        </div>
+      )}
+      {result?.error && !result.ok && (
+        <div className="flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">Error</span>
+          <p className="text-[10px] text-red-400/70 font-mono leading-relaxed break-all">{result.error}</p>
+        </div>
+      )}
 
-          {/* Reply / Error */}
-          {result?.chatReply && (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/40">Reply</span>
-              <p className="text-foreground/70 leading-relaxed line-clamp-3">{result.chatReply}</p>
-            </div>
-          )}
-          {result?.error && !result.ok && (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-red-400/50">Error</span>
-              <p className="text-red-400/70 font-mono text-[10px] leading-relaxed">{result.error}</p>
-            </div>
-          )}
-
-          {/* Models available */}
-          {models.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/40">
-                Available Models ({models.length})
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {models.map((m) => {
-                  const isActive = result?.modelUsed
-                    ? result.modelUsed === m.id
-                    : m.default
-                  return (
-                    <span
-                      key={m.id}
-                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded border leading-tight ${
-                        isActive
-                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                          : "border-border/40 text-muted-foreground/50"
-                      }`}
-                    >
-                      {m.label}
-                      {isActive && <span className="ml-1 opacity-60">✓</span>}
-                    </span>
-                  )
-                })}
+      {/* Token breakdown */}
+      {result?.tokenUsage && (
+        <div className="flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Token Usage</span>
+          <div className="flex items-center gap-4">
+            {result.tokenUsage.promptTokens !== null && (
+              <div className="flex flex-col items-start">
+                <span className="text-[8px] text-sky-400/60 font-bold uppercase tracking-wider">Input</span>
+                <span className="text-sm font-mono font-bold text-sky-400 tabular-nums">{result.tokenUsage.promptTokens.toLocaleString()}</span>
               </div>
-            </div>
-          )}
-
-          {/* Token breakdown */}
-          {result?.tokenUsage && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/40">Token Usage</span>
-              <div className="flex items-center gap-4">
-                {result.tokenUsage.promptTokens !== null && (
-                  <div className="flex flex-col items-start">
-                    <span className="text-[9px] text-sky-400/60 font-semibold uppercase tracking-wider">Input</span>
-                    <span className="text-[13px] font-mono font-bold text-sky-400">{result.tokenUsage.promptTokens.toLocaleString()}</span>
-                  </div>
-                )}
-                {result.tokenUsage.completionTokens !== null && (
-                  <div className="flex flex-col items-start">
-                    <span className="text-[9px] text-violet-400/60 font-semibold uppercase tracking-wider">Output</span>
-                    <span className="text-[13px] font-mono font-bold text-violet-400">{result.tokenUsage.completionTokens.toLocaleString()}</span>
-                  </div>
-                )}
-                {result.tokenUsage.totalTokens !== null && (
-                  <div className="flex flex-col items-start">
-                    <span className="text-[9px] text-muted-foreground/40 font-semibold uppercase tracking-wider">Total</span>
-                    <span className="text-[13px] font-mono font-bold text-foreground/60">{result.tokenUsage.totalTokens.toLocaleString()}</span>
-                  </div>
-                )}
+            )}
+            {result.tokenUsage.completionTokens !== null && (
+              <div className="flex flex-col items-start">
+                <span className="text-[8px] text-violet-400/60 font-bold uppercase tracking-wider">Output</span>
+                <span className="text-sm font-mono font-bold text-violet-400 tabular-nums">{result.tokenUsage.completionTokens.toLocaleString()}</span>
               </div>
-            </div>
-          )}
+            )}
+            {result.tokenUsage.totalTokens !== null && (
+              <div className="flex flex-col items-start">
+                <span className="text-[8px] text-muted-foreground/40 font-bold uppercase tracking-wider">Total</span>
+                <span className="text-sm font-mono font-bold text-foreground/60 tabular-nums">{result.tokenUsage.totalTokens.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-          {/* Model used */}
-          {result?.modelUsed && (
-            <div className="text-[9px] font-mono text-muted-foreground/40">
-              Model used: <span className="text-muted-foreground/60">{result.modelUsed}</span>
-            </div>
+      {/* Model used */}
+      {result?.modelUsed && (
+        <div className="text-[9px] font-mono text-muted-foreground/40">
+          Model: <span className="text-muted-foreground/60">{result.modelUsed}</span>
+        </div>
+      )}
+
+      {/* Available models */}
+      {models.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">
+            Available Models ({models.length})
+          </span>
+          <div className="flex flex-wrap gap-1">
+            {models.map((m) => {
+              const isActive = result?.modelUsed ? result.modelUsed === m.id : m.default
+              return (
+                <span
+                  key={m.id}
+                  className={`text-[9px] font-mono px-1.5 py-0.5 rounded border leading-tight ${
+                    isActive
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                      : "border-border/40 text-muted-foreground/45"
+                  }`}
+                >
+                  {m.label}
+                  {isActive && <span className="ml-1 opacity-60">✓</span>}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Mobile card row ───────────────────────────────────────────────────────────
+
+function MobileRow({
+  entry,
+  idx,
+  result,
+  isRunning,
+  isExpanded,
+  onToggle,
+  onRemove,
+}: {
+  entry: ParsedEntry
+  idx: number
+  result: MultiKeyResult | null
+  isRunning: boolean
+  isExpanded: boolean
+  onToggle: () => void
+  onRemove: () => void
+}) {
+  const providerInfo = PROVIDER_FORMATS.find((p) => p.id === entry.provider)
+  const models = PROVIDER_MODELS[entry.provider] ?? []
+  const defaultModel = models.find((m) => m.default) ?? models[0]
+  const activeModelId = result?.modelUsed ?? defaultModel?.id ?? ""
+  const activeModel = models.find((m) => m.id === activeModelId) ?? defaultModel
+
+  const rowBg = result?.ok
+    ? "bg-emerald-500/[0.03] border-l-2 border-l-emerald-500/30"
+    : result && !result.ok
+      ? "bg-red-500/[0.03] border-l-2 border-l-red-500/30"
+      : "border-l-2 border-l-border/20"
+
+  return (
+    <div className={`border-b border-border/40 last:border-0 ${rowBg}`}>
+      {/* Main row */}
+      <div
+        className="flex items-start gap-2.5 px-3 py-2.5 cursor-pointer active:bg-secondary/20"
+        onClick={onToggle}
+      >
+        {/* Index */}
+        <span className="text-[10px] font-mono text-muted-foreground/30 w-5 flex-shrink-0 pt-0.5 text-right">{idx + 1}</span>
+
+        {/* Provider + key + model */}
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {entry.unknown ? (
+              <span className="text-[11px] font-semibold text-yellow-400/70">? unknown</span>
+            ) : (
+              <>
+                <span className="text-base leading-none select-none" aria-hidden>{providerInfo?.flag}</span>
+                <span className="text-[11px] font-semibold text-foreground truncate">{providerInfo?.label ?? entry.provider}</span>
+                {entry.detected && (
+                  <span className="text-[8px] px-1 rounded bg-primary/10 text-primary font-bold">auto</span>
+                )}
+              </>
+            )}
+          </div>
+          <span className="text-[10px] font-mono text-muted-foreground/45">{maskKey(entry.apiKey)}</span>
+          {/* Model line */}
+          {!entry.unknown && activeModel && (
+            <span className="text-[9px] text-muted-foreground/50 truncate max-w-[160px]">
+              {isRunning ? (
+                <span className="inline-flex items-center gap-1"><Spinner size={8} /> testing…</span>
+              ) : (
+                activeModel.label
+              )}
+            </span>
           )}
         </div>
-      </td>
-    </tr>
+
+        {/* Right side: status + tokens */}
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          {isRunning ? (
+            <Spinner size={12} />
+          ) : (
+            <>
+              <StatusPill result={result} />
+              {result?.tokenUsage && (
+                <div className="flex items-center gap-1.5 text-[9px] font-mono tabular-nums">
+                  <span className="text-sky-400/70">+{result.tokenUsage.promptTokens ?? 0}</span>
+                  <span className="text-violet-400/70">-{result.tokenUsage.completionTokens ?? 0}</span>
+                </div>
+              )}
+              {result && !result.tokenUsage && (
+                <span className="text-[9px] text-muted-foreground/25">—</span>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Remove button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onRemove() }}
+          className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded text-muted-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-colors self-center"
+          title="Remove"
+          aria-label="Remove entry"
+        >
+          <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Expanded */}
+      {isExpanded && <ExpandedDetail entry={entry} result={result} />}
+    </div>
+  )
+}
+
+// ── Desktop table row ─────────────────────────────────────────────────────────
+
+function DesktopRow({
+  entry,
+  idx,
+  result,
+  isRunning,
+  isExpanded,
+  onToggle,
+  onRemove,
+}: {
+  entry: ParsedEntry
+  idx: number
+  result: MultiKeyResult | null
+  isRunning: boolean
+  isExpanded: boolean
+  onToggle: () => void
+  onRemove: () => void
+}) {
+  const providerInfo = PROVIDER_FORMATS.find((p) => p.id === entry.provider)
+
+  const rowBg = result?.ok
+    ? "bg-emerald-500/[0.02] hover:bg-emerald-500/[0.04]"
+    : result && !result.ok
+      ? "bg-red-500/[0.02] hover:bg-red-500/[0.04]"
+      : "hover:bg-secondary/20"
+
+  return (
+    <>
+      <tr
+        onClick={() => (result || entry.unknown) && onToggle()}
+        className={`border-b border-border/40 last:border-0 transition-colors ${rowBg} ${(result || entry.unknown) ? "cursor-pointer" : ""}`}
+      >
+        {/* # */}
+        <td className="px-3 py-2.5 text-muted-foreground/30 font-mono text-[10px] w-8">{idx + 1}</td>
+
+        {/* Provider */}
+        <td className="px-2 py-2.5 w-36">
+          {entry.unknown ? (
+            <span className="text-yellow-400/70 font-mono text-[10px]">? unknown</span>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm leading-none select-none flex-shrink-0" aria-hidden>{providerInfo?.flag}</span>
+              <div className="flex flex-col gap-0 min-w-0">
+                <span className="font-semibold text-foreground text-[10px] truncate leading-tight">
+                  {providerInfo?.label ?? entry.provider}
+                </span>
+                {entry.detected && (
+                  <span className="text-[8px] text-primary/40 font-mono">auto</span>
+                )}
+              </div>
+            </div>
+          )}
+        </td>
+
+        {/* Key */}
+        <td className="px-2 py-2.5 font-mono text-muted-foreground/45 text-[10px] w-32 max-w-[128px]">
+          <span className="truncate block">{maskKey(entry.apiKey)}</span>
+        </td>
+
+        {/* Model */}
+        <td className="px-2 py-2.5 w-32">
+          {isRunning ? (
+            <div className="flex items-center gap-1.5">
+              <Spinner size={9} />
+              <span className="text-[9px] text-muted-foreground/40">testing…</span>
+            </div>
+          ) : (
+            <ModelCell provider={entry.provider} result={result ?? null} />
+          )}
+        </td>
+
+        {/* Status */}
+        <td className="px-2 py-2.5 w-20">
+          {isRunning ? <Spinner size={10} /> : <StatusPill result={result ?? null} />}
+        </td>
+
+        {/* Tokens */}
+        <td className="px-2 py-2.5 w-24">
+          {isRunning ? (
+            <span className="text-[10px] text-muted-foreground/20">…</span>
+          ) : (
+            <TokenBadge usage={result?.tokenUsage} />
+          )}
+        </td>
+
+        {/* Actions */}
+        <td className="px-2 py-2.5 w-10">
+          <div className="flex items-center gap-1.5">
+            {(result || entry.unknown) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggle() }}
+                className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"
+                title={isExpanded ? "Collapse" : "Expand"}
+                aria-label={isExpanded ? "Collapse row" : "Expand row"}
+              >
+                <svg
+                  width="9" height="9" viewBox="0 0 10 10" fill="none"
+                  className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                  aria-hidden
+                >
+                  <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove() }}
+              className="text-muted-foreground/20 hover:text-destructive transition-colors"
+              title="Remove"
+              aria-label="Remove entry"
+            >
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+                <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      {/* Expanded detail row */}
+      {isExpanded && (
+        <tr className="border-b border-border/30">
+          <td colSpan={7} className="p-0">
+            <ExpandedDetail entry={entry} result={result ?? null} />
+          </td>
+        </tr>
+      )}
+    </>
   )
 }
 
@@ -469,7 +688,7 @@ export default function MultiKeyBatch() {
 
   function exportResults() {
     if (!results.length) return
-    const header = `# Multi-Key Batch Test Results\n# Generated: ${new Date().toISOString()}\n# Format: Provider | Key | Status | Code | Model | Tokens (in+out) | Duration | Reply\n\n`
+    const header = `# Multi-Key Batch Test Results\n# Generated: ${new Date().toISOString()}\n# Format: Provider | Key | Status | Code | Model | Tokens (in+out=total) | Duration | Reply\n\n`
     const lines = results.map((r) => {
       const tokens = r.tokenUsage
         ? `${r.tokenUsage.promptTokens ?? "?"}+${r.tokenUsage.completionTokens ?? "?"}=${r.tokenUsage.totalTokens ?? "?"}`
@@ -485,47 +704,53 @@ export default function MultiKeyBatch() {
     URL.revokeObjectURL(url)
   }
 
-  const validCount = entries.filter((e) => !e.unknown).length
-  const unknownCount = entries.filter((e) => e.unknown).length
-
-  // Stats for summary bar
-  const totalTokens = results.reduce((acc, r) => acc + (r.tokenUsage?.totalTokens ?? 0), 0)
-  const avgLatency = results.length
+  const validCount    = entries.filter((e) => !e.unknown).length
+  const unknownCount  = entries.filter((e) => e.unknown).length
+  const totalTokens   = results.reduce((acc, r) => acc + (r.tokenUsage?.totalTokens ?? 0), 0)
+  const avgLatency    = results.length
     ? Math.round(results.reduce((a, r) => a + r.durationMs, 0) / results.length)
     : 0
+
+  function getResult(entry: ParsedEntry) {
+    return results.find(
+      (r) => r.provider === entry.provider && r.apiKeyMasked.startsWith(entry.apiKey.slice(0, 8))
+    ) ?? null
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
-        <div>
-          <p className="text-xs font-semibold text-foreground tracking-tight">Multi-Key Batch Test</p>
-          <p className="text-[10px] text-muted-foreground">
-            Import a .txt file with API keys — all providers tested simultaneously
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {results.length > 0 && (
-            <button
-              onClick={exportResults}
-              className="text-[10px] font-medium text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1 transition-colors"
-            >
-              Export .txt
-            </button>
-          )}
-          {entries.length > 0 && (
-            <button
-              onClick={() => { setEntries([]); setResults([]); setSummary(null); setExpandedIdx(new Set()) }}
-              className="text-[10px] font-medium text-muted-foreground hover:text-destructive border border-border rounded px-2 py-1 transition-colors"
-            >
-              Clear
-            </button>
-          )}
+      <div className="flex-shrink-0 border-b border-border px-3 sm:px-4 py-2.5">
+        <div className="flex items-start sm:items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-foreground tracking-tight">Multi-Key Batch Test</p>
+            <p className="text-[10px] text-muted-foreground leading-snug">
+              Import a .txt file — all providers tested simultaneously
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {results.length > 0 && (
+              <button
+                onClick={exportResults}
+                className="text-[10px] font-medium text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1 transition-colors whitespace-nowrap"
+              >
+                Export .txt
+              </button>
+            )}
+            {entries.length > 0 && (
+              <button
+                onClick={() => { setEntries([]); setResults([]); setSummary(null); setExpandedIdx(new Set()) }}
+                className="text-[10px] font-medium text-muted-foreground hover:text-destructive border border-border rounded px-2 py-1 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 px-4 py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 px-3 sm:px-4 py-3">
 
         {/* ── Drop zone ──────────────────────────────────────────────────────── */}
         {entries.length === 0 && (
@@ -534,24 +759,24 @@ export default function MultiKeyBatch() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onClick={() => fileRef.current?.click()}
-            className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-10 px-4 text-center select-none ${
+            className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-8 px-4 text-center select-none ${
               dragOver
                 ? "border-primary/60 bg-primary/5"
                 : "border-border hover:border-border/80 hover:bg-secondary/30"
             }`}
           >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/40" aria-hidden>
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/40" aria-hidden>
               <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
               <path d="M10 10h12M10 14h12M10 18h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <div>
-              <p className="text-sm font-medium text-foreground">Drop a .txt file or click to browse</p>
-              <p className="text-[11px] text-muted-foreground mt-1">One key per line. Formats accepted:</p>
+              <p className="text-sm font-medium text-foreground">Drop a .txt file or tap to browse</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">One API key per line</p>
               <div className="mt-2 text-left inline-block bg-secondary/50 rounded px-3 py-2 text-[10px] font-mono text-muted-foreground space-y-0.5">
-                <p className="text-foreground/60"># Format options:</p>
-                <p>provider:apikey &nbsp;&nbsp;&nbsp;&nbsp;→ &nbsp;anthropic:sk-ant-...</p>
-                <p>provider apikey &nbsp;&nbsp;&nbsp;&nbsp;→ &nbsp;openai sk-...</p>
-                <p>apikey &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ &nbsp;sk-or-v1-... (auto-detect)</p>
+                <p className="text-foreground/50"># Accepted formats:</p>
+                <p>anthropic:sk-ant-...</p>
+                <p>openai sk-proj-...</p>
+                <p>sk-or-v1-... &nbsp;&nbsp;(auto-detect)</p>
               </div>
             </div>
             <input
@@ -588,7 +813,7 @@ export default function MultiKeyBatch() {
                 <button
                   onClick={handleManualApply}
                   disabled={!manualInput.trim()}
-                  className="self-start text-[11px] font-medium bg-primary text-primary-foreground rounded px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  className="self-start text-[11px] font-semibold bg-primary text-primary-foreground rounded px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
                 >
                   Load keys
                 </button>
@@ -601,10 +826,10 @@ export default function MultiKeyBatch() {
         <div className="rounded-xl border border-border overflow-hidden flex-shrink-0">
           <button
             onClick={() => setShowGuide((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2.5 bg-secondary/40 hover:bg-secondary/60 transition-colors"
+            className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 bg-secondary/40 hover:bg-secondary/60 transition-colors"
           >
             <span className="flex items-center gap-2 text-[11px] font-semibold text-foreground">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-muted-foreground" aria-hidden>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-muted-foreground flex-shrink-0" aria-hidden>
                 <rect x="1" y="2" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
                 <path d="M3 5h6M3 7h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
@@ -618,7 +843,7 @@ export default function MultiKeyBatch() {
                   className={`text-[10px] font-medium px-2 py-0.5 rounded border transition-colors ${
                     copiedId === "all"
                       ? "border-emerald-400/40 text-emerald-400 bg-emerald-400/10"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-border/80"
+                      : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {copiedId === "all" ? "Copied!" : "Copy All"}
@@ -626,29 +851,29 @@ export default function MultiKeyBatch() {
               )}
               <svg
                 width="10" height="10" viewBox="0 0 10 10" fill="none"
-                className={`text-muted-foreground/60 transition-transform ${showGuide ? "rotate-180" : ""}`}
+                className={`text-muted-foreground/60 transition-transform flex-shrink-0 ${showGuide ? "rotate-180" : ""}`}
                 aria-hidden
               >
                 <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </button>
+
           {showGuide && (
-            <div className="overflow-y-auto max-h-72 divide-y divide-border/40">
+            <div className="overflow-y-auto max-h-64 divide-y divide-border/40">
               {PROVIDER_FORMATS.map((pf) => {
                 const models = PROVIDER_MODELS[pf.id] ?? []
                 return (
-                  <div key={pf.id} className="flex items-start gap-3 px-3 py-2.5 hover:bg-secondary/20 transition-colors group">
+                  <div key={pf.id} className="flex items-start gap-2.5 px-3 py-2 hover:bg-secondary/20 transition-colors group">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-base leading-none select-none" aria-hidden>{pf.flag}</span>
+                        <span className="text-sm leading-none select-none flex-shrink-0" aria-hidden>{pf.flag}</span>
                         <span className="text-[11px] font-medium text-foreground">{pf.label}</span>
                         {pf.autoDetect && (
-                          <span className="text-[8px] px-1 rounded bg-primary/10 text-primary font-semibold">auto</span>
+                          <span className="text-[8px] px-1 rounded bg-primary/10 text-primary font-bold">auto</span>
                         )}
                       </div>
-                      <code className="text-[10px] font-mono text-muted-foreground/60 block mt-0.5">{pf.example}</code>
-                      {/* Models list inline */}
+                      <code className="text-[10px] font-mono text-muted-foreground/55 block mt-0.5 break-all">{pf.example}</code>
                       {models.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {models.map((m) => (
@@ -669,10 +894,10 @@ export default function MultiKeyBatch() {
                     <button
                       onClick={() => copyText(pf.example, pf.id)}
                       title={`Copy format for ${pf.label}`}
-                      className={`flex-shrink-0 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-all ${
+                      className={`flex-shrink-0 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-all mt-0.5 ${
                         copiedId === pf.id
                           ? "border-emerald-400/40 text-emerald-400 bg-emerald-400/10"
-                          : "border-border/60 text-muted-foreground/50 hover:text-foreground hover:border-border opacity-0 group-hover:opacity-100"
+                          : "border-border/60 text-muted-foreground/50 hover:text-foreground hover:border-border opacity-0 group-hover:opacity-100 sm:opacity-100"
                       }`}
                     >
                       {copiedId === pf.id ? "Copied" : "Copy"}
@@ -689,9 +914,9 @@ export default function MultiKeyBatch() {
           <div className="flex flex-col gap-3">
 
             {/* Prompt + Run */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <div className="flex-1 w-full">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 block mb-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+              <div className="flex-1 min-w-0">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 block mb-1">
                   Test Prompt
                 </label>
                 <input
@@ -699,13 +924,13 @@ export default function MultiKeyBatch() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="halo"
-                  className="w-full rounded-md border border-border bg-background text-foreground text-[12px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                  className="w-full rounded-lg border border-border bg-background text-foreground text-[12px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
                 />
               </div>
               <button
                 onClick={runAll}
                 disabled={running || validCount === 0}
-                className="flex-shrink-0 flex items-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity mt-5 sm:mt-0"
+                className="flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
               >
                 {running ? <Spinner size={12} /> : (
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
@@ -716,42 +941,38 @@ export default function MultiKeyBatch() {
               </button>
             </div>
 
-            {/* ── Summary dashboard ────────────────────────────────────────── */}
+            {/* ── Summary stats ─────────────────────────────────────────────── */}
             {summary && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {/* Passed */}
-                <div className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                  <span className="text-[9px] font-semibold uppercase tracking-widest text-emerald-400/50">Passed</span>
-                  <span className="text-lg font-bold font-mono text-emerald-400 leading-none">{summary.passed}</span>
-                  <span className="text-[9px] text-emerald-400/40">{Math.round((summary.passed / results.length) * 100)}%</span>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400/50">Passed</span>
+                  <span className="text-xl font-bold font-mono text-emerald-400 leading-none tabular-nums">{summary.passed}</span>
+                  <span className="text-[9px] text-emerald-400/40 tabular-nums">{Math.round((summary.passed / results.length) * 100)}%</span>
                 </div>
-                {/* Failed */}
-                <div className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/20">
-                  <span className="text-[9px] font-semibold uppercase tracking-widest text-red-400/50">Failed</span>
-                  <span className="text-lg font-bold font-mono text-red-400 leading-none">{summary.failed}</span>
-                  <span className="text-[9px] text-red-400/40">{Math.round((summary.failed / results.length) * 100)}%</span>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-red-500/5 border border-red-500/20">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">Failed</span>
+                  <span className="text-xl font-bold font-mono text-red-400 leading-none tabular-nums">{summary.failed}</span>
+                  <span className="text-[9px] text-red-400/40 tabular-nums">{Math.round((summary.failed / results.length) * 100)}%</span>
                 </div>
-                {/* Total tokens */}
-                <div className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-secondary/50 border border-border">
-                  <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/40">Total Tokens</span>
-                  <span className="text-lg font-bold font-mono text-foreground/70 leading-none">
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Total Tokens</span>
+                  <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">
                     {totalTokens > 0 ? totalTokens.toLocaleString() : "—"}
                   </span>
-                  <span className="text-[9px] text-muted-foreground/30">across all keys</span>
+                  <span className="text-[9px] text-muted-foreground/30">all keys</span>
                 </div>
-                {/* Avg latency */}
-                <div className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-secondary/50 border border-border">
-                  <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/40">Avg Latency</span>
-                  <span className="text-lg font-bold font-mono text-foreground/70 leading-none">{avgLatency}ms</span>
-                  <span className="text-[9px] text-muted-foreground/30">{summary.totalMs}ms total</span>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Avg Latency</span>
+                  <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">{avgLatency}ms</span>
+                  <span className="text-[9px] text-muted-foreground/30 tabular-nums">{summary.totalMs}ms total</span>
                 </div>
               </div>
             )}
 
             {/* Error */}
             {error && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20 text-[11px] text-destructive">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0" aria-hidden>
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-[11px] text-destructive">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0 mt-0.5" aria-hidden>
                   <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.3" />
                   <path d="M6 3.5v3M6 8v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                 </svg>
@@ -759,160 +980,97 @@ export default function MultiKeyBatch() {
               </div>
             )}
 
-            {/* ── Main results table ────────────────────────────────────────── */}
-            <div className="rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-[11px]">
-                <thead>
-                  <tr className="border-b border-border bg-secondary/60">
-                    <th className="text-left px-2 py-2.5 font-semibold text-muted-foreground/50 uppercase tracking-wider text-[8px] w-7">#</th>
-                    <th className="text-left px-2 py-2.5 font-semibold text-muted-foreground/50 uppercase tracking-wider text-[8px]">Provider</th>
-                    <th className="text-left px-2 py-2.5 font-semibold text-muted-foreground/50 uppercase tracking-wider text-[8px]">Key</th>
-                    <th className="text-left px-2 py-2.5 font-semibold text-muted-foreground/50 uppercase tracking-wider text-[8px]">Model</th>
-                    <th className="text-left px-2 py-2.5 font-semibold text-muted-foreground/50 uppercase tracking-wider text-[8px]">Status</th>
-                    <th className="text-left px-2 py-2.5 font-semibold text-muted-foreground/50 uppercase tracking-wider text-[8px]">
-                      <div className="flex flex-col">
-                        <span>Tokens</span>
-                        <span className="text-[7px] font-normal text-muted-foreground/30 normal-case tracking-normal flex gap-1.5">
-                          <span className="text-sky-400/50">in</span>
-                          <span className="text-violet-400/50">out</span>
-                        </span>
-                      </div>
-                    </th>
-                    <th className="w-7 px-1.5 py-2.5" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {entries.map((entry, idx) => {
-                    const res = results.find(
-                      (r) => r.provider === entry.provider && r.apiKeyMasked.startsWith(entry.apiKey.slice(0, 8))
-                    )
-                    const isRunning = running && !res
-                    const isExpanded = expandedIdx.has(idx)
-                    const providerInfo = PROVIDER_FORMATS.find((p) => p.id === entry.provider)
+            {/* ── Entry count summary ───────────────────────────────────────── */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] text-muted-foreground/50">
+                {entries.length} {entries.length === 1 ? "entry" : "entries"} loaded
+              </span>
+              {validCount !== entries.length && (
+                <span className="text-[10px] text-emerald-400/60">{validCount} valid</span>
+              )}
+              {unknownCount > 0 && (
+                <span className="text-[10px] text-yellow-400/60">{unknownCount} unknown</span>
+              )}
+            </div>
 
-                    return (
-                      <>
-                        <tr
-                          key={`row-${idx}`}
-                          onClick={() => (res || entry.unknown) && toggleExpand(idx)}
-                          className={`border-b border-border/40 last:border-0 transition-colors ${
-                            res?.ok
-                              ? "bg-emerald-500/[0.02] hover:bg-emerald-500/[0.04]"
-                              : res && !res.ok
-                                ? "bg-red-500/[0.02] hover:bg-red-500/[0.04]"
-                                : "hover:bg-secondary/20"
-                          } ${(res || entry.unknown) ? "cursor-pointer" : ""}`}
-                        >
-                          {/* # */}
-                          <td className="px-2 py-2.5 text-muted-foreground/30 font-mono text-[10px]">{idx + 1}</td>
+            {/* ── Mobile card list ──────────────────────────────────────────── */}
+            <div className="block sm:hidden rounded-xl border border-border overflow-hidden">
+              {/* Mobile header */}
+              <div className="flex items-center justify-between px-3 py-2 bg-secondary/60 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40 w-5">#</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Provider / Key / Model</span>
+                </div>
+                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Status / Tokens</span>
+              </div>
+              {entries.map((entry, idx) => {
+                const res = getResult(entry)
+                const isRunning = running && !res
+                const isExpanded = expandedIdx.has(idx)
+                return (
+                  <MobileRow
+                    key={idx}
+                    entry={entry}
+                    idx={idx}
+                    result={res}
+                    isRunning={isRunning}
+                    isExpanded={isExpanded}
+                    onToggle={() => toggleExpand(idx)}
+                    onRemove={() => removeEntry(idx)}
+                  />
+                )
+              })}
+            </div>
 
-                          {/* Provider */}
-                          <td className="px-2 py-2.5">
-                            {entry.unknown ? (
-                              <span className="text-yellow-400/70 font-mono text-[10px]">? unknown</span>
-                            ) : (
-                              <div className="flex flex-col gap-0.5">
-                                <span className="font-semibold text-foreground text-[10px] leading-tight">
-                                  {providerInfo?.label ?? entry.provider}
-                                </span>
-                                {providerInfo?.country && (
-                                  <span className="text-[8px] text-muted-foreground/35 font-mono uppercase">{providerInfo.country}</span>
-                                )}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Key */}
-                          <td className="px-2 py-2.5 font-mono text-muted-foreground/50 text-[10px]">
-                            {entry.apiKey.slice(0, 8)}
-                            {"•".repeat(Math.min(6, Math.max(0, entry.apiKey.length - 8)))}
-                            {entry.detected && (
-                              <span className="ml-1 text-[8px] text-primary/40">auto</span>
-                            )}
-                          </td>
-
-                          {/* Model */}
-                          <td className="px-2 py-2.5 max-w-[110px]">
-                            {isRunning ? (
-                              <div className="flex items-center gap-1.5">
-                                <Spinner size={10} />
-                                <span className="text-[9px] text-muted-foreground/40">testing…</span>
-                              </div>
-                            ) : (
-                              <ModelCell provider={entry.provider} result={res ?? null} />
-                            )}
-                          </td>
-
-                          {/* Status */}
-                          <td className="px-2 py-2.5">
-                            {isRunning ? (
-                              <Spinner size={10} />
-                            ) : (
-                              <StatusPill result={res ?? null} />
-                            )}
-                          </td>
-
-                          {/* Tokens */}
-                          <td className="px-2 py-2.5">
-                            {isRunning ? (
-                              <span className="text-[10px] text-muted-foreground/20">…</span>
-                            ) : (
-                              <TokenBadge usage={res?.tokenUsage} />
-                            )}
-                          </td>
-
-                          {/* Expand / Remove */}
-                          <td className="px-1.5 py-2.5">
-                            <div className="flex flex-col items-center gap-1">
-                              {(res || entry.unknown) && (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); toggleExpand(idx) }}
-                                  className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"
-                                  title={isExpanded ? "Collapse" : "Expand"}
-                                  aria-label={isExpanded ? "Collapse row" : "Expand row"}
-                                >
-                                  <svg
-                                    width="9" height="9" viewBox="0 0 10 10" fill="none"
-                                    className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                                    aria-hidden
-                                  >
-                                    <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </button>
-                              )}
-                              <button
-                                onClick={(e) => { e.stopPropagation(); removeEntry(idx) }}
-                                className="text-muted-foreground/20 hover:text-destructive transition-colors"
-                                title="Remove"
-                                aria-label="Remove entry"
-                              >
-                                <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
-                                  <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-
-                        {/* Expanded detail row */}
-                        {isExpanded && (
-                          <ExpandedRow
-                            key={`expand-${idx}`}
-                            entry={entry}
-                            result={res ?? null}
-                            colSpan={7}
-                          />
-                        )}
-                      </>
-                    )
-                  })}
-                </tbody>
-              </table>
+            {/* ── Desktop table ─────────────────────────────────────────────── */}
+            <div className="hidden sm:block rounded-xl border border-border overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px] min-w-[520px]">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/60">
+                      <th className="text-left px-3 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-8">#</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-36">Provider</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-32">Key</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-32">Model</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-20">Status</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-24">
+                        <div className="flex flex-col gap-0.5">
+                          <span>Tokens</span>
+                          <span className="flex gap-1.5 font-normal text-[7px] normal-case tracking-normal">
+                            <span className="text-sky-400/50">in</span>
+                            <span className="text-violet-400/50">out</span>
+                          </span>
+                        </div>
+                      </th>
+                      <th className="w-10 px-2 py-2.5" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entries.map((entry, idx) => {
+                      const res = getResult(entry)
+                      const isRunning = running && !res
+                      const isExpanded = expandedIdx.has(idx)
+                      return (
+                        <DesktopRow
+                          key={idx}
+                          entry={entry}
+                          idx={idx}
+                          result={res}
+                          isRunning={isRunning}
+                          isExpanded={isExpanded}
+                          onToggle={() => toggleExpand(idx)}
+                          onRemove={() => removeEntry(idx)}
+                        />
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Unknown keys warning */}
             {unknownCount > 0 && (
-              <p className="text-[10px] text-yellow-400/70 border border-yellow-400/15 bg-yellow-400/5 rounded px-3 py-2">
+              <p className="text-[10px] text-yellow-400/70 border border-yellow-400/15 bg-yellow-400/5 rounded px-3 py-2 leading-relaxed">
                 {unknownCount} {unknownCount === 1 ? "entry" : "entries"} skipped — provider could not be detected. Use format:{" "}
                 <code className="font-mono">provider:apikey</code>
               </p>
