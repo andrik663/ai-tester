@@ -9,6 +9,7 @@ import {
   type WorkingKeyRecord,
 } from "@/lib/working-keys-store"
 import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
+import ExportApiPanel from "@/components/export-api-panel"
 
 // Build a ready-to-run curl command for a working key record
 function buildCurlCommand(record: WorkingKeyRecord): string {
@@ -395,8 +396,11 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
       </div>
 
       <p className="text-[9px] text-muted-foreground/40 text-center">
-        Stored locally in browser. Keys are never sent to any server.
+        Stored locally in browser. Raw keys are never exposed via the API.
       </p>
+
+      {/* Export API section */}
+      <ExportApiPanel keys={records} />
     </div>
   )
 }
