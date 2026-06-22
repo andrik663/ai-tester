@@ -10,6 +10,7 @@ import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
 import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
+import KeyValidator from "@/components/key-validator"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
@@ -1235,7 +1236,7 @@ function VideoTabIcon() {
   )
 }
 
-// ── Log level styles ───────────────────��─────────────────────��────────────────
+// ── Log level styles ───────────────────��─��───────────────────��────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -1342,7 +1343,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("vision")
+  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("chat")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
@@ -1639,10 +1640,19 @@ export default function ManualKeyTester() {
         ${configOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
 
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-          <div>
-            <p className="text-xs font-semibold text-foreground">Configuration</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Provider &amp; API key settings</p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center flex-shrink-0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-primary">
+                <circle cx="7" cy="12" r="4" />
+                <path d="M11 12h9M17 10v4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-foreground leading-tight">API Key Tester</p>
+              <p className="text-[10px] text-muted-foreground">40+ providers supported</p>
+            </div>
           </div>
           <button
             onClick={() => setConfigOpen(false)}
@@ -1653,6 +1663,17 @@ export default function ManualKeyTester() {
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
+        </div>
+
+        {/* Quick Key Validator — always visible at top */}
+        <div className="px-4 py-4 border-b border-border flex-shrink-0 bg-background/30">
+          <div className="flex items-center gap-1.5 mb-3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-primary">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Quick Validate</p>
+          </div>
+          <KeyValidator compact />
         </div>
 
         <div className="flex-1 px-4 py-4 flex flex-col gap-5">
@@ -2062,6 +2083,25 @@ export default function ManualKeyTester() {
             </svg>
           </button>
 
+          {/* Chat tab */}
+          <button
+            onClick={() => setActiveTab("chat")}
+            title="Chat — Test with prompt"
+            className={`flex items-center gap-1.5 px-2.5 h-8 rounded text-[10px] font-semibold transition-colors mr-1 ${
+              activeTab === "chat"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 flex-shrink-0">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Chat
+          </button>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-border flex-shrink-0 mx-0.5" />
+
           {/* API Tester tabs — icon only */}
           <div className="flex items-center gap-0.5 py-1.5 mr-1">
             {([
@@ -2186,7 +2226,7 @@ export default function ManualKeyTester() {
             </span>
           )}
 
-          {/* Response status — shown for Vision and OCR tabs only */}
+          {/* Response status — shown for Vision tab only */}
           {activeTab === "vision" && visionResult && (
             <div className="flex items-center gap-2 ml-auto flex-shrink-0 pr-1">
               {visionResult.tokenUsage?.totalTokens && (
@@ -2200,6 +2240,147 @@ export default function ManualKeyTester() {
             </div>
           )}
         </div>
+
+        {/* ── CHAT TAB ─────────────────────────────────────────────────────── */}
+        {activeTab === "chat" && (
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+
+            {/* Chat messages area */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 flex flex-col gap-3">
+              {chatHistory.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-12">
+                  <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center flex-shrink-0 ${selectedPreset.color}`}>
+                    <ProviderLogo providerId={selectedPreset.id} className="w-6 h-6" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
+                    <p className="text-[11px] text-muted-foreground max-w-xs leading-relaxed">
+                      Send a message to test your API key with a real request. Responses appear here.
+                    </p>
+                    {!apiKey && (
+                      <p className="text-[10px] text-yellow-400/80 mt-1.5 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                        Enter your API key in the Quick Validate section first.
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center max-w-sm">
+                    {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setPrompt(s)}
+                        className="text-[10px] px-3 py-1.5 rounded-full border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {chatHistory.map((msg, i) => (
+                <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-sm"
+                      : "bg-card border border-border text-foreground rounded-bl-sm"
+                  }`}>
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground/50 px-1">
+                    {msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}
+                  </span>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex items-start gap-2">
+                  <div className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${selectedPreset.color}`}>
+                    <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4" />
+                  </div>
+                  <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-2">
+                    <SpinnerIcon />
+                    <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Result stats bar */}
+              {result && (
+                <div className={`flex flex-wrap items-center gap-3 px-3 py-2 rounded-xl border text-[10px] font-mono ${
+                  result.ok ? "border-green-400/20 bg-green-400/5" : "border-red-400/20 bg-red-400/5"
+                }`}>
+                  <span className={`font-semibold ${result.ok ? "text-green-400" : "text-red-400"}`}>
+                    HTTP {result.status}
+                  </span>
+                  <span className="text-muted-foreground">{result.durationMs}ms</span>
+                  {result.tokenUsage?.promptTokens !== undefined && (
+                    <span className="text-muted-foreground">in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span></span>
+                  )}
+                  {result.tokenUsage?.completionTokens !== undefined && (
+                    <span className="text-muted-foreground">out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span></span>
+                  )}
+                  {/* Rate limit quick view */}
+                  {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
+                    <span className="text-muted-foreground">
+                      req left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
+                    </span>
+                  )}
+                  {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
+                    <span className="text-muted-foreground">
+                      tok left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
+                    </span>
+                  )}
+                  {/* cURL copy */}
+                  {result.curlFull && (
+                    <button
+                      onClick={copyCurlFull}
+                      className="ml-auto flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <CopyIcon />
+                      {copiedCurlFull ? <span className="text-green-400">Copied</span> : "cURL"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Chat input */}
+            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key first..."}
+                  disabled={loading || !apiKey.trim()}
+                  rows={2}
+                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
+                />
+                <button
+                  onClick={runTest}
+                  disabled={!apiKey.trim() || !prompt.trim() || loading}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 min-w-[80px] h-[46px]"
+                >
+                  {loading ? <SpinnerIcon /> : <SendIcon />}
+                  {loading ? "..." : "Send"}
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-1.5">
+                <p className="text-[9px] text-muted-foreground/40">Shift+Enter for newline</p>
+                {chatHistory.length > 0 && (
+                  <button
+                    onClick={() => { setChatHistory([]); setResult(null) }}
+                    className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  >
+                    Clear chat
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── VISION TAB ────────────��──────────────────────────────────��───── */}
         {activeTab === "vision" && (
