@@ -10,7 +10,6 @@ import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
 import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
-import KeyValidator from "@/components/key-validator"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
 
@@ -1341,6 +1340,7 @@ export default function ManualKeyTester() {
   const [showBodyEditor, setShowBodyEditor] = useState(false)
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
+  const [copiedShare, setCopiedShare] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
@@ -1418,7 +1418,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ────────────────────────────────────────────────────
+  // ── Vision / OCR helpers ───���────────────────────────────────────────────────
 
   function handleImageFile(
     file: File,
@@ -1620,6 +1620,22 @@ export default function ManualKeyTester() {
     }).catch(() => {})
   }
 
+  function shareResult() {
+    if (!result) return
+    const lines = [
+      `API Key Test Result — ${selectedPreset.name}`,
+      `Status: ${result.ok ? "VALID" : "INVALID"} (HTTP ${result.status})`,
+      result.durationMs !== undefined ? `Latency: ${result.durationMs}ms` : null,
+      result.tokenUsage?.totalTokens !== undefined ? `Total Tokens: ${result.tokenUsage.totalTokens}` : null,
+      result.tokenUsage?.promptTokens !== undefined ? `Prompt: ${result.tokenUsage.promptTokens} / Completion: ${result.tokenUsage.completionTokens}` : null,
+      result.curlFull ? `\ncURL:\n${result.curlFull}` : null,
+    ].filter(Boolean).join("\n")
+    copyToClipboard(lines).then(() => {
+      setCopiedShare(true)
+      setTimeout(() => setCopiedShare(false), 2000)
+    }).catch(() => {})
+  }
+
   return (
     <div className="flex h-full bg-background text-foreground font-sans overflow-hidden relative antialiased">
 
@@ -1664,17 +1680,6 @@ export default function ManualKeyTester() {
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-        </div>
-
-        {/* Quick Key Validator — always visible at top */}
-        <div className="px-4 py-4 border-b border-border flex-shrink-0">
-          <div className="flex items-center gap-1.5 mb-3">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-primary">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">Quick Validate</p>
-          </div>
-          <KeyValidator compact />
         </div>
 
         <div className="flex-1 px-4 py-4 flex flex-col gap-5">
@@ -1753,9 +1758,36 @@ export default function ManualKeyTester() {
               </button>
             </div>
             {apiKey && (
-              <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
-                {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
+                  {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
+                </p>
+                {result && (
+                  <button
+                    onClick={shareResult}
+                    title="Copy test result to clipboard"
+                    className="flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors flex-shrink-0"
+                  >
+                    {copiedShare ? (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span className="text-green-400">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                          <polyline points="16 6 12 2 8 6" />
+                          <line x1="12" y1="2" x2="12" y2="15" />
+                        </svg>
+                        Share
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             )}
             {/* Create API key link */}
             {selectedPreset.createKeyUrl && (
@@ -2217,7 +2249,7 @@ export default function ManualKeyTester() {
                         <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
                       </svg>
                       <p className="text-[10px] text-muted-foreground">
-                        Enter your API key in the <span className="text-foreground font-medium">Quick Validate</span> panel first.
+                        Enter your API key in the <span className="text-foreground font-medium">API Key</span> field on the left first.
                       </p>
                     </div>
                   )}
