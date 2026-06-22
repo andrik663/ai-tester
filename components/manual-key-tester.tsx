@@ -1347,6 +1347,19 @@ export default function ManualKeyTester() {
   const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("chat")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
+  // Quick Validate state
+  const [validateLoading, setValidateLoading] = useState(false)
+  const [validateResult, setValidateResult] = useState<{
+    valid: boolean | null
+    provider: string
+    message: string
+    latencyMs?: number
+    modelCount?: number
+    modelList?: string[]
+    balance?: string
+    username?: string
+    errorReason?: string | null
+  } | null>(null)
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1371,6 +1384,7 @@ export default function ManualKeyTester() {
   // Debounce API key changes by 400ms
   const handleApiKeyChange = useCallback((val: string) => {
     setApiKey(val)
+    setValidateResult(null)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => setDebouncedApiKey(val), 400)
   }, [])
@@ -1525,12 +1539,42 @@ export default function ManualKeyTester() {
     )
     setBodyTemplate(preset.bodyTemplate)
     setResult(null)
+    setValidateResult(null)
     setShowLog(false)
     // Reset image/video model to first supported for the new provider
     const imgModels = getImageCapabilities(preset.id)
     if (imgModels.length > 0) setImageModel(imgModels[0].id)
     const { models: vidModels } = getVideoCapabilities(preset.id)
     if (vidModels.length > 0) setVideoModel(vidModels[0].id)
+  }
+
+  async function runValidate() {
+    if (!apiKey.trim() || validateLoading) return
+    setValidateLoading(true)
+    setValidateResult(null)
+    try {
+      const res = await fetch("/api/test-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: apiKey.trim(), provider: selectedPreset.id }),
+      })
+      const data = await res.json()
+      setValidateResult({
+        valid: data.valid,
+        provider: data.provider ?? selectedPreset.name,
+        message: data.message,
+        latencyMs: data.latencyMs,
+        modelCount: data.modelCount,
+        modelList: data.modelList,
+        balance: data.balance,
+        username: data.username,
+        errorReason: data.errorReason,
+      })
+    } catch {
+      setValidateResult({ valid: false, provider: selectedPreset.name, message: "Request failed — check network connection" })
+    } finally {
+      setValidateLoading(false)
+    }
   }
 
   async function runTest() {
@@ -1725,12 +1769,18 @@ export default function ManualKeyTester() {
           {/* API Key */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
                 API Key
+                {validateResult && (
+                  <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                    validateResult.valid === true ? "bg-green-400" :
+                    validateResult.valid === false ? "bg-red-400" : "bg-yellow-400"
+                  }`} />
+                )}
               </label>
               {apiKey && (
                 <button
-                  onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
+                  onClick={() => { handleApiKeyChange(""); setShowKey(false); setValidateResult(null) }}
                   className="text-[9px] text-muted-foreground/60 hover:text-destructive transition-colors flex items-center gap-0.5"
                   title="Clear API key"
                 >
@@ -1757,38 +1807,103 @@ export default function ManualKeyTester() {
                 <EyeIcon show={showKey} />
               </button>
             </div>
-            {apiKey && (
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
-                  {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
-                </p>
-                {result && (
-                  <button
-                    onClick={shareResult}
-                    title="Copy test result to clipboard"
-                    className="flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors flex-shrink-0"
-                  >
-                    {copiedShare ? (
-                      <>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        <span className="text-green-400">Copied</span>
-                      </>
+
+            {/* Quick Validate Button */}
+            <button
+              onClick={runValidate}
+              disabled={!apiKey.trim() || validateLoading}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border bg-secondary/40 hover:bg-secondary hover:border-ring/50 text-[11px] font-semibold text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              {validateLoading ? (
+                <>
+                  <SpinnerIcon />
+                  <span>Validating...</span>
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-primary">
+                    <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Validate Key
+                </>
+              )}
+            </button>
+
+            {/* Validate Result Card */}
+            {validateResult && (
+              <div className={`rounded-lg border px-3 py-2.5 flex flex-col gap-2 ${
+                validateResult.valid === true
+                  ? "border-green-500/25 bg-green-500/8"
+                  : validateResult.valid === false
+                  ? "border-red-500/25 bg-red-500/8"
+                  : "border-yellow-500/25 bg-yellow-500/8"
+              }`}>
+                {/* Status row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    {validateResult.valid === true ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-green-400 flex-shrink-0">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                     ) : (
-                      <>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-                          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                          <polyline points="16 6 12 2 8 6" />
-                          <line x1="12" y1="2" x2="12" y2="15" />
-                        </svg>
-                        Share
-                      </>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-red-400 flex-shrink-0">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
                     )}
-                  </button>
+                    <span className={`text-[11px] font-bold ${
+                      validateResult.valid === true ? "text-green-400" : "text-red-400"
+                    }`}>
+                      {validateResult.valid === true ? "VALID" : "INVALID"}
+                    </span>
+                  </div>
+                  {validateResult.latencyMs !== undefined && (
+                    <span className="text-[10px] font-mono text-muted-foreground">{validateResult.latencyMs}ms</span>
+                  )}
+                </div>
+
+                {/* Message */}
+                <p className="text-[10px] text-muted-foreground leading-relaxed">{validateResult.message}</p>
+
+                {/* Stats grid */}
+                {(validateResult.modelCount || validateResult.balance || validateResult.username) && (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {validateResult.modelCount !== undefined && (
+                      <div className="flex flex-col gap-0.5 bg-card/60 rounded px-2 py-1.5 border border-border/50">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Models</span>
+                        <span className="text-[13px] font-semibold text-foreground tabular-nums">{validateResult.modelCount}</span>
+                      </div>
+                    )}
+                    {validateResult.balance && (
+                      <div className="flex flex-col gap-0.5 bg-card/60 rounded px-2 py-1.5 border border-border/50">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Balance</span>
+                        <span className="text-[13px] font-semibold text-foreground tabular-nums">{validateResult.balance}</span>
+                      </div>
+                    )}
+                    {validateResult.username && (
+                      <div className="col-span-2 flex flex-col gap-0.5 bg-card/60 rounded px-2 py-1.5 border border-border/50">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Account</span>
+                        <span className="text-[11px] font-medium text-foreground truncate">{validateResult.username}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Model list preview */}
+                {validateResult.modelList && validateResult.modelList.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {validateResult.modelList.slice(0, 4).map((m) => (
+                      <span key={m} className="text-[9px] font-mono bg-card/80 border border-border/60 px-1.5 py-0.5 rounded text-muted-foreground truncate max-w-full">
+                        {m}
+                      </span>
+                    ))}
+                    {(validateResult.modelCount ?? 0) > 4 && (
+                      <span className="text-[9px] text-muted-foreground/60">+{(validateResult.modelCount ?? 0) - 4} more</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}
+
             {/* Create API key link */}
             {selectedPreset.createKeyUrl && (
               <a
@@ -1806,6 +1921,32 @@ export default function ManualKeyTester() {
                   <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </a>
+            )}
+
+            {apiKey && result && (
+              <button
+                onClick={shareResult}
+                title="Copy test result to clipboard"
+                className="inline-flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors self-start"
+              >
+                {copiedShare ? (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span className="text-green-400">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                    Share result
+                  </>
+                )}
+              </button>
             )}
           </div>
 
@@ -2090,7 +2231,7 @@ export default function ManualKeyTester() {
 
           {/* Reset */}
           <button
-            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
+            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false); setValidateResult(null) }}
             className="text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary px-3 py-2 rounded transition-colors border border-border/50 hover:border-border w-full text-left"
           >
             Clear All History
@@ -2126,6 +2267,21 @@ export default function ManualKeyTester() {
                 <span className="text-[9px] font-mono text-muted-foreground/40 uppercase hidden sm:block">{selectedPreset.country}</span>
               )}
             </span>
+
+            {/* Key validity indicator */}
+            {validateResult && (
+              <span className={`hidden sm:flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-full border flex-shrink-0 ${
+                validateResult.valid === true
+                  ? "text-green-400 border-green-500/25 bg-green-500/8"
+                  : "text-red-400 border-red-500/25 bg-red-500/8"
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${validateResult.valid === true ? "bg-green-400" : "bg-red-400"}`} />
+                {validateResult.valid === true ? "Key Valid" : "Key Invalid"}
+                {validateResult.latencyMs !== undefined && (
+                  <span className="text-muted-foreground ml-0.5">{validateResult.latencyMs}ms</span>
+                )}
+              </span>
+            )}
 
             {/* Response status chip — vision/chat result */}
             {activeTab === "vision" && visionResult && (
@@ -2227,44 +2383,164 @@ export default function ManualKeyTester() {
             {/* Chat messages area */}
             <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 flex flex-col gap-3">
               {chatHistory.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full gap-5 text-center py-16">
-                  {/* Icon — clean SVG, no broken images */}
-                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_24px_oklch(0.76_0.17_192_/_0.12)]">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-primary">
-                      <circle cx="7" cy="12" r="4" />
-                      <path d="M11 12h9M17 10v4" />
-                    </svg>
-                  </div>
+                <div className="flex flex-col items-center justify-center h-full gap-6 text-center py-8 max-w-lg mx-auto w-full">
 
-                  <div className="flex flex-col gap-2">
-                    <p className="text-base font-semibold text-foreground text-balance">{selectedPreset.name}</p>
-                    <p className="text-xs text-muted-foreground max-w-xs leading-relaxed text-pretty">
-                      Type a message below to test your API key with a real request. Response, latency, and token usage will appear here.
-                    </p>
-                  </div>
-
-                  {!apiKey && (
-                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border bg-secondary/40 max-w-xs">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0">
-                        <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                      </svg>
-                      <p className="text-[10px] text-muted-foreground">
-                        Enter your API key in the <span className="text-foreground font-medium">API Key</span> field on the left first.
+                  {/* Provider icon + name */}
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_28px_oklch(0.76_0.17_192_/_0.15)]">
+                      {PROVIDER_LOGOS[selectedPreset.id] ? (
+                        <ProviderLogo providerId={selectedPreset.id} className="w-8 h-8" />
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-primary">
+                          <circle cx="7" cy="12" r="4" />
+                          <path d="M11 12h9M17 10v4" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-foreground text-balance">{selectedPreset.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {apiKey ? "Key entered — click Validate Key or send a message" : "Enter your API key on the left to get started"}
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Key status / CTA */}
+                  {!apiKey ? (
+                    <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+                      <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-secondary/30 text-left w-full">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <div>
+                          <p className="text-[11px] font-medium text-foreground">No API key entered</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                            Paste your API key in the sidebar. Keys are never stored or sent to our servers — all requests go directly to the provider.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* What you get */}
+                      <div className="grid grid-cols-2 gap-2 w-full">
+                        {[
+                          { icon: "✓", label: "Valid / Invalid status", color: "text-green-400" },
+                          { icon: "⚡", label: "Response latency (ms)", color: "text-yellow-400" },
+                          { icon: "◉", label: "Accessible model count", color: "text-primary" },
+                          { icon: "⊘", label: "Rate limit remaining", color: "text-sky-400" },
+                        ].map((item) => (
+                          <div key={item.label} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/40">
+                            <span className={`text-[13px] ${item.color} flex-shrink-0`}>{item.icon}</span>
+                            <span className="text-[10px] text-muted-foreground leading-tight">{item.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : validateResult ? (
+                    /* Validate result summary in the main area */
+                    <div className={`w-full max-w-sm rounded-xl border p-4 flex flex-col gap-3 ${
+                      validateResult.valid === true
+                        ? "border-green-500/30 bg-green-500/6"
+                        : "border-red-500/30 bg-red-500/6"
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            validateResult.valid === true ? "bg-green-500/15 border border-green-500/25" : "bg-red-500/15 border border-red-500/25"
+                          }`}>
+                            {validateResult.valid === true ? (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-green-400">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-red-400">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-bold ${validateResult.valid === true ? "text-green-400" : "text-red-400"}`}>
+                              {validateResult.valid === true ? "Key Valid" : "Key Invalid"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">{validateResult.provider}</p>
+                          </div>
+                        </div>
+                        {validateResult.latencyMs !== undefined && (
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-foreground tabular-nums">{validateResult.latencyMs}<span className="text-xs font-normal text-muted-foreground">ms</span></p>
+                            <p className="text-[10px] text-muted-foreground">latency</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {(validateResult.modelCount || validateResult.balance || validateResult.username) && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {validateResult.modelCount !== undefined && (
+                            <div className="bg-card/60 rounded-lg p-2 border border-border/50 text-center">
+                              <p className="text-lg font-bold text-foreground tabular-nums">{validateResult.modelCount}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Models</p>
+                            </div>
+                          )}
+                          {validateResult.balance && (
+                            <div className="bg-card/60 rounded-lg p-2 border border-border/50 text-center">
+                              <p className="text-sm font-bold text-foreground truncate">{validateResult.balance}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Balance</p>
+                            </div>
+                          )}
+                          {validateResult.username && (
+                            <div className="bg-card/60 rounded-lg p-2 border border-border/50 text-center col-span-2">
+                              <p className="text-xs font-medium text-foreground truncate">{validateResult.username}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Account</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {validateResult.modelList && validateResult.modelList.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {validateResult.modelList.slice(0, 6).map((m) => (
+                            <span key={m} className="text-[9px] font-mono bg-card/80 border border-border/60 px-2 py-1 rounded text-muted-foreground">
+                              {m}
+                            </span>
+                          ))}
+                          {(validateResult.modelCount ?? 0) > 6 && (
+                            <span className="text-[9px] text-muted-foreground/60 self-center">+{(validateResult.modelCount ?? 0) - 6} more</span>
+                          )}
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-muted-foreground">{validateResult.message}</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+                      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/8 text-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-primary flex-shrink-0">
+                          <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-[11px] text-primary/80">
+                          Click <span className="font-semibold text-primary">Validate Key</span> in the sidebar to check your key
+                        </p>
+                      </div>
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-1.5 justify-center max-w-xs">
-                    {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setPrompt(s)}
-                        className="text-[10px] px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/60 hover:bg-secondary/60 transition-colors"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Quick prompts */}
+                  {apiKey && (
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-[10px] text-muted-foreground/60">Or send a test message:</p>
+                      <div className="flex flex-wrap gap-1.5 justify-center">
+                        {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setPrompt(s)}
+                            className="text-[10px] px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/60 hover:bg-secondary/60 transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2297,39 +2573,60 @@ export default function ManualKeyTester() {
 
               {/* Result stats bar */}
               {result && (
-                <div className={`flex flex-wrap items-center gap-3 px-3 py-2 rounded-xl border text-[10px] font-mono ${
-                  result.ok ? "border-green-400/20 bg-green-400/5" : "border-red-400/20 bg-red-400/5"
+                <div className={`rounded-xl border overflow-hidden ${
+                  result.ok ? "border-green-500/25 bg-green-500/5" : "border-red-500/25 bg-red-500/5"
                 }`}>
-                  <span className={`font-semibold ${result.ok ? "text-green-400" : "text-red-400"}`}>
-                    HTTP {result.status}
-                  </span>
-                  <span className="text-muted-foreground">{result.durationMs}ms</span>
-                  {result.tokenUsage?.promptTokens !== undefined && (
-                    <span className="text-muted-foreground">in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span></span>
-                  )}
-                  {result.tokenUsage?.completionTokens !== undefined && (
-                    <span className="text-muted-foreground">out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span></span>
-                  )}
-                  {/* Rate limit quick view */}
-                  {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
-                    <span className="text-muted-foreground">
-                      req left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
-                    </span>
-                  )}
-                  {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
-                    <span className="text-muted-foreground">
-                      tok left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
-                    </span>
-                  )}
-                  {/* cURL copy */}
-                  {result.curlFull && (
-                    <button
-                      onClick={copyCurlFull}
-                      className="ml-auto flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <CopyIcon />
-                      {copiedCurlFull ? <span className="text-green-400">Copied</span> : "cURL"}
-                    </button>
+                  {/* Top status row */}
+                  <div className={`flex items-center justify-between px-4 py-2.5 border-b ${
+                    result.ok ? "border-green-500/15" : "border-red-500/15"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${result.ok ? "bg-green-400" : "bg-red-400"}`} />
+                      <span className={`text-sm font-bold ${result.ok ? "text-green-400" : "text-red-400"}`}>
+                        HTTP {result.status} — {result.ok ? "Success" : "Failed"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {result.durationMs !== undefined && (
+                        <span className="text-[11px] font-mono text-muted-foreground">
+                          <span className="text-foreground font-semibold">{result.durationMs}</span>ms
+                        </span>
+                      )}
+                      {result.curlFull && (
+                        <button
+                          onClick={copyCurlFull}
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-border/50 bg-card/40 hover:bg-secondary transition-colors"
+                        >
+                          <CopyIcon />
+                          {copiedCurlFull ? <span className="text-green-400">Copied</span> : "cURL"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {/* Stats grid */}
+                  {(result.tokenUsage?.promptTokens !== undefined || result.responseHeaders?.["x-ratelimit-remaining-requests"] || result.responseHeaders?.["x-ratelimit-remaining-tokens"]) && (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-[10px] font-mono">
+                      {result.tokenUsage?.promptTokens !== undefined && (
+                        <span className="text-muted-foreground">
+                          in: <span className="text-foreground font-semibold">{result.tokenUsage.promptTokens}</span> tok
+                        </span>
+                      )}
+                      {result.tokenUsage?.completionTokens !== undefined && (
+                        <span className="text-muted-foreground">
+                          out: <span className="text-foreground font-semibold">{result.tokenUsage.completionTokens}</span> tok
+                        </span>
+                      )}
+                      {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
+                        <span className="text-muted-foreground">
+                          req left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
+                        </span>
+                      )}
+                      {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
+                        <span className="text-muted-foreground">
+                          tok left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -2373,7 +2670,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��──────────────────────────────────��───── */}
+        {/* ── VISION TAB ────────────��──────────────────────────────────��───��─ */}
         {activeTab === "vision" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
