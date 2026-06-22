@@ -9,6 +9,7 @@ import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
 import SBGAgent from "@/components/sbg-agent"
+import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
@@ -26,6 +27,8 @@ interface ProviderModelInfo {
 interface ProviderPreset {
   id: string
   name: string
+  /** ISO 3166-1 alpha-2 country code — shown as flag next to provider name */
+  country: string
   endpoint: string
   method: "POST" | "GET"
   headers: Record<string, string>
@@ -41,6 +44,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "dahono",
     name: "Dahono Labs Gateway",
+    country: "ID",
     endpoint: "https://gateway.dahono.com/v1/chat/completions",
     method: "POST",
     headers: {
@@ -60,6 +64,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
+    country: "US",
     endpoint: "https://api.anthropic.com/v1/messages",
     method: "POST",
     headers: {
@@ -79,6 +84,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "openai",
     name: "GPT (OpenAI)",
+    country: "US",
     endpoint: "https://api.openai.com/v1/responses",
     method: "POST",
     headers: {
@@ -102,6 +108,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "google",
     name: "Gemini (Google)",
+    country: "US",
     endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={{API_KEY}}",
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -120,6 +127,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "xai",
     name: "Grok (xAI)",
+    country: "US",
     endpoint: "https://api.x.ai/v1/responses",
     method: "POST",
     headers: {
@@ -143,6 +151,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "deepseek",
     name: "DeepSeek",
+    country: "CN",
     endpoint: "https://api.deepseek.com/chat/completions",
     method: "POST",
     headers: {
@@ -162,6 +171,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "qwen",
     name: "Qwen (Alibaba)",
+    country: "CN",
     endpoint: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
     method: "POST",
     headers: {
@@ -180,6 +190,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "zhipu",
     name: "GLM (Zhipu AI)",
+    country: "CN",
     endpoint: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
     method: "POST",
     headers: {
@@ -198,6 +209,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "minimax",
     name: "MiniMax",
+    country: "CN",
     endpoint: "https://api.minimax.io/v1/chat/completions",
     method: "POST",
     headers: {
@@ -219,6 +231,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "cerebras",
     name: "Cerebras",
+    country: "US",
     endpoint: "https://api.cerebras.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -245,6 +258,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "fireworks",
     name: "Fireworks AI",
+    country: "US",
     endpoint: "https://api.fireworks.ai/inference/v1/chat/completions",
     method: "POST",
     headers: {
@@ -263,6 +277,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "novita",
     name: "Novita AI",
+    country: "US",
     endpoint: "https://api.novita.ai/openai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -335,6 +350,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "cloudflare",
     name: "Cloudflare Workers AI",
+    country: "US",
     endpoint: "https://api.cloudflare.com/client/v4/accounts/{{CF_ACCOUNT_ID}}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     method: "POST",
     headers: {
@@ -352,6 +368,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "openrouter",
     name: "OpenRouter",
+    country: "US",
     endpoint: "https://openrouter.ai/api/v1/chat/completions",
     method: "POST",
     headers: {
@@ -370,6 +387,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "sambanova",
     name: "SambaNova",
+    country: "US",
     endpoint: "https://api.sambanova.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -388,6 +406,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "nvidia",
     name: "NVIDIA NIM",
+    country: "US",
     endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
     method: "POST",
     headers: {
@@ -406,6 +425,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "hyperbolic",
     name: "Hyperbolic",
+    country: "US",
     endpoint: "https://api.hyperbolic.xyz/v1/chat/completions",
     method: "POST",
     headers: {
@@ -424,6 +444,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "ai21",
     name: "AI21 Labs",
+    country: "IL",
     endpoint: "https://api.ai21.com/studio/v1/chat/completions",
     method: "POST",
     headers: {
@@ -443,6 +464,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "groq",
     name: "Groq",
+    country: "US",
     endpoint: "https://api.groq.com/openai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -461,6 +483,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "together",
     name: "Together AI",
+    country: "US",
     endpoint: "https://api.together.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -496,6 +519,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "mistral",
     name: "Mistral AI",
+    country: "FR",
     endpoint: "https://api.mistral.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -514,6 +538,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "cohere",
     name: "Cohere",
+    country: "CA",
     endpoint: "https://api.cohere.com/v2/chat",
     method: "POST",
     headers: {
@@ -531,6 +556,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "perplexity",
     name: "Perplexity",
+    country: "US",
     endpoint: "https://api.perplexity.ai/chat/completions",
     method: "POST",
     headers: {
@@ -549,6 +575,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "huggingface",
     name: "HuggingFace",
+    country: "US",
     endpoint: "https://api-inference.huggingface.co/models/meta-llama/Llama-3.3-70B-Instruct/v1/chat/completions",
     method: "POST",
     headers: {
@@ -567,6 +594,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "replicate",
     name: "Replicate",
+    country: "US",
     endpoint: "https://api.replicate.com/v1/predictions",
     method: "POST",
     headers: {
@@ -589,6 +617,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "moonshot",
     name: "Moonshot AI (Kimi)",
+    country: "CN",
     endpoint: "https://api.moonshot.cn/v1/chat/completions",
     method: "POST",
     headers: {
@@ -607,6 +636,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "baidu",
     name: "Baidu ERNIE (Qianfan)",
+    country: "CN",
     endpoint: "https://qianfan.baidubce.com/v2/chat/completions",
     method: "POST",
     headers: {
@@ -625,6 +655,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "yi",
     name: "01.AI (Yi)",
+    country: "CN",
     endpoint: "https://api.lingyiwanwu.com/v1/chat/completions",
     method: "POST",
     headers: {
@@ -643,6 +674,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "stepfun",
     name: "Stepfun",
+    country: "CN",
     endpoint: "https://api.stepfun.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -661,6 +693,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "hunyuan",
     name: "Tencent Hunyuan",
+    country: "CN",
     endpoint: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
     method: "POST",
     headers: {
@@ -680,6 +713,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "azure",
     name: "Azure OpenAI",
+    country: "US",
     endpoint: "https://{{AZURE_RESOURCE}}.openai.azure.com/openai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -699,6 +733,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "upstage",
     name: "Upstage Solar",
+    country: "KR",
     endpoint: "https://api.upstage.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -718,6 +753,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "writer",
     name: "Writer AI (Palmyra)",
+    country: "US",
     endpoint: "https://api.writer.com/v1/chat",
     method: "POST",
     headers: {
@@ -735,6 +771,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "lepton",
     name: "LeptonAI",
+    country: "US",
     endpoint: "https://api.lepton.ai/v1/chat/completions",
     method: "POST",
     headers: {
@@ -754,6 +791,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "bfl",
     name: "Black Forest Labs (FLUX)",
+    country: "DE",
     endpoint: "https://api.bfl.ai/v1/flux-pro-1.1",
     method: "POST",
     headers: {
@@ -772,6 +810,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "bytedance",
     name: "Bytedance (SeedDream)",
+    country: "CN",
     endpoint: "https://ark.cn-beijing.volces.com/api/v3/images/generations",
     method: "POST",
     headers: {
@@ -790,6 +829,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "recraft",
     name: "Recraft AI",
+    country: "US",
     endpoint: "https://external.api.recraft.ai/v1/images/generations",
     method: "POST",
     headers: {
@@ -809,6 +849,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "ideogram",
     name: "Ideogram AI",
+    country: "US",
     endpoint: "https://api.ideogram.ai/v1/ideogram-v3/generate",
     method: "POST",
     headers: {
@@ -829,6 +870,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "luma",
     name: "Luma AI (Photon)",
+    country: "US",
     endpoint: "https://api.lumalabs.ai/dream-machine/v1/generations/image",
     method: "POST",
     headers: {
@@ -847,6 +889,7 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "amazon",
     name: "Amazon Nova (Bedrock)",
+    country: "US",
     endpoint: "https://bedrock-runtime.us-east-1.amazonaws.com/model/amazon.nova-pro-v1:0/converse",
     method: "POST",
     headers: {
@@ -861,10 +904,127 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://console.aws.amazon.com/iam/home#/security_credentials",
     color: "text-amber-300 bg-amber-300/10 border-amber-300/20",
   },
+  // ── Tier 9: New / Emerging providers ─────────────────────────────────────
+  {
+    id: "inception",
+    name: "Inception (Mercury)",
+    country: "US",
+    endpoint: "https://api.inceptionlabs.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "mercury-coder-small",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.inceptionlabs.ai/api-reference/chat",
+    createKeyUrl: "https://platform.inceptionlabs.ai/",
+    color: "text-slate-300 bg-slate-300/10 border-slate-300/20",
+  },
+  {
+    id: "ibm",
+    name: "IBM Granite (WatsonX)",
+    country: "US",
+    endpoint: "https://us-south.ml.cloud.ibm.com/ml/v1/text/chat?version=2023-05-29",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model_id: "ibm/granite-4-8b-instruct",
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+      parameters: { max_new_tokens: 1024 },
+    }, null, 2),
+    docsUrl: "https://www.ibm.com/docs/en/watsonx/saas?topic=tasks-text-chat",
+    createKeyUrl: "https://www.ibm.com/watsonx",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+  },
+  {
+    id: "neets",
+    name: "Neets AI",
+    country: "US",
+    endpoint: "https://api.neets.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+      "X-API-Key": "{{API_KEY}}",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Meta-Llama-3-8B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.neets.ai/reference/create-chat-completion",
+    createKeyUrl: "https://neets.ai/api",
+    color: "text-rose-300 bg-rose-300/10 border-rose-300/20",
+  },
+  {
+    id: "lamini",
+    name: "Lamini AI",
+    country: "US",
+    endpoint: "https://api.lamini.ai/v1/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model_name: "meta-llama/Meta-Llama-3-8B-Instruct",
+      prompt: "{{PROMPT}}",
+      max_new_tokens: 1024,
+    }, null, 2),
+    docsUrl: "https://lamini-ai.github.io/lamini/",
+    createKeyUrl: "https://app.lamini.ai/account",
+    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+  },
+  {
+    id: "deepinfra",
+    name: "Deep Infra",
+    country: "US",
+    endpoint: "https://api.deepinfra.com/v1/openai/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://deepinfra.com/docs/advanced/openai_api",
+    createKeyUrl: "https://deepinfra.com/dash/api_keys",
+    color: "text-indigo-300 bg-indigo-300/10 border-indigo-300/20",
+  },
+  {
+    id: "anyscale",
+    name: "Anyscale",
+    country: "US",
+    endpoint: "https://api.endpoints.anyscale.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Meta-Llama-3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.endpoints.anyscale.com/",
+    createKeyUrl: "https://console.anyscale.com/credentials",
+    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+  },
   // ── Custom ────────────────────────────────────────────────────────────────
   {
     id: "custom",
     name: "Custom / cURL",
+    country: "",
     endpoint: "",
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -923,7 +1083,12 @@ const PROVIDER_LOGOS: Record<string, string> = {
   ideogram:    `${BASE}/ideogram/default.svg`,
   luma:        `${BASE}/luma-ai/default.svg`,
   amazon:      `${BASE}/amazon-web-services/mono.svg`,
+  inception:   `${BASE}/inception/default.svg`,
+  ibm:         `${BASE}/ibm/default.svg`,
+  deepinfra:   `${BASE}/deepinfra/default.svg`,
+  anyscale:    `${BASE}/anyscale/default.svg`,
 }
+
 
 function ProviderLogo({ providerId, className = "w-4 h-4" }: { providerId: string; className?: string }) {
   const src = PROVIDER_LOGOS[providerId]
@@ -1070,7 +1235,7 @@ function VideoTabIcon() {
   )
 }
 
-// ── Log level styles ───────────────────��──────────────────────────────────────
+// ── Log level styles ───────────────────��─────────────────────��────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -1177,7 +1342,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent">("vision")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("vision")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
@@ -1519,7 +1684,12 @@ export default function ManualKeyTester() {
                       }`} />
                     )}
                   </span>
-                  {p.name}
+                  <span className="flex-1 min-w-0 truncate">{p.name}</span>
+                  {p.country && (
+                    <span className="flex-shrink-0 text-[9px] font-mono font-semibold tracking-wider text-muted-foreground/50 uppercase">
+                      {p.country}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -1976,13 +2146,37 @@ export default function ManualKeyTester() {
             )}
           </button>
 
+          {/* Multi-Key Batch tab */}
+          <button
+            onClick={() => setActiveTab("multi-batch")}
+            title="Multi-Key Batch — Test all providers at once"
+            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold transition-colors ${
+              activeTab === "multi-batch"
+                ? "bg-emerald-500/15 text-emerald-400"
+                : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+            }`}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0" aria-hidden>
+              <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <circle cx="10" cy="3" r="1.5" fill="currentColor" />
+              <circle cx="10" cy="6" r="1.5" fill="currentColor" />
+              <circle cx="10" cy="9" r="1.5" fill="currentColor" />
+            </svg>
+            Batch
+          </button>
+
           {/* Divider */}
           <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
 
-          {/* Provider badge — with logo */}
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate max-w-[160px] flex-shrink-0">
+          {/* Provider badge — with logo and country flag */}
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate max-w-[200px] flex-shrink-0">
             <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70" />
             {selectedPreset.name}
+            {selectedPreset.country && (
+              <span className="text-[9px] font-mono font-semibold tracking-wider text-muted-foreground/40 uppercase">
+                {selectedPreset.country}
+              </span>
+            )}
           </span>
 
           {/* Endpoint */}
@@ -2007,7 +2201,7 @@ export default function ManualKeyTester() {
           )}
         </div>
 
-        {/* ── VISION TAB ────────────��──────────────────────────────────────── */}
+        {/* ── VISION TAB ────────────��──────────────────────────────────��───── */}
         {activeTab === "vision" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
@@ -2352,6 +2546,13 @@ export default function ManualKeyTester() {
         {activeTab === "sbg-agent" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
+          </div>
+        )}
+
+        {/* ── MULTI-KEY BATCH TAB ───────────────────────────────────────────── */}
+        {activeTab === "multi-batch" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <MultiKeyBatch />
           </div>
         )}
 
