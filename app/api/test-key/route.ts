@@ -12,6 +12,8 @@ export interface TokenUsage {
   totalTokens?: number
 }
 
+export type ErrorReason = "expired" | "wrong_key" | "rate_limited" | "no_credits" | "network" | "insufficient_permissions" | null
+
 export interface TestKeyResult {
   valid: boolean | null
   provider: string
@@ -23,6 +25,12 @@ export interface TestKeyResult {
   responseHeaders?: Record<string, string>
   curlFull?: string          // full key — only sent when valid, for copy-paste
   curlDisplay?: string       // masked key — always safe to display in logs
+  // enriched fields
+  modelCount?: number        // number of accessible models
+  modelList?: string[]       // first few model IDs (max 8)
+  balance?: string           // formatted credit balance e.g. "$12.45" or "2,000 tokens"
+  username?: string          // authenticated user/account name
+  errorReason?: ErrorReason  // structured error classification
 }
 
 // ── Logger helper ─────────────────────────────────────────────────────────────
@@ -142,12 +150,14 @@ async function testAnthropic(key: string): Promise<TestKeyResult> {
   if (res.status === 200 || res.status === 429) {
     const data = await res.json().catch(() => ({}))
     const tokenUsage = extractTokenUsage(data)
-    const msg = res.status === 429 ? "Valid — key accepted (rate limited)" : "Valid — key accepted by Anthropic"
+    const rateLimited = res.status === 429
+    const msg = rateLimited ? "Valid — key accepted (rate limited)" : "Valid — key accepted by Anthropic"
     log("ok", msg)
     if (tokenUsage?.totalTokens) log("info", `Tokens: ${tokenUsage.totalTokens}`)
     return {
       valid: true, provider: "Anthropic", message: msg, detail: `HTTP ${res.status}`,
       logs, latencyMs, tokenUsage, responseHeaders,
+      errorReason: rateLimited ? "rate_limited" : null,
       curlDisplay: buildCurl({ method: "POST", url, headers, body, maskKey: true }),
       curlFull: buildCurl({ method: "POST", url, headers, body, maskKey: false }),
     }
@@ -155,13 +165,20 @@ async function testAnthropic(key: string): Promise<TestKeyResult> {
   if (res.status === 401) {
     const body2 = await res.json().catch(() => ({}))
     const err = body2?.error?.message ?? "authentication_error"
+    const isExpired = /expired|invalid_api_key/i.test(err)
     log("err", `401 Unauthorized: ${err}`)
-    return { valid: false, provider: "Anthropic", message: "Invalid — authentication failed", detail: err, logs, latencyMs, responseHeaders }
+    return { valid: false, provider: "Anthropic", message: "Invalid — authentication failed", detail: err, logs, latencyMs, responseHeaders, errorReason: isExpired ? "expired" : "wrong_key" }
+  }
+  if (res.status === 403) {
+    const body2 = await res.json().catch(() => ({}))
+    const err = body2?.error?.message ?? "Permission denied"
+    log("err", `403 Forbidden: ${err}`)
+    return { valid: false, provider: "Anthropic", message: "Invalid — permission denied", detail: err, logs, latencyMs, responseHeaders, errorReason: "insufficient_permissions" }
   }
   const rawBody = await res.json().catch(() => ({}))
   const errMsg = rawBody?.error?.message ?? JSON.stringify(rawBody).slice(0, 120)
   log("err", `Unexpected status ${res.status}: ${errMsg}`)
-  return { valid: false, provider: "Anthropic", message: `Unexpected HTTP ${res.status}`, detail: errMsg, logs, latencyMs, responseHeaders }
+  return { valid: false, provider: "Anthropic", message: `Unexpected HTTP ${res.status}`, detail: errMsg, logs, latencyMs, responseHeaders, errorReason: null }
 }
 
 async function testOpenAI(key: string): Promise<TestKeyResult> {
@@ -185,11 +202,18 @@ async function testOpenAI(key: string): Promise<TestKeyResult> {
 
   if (res.status === 200) {
     const data = await res.json().catch(() => ({}))
-    const count = Array.isArray(data?.data) ? data.data.length : "?"
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    const count = models.length || "?"
+    // Show GPT-4 family first, then sort rest
+    const sorted = [...models].sort((a, b) => {
+      const aGpt4 = a.startsWith("gpt-4"), bGpt4 = b.startsWith("gpt-4")
+      if (aGpt4 && !bGpt4) return -1; if (bGpt4 && !aGpt4) return 1
+      return a.localeCompare(b)
+    })
     log("ok", `Valid — ${count} models accessible`)
     return {
       valid: true, provider: "OpenAI", message: `Valid — ${count} models accessible`, detail: "HTTP 200",
-      logs, latencyMs, responseHeaders,
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: sorted.slice(0, 8), errorReason: null,
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
@@ -198,7 +222,7 @@ async function testOpenAI(key: string): Promise<TestKeyResult> {
     log("ok", "Valid — key accepted (rate limited)")
     return {
       valid: true, provider: "OpenAI", message: "Valid (rate limited)", detail: "HTTP 429",
-      logs, latencyMs, responseHeaders,
+      logs, latencyMs, responseHeaders, errorReason: "rate_limited",
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
@@ -206,13 +230,14 @@ async function testOpenAI(key: string): Promise<TestKeyResult> {
   if (res.status === 401) {
     const body = await res.json().catch(() => ({}))
     const err = body?.error?.message ?? "Incorrect API key"
+    const isExpired = /expired/i.test(err)
     log("err", `401 Unauthorized: ${err}`)
-    return { valid: false, provider: "OpenAI", message: "Invalid — authentication failed", detail: err, logs, latencyMs, responseHeaders }
+    return { valid: false, provider: "OpenAI", message: "Invalid — authentication failed", detail: err, logs, latencyMs, responseHeaders, errorReason: isExpired ? "expired" : "wrong_key" }
   }
   const body = await res.json().catch(() => ({}))
   const errMsg = body?.error?.message ?? JSON.stringify(body).slice(0, 120)
   log("err", `Unexpected ${res.status}: ${errMsg}`)
-  return { valid: false, provider: "OpenAI", message: `Unexpected HTTP ${res.status}`, detail: errMsg, logs, latencyMs, responseHeaders }
+  return { valid: false, provider: "OpenAI", message: `Unexpected HTTP ${res.status}`, detail: errMsg, logs, latencyMs, responseHeaders, errorReason: null }
 }
 
 async function testGoogle(key: string): Promise<TestKeyResult> {
@@ -233,11 +258,12 @@ async function testGoogle(key: string): Promise<TestKeyResult> {
 
   if (res.status === 200) {
     const data = await res.json().catch(() => ({}))
-    const count = Array.isArray(data?.models) ? data.models.length : "?"
+    const models: string[] = Array.isArray(data?.models) ? data.models.map((m: Record<string, unknown>) => String(m.name ?? m.displayName ?? "")).filter(Boolean) : []
+    const count = models.length || "?"
     log("ok", `Valid — ${count} Gemini models accessible`)
     return {
       valid: true, provider: "Google/Gemini", message: `Valid — ${count} models accessible`, detail: "HTTP 200",
-      logs, latencyMs, responseHeaders,
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), errorReason: null,
       curlDisplay: `curl '${displayUrl}'`,
       curlFull: `curl '${url}'`,
     }
@@ -246,10 +272,10 @@ async function testGoogle(key: string): Promise<TestKeyResult> {
     const body = await res.json().catch(() => ({}))
     const err = body?.error?.message ?? "API key invalid"
     log("err", `${res.status}: ${err}`)
-    return { valid: false, provider: "Google/Gemini", message: "Invalid — API key rejected", detail: err, logs, latencyMs, responseHeaders }
+    return { valid: false, provider: "Google/Gemini", message: "Invalid — API key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
   }
   log("err", `Unexpected HTTP ${res.status}`)
-  return { valid: false, provider: "Google/Gemini", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders }
+  return { valid: false, provider: "Google/Gemini", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
 }
 
 async function testHuggingFace(key: string): Promise<TestKeyResult> {
@@ -270,21 +296,22 @@ async function testHuggingFace(key: string): Promise<TestKeyResult> {
 
   if (res.status === 200) {
     const body = await res.json().catch(() => ({}))
-    const user = body?.name ?? "unknown"
+    const user = body?.name ?? body?.login ?? "unknown"
+    const email = body?.email ?? undefined
     log("ok", `Valid — authenticated as ${user}`)
     return {
-      valid: true, provider: "HuggingFace", message: `Valid — authenticated as ${user}`, detail: "HTTP 200",
-      logs, latencyMs, responseHeaders,
+      valid: true, provider: "HuggingFace", message: `Valid — authenticated as ${user}`, detail: email ? `Email: ${email}` : "HTTP 200",
+      logs, latencyMs, responseHeaders, username: user, errorReason: null,
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
   }
   if (res.status === 401) {
     log("err", "401 Unauthorized — token rejected")
-    return { valid: false, provider: "HuggingFace", message: "Invalid — token rejected", detail: "HTTP 401", logs, latencyMs, responseHeaders }
+    return { valid: false, provider: "HuggingFace", message: "Invalid — token rejected", detail: "HTTP 401", logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
   }
   log("err", `Unexpected HTTP ${res.status}`)
-  return { valid: false, provider: "HuggingFace", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders }
+  return { valid: false, provider: "HuggingFace", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
 }
 
 async function testGroq(key: string): Promise<TestKeyResult> {
@@ -305,11 +332,12 @@ async function testGroq(key: string): Promise<TestKeyResult> {
 
   if (res.status === 200) {
     const data = await res.json().catch(() => ({}))
-    const count = Array.isArray(data?.data) ? data.data.length : "?"
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    const count = models.length || "?"
     log("ok", `Valid — ${count} Groq models accessible`)
     return {
       valid: true, provider: "Groq", message: `Valid — ${count} models accessible`, detail: "HTTP 200",
-      logs, latencyMs, responseHeaders,
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), errorReason: null,
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
@@ -318,7 +346,7 @@ async function testGroq(key: string): Promise<TestKeyResult> {
     log("ok", "Valid — key accepted (rate limited)")
     return {
       valid: true, provider: "Groq", message: "Valid (rate limited)", detail: "HTTP 429",
-      logs, latencyMs, responseHeaders,
+      logs, latencyMs, responseHeaders, errorReason: "rate_limited",
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
@@ -326,10 +354,10 @@ async function testGroq(key: string): Promise<TestKeyResult> {
   if (res.status === 401) {
     const body = await res.json().catch(() => ({}))
     log("err", `401: ${body?.error?.message ?? "Invalid API key"}`)
-    return { valid: false, provider: "Groq", message: "Invalid — authentication failed", detail: "HTTP 401", logs, latencyMs, responseHeaders }
+    return { valid: false, provider: "Groq", message: "Invalid — authentication failed", detail: "HTTP 401", logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
   }
   log("err", `Unexpected HTTP ${res.status}`)
-  return { valid: false, provider: "Groq", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders }
+  return { valid: false, provider: "Groq", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
 }
 
 async function testGitHub(key: string): Promise<TestKeyResult> {

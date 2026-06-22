@@ -5,6 +5,7 @@ import type { BatchModelResult, BatchTestResponse } from "@/app/api/batch-test/r
 import { PROVIDER_CONFIGS } from "@/app/api/batch-test/route"
 import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
 import { appendWorkingResults } from "@/lib/working-keys-store"
+import { copyToClipboard } from "@/lib/clipboard"
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -70,19 +71,19 @@ function ResultRow({ r }: { r: BatchModelResult }) {
 
   function copyCurl(e: React.MouseEvent) {
     e.stopPropagation()
-    navigator.clipboard.writeText(r.curlFull).then(() => {
+    copyToClipboard(r.curlFull).then(() => {
       setCopiedCurl(true)
       setTimeout(() => setCopiedCurl(false), 1400)
-    })
+    }).catch(() => {})
   }
 
   function copyReply(e: React.MouseEvent) {
     e.stopPropagation()
     if (!r.reply) return
-    navigator.clipboard.writeText(r.reply).then(() => {
+    copyToClipboard(r.reply).then(() => {
       setCopiedReply(true)
       setTimeout(() => setCopiedReply(false), 1400)
-    })
+    }).catch(() => {})
   }
 
   return (

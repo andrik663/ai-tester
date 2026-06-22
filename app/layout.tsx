@@ -10,8 +10,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Gemini API Tester',
-  description: 'One-page developer tool for testing the Gemini API with live chat, config controls, and request inspector',
+  title: 'API Key Tester — Validate Any AI Key Instantly',
+  description: 'Free developer tool to test and validate API keys for 40+ AI providers. Get instant status, latency, quota, rate limits, model list, and cURL inspector. Keys never stored.',
   generator: 'v0.app',
   icons: {
     icon: [

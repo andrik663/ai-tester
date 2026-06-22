@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { copyToClipboard } from "@/lib/clipboard"
 import {
   loadWorkingKeys,
   deleteWorkingKey,
@@ -67,18 +68,18 @@ function RecordRow({
   const [confirmDel, setConfirmDel]   = useState(false)
 
   const handleCopyKey = useCallback(() => {
-    navigator.clipboard.writeText(record.apiKey).then(() => {
+    copyToClipboard(record.apiKey).then(() => {
       setCopiedKey(true)
       setTimeout(() => setCopiedKey(false), 1500)
       onCopyKey(record.apiKey)
-    })
+    }).catch(() => {})
   }, [record.apiKey, onCopyKey])
 
   const handleCopyModel = useCallback(() => {
-    navigator.clipboard.writeText(record.modelId).then(() => {
+    copyToClipboard(record.modelId).then(() => {
       setCopiedModel(true)
       setTimeout(() => setCopiedModel(false), 1500)
-    })
+    }).catch(() => {})
   }, [record.modelId])
 
   const handleDelete = useCallback(() => {

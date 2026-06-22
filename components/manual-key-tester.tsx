@@ -11,6 +11,7 @@ import WorkingKeysPanel from "@/components/working-keys-panel"
 import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
+import { copyToClipboard } from "@/lib/clipboard"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -1235,7 +1236,7 @@ function VideoTabIcon() {
   )
 }
 
-// ── Log level styles ───────────────────��─────────────────────��────────────────
+// ── Log level styles ───────────────────��─��───────────────────��────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -1339,10 +1340,11 @@ export default function ManualKeyTester() {
   const [showBodyEditor, setShowBodyEditor] = useState(false)
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
+  const [copiedShare, setCopiedShare] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("vision")
+  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("chat")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
@@ -1416,7 +1418,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ────────────────────────────────────────────────────
+  // ── Vision / OCR helpers ───���────────────────────────────────────────────────
 
   function handleImageFile(
     file: File,
@@ -1604,22 +1606,38 @@ export default function ManualKeyTester() {
 
   function copyCurl() {
     if (!result?.curlCommand) return
-    navigator.clipboard.writeText(result.curlCommand).then(() => {
+    copyToClipboard(result.curlCommand).then(() => {
       setCopiedCurl(true)
       setTimeout(() => setCopiedCurl(false), 1500)
-    })
+    }).catch(() => {})
   }
 
   function copyCurlFull() {
     if (!result?.curlFull) return
-    navigator.clipboard.writeText(result.curlFull).then(() => {
+    copyToClipboard(result.curlFull).then(() => {
       setCopiedCurlFull(true)
       setTimeout(() => setCopiedCurlFull(false), 1500)
-    })
+    }).catch(() => {})
+  }
+
+  function shareResult() {
+    if (!result) return
+    const lines = [
+      `API Key Test Result — ${selectedPreset.name}`,
+      `Status: ${result.ok ? "VALID" : "INVALID"} (HTTP ${result.status})`,
+      result.durationMs !== undefined ? `Latency: ${result.durationMs}ms` : null,
+      result.tokenUsage?.totalTokens !== undefined ? `Total Tokens: ${result.tokenUsage.totalTokens}` : null,
+      result.tokenUsage?.promptTokens !== undefined ? `Prompt: ${result.tokenUsage.promptTokens} / Completion: ${result.tokenUsage.completionTokens}` : null,
+      result.curlFull ? `\ncURL:\n${result.curlFull}` : null,
+    ].filter(Boolean).join("\n")
+    copyToClipboard(lines).then(() => {
+      setCopiedShare(true)
+      setTimeout(() => setCopiedShare(false), 2000)
+    }).catch(() => {})
   }
 
   return (
-    <div className="flex h-full bg-background text-foreground font-sans overflow-hidden relative">
+    <div className="flex h-full bg-background text-foreground font-sans overflow-hidden relative antialiased">
 
       {/* ── Mobile config overlay backdrop ────────────────────────────────── */}
       {configOpen && (
@@ -1632,17 +1650,26 @@ export default function ManualKeyTester() {
 
       {/* ── LEFT: Config panel ─────────────────────────────────────────────── */}
       <aside className={`
-        flex-shrink-0 border-r border-border bg-card flex flex-col overflow-y-auto
+        flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-y-auto
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
         w-72 md:w-64 lg:w-72
         transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
         ${configOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
 
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-          <div>
-            <p className="text-xs font-semibold text-foreground">Configuration</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Provider &amp; API key settings</p>
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-border flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/12 border border-primary/25 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_oklch(0.76_0.17_192_/_0.2)]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-primary">
+                <circle cx="7" cy="12" r="4" />
+                <path d="M11 12h9M17 10v4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Key Tester</p>
+              <p className="text-[10px] text-muted-foreground">40+ providers supported</p>
+            </div>
           </div>
           <button
             onClick={() => setConfigOpen(false)}
@@ -1731,9 +1758,36 @@ export default function ManualKeyTester() {
               </button>
             </div>
             {apiKey && (
-              <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
-                {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
+                  {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
+                </p>
+                {result && (
+                  <button
+                    onClick={shareResult}
+                    title="Copy test result to clipboard"
+                    className="flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors flex-shrink-0"
+                  >
+                    {copiedShare ? (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span className="text-green-400">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                          <polyline points="16 6 12 2 8 6" />
+                          <line x1="12" y1="2" x2="12" y2="15" />
+                        </svg>
+                        Share
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             )}
             {/* Create API key link */}
             {selectedPreset.createKeyUrl && (
@@ -2048,158 +2102,276 @@ export default function ManualKeyTester() {
       {/* ── RIGHT: Tabbed panel ────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
-        {/* Tab bar + status */}
-        <div className="flex items-center gap-0 px-2 border-b border-border bg-card flex-shrink-0 min-h-[44px]">
+        {/* ── HEADER: mobile config toggle + tab bar ──────────────────────── */}
+        <div className="flex flex-col border-b border-border bg-card flex-shrink-0">
 
-          {/* Mobile: config toggle button */}
-          <button
-            onClick={() => setConfigOpen(true)}
-            className="md:hidden flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground px-2 py-2 mr-1 flex-shrink-0 transition-colors"
-            aria-label="Open configuration"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
+          {/* Top row — mobile menu + provider badge + response status */}
+          <div className="flex items-center gap-2 px-3 h-10 border-b border-border/50 bg-card/60">
+            {/* Mobile: config drawer toggle */}
+            <button
+              onClick={() => setConfigOpen(true)}
+              className="md:hidden flex items-center justify-center w-7 h-7 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex-shrink-0"
+              aria-label="Open configuration"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
 
-          {/* API Tester tabs — icon only */}
-          <div className="flex items-center gap-0.5 py-1.5 mr-1">
-            {([
-              { id: "vision", icon: <ImageIcon />, title: "Vision" },
-              { id: "ocr", icon: <ScanIcon />, title: "OCR" },
-            ] as const).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                title={t.title}
-                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                  activeTab === t.id
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                {t.icon}
-              </button>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
-
-          {/* AI Generation tabs — icon only */}
-          <div className="flex items-center gap-0.5 py-1.5 mr-1">
-            {([
-              { id: "image-gen", icon: <PhotoIcon />, title: "Image Gen" },
-              { id: "video-gen", icon: <VideoTabIcon />, title: "Video Gen" },
-            ] as const).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                title={t.title}
-                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                  activeTab === t.id
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                {t.icon}
-              </button>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
-
-          {/* Working Keys tab */}
-          <button
-            onClick={() => setActiveTab("working-keys")}
-            title="Working Keys"
-            className={`relative flex items-center justify-center w-8 h-8 rounded transition-colors ${
-              activeTab === "working-keys"
-                ? "bg-green-400/15 text-green-400"
-                : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
-            }`}
-          >
-            {/* Key icon */}
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-              <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M8.5 8h6M12.5 8v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-
-          {/* Divider */}
-          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
-
-          {/* SBG Agent tab */}
-          <button
-            onClick={() => setActiveTab("sbg-agent")}
-            title="SBG Agent — Research & Coding Helper"
-            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold font-mono transition-colors ${
-              activeTab === "sbg-agent"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-            }`}
-          >
-            SBG
-            {activeTab !== "sbg-agent" && (
-              <span className="text-[7px] font-bold px-0.5 rounded bg-primary/10 text-primary leading-none py-px">AI</span>
-            )}
-          </button>
-
-          {/* Multi-Key Batch tab */}
-          <button
-            onClick={() => setActiveTab("multi-batch")}
-            title="Multi-Key Batch — Test all providers at once"
-            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold transition-colors ${
-              activeTab === "multi-batch"
-                ? "bg-emerald-500/15 text-emerald-400"
-                : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
-            }`}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0" aria-hidden>
-              <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              <circle cx="10" cy="3" r="1.5" fill="currentColor" />
-              <circle cx="10" cy="6" r="1.5" fill="currentColor" />
-              <circle cx="10" cy="9" r="1.5" fill="currentColor" />
-            </svg>
-            Batch
-          </button>
-
-          {/* Divider */}
-          <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
-
-          {/* Provider badge — with logo and country flag */}
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate max-w-[200px] flex-shrink-0">
-            <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70" />
-            {selectedPreset.name}
-            {selectedPreset.country && (
-              <span className="text-[9px] font-mono font-semibold tracking-wider text-muted-foreground/40 uppercase">
-                {selectedPreset.country}
-              </span>
-            )}
-          </span>
-
-          {/* Endpoint */}
-          {endpoint && (
-            <span className="hidden md:block text-[10px] font-mono text-muted-foreground/50 truncate flex-1 min-w-0 ml-2">
-              {method} {endpoint.replace(/\?key=.*/, "?key=…")}
-            </span>
-          )}
-
-          {/* Response status — shown for Vision and OCR tabs only */}
-          {activeTab === "vision" && visionResult && (
-            <div className="flex items-center gap-2 ml-auto flex-shrink-0 pr-1">
-              {visionResult.tokenUsage?.totalTokens && (
-                <span className="text-[10px] font-mono text-muted-foreground hidden md:block">
-                  {visionResult.tokenUsage.totalTokens}t
-                </span>
+            {/* Provider badge */}
+            <span className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate min-w-0 flex-1">
+              <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
+              <span className="truncate hidden sm:block">{selectedPreset.name}</span>
+              {selectedPreset.country && (
+                <span className="text-[9px] font-mono text-muted-foreground/40 uppercase hidden sm:block">{selectedPreset.country}</span>
               )}
-              <span className={`text-[10px] font-mono ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
+            </span>
+
+            {/* Response status chip — vision/chat result */}
+            {activeTab === "vision" && visionResult && (
+              <span className={`text-[10px] font-mono flex-shrink-0 ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
                 {visionResult.status} · {visionResult.durationMs}ms
               </span>
-            </div>
-          )}
+            )}
+            {activeTab === "chat" && result && (
+              <span className={`text-[10px] font-mono flex-shrink-0 ${result.ok ? "text-green-400" : "text-red-400"}`}>
+                {result.status} · {result.durationMs}ms
+              </span>
+            )}
+          </div>
+
+          {/* Tab row — scrollable on mobile */}
+          <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9">
+            {([
+              {
+                id: "chat" as const,
+                label: "Chat",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                ),
+              },
+              {
+                id: "vision" as const,
+                label: "Vision",
+                icon: <ImageIcon />,
+              },
+              {
+                id: "ocr" as const,
+                label: "OCR",
+                icon: <ScanIcon />,
+              },
+              {
+                id: "image-gen" as const,
+                label: "Image",
+                icon: <PhotoIcon />,
+              },
+              {
+                id: "video-gen" as const,
+                label: "Video",
+                icon: <VideoTabIcon />,
+              },
+              {
+                id: "working-keys" as const,
+                label: "Keys",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M8.5 8h6M12.5 8v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                ),
+              },
+              {
+                id: "sbg-agent" as const,
+                label: "SBG",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                  </svg>
+                ),
+              },
+              {
+                id: "multi-batch" as const,
+                label: "Batch",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                    <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    <circle cx="10" cy="3" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="6" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="9" r="1.5" fill="currentColor" />
+                  </svg>
+                ),
+              },
+            ]).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                  activeTab === t.id
+                    ? "bg-secondary text-foreground shadow-[inset_0_-2px_0_oklch(0.76_0.17_192_/_0.8)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                }`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* ── CHAT TAB ─────────────────────────────────────────────────────── */}
+        {activeTab === "chat" && (
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+
+            {/* Chat messages area */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 flex flex-col gap-3">
+              {chatHistory.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full gap-5 text-center py-16">
+                  {/* Icon — clean SVG, no broken images */}
+                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_24px_oklch(0.76_0.17_192_/_0.12)]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-primary">
+                      <circle cx="7" cy="12" r="4" />
+                      <path d="M11 12h9M17 10v4" />
+                    </svg>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <p className="text-base font-semibold text-foreground text-balance">{selectedPreset.name}</p>
+                    <p className="text-xs text-muted-foreground max-w-xs leading-relaxed text-pretty">
+                      Type a message below to test your API key with a real request. Response, latency, and token usage will appear here.
+                    </p>
+                  </div>
+
+                  {!apiKey && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border bg-secondary/40 max-w-xs">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0">
+                        <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
+                      </svg>
+                      <p className="text-[10px] text-muted-foreground">
+                        Enter your API key in the <span className="text-foreground font-medium">API Key</span> field on the left first.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-1.5 justify-center max-w-xs">
+                    {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setPrompt(s)}
+                        className="text-[10px] px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/60 hover:bg-secondary/60 transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {chatHistory.map((msg, i) => (
+                <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-sm"
+                      : "bg-card border border-border text-foreground rounded-bl-sm"
+                  }`}>
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground/50 px-1">
+                    {msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}
+                  </span>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex items-start gap-2">
+                  <div className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${selectedPreset.color}`}>
+                    <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4" />
+                  </div>
+                  <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-2">
+                    <SpinnerIcon />
+                    <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Result stats bar */}
+              {result && (
+                <div className={`flex flex-wrap items-center gap-3 px-3 py-2 rounded-xl border text-[10px] font-mono ${
+                  result.ok ? "border-green-400/20 bg-green-400/5" : "border-red-400/20 bg-red-400/5"
+                }`}>
+                  <span className={`font-semibold ${result.ok ? "text-green-400" : "text-red-400"}`}>
+                    HTTP {result.status}
+                  </span>
+                  <span className="text-muted-foreground">{result.durationMs}ms</span>
+                  {result.tokenUsage?.promptTokens !== undefined && (
+                    <span className="text-muted-foreground">in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span></span>
+                  )}
+                  {result.tokenUsage?.completionTokens !== undefined && (
+                    <span className="text-muted-foreground">out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span></span>
+                  )}
+                  {/* Rate limit quick view */}
+                  {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
+                    <span className="text-muted-foreground">
+                      req left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
+                    </span>
+                  )}
+                  {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
+                    <span className="text-muted-foreground">
+                      tok left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
+                    </span>
+                  )}
+                  {/* cURL copy */}
+                  {result.curlFull && (
+                    <button
+                      onClick={copyCurlFull}
+                      className="ml-auto flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <CopyIcon />
+                      {copiedCurlFull ? <span className="text-green-400">Copied</span> : "cURL"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Chat input */}
+            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key first..."}
+                  disabled={loading || !apiKey.trim()}
+                  rows={2}
+                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
+                />
+                <button
+                  onClick={runTest}
+                  disabled={!apiKey.trim() || !prompt.trim() || loading}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 min-w-[80px] h-[46px]"
+                >
+                  {loading ? <SpinnerIcon /> : <SendIcon />}
+                  {loading ? "..." : "Send"}
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-1.5">
+                <p className="text-[9px] text-muted-foreground/40">Shift+Enter for newline</p>
+                {chatHistory.length > 0 && (
+                  <button
+                    onClick={() => { setChatHistory([]); setResult(null) }}
+                    className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  >
+                    Clear chat
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── VISION TAB ────────────��──────────────────────────────────��───── */}
         {activeTab === "vision" && (
@@ -2385,7 +2557,7 @@ export default function ManualKeyTester() {
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Extracted Text</span>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => navigator.clipboard.writeText(ocrResult)}
+                        onClick={() => copyToClipboard(ocrResult).catch(() => {})}
                         className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-transparent hover:bg-secondary transition-colors"
                       >
                         <CopyIcon /> Copy
@@ -2542,7 +2714,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── SBG AGENT TAB ─────────────────────────────────────────────────── */}
+        {/* ── SBG AGENT TAB ────────────────────────────────��────────────────── */}
         {activeTab === "sbg-agent" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
