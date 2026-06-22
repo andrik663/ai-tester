@@ -8,9 +8,20 @@ import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
+import SBGAgent from "@/components/sbg-agent"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
+
+interface ProviderModelInfo {
+  id: string
+  label: string
+  tag: string
+  ctx: string
+  in: string
+  out: string
+  cache: string
+}
 
 interface ProviderPreset {
   id: string
@@ -22,6 +33,7 @@ interface ProviderPreset {
   docsUrl: string
   createKeyUrl: string   // direct link to API key creation page
   color: string
+  models?: ProviderModelInfo[]  // compact model catalog with pricing
 }
 
 const PRESETS: ProviderPreset[] = [
@@ -251,18 +263,72 @@ const PRESETS: ProviderPreset[] = [
   {
     id: "novita",
     name: "Novita AI",
-    endpoint: "https://api.novita.ai/v3/openai/chat/completions",
+    endpoint: "https://api.novita.ai/openai/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "meta-llama/llama-3.3-70b-instruct",
+      model: "deepseek/deepseek-v4-pro",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://novita.ai/docs/api-reference/llm-openai-compatible-apis",
+    models: [
+      // ── NEW (Jun 2026) ────────────────────────────────────────────────────
+      { id: "zai-org/glm-5-2",                                   label: "GLM 5.2 (New)",               tag: "Zai-org",    ctx: "1M ctx",   in: "$1.4/Mt",   out: "$4.4/Mt",   cache: "$0.26/Mt" },
+      { id: "moonshotai/kimi-k2-7-code",                         label: "Kimi K2.7 Code (Hot)",        tag: "MoonshotAI", ctx: "256K ctx", in: "$0.95/Mt",  out: "$4/Mt",     cache: "$0.19/Mt" },
+      { id: "minimax/minimax-m3",                                label: "MiniMax M3 (New)",            tag: "MiniMax",    ctx: "977K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
+      { id: "deepseek/deepseek-v4-pro",                          label: "DeepSeek V4 Pro (Hot)",       tag: "DeepSeek",   ctx: "1M ctx",   in: "$1.6/Mt",   out: "$3.2/Mt",   cache: "$0.135/Mt"},
+      { id: "deepseek/deepseek-v4-flash",                        label: "DeepSeek V4 Flash (Hot)",     tag: "DeepSeek",   ctx: "1M ctx",   in: "$0.14/Mt",  out: "$0.28/Mt",  cache: "$0.028/Mt"},
+      { id: "deepseek/deepseek-v3-2",                            label: "DeepSeek V3.2 (Hot)",         tag: "DeepSeek",   ctx: "160K ctx", in: "$0.269/Mt", out: "$0.4/Mt",   cache: "$0.135/Mt"},
+      { id: "stepfun/step-3-7-flash",                            label: "Step 3.7 Flash (New)",        tag: "StepFun",    ctx: "256K ctx", in: "$0.2/Mt",   out: "$1.15/Mt",  cache: "$0.04/Mt" },
+      { id: "nvidia/nemotron-3-nano-30b-a3b",                    label: "Nemotron 3 Nano 30B (New)",   tag: "Nvidia",     ctx: "256K ctx", in: "$0.05/Mt",  out: "$0.2/Mt",   cache: "" },
+      { id: "baidu/cobuddy",                                     label: "CoBuddy (New)",               tag: "Baidu",      ctx: "128K ctx", in: "$0.29/Mt",  out: "$1.13/Mt",  cache: "$0.07/Mt" },
+      { id: "xiaomi/mimo-v2-5",                                  label: "MiMo-V2.5 (New)",             tag: "Xiaomi",     ctx: "1M ctx",   in: "$0.168/Mt", out: "$0.336/Mt", cache: "$0.003/Mt"},
+      { id: "xiaomi/mimo-v2-5-pro",                              label: "MiMo-V2.5-Pro (New)",         tag: "Xiaomi",     ctx: "1M ctx",   in: "$0.522/Mt", out: "$1.044/Mt", cache: "$0.004/Mt"},
+      // ── DeepSeek ─────────────────────────────────────────────────────────
+      { id: "deepseek/deepseek-r1-0528",                         label: "DeepSeek R1 0528",            tag: "DeepSeek",   ctx: "160K ctx", in: "$0.7/Mt",   out: "$2.5/Mt",   cache: "$0.35/Mt" },
+      { id: "deepseek/deepseek-v3-0324",                         label: "DeepSeek V3 0324",            tag: "DeepSeek",   ctx: "160K ctx", in: "$0.27/Mt",  out: "$1.12/Mt",  cache: "$0.135/Mt"},
+      { id: "deepseek/deepseek-v3-1",                            label: "DeepSeek V3.1",               tag: "DeepSeek",   ctx: "131K ctx", in: "$0.27/Mt",  out: "$1/Mt",     cache: "$0.135/Mt"},
+      { id: "deepseek/deepseek-r1",                              label: "DeepSeek R1 (Turbo)",         tag: "DeepSeek",   ctx: "64K ctx",  in: "$0.7/Mt",   out: "$2.5/Mt",   cache: "" },
+      { id: "deepseek/deepseek-v3",                              label: "DeepSeek V3 (Turbo)",         tag: "DeepSeek",   ctx: "64K ctx",  in: "$0.4/Mt",   out: "$1.3/Mt",   cache: "" },
+      { id: "deepseek/deepseek-prover-v2-671b",                  label: "DeepSeek Prover V2 671B",     tag: "DeepSeek",   ctx: "160K ctx", in: "$0.7/Mt",   out: "$2.5/Mt",   cache: "" },
+      { id: "deepseek/deepseek-ocr-2",                           label: "DeepSeek-OCR 2",              tag: "DeepSeek",   ctx: "8K ctx",   in: "$0.03/Mt",  out: "$0.03/Mt",  cache: "" },
+      // ── Qwen ─────────────────────────────────────────────────────────────
+      { id: "qwen/qwen3-7-max",                                  label: "Qwen3.7-Max",                 tag: "Qwen",       ctx: "977K ctx", in: "$1.25/Mt",  out: "$3.75/Mt",  cache: "$0.25/Mt" },
+      { id: "qwen/qwen3-6-27b",                                  label: "Qwen3.6-27B (New)",           tag: "Qwen",       ctx: "256K ctx", in: "$0.6/Mt",   out: "$3.6/Mt",   cache: "" },
+      { id: "qwen/qwen3-5-27b",                                  label: "Qwen3.5-27B",                 tag: "Qwen",       ctx: "256K ctx", in: "$0.3/Mt",   out: "$2.4/Mt",   cache: "" },
+      { id: "qwen/qwen3-coder-480b-a35b-instruct",               label: "Qwen3-Coder 480B A35B",       tag: "Qwen",       ctx: "256K ctx", in: "$0.38/Mt",  out: "$1.55/Mt",  cache: "" },
+      { id: "qwen/qwen3-235b-a22b-instruct-2507",                label: "Qwen3-235B A22B 2507 Think",  tag: "Qwen",       ctx: "131K ctx", in: "$0.3/Mt",   out: "$3/Mt",     cache: "" },
+      { id: "qwen/qwen3-235b-a22b-fp8",                          label: "Qwen3-235B A22B FP8",         tag: "Qwen",       ctx: "131K ctx", in: "$0.09/Mt",  out: "$0.58/Mt",  cache: "" },
+      { id: "qwen/qwen3-vl-30b-a3b-instruct",                    label: "Qwen3 VL 30B Instruct",       tag: "Qwen VL",    ctx: "131K ctx", in: "$0.2/Mt",   out: "$0.7/Mt",   cache: "" },
+      { id: "qwen/qwen2.5-vl-72b-instruct",                      label: "Qwen2.5-VL 72B",              tag: "Qwen VL",    ctx: "32K ctx",  in: "$0.38/Mt",  out: "$0.4/Mt",   cache: "" },
+      // ── GLM / Zai-org ────────────────────────────────────────────────────
+      { id: "zai-org/glm-5-1",                                   label: "GLM-5.1 (New)",               tag: "Zai-org",    ctx: "200K ctx", in: "$1.38/Mt",  out: "$4.4/Mt",   cache: "$0.26/Mt" },
+      { id: "zai-org/glm-4-5",                                   label: "GLM-4.5",                     tag: "Zai-org",    ctx: "131K ctx", in: "$0.6/Mt",   out: "$2.2/Mt",   cache: "$0.11/Mt" },
+      { id: "zai-org/glm-4-7-flash",                             label: "GLM-4.7-Flash",               tag: "Zai-org",    ctx: "200K ctx", in: "$0.07/Mt",  out: "$0.4/Mt",   cache: "$0.01/Mt" },
+      // ── MiniMax ──────────────────────────────────────────────────────────
+      { id: "minimax/minimax-m2-7",                              label: "MiniMax M2.7 (Hot)",          tag: "MiniMax",    ctx: "200K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
+      { id: "minimax/minimax-m2-5-highspeed",                    label: "MiniMax M2.5-Highspeed",      tag: "MiniMax",    ctx: "200K ctx", in: "$0.6/Mt",   out: "$2.4/Mt",   cache: "$0.03/Mt" },
+      { id: "minimax/minimax-m1",                                label: "MiniMax M1",                  tag: "MiniMax",    ctx: "1M ctx",   in: "$0.55/Mt",  out: "$2.2/Mt",   cache: "" },
+      // ── Kimi ─────────────────────────────────────────────────────────────
+      { id: "moonshotai/kimi-k2-6",                              label: "Kimi K2.6 (New)",             tag: "MoonshotAI", ctx: "256K ctx", in: "$0.8/Mt",   out: "$3.4/Mt",   cache: "$0.16/Mt" },
+      { id: "moonshotai/kimi-k2-instruct",                       label: "Kimi K2 Instruct",            tag: "MoonshotAI", ctx: "131K ctx", in: "$0.57/Mt",  out: "$2.3/Mt",   cache: "" },
+      { id: "moonshotai/kimi-k2-thinking",                       label: "Kimi K2 Thinking",            tag: "MoonshotAI", ctx: "256K ctx", in: "$0.6/Mt",   out: "$2.5/Mt",   cache: "$0.15/Mt" },
+      // ── Google Gemma ─────────────────────────────────────────────────────
+      { id: "google/gemma-4-26b-a4b",                            label: "Gemma 4 26B A4B",             tag: "Gemma",      ctx: "256K ctx", in: "$0.13/Mt",  out: "$0.4/Mt",   cache: "" },
+      { id: "google/gemma-4-31b",                                label: "Gemma 4 31B",                 tag: "Gemma",      ctx: "256K ctx", in: "$0.14/Mt",  out: "$0.4/Mt",   cache: "" },
+      // ── Meta Llama ───────────────────────────────────────────────────────
+      { id: "meta-llama/llama-4-maverick-17b-128e-instruct-fp8", label: "Llama 4 Maverick FP8",       tag: "Meta",       ctx: "1M ctx",   in: "$0.27/Mt",  out: "$0.85/Mt",  cache: "" },
+      { id: "meta-llama/llama-4-scout-17b-16e-instruct",         label: "Llama 4 Scout",               tag: "Meta",       ctx: "131K ctx", in: "$0.18/Mt",  out: "$0.59/Mt",  cache: "" },
+      { id: "meta-llama/llama-3.3-70b-instruct",                 label: "Llama 3.3 70B",               tag: "Meta",       ctx: "131K ctx", in: "$0.135/Mt", out: "$0.4/Mt",   cache: "" },
+      { id: "meta-llama/llama-3.1-8b-instruct",                  label: "Llama 3.1 8B",                tag: "Meta",       ctx: "16K ctx",  in: "$0.02/Mt",  out: "$0.05/Mt",  cache: "" },
+      // ── OpenAI OSS ───────────────────────────────────────────────────────
+      { id: "openai/openai-gpt-oss-120b",                        label: "OpenAI GPT OSS 120B",         tag: "OpenAI",     ctx: "131K ctx", in: "$0.05/Mt",  out: "$0.25/Mt",  cache: "" },
+      { id: "openai/openai-gpt-oss-20b",                         label: "OpenAI GPT OSS 20B",          tag: "OpenAI",     ctx: "131K ctx", in: "$0.04/Mt",  out: "$0.15/Mt",  cache: "" },
+    ],
+    docsUrl: "https://novita.ai/docs/api-reference/model-apis-llm-create-chat-completion",
     createKeyUrl: "https://novita.ai/settings/key-management",
     color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
   },
@@ -812,6 +878,68 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
+// ── Provider logos (theSVG.org CDN) ───────────────────────────────────────────
+// Using jsDelivr mirror for performance. Variants: light = white for dark BG, default fallback.
+const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
+
+const PROVIDER_LOGOS: Record<string, string> = {
+  dahono:      `${BASE}/dahono/color.svg`,
+  anthropic:   `${BASE}/anthropic/light.svg`,
+  openai:      `${BASE}/openai/dark.svg`,
+  google:      `${BASE}/google/default.svg`,
+  xai:         `${BASE}/x/mono.svg`,
+  deepseek:    `${BASE}/deepseek/default.svg`,
+  qwen:        `${BASE}/alibaba-cloud/mono.svg`,
+  zhipu:       `${BASE}/zhipuai/default.svg`,
+  minimax:     `${BASE}/minimax/default.svg`,
+  cerebras:    `${BASE}/cerebras/mono.svg`,
+  fireworks:   `${BASE}/fireworks-ai/default.svg`,
+  novita:      `${BASE}/novita/default.svg`,
+  cloudflare:  `${BASE}/cloudflare-workers/default.svg`,
+  openrouter:  `${BASE}/openrouter/default.svg`,
+  sambanova:   `${BASE}/sambanova/default.svg`,
+  nvidia:      `${BASE}/nvidia/mono.svg`,
+  hyperbolic:  `${BASE}/hyperbolic/default.svg`,
+  ai21:        `${BASE}/ai21-labs/default.svg`,
+  groq:        `${BASE}/groq/default.svg`,
+  together:    `${BASE}/together-ai/default.svg`,
+  mistral:     `${BASE}/mistral-ai/default.svg`,
+  cohere:      `${BASE}/cohere/default.svg`,
+  perplexity:  `${BASE}/perplexity/default.svg`,
+  huggingface: `${BASE}/hugging-face/default.svg`,
+  replicate:   `${BASE}/replicate/default.svg`,
+  moonshot:    `${BASE}/moonshot-ai/default.svg`,
+  baidu:       `${BASE}/baidu/default.svg`,
+  yi:          `${BASE}/01dotai/mono.svg`,
+  stepfun:     `${BASE}/stepfun/default.svg`,
+  hunyuan:     `${BASE}/tencent/mono.svg`,
+  azure:       `${BASE}/microsoft-azure/default.svg`,
+  upstage:     `${BASE}/upstage/default.svg`,
+  writer:      `${BASE}/writer/default.svg`,
+  lepton:      `${BASE}/lepton-ai/default.svg`,
+  bfl:         `${BASE}/black-forest-labs/default.svg`,
+  bytedance:   `${BASE}/bytedance/default.svg`,
+  recraft:     `${BASE}/recraft/default.svg`,
+  ideogram:    `${BASE}/ideogram/default.svg`,
+  luma:        `${BASE}/luma-ai/default.svg`,
+  amazon:      `${BASE}/amazon-web-services/mono.svg`,
+}
+
+function ProviderLogo({ providerId, className = "w-4 h-4" }: { providerId: string; className?: string }) {
+  const src = PROVIDER_LOGOS[providerId]
+  if (!src) return null
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      className={`${className} object-contain flex-shrink-0`}
+      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
+    />
+  )
+}
+
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 function SpinnerIcon() {
@@ -1049,7 +1177,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys">("vision")
+  const [activeTab, setActiveTab] = useState<"vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent">("vision")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Image Gen config — default to first Google image model
@@ -1374,15 +1502,23 @@ export default function ManualKeyTester() {
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
-                  className={`text-[11px] font-medium px-2.5 py-2 rounded transition-colors text-left w-full flex items-center gap-2 group ${
+                  className={`text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors text-left w-full flex items-center gap-2 group ${
                     selectedPreset.id === p.id
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 border transition-colors ${
-                    selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
-                  }`} />
+                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors overflow-hidden ${
+                    selectedPreset.id === p.id ? "opacity-100" : "opacity-60 group-hover:opacity-90"
+                  }`}>
+                    {PROVIDER_LOGOS[p.id] ? (
+                      <ProviderLogo providerId={p.id} className="w-4 h-4" />
+                    ) : (
+                      <span className={`w-1.5 h-1.5 rounded-full border transition-colors ${
+                        selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
+                      }`} />
+                    )}
+                  </span>
                   {p.name}
                 </button>
               ))}
@@ -1548,6 +1684,59 @@ export default function ManualKeyTester() {
               Use <code className="text-primary/70">{"{{API_KEY}}"}</code> as placeholder — replaced with your key on send.
             </p>
           </div>
+
+          {/* Compact model catalog (providers with rich model list) */}
+          {selectedPreset.models && selectedPreset.models.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Models ({selectedPreset.models.length})
+                <span className="ml-1 normal-case font-normal text-muted-foreground/40">— click to use</span>
+              </p>
+              <div className="max-h-64 overflow-y-auto flex flex-col gap-0.5 pr-0.5">
+                {selectedPreset.models.map((m) => {
+                  // Check if this model is currently in the body template
+                  const isActive = bodyTemplate.includes(`"${m.id}"`)
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        try {
+                          const parsed = JSON.parse(bodyTemplate)
+                          parsed.model = m.id
+                          setBodyTemplate(JSON.stringify(parsed, null, 2))
+                        } catch {
+                          // fallback: just inject the model id into a new template
+                          setBodyTemplate(JSON.stringify({
+                            model: m.id,
+                            max_tokens: 1024,
+                            messages: [{ role: "user", content: "{{PROMPT}}" }],
+                          }, null, 2))
+                        }
+                      }}
+                      className={`text-left w-full px-2 py-1.5 rounded transition-colors flex flex-col gap-0.5 group ${
+                        isActive
+                          ? "bg-primary/10 border border-primary/20"
+                          : "hover:bg-secondary/50 border border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-[10px] font-medium truncate ${isActive ? "text-primary" : "text-foreground group-hover:text-foreground"}`}>
+                          {m.label}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground/50 bg-muted/40 px-1 py-0.5 rounded flex-shrink-0">{m.tag}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                        <span className="text-[9px] text-muted-foreground/70">In: <span className="text-emerald-400/80">{m.in}</span></span>
+                        <span className="text-[9px] text-muted-foreground/70">Out: <span className="text-amber-400/80">{m.out}</span></span>
+                        {m.cache && <span className="text-[9px] text-muted-foreground/70">Cache: <span className="text-sky-400/80">{m.cache}</span></span>}
+                        <span className="text-[9px] text-muted-foreground/50">{m.ctx}</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Request body */}
           <div className="flex flex-col gap-1.5">
@@ -1769,10 +1958,30 @@ export default function ManualKeyTester() {
           </button>
 
           {/* Divider */}
+          <div className="w-px h-4 bg-border flex-shrink-0 mx-1" />
+
+          {/* SBG Agent tab */}
+          <button
+            onClick={() => setActiveTab("sbg-agent")}
+            title="SBG Agent — Research & Coding Helper"
+            className={`relative flex items-center gap-1 px-2 h-8 rounded text-[10px] font-semibold font-mono transition-colors ${
+              activeTab === "sbg-agent"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+            }`}
+          >
+            SBG
+            {activeTab !== "sbg-agent" && (
+              <span className="text-[7px] font-bold px-0.5 rounded bg-primary/10 text-primary leading-none py-px">AI</span>
+            )}
+          </button>
+
+          {/* Divider */}
           <div className="hidden sm:block w-px h-4 bg-border flex-shrink-0 mr-2" />
 
-          {/* Provider badge — monochrome, no color tiles */}
-          <span className="hidden sm:inline-flex items-center text-[10px] font-mono text-muted-foreground truncate max-w-[130px] flex-shrink-0">
+          {/* Provider badge — with logo */}
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate max-w-[160px] flex-shrink-0">
+            <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70" />
             {selectedPreset.name}
           </span>
 
@@ -2136,6 +2345,13 @@ export default function ManualKeyTester() {
                 setConfigOpen(true)
               }}
             />
+          </div>
+        )}
+
+        {/* ── SBG AGENT TAB ─────────────────────────────────────────────────── */}
+        {activeTab === "sbg-agent" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
           </div>
         )}
 

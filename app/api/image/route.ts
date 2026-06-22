@@ -101,9 +101,9 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
 
   // ── Fireworks AI ───────────────────────────────────────────────────────────
   fireworks: {
-    buildUrl: () => "https://api.fireworks.ai/inference/v1/image_generation/accounts/fireworks/models/flux-1-schnell-fp8",
+    buildUrl: (model) => `https://api.fireworks.ai/inference/v1/image_generation/${model}`,
     buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
-    buildBody: (prompt, model, aspectRatio) => {
+    buildBody: (prompt, _model, aspectRatio) => {
       const wMap: Record<string, number> = { "1:1": 1024, "16:9": 1344, "9:16": 768 }
       const hMap: Record<string, number> = { "1:1": 1024, "16:9": 768, "9:16": 1344 }
       return { prompt, width: wMap[aspectRatio] ?? 1024, height: hMap[aspectRatio] ?? 1024, num_inference_steps: 4 }
@@ -122,18 +122,55 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
   },
 
   // ── Novita AI ──────────────────────────────────────────────────────────────
+  // Dedicated model endpoints (Seedream, FLUX.2, Kontext) use /v3/async/{slug}
+  // Legacy SD endpoints use /v3/async/txt2img with request.model_name
   novita: {
-    buildUrl: () => "https://api.novita.ai/v3/async/txt2img",
+    buildUrl: (model) => {
+      // Dedicated-endpoint models have their own slug route
+      const dedicatedModels = [
+        "seedream-5-0-lite",
+        "seedream-4-5",
+        "seedream-4-0",
+        "flux-2-dev",
+        "flux-2-pro",
+        "flux-2-flex",
+        "flux-1-kontext-pro",
+        "flux-1-kontext-max",
+        "flux-1-kontext-dev",
+      ]
+      if (dedicatedModels.includes(model)) {
+        return `https://api.novita.ai/v3/async/${model}`
+      }
+      return "https://api.novita.ai/v3/async/txt2img"
+    },
     buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
     buildBody: (prompt, model, aspectRatio) => {
       const wMap: Record<string, number> = { "1:1": 1024, "16:9": 1344, "9:16": 768 }
       const hMap: Record<string, number> = { "1:1": 1024, "16:9": 768, "9:16": 1344 }
+      const w = wMap[aspectRatio] ?? 1024
+      const h = hMap[aspectRatio] ?? 1024
+      const dedicatedModels = [
+        "seedream-5-0-lite",
+        "seedream-4-5",
+        "seedream-4-0",
+        "flux-2-dev",
+        "flux-2-pro",
+        "flux-2-flex",
+        "flux-1-kontext-pro",
+        "flux-1-kontext-max",
+        "flux-1-kontext-dev",
+      ]
+      if (dedicatedModels.includes(model)) {
+        // Dedicated endpoints accept prompt + pixel_size directly
+        return { prompt, pixel_size: `${w}*${h}` }
+      }
+      // Legacy SD txt2img format
       return {
         request: {
           model_name: model,
           prompt,
-          width: wMap[aspectRatio] ?? 1024,
-          height: hMap[aspectRatio] ?? 1024,
+          width: w,
+          height: h,
           image_num: 1,
           steps: 20,
           guidance_scale: 7.5,
@@ -142,14 +179,23 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
       }
     },
     extractImage: (data: unknown) => {
-      const d = data as { data?: { imgs?: Array<{ image_url?: string }> }; imgs?: Array<{ image_url?: string }> }
-      const imgs = d.data?.imgs ?? d.imgs ?? []
-      // Novita returns URLs; we can't inline base64 easily, return null and URL separately
-      return { imageData: null, imageMimeType: "image/png", textContent: imgs[0]?.image_url ?? "" }
+      // Dedicated endpoints: { images: [{ image_url }] }
+      // Legacy txt2img: { imgs: [{ image_url }] } or task-result format
+      const d = data as {
+        images?: Array<{ image_url?: string }>
+        data?: { imgs?: Array<{ image_url?: string }> }
+        imgs?: Array<{ image_url?: string }>
+      }
+      const url =
+        d.images?.[0]?.image_url ??
+        d.data?.imgs?.[0]?.image_url ??
+        d.imgs?.[0]?.image_url ??
+        ""
+      return { imageData: null, imageMimeType: "image/png", textContent: url }
     },
     extractError: (data: unknown, status: number) => {
-      const d = data as { reason?: string; message?: string }
-      return { error: d.reason ?? d.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+      const d = data as { reason?: string; message?: string; code?: number }
+      return { error: d.reason ?? d.message ?? `HTTP ${status}`, errorCode: d.code ?? status, errorStatus: "ERROR" }
     },
   },
 
