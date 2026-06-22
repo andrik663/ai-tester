@@ -1418,7 +1418,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ───���────────────────────────��─��─────────────────────
+  // ── Vision / OCR helpers ─���─���────────────────────────��─��─────────────────────
 
   function handleImageFile(
     file: File,
@@ -2139,6 +2139,18 @@ export default function ManualKeyTester() {
           <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9">
             {([
               {
+                id: "multi-batch" as const,
+                label: "Batch",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                    <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    <circle cx="10" cy="3" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="6" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="9" r="1.5" fill="currentColor" />
+                  </svg>
+                ),
+              },
+              {
                 id: "chat" as const,
                 label: "Chat",
                 icon: (
@@ -2183,18 +2195,6 @@ export default function ManualKeyTester() {
                 icon: (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
                     <circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                  </svg>
-                ),
-              },
-              {
-                id: "multi-batch" as const,
-                label: "Batch",
-                icon: (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-                    <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    <circle cx="10" cy="3" r="1.5" fill="currentColor" />
-                    <circle cx="10" cy="6" r="1.5" fill="currentColor" />
-                    <circle cx="10" cy="9" r="1.5" fill="currentColor" />
                   </svg>
                 ),
               },
