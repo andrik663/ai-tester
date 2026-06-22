@@ -12,6 +12,7 @@ import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
+import KeyInfoPanel from "@/components/key-info-panel"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -38,6 +39,35 @@ interface ProviderPreset {
   createKeyUrl: string   // direct link to API key creation page
   color: string
   models?: ProviderModelInfo[]  // compact model catalog with pricing
+}
+
+// ── Auto-detect provider from key prefix ─────────────────────────────────────
+// Returns a preset id string when the key format matches a known provider.
+function detectProviderFromKey(key: string): string | null {
+  if (!key || key.trim().length < 4) return null
+  const k = key.trim()
+  if (k.startsWith("sk-ant-api"))                           return "anthropic"
+  if (k.startsWith("sk-ant-"))                              return "anthropic"
+  if (k.startsWith("AIzaSy") || k.startsWith("AIza"))      return "google"
+  if (k.startsWith("gsk_"))                                 return "groq"
+  if (k.startsWith("hf_"))                                  return "huggingface"
+  if (k.startsWith("ghp_") || k.startsWith("github_pat_")) return null // GitHub — not an AI provider here
+  if (k.startsWith("sk_live_") || k.startsWith("sk_test_")) return null // Stripe
+  if (k.startsWith("xai-"))                                 return "xai"
+  if (k.startsWith("sk-proj-") || k.startsWith("sk-None-")) return "openai"
+  // DeepSeek keys look like sk-<hex> — differentiated by length and by not matching OpenAI patterns
+  if (k.startsWith("sk-") && !k.startsWith("sk_") && k.length > 40) {
+    // OpenAI keys are 56 chars starting sk-proj- or sk-None- (already caught) or older sk- 51 chars
+    // DeepSeek uses sk- too but shorter. Best effort — return openai as it's more common.
+    return "openai"
+  }
+  if (k.startsWith("pplx-"))                                return "perplexity"
+  if (k.startsWith("or-"))                                  return "openrouter"
+  if (k.startsWith("fw-"))                                  return "fireworks"
+  if (k.startsWith("nvapi-"))                               return "nvidia"
+  if (k.startsWith("dc-"))                                  return "dahono"
+  if (k.startsWith("dk-"))                                  return "dahono"
+  return null
 }
 
 const PRESETS: ProviderPreset[] = [
@@ -1347,6 +1377,10 @@ export default function ManualKeyTester() {
   const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("chat")
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
+  // Increment to trigger a fresh KeyInfoPanel fetch (bumped after successful chat)
+  const [keyInfoTick, setKeyInfoTick] = useState(0)
+  // Last known response headers — passed to KeyInfoPanel for rate limit data
+  const [lastResponseHeaders, setLastResponseHeaders] = useState<Record<string, string> | undefined>(undefined)
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1368,11 +1402,36 @@ export default function ManualKeyTester() {
   const visionEndRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Debounce API key changes by 400ms
+  // Debounce API key changes by 400ms — also auto-detects provider from key prefix
   const handleApiKeyChange = useCallback((val: string) => {
     setApiKey(val)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => setDebouncedApiKey(val), 400)
+    debounceRef.current = setTimeout(() => {
+      setDebouncedApiKey(val)
+      // Auto-detect: if the current preset is "custom" or the key prefix clearly matches a different provider, switch
+      const detectedId = detectProviderFromKey(val)
+      if (detectedId) {
+        setSelectedPreset((current) => {
+          if (current.id === detectedId) return current  // already correct
+          // Only auto-switch when the user hasn't explicitly customized the endpoint
+          const detected = PRESETS.find((p) => p.id === detectedId)
+          if (detected) {
+            // Apply full preset (endpoint, headers, body) — mirrors applyPreset but without setResult
+            setEndpoint(detected.endpoint)
+            setMethod(detected.method)
+            setHeaderRows(Object.entries(detected.headers).map(([k, v], i) => ({ key: k, value: v, id: i })))
+            setBodyTemplate(detected.bodyTemplate)
+            const imgModels = getImageCapabilities(detected.id)
+            if (imgModels.length > 0) setImageModel(imgModels[0].id)
+            const { models: vidModels } = getVideoCapabilities(detected.id)
+            if (vidModels.length > 0) setVideoModel(vidModels[0].id)
+            return detected
+          }
+          return current
+        })
+      }
+    }, 400)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -1569,6 +1628,16 @@ export default function ManualKeyTester() {
       const data: ManualTestResult = await res.json()
       setResult(data)
 
+      // Capture response headers for KeyInfoPanel rate-limit enrichment
+      if (data.responseHeaders) {
+        setLastResponseHeaders(data.responseHeaders)
+      }
+
+      // After a successful chat, bump key info so balance/rate-limit refreshes
+      if (data.ok) {
+        setKeyInfoTick((t) => t + 1)
+      }
+
       const reply = data.chatReply ?? (data.ok ? data.responseBody : null)
       if (reply) {
         const assistantMsg: ChatMessage = {
@@ -1686,9 +1755,16 @@ export default function ManualKeyTester() {
 
           {/* Provider selector */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
+              </label>
+              {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
+                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
+                  auto-detected
+                </span>
+              )}
+            </div>
             <div className="flex flex-col gap-px max-h-52 overflow-y-auto">
               {PRESETS.map((p) => (
                 <button
@@ -1803,6 +1879,16 @@ export default function ManualKeyTester() {
               </button>
             )}
           </div>
+
+          {/* Key Info Panel — enriched data after key is entered */}
+          {apiKey.trim().length >= 8 && (
+            <KeyInfoPanel
+              provider={selectedPreset.id}
+              apiKey={apiKey}
+              responseHeaders={lastResponseHeaders}
+              fetchTick={keyInfoTick}
+            />
+          )}
 
           {/* Endpoint */}
           <div className="flex flex-col gap-2">
@@ -2357,30 +2443,92 @@ export default function ManualKeyTester() {
                     </div>
                   </div>
                   {/* Stats grid */}
-                  {(result.tokenUsage?.promptTokens !== undefined || result.responseHeaders?.["x-ratelimit-remaining-requests"] || result.responseHeaders?.["x-ratelimit-remaining-tokens"]) && (
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-[10px] font-mono">
-                      {result.tokenUsage?.promptTokens !== undefined && (
-                        <span className="text-muted-foreground">
-                          in: <span className="text-foreground font-semibold">{result.tokenUsage.promptTokens}</span> tok
-                        </span>
-                      )}
-                      {result.tokenUsage?.completionTokens !== undefined && (
-                        <span className="text-muted-foreground">
-                          out: <span className="text-foreground font-semibold">{result.tokenUsage.completionTokens}</span> tok
-                        </span>
-                      )}
-                      {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
-                        <span className="text-muted-foreground">
-                          req left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
-                        </span>
-                      )}
-                      {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
-                        <span className="text-muted-foreground">
-                          tok left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {(() => {
+                    const rh = result.responseHeaders ?? {}
+                    const reqRem = rh["x-ratelimit-remaining-requests"] ?? rh["anthropic-ratelimit-requests-remaining"]
+                    const reqLim = rh["x-ratelimit-limit-requests"] ?? rh["anthropic-ratelimit-requests-limit"]
+                    const reqReset = rh["x-ratelimit-reset-requests"] ?? rh["anthropic-ratelimit-requests-reset"]
+                    const tokRem = rh["x-ratelimit-remaining-tokens"] ?? rh["anthropic-ratelimit-tokens-remaining"]
+                    const tokLim = rh["x-ratelimit-limit-tokens"] ?? rh["anthropic-ratelimit-tokens-limit"]
+                    const hasStats = result.tokenUsage?.promptTokens !== undefined || reqRem || tokRem
+                    if (!hasStats) return null
+
+                    function fmtReset(s?: string): string | null {
+                      if (!s) return null
+                      const iso = s.match(/^PT?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+\.?\d*)S)?$/i)
+                      if (iso) {
+                        const h = parseInt(iso[1] ?? "0"), m = parseInt(iso[2] ?? "0"), sec = Math.round(parseFloat(iso[3] ?? "0"))
+                        const parts: string[] = []
+                        if (h) parts.push(`${h}h`)
+                        if (m) parts.push(`${m}m`)
+                        if (sec) parts.push(`${sec}s`)
+                        return parts.join(" ") || null
+                      }
+                      const compact = s.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?/)
+                      if (compact && (compact[1] || compact[2] || compact[3])) {
+                        const parts: string[] = []
+                        if (compact[1]) parts.push(`${compact[1]}h`)
+                        if (compact[2]) parts.push(`${compact[2]}m`)
+                        if (compact[3]) parts.push(`${Math.round(parseFloat(compact[3]))}s`)
+                        return parts.join(" ") || null
+                      }
+                      try {
+                        const dt = new Date(s)
+                        if (!isNaN(dt.getTime())) {
+                          const diff = Math.round((dt.getTime() - Date.now()) / 1000)
+                          if (diff < 0) return "soon"
+                          if (diff < 60) return `${diff}s`
+                          if (diff < 3600) return `${Math.round(diff/60)}m`
+                          return `${Math.round(diff/3600)}h`
+                        }
+                      } catch { /* ignore */ }
+                      return null
+                    }
+
+                    function pctAccent(rem?: string, lim?: string): string {
+                      if (!rem || !lim) return "text-sky-400"
+                      const pct = Math.round((parseInt(rem) / parseInt(lim)) * 100)
+                      if (pct > 60) return "text-green-400"
+                      if (pct > 25) return "text-yellow-400"
+                      return "text-red-400"
+                    }
+
+                    const reqResetLabel = fmtReset(reqReset)
+
+                    return (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-[10px] font-mono border-t border-inherit/20">
+                        {result.tokenUsage?.promptTokens !== undefined && (
+                          <span className="text-muted-foreground">
+                            in: <span className="text-foreground font-semibold">{result.tokenUsage.promptTokens}</span> tok
+                          </span>
+                        )}
+                        {result.tokenUsage?.completionTokens !== undefined && (
+                          <span className="text-muted-foreground">
+                            out: <span className="text-foreground font-semibold">{result.tokenUsage.completionTokens}</span> tok
+                          </span>
+                        )}
+                        {reqRem && (
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            req: <span className={`font-semibold ${pctAccent(reqRem, reqLim)}`}>
+                              {reqLim ? `${reqRem}/${reqLim}` : reqRem}
+                            </span>
+                            {reqResetLabel && (
+                              <span className="text-[9px] text-sky-400/70 bg-sky-400/8 px-1 rounded">
+                                ↺{reqResetLabel}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                        {tokRem && (
+                          <span className="text-muted-foreground">
+                            tok: <span className={`font-semibold ${pctAccent(tokRem, tokLim)}`}>
+                              {tokLim ? `${tokRem}/${tokLim}` : tokRem}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
 
