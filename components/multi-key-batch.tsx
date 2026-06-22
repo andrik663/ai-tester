@@ -5,6 +5,7 @@ import type { MultiKeyResult, MultiKeyTestResponse, TokenUsage } from "@/app/api
 import { PROVIDER_MODELS, maskApiKey } from "@/app/api/multi-key-test/route"
 import type { KeyAllModelsResult, MultiKeyAllResponse, ModelTestResult } from "@/app/api/multi-key-batch-all/route"
 import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
+import { copyToClipboard } from "@/lib/clipboard"
 
 // ── Provider format catalogue ─────────────────────────────────────────────────
 
@@ -440,7 +441,7 @@ function MobileRow({
   )
 }
 
-// ── Desktop table row ─────────────────────────────────────────────────────────
+// ─��� Desktop table row ─────────────────────────────────────────────────────────
 
 function DesktopRow({
   entry,
@@ -589,12 +590,12 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
 
   function copyCurl(e: React.MouseEvent) {
     e.stopPropagation()
-    navigator.clipboard.writeText(r.curlFull).then(() => { setCopiedCurl(true); setTimeout(() => setCopiedCurl(false), 1400) })
+    copyToClipboard(r.curlFull).then(() => { setCopiedCurl(true); setTimeout(() => setCopiedCurl(false), 1400) }).catch(() => {})
   }
   function copyReply(e: React.MouseEvent) {
     e.stopPropagation()
     if (!r.reply) return
-    navigator.clipboard.writeText(r.reply).then(() => { setCopiedReply(true); setTimeout(() => setCopiedReply(false), 1400) })
+    copyToClipboard(r.reply).then(() => { setCopiedReply(true); setTimeout(() => setCopiedReply(false), 1400) }).catch(() => {})
   }
 
   return (
@@ -824,10 +825,10 @@ export default function MultiKeyBatch() {
   }
 
   function copyText(text: string, id: string) {
-    navigator.clipboard.writeText(text).then(() => {
+    copyToClipboard(text).then(() => {
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 1500)
-    })
+    }).catch(() => {})
   }
 
   function copyAllFormats() {

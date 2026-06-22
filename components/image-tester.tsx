@@ -3,6 +3,7 @@
 import { useState, useRef } from "react"
 import { getImageCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import type { ImageModel } from "@/lib/provider-capabilities"
+import { copyToClipboard } from "@/lib/clipboard"
 
 export { IMAGE_ASPECT_RATIOS }
 export const IMAGE_MODELS = getImageCapabilities("google")
@@ -286,12 +287,12 @@ export default function ImageTester({
                   <div className="p-3 relative bg-card">
                     <button
                       onClick={() =>
-                        navigator.clipboard.writeText(
+                        copyToClipboard(
                           JSON.stringify(
                             inspectorTab === "request" ? result.rawRequest : result.rawResponse,
                             null, 2
                           )
-                        )
+                        ).catch(() => {})
                       }
                       className="absolute top-3 right-3 text-[9px] px-2 py-1 rounded bg-secondary text-muted-foreground hover:text-foreground"
                     >

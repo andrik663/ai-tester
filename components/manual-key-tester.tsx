@@ -12,6 +12,7 @@ import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import KeyValidator from "@/components/key-validator"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
+import { copyToClipboard } from "@/lib/clipboard"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -1605,18 +1606,18 @@ export default function ManualKeyTester() {
 
   function copyCurl() {
     if (!result?.curlCommand) return
-    navigator.clipboard.writeText(result.curlCommand).then(() => {
+    copyToClipboard(result.curlCommand).then(() => {
       setCopiedCurl(true)
       setTimeout(() => setCopiedCurl(false), 1500)
-    })
+    }).catch(() => {})
   }
 
   function copyCurlFull() {
     if (!result?.curlFull) return
-    navigator.clipboard.writeText(result.curlFull).then(() => {
+    copyToClipboard(result.curlFull).then(() => {
       setCopiedCurlFull(true)
       setTimeout(() => setCopiedCurlFull(false), 1500)
-    })
+    }).catch(() => {})
   }
 
   return (
@@ -2524,7 +2525,7 @@ export default function ManualKeyTester() {
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Extracted Text</span>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => navigator.clipboard.writeText(ocrResult)}
+                        onClick={() => copyToClipboard(ocrResult).catch(() => {})}
                         className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-transparent hover:bg-secondary transition-colors"
                       >
                         <CopyIcon /> Copy

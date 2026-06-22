@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import type { DahnoBatchTestResponse, BatchModelResult } from "@/app/api/dahono-batch-test/route"
+import { copyToClipboard } from "@/lib/clipboard"
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -74,18 +75,18 @@ function ResultRow({ r }: { r: BatchModelResult }) {
 
   function copyReply() {
     if (!r.reply) return
-    navigator.clipboard.writeText(r.reply).then(() => {
+    copyToClipboard(r.reply).then(() => {
       setCopiedReply(true)
       setTimeout(() => setCopiedReply(false), 1400)
-    })
+    }).catch(() => {})
   }
 
   function copyCurl(e: React.MouseEvent) {
     e.stopPropagation()
-    navigator.clipboard.writeText(r.curlFull).then(() => {
+    copyToClipboard(r.curlFull).then(() => {
       setCopiedCurl(true)
       setTimeout(() => setCopiedCurl(false), 1400)
-    })
+    }).catch(() => {})
   }
 
   return (

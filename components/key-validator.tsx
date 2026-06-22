@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import useSWR from "swr"
 import type { TestKeyResult } from "@/app/api/test-key/route"
+import { copyToClipboard } from "@/lib/clipboard"
 
 // ── Supported providers for the quick tester ──────────────────────────────────
 // NOTE: `testerLabel` must match a key in the TESTERS map in /api/test-key/route.ts
@@ -84,7 +85,7 @@ function MetricChip({ label, value, accent = "default" }: { label: string; value
 function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false)
   function copy() {
-    navigator.clipboard.writeText(text).then(() => {
+    copyToClipboard(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     })
@@ -276,9 +277,11 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
       result.tokenUsage?.totalTokens !== undefined ? `Total Tokens: ${result.tokenUsage.totalTokens}` : null,
       result.curlDisplay ? `\ncURL:\n${result.curlDisplay}` : null,
     ].filter(Boolean).join("\n")
-    navigator.clipboard.writeText(lines).then(() => {
+    copyToClipboard(lines).then(() => {
       setCopiedShare(true)
       setTimeout(() => setCopiedShare(false), 2000)
+    }).catch(() => {
+      // Silent fail — user will see no state change, which is acceptable
     })
   }
 
@@ -292,7 +295,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── Security notice ──────────────────────────────────────────────── */}
+      {/* ── Security notice ─────────────────────────────────���────────────── */}
       <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg border border-border bg-secondary/40">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-primary flex-shrink-0 mt-px">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
