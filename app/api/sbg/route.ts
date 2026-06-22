@@ -5,12 +5,15 @@ import {
   tool,
   UIMessage,
 } from "ai"
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
 import { z } from "zod"
 
 export const maxDuration = 60
 
 // ── SBG Agent: Hermes-powered Research & Coding Helper ────────────────────────
-// Uses nousresearch/hermes-3-llama-3.1-405b via OpenRouter on Vercel AI Gateway
+// Supports two providers:
+//   1. OpenRouter  — via Vercel AI Gateway (requires OpenRouter API key)
+//   2. Ollama      — self-hosted local inference (zero 3rd-party dependency)
 // Tools: webSearch, codeRunner, readFile, writeFile
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -208,31 +211,57 @@ export async function POST(req: Request) {
   const messages: UIMessage[] = body.messages ?? []
   const apiKey: string = body.apiKey ?? ""
 
-  // Model selection — Hermes 3 405B via OpenRouter (default), or any override
-  // The Vercel AI Gateway routes "openrouter/..." prefix to OpenRouter
-  const model = body.model ?? "openrouter/nousresearch/hermes-3-llama-3.1-405b"
+  // provider: "openrouter" | "ollama"
+  const provider: string = body.provider ?? "openrouter"
 
-  // Build extra headers for OpenRouter (pass through if using OpenRouter directly)
+  // Ollama base URL (default: localhost:11434)
+  const ollamaUrl: string = (body.ollamaUrl ?? "http://localhost:11434").replace(/\/$/, "")
+
+  // Model selection
+  // - OpenRouter: "openrouter/nousresearch/hermes-3-llama-3.1-405b" etc.
+  // - Ollama: bare model name like "hermes3", "llama3.1", "mistral"
+  const modelId: string = body.model ?? (
+    provider === "ollama"
+      ? "hermes3"
+      : "openrouter/nousresearch/hermes-3-llama-3.1-405b"
+  )
+
+  let resolvedModel: Parameters<typeof streamText>[0]["model"]
+
+  if (provider === "ollama") {
+    // Ollama exposes an OpenAI-compatible API at /v1
+    const ollama = createOpenAICompatible({
+      name: "ollama",
+      baseURL: `${ollamaUrl}/v1`,
+      // Ollama doesn't need an API key, but the SDK requires a non-empty string
+      apiKey: "ollama",
+    })
+    resolvedModel = ollama(modelId)
+  } else {
+    // OpenRouter via Vercel AI Gateway — model string passed directly
+    // The AI Gateway routes "openrouter/..." prefix automatically
+    resolvedModel = modelId as unknown as Parameters<typeof streamText>[0]["model"]
+  }
+
+  // Build extra headers for OpenRouter attribution
   const extraHeaders: Record<string, string> = {
     "HTTP-Referer": "https://ai-tester.vercel.app",
     "X-Title": "SBG Agent",
   }
 
-  // If user provides their own OpenRouter key, inject it
-  // The Vercel AI Gateway uses OPENROUTER_API_KEY env var automatically
-  // but we also support user-provided keys passed from the UI
-  if (apiKey) {
+  // If user provides their own OpenRouter key, inject it as Bearer
+  if (apiKey && provider === "openrouter") {
     extraHeaders["Authorization"] = `Bearer ${apiKey}`
   }
 
   const result = streamText({
-    model,
+    model: resolvedModel,
     system: SBG_SYSTEM,
     messages: await convertToModelMessages(messages),
     tools,
     stopWhen: stepCountIs(15),
     maxRetries: 2,
-    headers: extraHeaders,
+    ...(provider === "openrouter" ? { headers: extraHeaders } : {}),
   })
 
   return result.toUIMessageStreamResponse()

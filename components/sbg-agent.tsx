@@ -7,12 +7,24 @@ import { DefaultChatTransport } from "ai"
 // ── SBG Agent — Research & Coding Helper powered by Hermes 3 ─────────────────
 
 // Available Hermes models via OpenRouter
-const HERMES_MODELS = [
+const OPENROUTER_MODELS = [
   { id: "openrouter/nousresearch/hermes-3-llama-3.1-405b", label: "Hermes 3 405B (Best)", badge: "HOT" },
   { id: "openrouter/nousresearch/hermes-3-llama-3.1-70b",  label: "Hermes 3 70B (Fast)",  badge: "" },
   { id: "openrouter/nousresearch/hermes-4-405b",           label: "Hermes 4 405B",         badge: "NEW" },
   { id: "openrouter/nousresearch/hermes-4-70b",            label: "Hermes 4 70B",          badge: "NEW" },
 ]
+
+// Popular Ollama models that support tool calling / function calling
+const OLLAMA_MODELS = [
+  { id: "hermes3",          label: "Hermes 3 (8B)",      badge: "REC" },
+  { id: "hermes3:70b",      label: "Hermes 3 (70B)",     badge: "" },
+  { id: "llama3.1",         label: "Llama 3.1 (8B)",     badge: "" },
+  { id: "llama3.1:70b",     label: "Llama 3.1 (70B)",    badge: "" },
+  { id: "mistral",          label: "Mistral (7B)",        badge: "" },
+  { id: "qwen2.5:14b",      label: "Qwen 2.5 (14B)",     badge: "" },
+]
+
+type Provider = "openrouter" | "ollama"
 
 const SUGGESTED_PROMPTS = [
   { icon: "search", text: "Research: What are the latest AI reasoning models in 2026?", label: "Research" },
@@ -248,12 +260,23 @@ interface SBGAgentProps {
 
 export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
   const [input, setInput] = useState("")
-  const [selectedModel, setSelectedModel] = useState(HERMES_MODELS[0].id)
+  const [provider, setProvider] = useState<Provider>("openrouter")
+  const [selectedModel, setSelectedModel] = useState(OPENROUTER_MODELS[0].id)
   const [apiKey, setApiKey] = useState(openRouterApiKey)
   const [showApiKey, setShowApiKey] = useState(false)
   const [showModelPicker, setShowModelPicker] = useState(false)
+  const [ollamaUrl, setOllamaUrl] = useState("http://localhost:11434")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Switch default model when provider changes
+  function switchProvider(next: Provider) {
+    setProvider(next)
+    setSelectedModel(next === "ollama" ? OLLAMA_MODELS[0].id : OPENROUTER_MODELS[0].id)
+    setShowModelPicker(false)
+  }
+
+  const modelList = provider === "ollama" ? OLLAMA_MODELS : OPENROUTER_MODELS
 
   const { messages, sendMessage, status, error, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -264,6 +287,8 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           messages: msgs,
           model: selectedModel,
           apiKey: apiKey.trim(),
+          provider,
+          ollamaUrl: ollamaUrl.trim(),
         },
       }),
     }),
@@ -275,7 +300,7 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
   }, [messages])
 
   const isStreaming = status === "streaming" || status === "submitted"
-  const selectedModelMeta = HERMES_MODELS.find((m) => m.id === selectedModel) ?? HERMES_MODELS[0]
+  const selectedModelMeta = modelList.find((m) => m.id === selectedModel) ?? modelList[0]
 
   function handleSend() {
     const text = input.trim()
@@ -317,6 +342,30 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Provider toggle */}
+          <div className="flex items-center rounded border border-border overflow-hidden text-[10px] font-mono">
+            <button
+              onClick={() => switchProvider("openrouter")}
+              className={`px-2 py-1 transition-colors ${
+                provider === "openrouter"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              OpenRouter
+            </button>
+            <button
+              onClick={() => switchProvider("ollama")}
+              className={`px-2 py-1 transition-colors border-l border-border ${
+                provider === "ollama"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              Ollama
+            </button>
+          </div>
+
           {/* Model picker */}
           <div className="relative">
             <button
@@ -335,7 +384,7 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
             </button>
             {showModelPicker && (
               <div className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-lg shadow-xl overflow-hidden min-w-[200px]">
-                {HERMES_MODELS.map((m) => (
+                {modelList.map((m) => (
                   <button
                     key={m.id}
                     onClick={() => { setSelectedModel(m.id); setShowModelPicker(false) }}
@@ -370,8 +419,8 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
         </div>
       </div>
 
-      {/* API key banner (shown when no key set) ─────────────────────────────── */}
-      {!apiKey && (
+      {/* Banner: API key warning for OpenRouter / Ollama info ──────────────── */}
+      {provider === "openrouter" && !apiKey && (
         <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-amber-400/5 border-b border-amber-400/15 text-[11px]">
           <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-amber-400 flex-shrink-0" aria-hidden>
             <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4" />
@@ -379,6 +428,17 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           </svg>
           <span className="text-amber-400/80">
             Set your OpenRouter API key below to enable SBG with Hermes models.
+          </span>
+        </div>
+      )}
+      {provider === "ollama" && (
+        <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-emerald-400/5 border-b border-emerald-400/15 text-[11px]">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-emerald-400 flex-shrink-0" aria-hidden>
+            <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4" />
+            <path d="M5 7l1.5 1.5L9.5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-emerald-400/80">
+            Ollama mode — no API key needed. Make sure Ollama is running and the model is pulled locally.
           </span>
         </div>
       )}
@@ -511,37 +571,55 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
       {/* Input area ──────────────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 border-t border-border bg-card px-4 py-3 flex flex-col gap-2">
 
-        {/* API key input (compact, collapsible) */}
-        <div className="flex items-center gap-2">
-          <label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 flex-shrink-0 w-16">
-            OR Key
-          </label>
-          <div className="flex-1 relative">
-            <input
-              type={showApiKey ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-or-v1-..."
-              className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2 py-1 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30"
-            />
-            <button
-              onClick={() => setShowApiKey((v) => !v)}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-              tabIndex={-1}
-            >
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
-                {showApiKey ? (
-                  <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5zm7 2a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.4" />
-                ) : (
-                  <path d="M2 2l12 12M6.7 6.7A2 2 0 0110.3 9.3M4.2 4.2C2.5 5.4 1 8 1 8s2.5 5 7 5c1.4 0 2.7-.4 3.8-1M9 3.2C8.4 3.1 8.2 3 8 3 3.5 3 1 8 1 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                )}
-              </svg>
-            </button>
+        {/* Provider-specific config row */}
+        {provider === "openrouter" ? (
+          /* OpenRouter API key */
+          <div className="flex items-center gap-2">
+            <label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 flex-shrink-0 w-16">
+              OR Key
+            </label>
+            <div className="flex-1 relative">
+              <input
+                type={showApiKey ? "text" : "password"}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-or-v1-..."
+                className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2 py-1 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30"
+              />
+              <button
+                onClick={() => setShowApiKey((v) => !v)}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                tabIndex={-1}
+              >
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  {showApiKey ? (
+                    <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5zm7 2a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.4" />
+                  ) : (
+                    <path d="M2 2l12 12M6.7 6.7A2 2 0 0110.3 9.3M4.2 4.2C2.5 5.4 1 8 1 8s2.5 5 7 5c1.4 0 2.7-.4 3.8-1M9 3.2C8.4 3.1 8.2 3 8 3 3.5 3 1 8 1 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  )}
+                </svg>
+              </button>
+            </div>
+            {apiKey && (
+              <span className="text-[9px] text-emerald-400/70 flex-shrink-0">connected</span>
+            )}
           </div>
-          {apiKey && (
-            <span className="text-[9px] text-emerald-400/70 flex-shrink-0">connected</span>
-          )}
-        </div>
+        ) : (
+          /* Ollama base URL */
+          <div className="flex items-center gap-2">
+            <label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 flex-shrink-0 w-16">
+              Ollama
+            </label>
+            <input
+              type="text"
+              value={ollamaUrl}
+              onChange={(e) => setOllamaUrl(e.target.value)}
+              placeholder="http://localhost:11434"
+              className="flex-1 rounded border border-border bg-background text-foreground text-[10px] font-mono px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30"
+            />
+            <span className="text-[9px] text-emerald-400/70 flex-shrink-0">local</span>
+          </div>
+        )}
 
         {/* Message input */}
         <div className="flex items-end gap-2">
@@ -566,7 +644,10 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
         </div>
 
         <p className="text-[9px] text-muted-foreground/30 text-center">
-          Powered by Hermes 3/4 via OpenRouter &middot; Tools: Web Search · Code Runner · File R/W
+          {provider === "ollama"
+            ? `Ollama · ${ollamaUrl} · Tools: Web Search · Code Runner · File R/W`
+            : "Powered by Hermes 3/4 via OpenRouter · Tools: Web Search · Code Runner · File R/W"
+          }
         </p>
       </div>
     </div>
