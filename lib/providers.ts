@@ -28,6 +28,10 @@ export interface ProviderModelEntry {
 /** Full config used by batch-test and buildProviderBody */
 export interface ProviderConfig {
   id: string
+  /**
+   * Static fallback model list used when no live fetch is available.
+   * For providers with modelsEndpoint, this acts as a fallback only.
+   */
   models: string[]
   /** Chat completion endpoint. May contain {{MODEL}} or {{ACCOUNT_ID}} placeholders. */
   endpoint: string
@@ -37,6 +41,21 @@ export interface ProviderConfig {
   extractReply?: (parsed: Record<string, unknown>) => string | undefined
   keyInUrl?: boolean
   concurrencyLimit?: number
+  /**
+   * If set, this endpoint is called (GET, with the provider's authHeader) to
+   * fetch the live model list at runtime. The response must be either:
+   *   - OpenAI-style: { data: [{ id: string }] }
+   *   - Array: [{ id: string }]
+   *   - Google-style: { models: [{ name: string }] }
+   *   - Dahono-style: { data: [{ id: string, free?: boolean, tier?: string }] }
+   * When present, batch-test uses the live list instead of `models`.
+   */
+  modelsEndpoint?: string
+  /**
+   * How to extract model IDs from the live /models response.
+   * Defaults to OpenAI-style { data: [{ id }] } if not specified.
+   */
+  parseModels?: (data: unknown) => string[]
 }
 
 // ── Reply extractors ─────────────────────────────────────────────────────────
@@ -88,6 +107,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Dahono Gateway ────────────────────────────────────────────────────────
   dahono: {
     id: "dahono",
+    // Static fallback — overridden at runtime via modelsEndpoint
     models: [
       "dahono/deepseek-v4-flash",
       "dahono/gemini-2.5-flash",
@@ -95,6 +115,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "dahono/claude-haiku-4-5",
     ],
     endpoint: "https://gateway.dahono.com/v1/chat/completions",
+    // Live model list — same API the single-key tester uses, returns all 70+ models
+    modelsEndpoint: "https://gateway.dahono.com/v1/models",
+    parseModels: (data) => {
+      const d = data as { data?: { id: string; free?: boolean }[] }
+      return (d?.data ?? []).map((m) => m.id)
+    },
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
@@ -130,6 +156,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── OpenAI — Responses API ────────────────────────────────────────────────
   openai: {
     id: "openai",
+    modelsEndpoint: "https://api.openai.com/v1/models",
     models: [
       "gpt-5.3-codex",
       "gpt-5.2",
@@ -212,6 +239,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── xAI (Grok) — Responses API ───────────────────────────────────────────
   xai: {
     id: "xai",
+    modelsEndpoint: "https://api.x.ai/v1/models",
     models: [
       "grok-4.3",
       "grok-4.20-0309-reasoning",
@@ -239,6 +267,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── DeepSeek ──────────────────────────────────────────────────────────────
   deepseek: {
     id: "deepseek",
+    modelsEndpoint: "https://api.deepseek.com/models",
     models: [
       "deepseek-v4-flash",
       "deepseek-v4-flash:thinking",
@@ -261,6 +290,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Qwen (Alibaba DashScope) ──────────────────────────────────────────────
   qwen: {
     id: "qwen",
+    modelsEndpoint: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models",
     models: [
       "qwen3-235b-a22b",
       "qwen3-30b-a3b",
@@ -334,6 +364,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Groq ──────────────────────────────────────────────────────────────────
   groq: {
     id: "groq",
+    modelsEndpoint: "https://api.groq.com/openai/v1/models",
     models: [
       "meta-llama/llama-4-scout-17b-16e-instruct",
       "meta-llama/llama-4-maverick-17b-128e-instruct",
@@ -359,6 +390,13 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Together AI ───────────────────────────────────────────────────────────
   together: {
     id: "together",
+    modelsEndpoint: "https://api.together.ai/v1/models",
+    parseModels: (data) => {
+      // Together returns a plain array, not { data: [] }
+      if (Array.isArray(data)) return (data as { id: string }[]).map((m) => m.id)
+      const d = data as { data?: { id: string }[] }
+      return (d?.data ?? []).map((m) => m.id)
+    },
     models: [
       "MiniMaxAI/MiniMax-M3",
       "MiniMaxAI/MiniMax-M2.7",
@@ -399,6 +437,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Mistral ───────────────────────────────────────────────────────────────
   mistral: {
     id: "mistral",
+    modelsEndpoint: "https://api.mistral.ai/v1/models",
     models: [
       "mistral-large-latest",
       "mistral-medium-latest",
@@ -509,6 +548,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Fireworks AI ──────────────────────────────────────────────────────────
   fireworks: {
     id: "fireworks",
+    modelsEndpoint: "https://api.fireworks.ai/inference/v1/models",
     models: [
       "accounts/fireworks/models/glm-5-2",
       "accounts/fireworks/models/kimi-k2-7-code",
@@ -543,6 +583,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Novita AI ─────────────────────────────────────────────────────────────
   novita: {
     id: "novita",
+    modelsEndpoint: "https://api.novita.ai/openai/v1/models",
     models: [
       "zai-org/glm-5-2",
       "moonshotai/kimi-k2-7-code",
@@ -1000,6 +1041,17 @@ export const PROVIDER_MODELS: Record<string, { id: string; label: string; defaul
   return result
 })()
 
+/**
+ * Set of provider IDs that expose a live GET /models endpoint.
+ * The batch tester uses this to fetch the real model list at runtime
+ * instead of the static fallback. The UI uses it to show a "live" badge.
+ */
+export const PROVIDERS_WITH_LIVE_MODELS: ReadonlySet<string> = new Set(
+  Object.entries(PROVIDER_CONFIGS)
+    .filter(([, cfg]) => Boolean(cfg.modelsEndpoint))
+    .map(([id]) => id),
+)
+
 // ── Helpers used by multi-key-test/route.ts ───────────────────────────────────
 
 /** Build the POST body for a single-key multi-key test (uses SINGLE_MAX_TOKENS). */
@@ -1078,4 +1130,76 @@ export function resolveProviderEndpoint(provider: string, apiKey: string): strin
   const cfg = PROVIDER_CONFIGS[provider]
   if (!cfg || !cfg.endpoint) return null
   return cfg.endpoint
+}
+
+// ── Live model fetcher ────────────────────────────────────────────────────────
+// Used by /api/fetch-models and batch-test to get the real model list from
+// providers that expose a GET /v1/models endpoint (Dahono, OpenAI, Groq, etc.)
+
+export interface LiveModelEntry {
+  id: string
+  free?: boolean
+  tier?: string
+}
+
+/**
+ * Fetch the live model list for a provider using that provider's own API key.
+ * Falls back to the static `cfg.models` list on any error.
+ * Returns { models, source: "live" | "static" }.
+ */
+export async function fetchLiveModels(
+  provider: string,
+  apiKey: string,
+  timeoutMs = 10_000,
+): Promise<{ models: LiveModelEntry[]; source: "live" | "static" }> {
+  const cfg = PROVIDER_CONFIGS[provider]
+  if (!cfg) {
+    return { models: [], source: "static" }
+  }
+  if (!cfg.modelsEndpoint) {
+    return {
+      models: cfg.models.map((id) => ({ id })),
+      source: "static",
+    }
+  }
+  try {
+    const headers = { ...cfg.authHeader(apiKey) }
+    const res = await fetch(cfg.modelsEndpoint, {
+      headers,
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+
+    // Parse IDs using provider-specific or default parser
+    let ids: string[]
+    if (cfg.parseModels) {
+      ids = cfg.parseModels(data)
+    } else {
+      // Default: OpenAI-style { data: [{ id }] }
+      const d = data as { data?: { id: string }[] }
+      ids = (d?.data ?? []).map((m) => m.id).filter(Boolean)
+    }
+
+    // For Dahono, also preserve free/tier metadata
+    const dahono = provider === "dahono"
+      ? ((data as { data?: { id: string; free?: boolean; tier?: string }[] })?.data ?? [])
+      : []
+
+    const models: LiveModelEntry[] = ids.map((id) => {
+      if (dahono.length > 0) {
+        const meta = dahono.find((m) => m.id === id)
+        return { id, free: meta?.free, tier: meta?.tier }
+      }
+      return { id }
+    })
+
+    return { models, source: "live" }
+  } catch {
+    // Fall back to static list silently
+    return {
+      models: cfg.models.map((id) => ({ id })),
+      source: "static",
+    }
+  }
 }

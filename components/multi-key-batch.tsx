@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import type { MultiKeyResult, MultiKeyTestResponse, TokenUsage } from "@/app/api/multi-key-test/route"
 import { PROVIDER_MODELS, maskApiKey } from "@/app/api/multi-key-test/route"
+import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
 
 // ── Provider format catalogue ─────────────────────────────────────────────────
 
@@ -856,6 +857,7 @@ export default function MultiKeyBatch() {
             <div className="overflow-y-auto max-h-64 divide-y divide-border/40">
               {PROVIDER_FORMATS.map((pf) => {
                 const models = PROVIDER_MODELS[pf.id] ?? []
+                const isLive = PROVIDERS_WITH_LIVE_MODELS.has(pf.id)
                 return (
                   <div key={pf.id} className="flex items-start gap-2.5 px-3 py-2 hover:bg-secondary/20 transition-colors group">
                     <div className="flex-1 min-w-0">
@@ -865,9 +867,22 @@ export default function MultiKeyBatch() {
                         {pf.autoDetect && (
                           <span className="text-[8px] px-1 rounded bg-primary/10 text-primary font-bold">auto</span>
                         )}
+                        {isLive && (
+                          <span
+                            title="Model list is fetched live from the provider API at batch test time"
+                            className="text-[8px] px-1 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold"
+                          >
+                            live
+                          </span>
+                        )}
                       </div>
                       <code className="text-[10px] font-mono text-muted-foreground/55 block mt-0.5 break-all">{pf.example}</code>
-                      {models.length > 0 && (
+                      {isLive ? (
+                        <p className="text-[9px] text-muted-foreground/40 mt-1 leading-none">
+                          Models fetched live from {pf.label} API at test time
+                          {models.length > 0 && ` (${models.length}+ known static fallback)`}
+                        </p>
+                      ) : models.length > 0 ? (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {models.map((m) => (
                             <span
@@ -882,7 +897,7 @@ export default function MultiKeyBatch() {
                             </span>
                           ))}
                         </div>
-                      )}
+                      ) : null}
                     </div>
                     <button
                       onClick={() => copyText(pf.example, pf.id)}

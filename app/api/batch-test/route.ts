@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
-  PROVIDER_CONFIGS,
+  PROVIDER_CONFIGS as SHARED_PROVIDER_CONFIGS,
   DEFAULT_PROMPT,
+  fetchLiveModels,
   type ProviderConfig,
 } from "@/lib/providers"
 
 // Re-export so existing component imports still compile
-export { PROVIDER_CONFIGS }
+export { SHARED_PROVIDER_CONFIGS as PROVIDER_CONFIGS }
 export type { ProviderConfig }
 
 // ── Shared types ──────────────────────────────────────────────────────────────
@@ -163,60 +164,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "apiKey is required" }, { status: 400 })
   }
 
-  // ── Dahono: fetch live model list from gateway ────────────────────────────
-  if (providerId === "dahono") {
-    const GATEWAY = "https://gateway.dahono.com/v1"
-    let models: { id: string; tier: string; free: boolean }[] = []
-    try {
-      const r = await fetch(`${GATEWAY}/models`, {
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(12_000),
-      })
-      if (!r.ok) return NextResponse.json({ error: `Could not fetch Dahono models: HTTP ${r.status}` }, { status: r.status })
-      const d = await r.json()
-      models = (d?.data ?? []).map((m: Record<string, unknown>) => ({
-        id: String(m.id), tier: String(m.tier ?? "free"), free: Boolean(m.free),
-      }))
-    } catch (err) {
-      return NextResponse.json({ error: `Dahono model list error: ${err instanceof Error ? err.message : "unknown"}` }, { status: 502 })
-    }
-    if (models.length === 0) return NextResponse.json({ error: "No models found" }, { status: 404 })
-
-    const dahonoEndpoint = `${GATEWAY}/chat/completions`
-    const start = Date.now()
-    const tasks = models.map((m) => () => testModel(m.id, {
-      id: "dahono",
-      models: [],
-      endpoint: dahonoEndpoint,
-      authHeader: (k) => ({ Authorization: `Bearer ${k}` }),
-      extraHeaders: { "Content-Type": "application/json" },
-      buildBody: (modelId, maxTok = MAX_TOKENS) => ({
-        model: modelId, max_tokens: maxTok, messages: [{ role: "user", content: DEFAULT_PROMPT }],
-      }),
-      extractReply: (p) => {
-        try {
-          const choices = p.choices as Record<string, unknown>[]
-          return (choices[0]?.message as Record<string, unknown>)?.content as string
-        } catch { return undefined }
-      },
-    }, apiKey))
-    const results = await pLimit(tasks, 8)
-    const durationMs = Date.now() - start
-    const passed = results.filter((r) => r.ok).length
-    return NextResponse.json({
-      provider: "dahono", total: results.length, passed,
-      failed: results.length - passed, results, durationMs,
-    } satisfies BatchTestResponse)
-  }
-
-  // ── Static model list providers ───────────────────────────────────────────
-  const cfg = PROVIDER_CONFIGS[providerId]
+  const cfg = SHARED_PROVIDER_CONFIGS[providerId]
   if (!cfg) {
     return NextResponse.json({ error: `Unknown provider: ${providerId}` }, { status: 400 })
   }
 
+  // ── Resolve model list: live fetch if provider supports it, else static ────
+  // This makes Dahono (and any other provider with modelsEndpoint) always use
+  // the same live model list as the single-key tester — no more hardcoded subset.
+  const { models: liveModels, source } = await fetchLiveModels(providerId, apiKey, 12_000)
+  const modelIds = liveModels.map((m) => m.id)
+
+  if (modelIds.length === 0) {
+    return NextResponse.json({
+      error: `No models available for provider "${providerId}" (source: ${source})`,
+    }, { status: 404 })
+  }
+
   const start = Date.now()
-  const tasks = cfg.models.map((modelId) => () => testModel(modelId, cfg, apiKey))
+  const tasks = modelIds.map((modelId) => () => testModel(modelId, cfg, apiKey))
   const results = await pLimit(tasks, cfg.concurrencyLimit ?? 6)
   const durationMs = Date.now() - start
   const passed = results.filter((r) => r.ok).length
@@ -228,5 +194,7 @@ export async function POST(req: NextRequest) {
     failed: results.length - passed,
     results,
     durationMs,
-  } satisfies BatchTestResponse)
+    // Include source so the UI can show "70 models (live)" vs "8 models (static)"
+    modelSource: source,
+  } satisfies BatchTestResponse & { modelSource: string })
 }
