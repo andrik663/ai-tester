@@ -211,9 +211,35 @@ async function testOpenAI(key: string): Promise<TestKeyResult> {
       return a.localeCompare(b)
     })
     log("ok", `Valid — ${count} models accessible`)
+
+    // Fetch subscription / credit info
+    let balance: string | undefined
+    try {
+      const today = new Date()
+      const yyyyMm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`
+      const subRes = await fetch("https://api.openai.com/v1/me", { headers, signal: AbortSignal.timeout(6_000) })
+      if (subRes.ok) {
+        const subData = await subRes.json().catch(() => ({}))
+        if (subData?.name || subData?.email) {
+          balance = subData.name ? `Account: ${subData.name}` : `Email: ${subData.email}`
+          log("info", `Account: ${balance}`)
+        }
+      }
+      // Try usage endpoint for current month
+      const usageRes = await fetch(`https://api.openai.com/v1/usage?date=${yyyyMm}-01`, { headers, signal: AbortSignal.timeout(6_000) })
+      if (usageRes.ok) {
+        const usageData = await usageRes.json().catch(() => ({}))
+        const totalTokens = (usageData?.data ?? []).reduce((sum: number, d: Record<string, unknown>) => sum + (Number(d.n_context_tokens_total ?? 0) + Number(d.n_generated_tokens_total ?? 0)), 0)
+        if (totalTokens > 0) {
+          balance = (balance ? balance + " | " : "") + `Usage this month: ${totalTokens.toLocaleString()} tokens`
+          log("info", `Usage: ${totalTokens.toLocaleString()} tokens this month`)
+        }
+      }
+    } catch { /* best-effort */ }
+
     return {
       valid: true, provider: "OpenAI", message: `Valid — ${count} models accessible`, detail: "HTTP 200",
-      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: sorted.slice(0, 8), errorReason: null,
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: sorted.slice(0, 8), errorReason: null, balance,
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
@@ -701,6 +727,7 @@ async function testDahono(key: string): Promise<TestKeyResult> {
 async function testDeepSeek(key: string): Promise<TestKeyResult> {
   const { log, logs, start } = makeLogger()
   const url = "https://api.deepseek.com/models"
+  const balanceUrl = "https://api.deepseek.com/user/balance"
   const headers = { Authorization: `Bearer ${key}` }
 
   log("info", "Provider: DeepSeek")
@@ -718,9 +745,27 @@ async function testDeepSeek(key: string): Promise<TestKeyResult> {
     const data = await res.json().catch(() => ({}))
     const count = Array.isArray(data?.data) ? data.data.length : "?"
     log("ok", `Valid — ${count} DeepSeek models accessible`)
+
+    // Fetch credit balance
+    let balance: string | undefined
+    try {
+      const balRes = await fetch(balanceUrl, { headers, signal: AbortSignal.timeout(6_000) })
+      if (balRes.ok) {
+        const balData = await balRes.json().catch(() => ({}))
+        const info = balData?.balance_infos?.[0]
+        if (info) {
+          const total = parseFloat(info.total_balance ?? "0")
+          const granted = parseFloat(info.granted_balance ?? "0")
+          const topped = parseFloat(info.topped_up_balance ?? "0")
+          balance = `$${total.toFixed(4)} (topped-up: $${topped.toFixed(4)}, granted: $${granted.toFixed(4)})`
+          log("info", `Balance: ${balance}`)
+        }
+      }
+    } catch { /* balance fetch is best-effort */ }
+
     return {
       valid: true, provider: "DeepSeek", message: `Valid — ${count} models accessible`, detail: "HTTP 200",
-      logs, latencyMs, responseHeaders,
+      logs, latencyMs, responseHeaders, balance,
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
@@ -733,9 +778,25 @@ async function testDeepSeek(key: string): Promise<TestKeyResult> {
   }
   if (res.status === 402) {
     log("ok", "Valid — key accepted (insufficient balance)")
+
+    // Still try to get balance info even on 402
+    let balance: string | undefined
+    try {
+      const balRes = await fetch(balanceUrl, { headers, signal: AbortSignal.timeout(6_000) })
+      if (balRes.ok) {
+        const balData = await balRes.json().catch(() => ({}))
+        const info = balData?.balance_infos?.[0]
+        if (info) {
+          const total = parseFloat(info.total_balance ?? "0")
+          balance = `$${total.toFixed(4)} (insufficient)`
+          log("info", `Balance: ${balance}`)
+        }
+      }
+    } catch { /* best-effort */ }
+
     return {
       valid: true, provider: "DeepSeek", message: "Valid (insufficient balance)", detail: "HTTP 402",
-      logs, latencyMs, responseHeaders,
+      logs, latencyMs, responseHeaders, balance,
       curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
       curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
     }
@@ -845,9 +906,28 @@ async function testZhipu(key: string): Promise<TestKeyResult> {
     const tokenUsage = extractTokenUsage(data)
     const msg = res.status === 429 ? "Valid (rate limited)" : "Valid — GLM key accepted"
     log("ok", msg)
+
+    // Fetch quota/balance
+    let balance: string | undefined
+    try {
+      const quotaRes = await fetch("https://open.bigmodel.cn/api/monitor/usage/quota/limit", {
+        headers: { Authorization: key },
+        signal: AbortSignal.timeout(6_000),
+      })
+      if (quotaRes.ok) {
+        const qd = await quotaRes.json().catch(() => ({}))
+        const remaining = qd?.data?.remaining_quota ?? qd?.remaining_quota
+        const total = qd?.data?.total_quota ?? qd?.total_quota
+        if (remaining !== undefined) {
+          balance = `Quota: ${remaining}${total ? ` / ${total}` : ""} tokens remaining`
+          log("info", `Quota: ${balance}`)
+        }
+      }
+    } catch { /* best-effort */ }
+
     return {
       valid: true, provider: "Zhipu/GLM", message: msg, detail: `HTTP ${res.status}`,
-      logs, latencyMs, tokenUsage, responseHeaders,
+      logs, latencyMs, tokenUsage, responseHeaders, balance,
       curlDisplay: buildCurl({ method: "POST", url, headers, body, maskKey: true }),
       curlFull: buildCurl({ method: "POST", url, headers, body, maskKey: false }),
     }
@@ -936,6 +1016,372 @@ async function testFirebase(key: string): Promise<TestKeyResult> {
   return { valid: false, provider: "Google / Firebase", message: "Invalid or restricted key", detail: errMsg, logs, latencyMs, responseHeaders }
 }
 
+async function testOpenRouter(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const modelsUrl = "https://openrouter.ai/api/v1/models"
+  const creditsUrl = "https://openrouter.ai/api/v1/credits"
+  const headers = { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }
+
+  log("info", "Provider: OpenRouter")
+  log("info", "Endpoint: GET /api/v1/models")
+  log("curl", buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(modelsUrl, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    const count = models.length || "?"
+    log("ok", `Valid — ${count} models accessible`)
+
+    // Fetch credits
+    let balance: string | undefined
+    try {
+      const credRes = await fetch(creditsUrl, { headers, signal: AbortSignal.timeout(6_000) })
+      if (credRes.ok) {
+        const credData = await credRes.json().catch(() => ({}))
+        const totalCredits = credData?.data?.total_credits
+        const totalUsage = credData?.data?.total_usage
+        if (totalCredits !== undefined) {
+          const remaining = totalCredits - (totalUsage ?? 0)
+          balance = `$${remaining.toFixed(4)} remaining ($${totalCredits.toFixed(4)} total, $${(totalUsage ?? 0).toFixed(4)} used)`
+          log("info", `Credits: ${balance}`)
+        }
+      }
+    } catch { /* best-effort */ }
+
+    return {
+      valid: true, provider: "OpenRouter", message: `Valid — ${count} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), balance, errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "OpenRouter", message: "Invalid — authentication failed", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "OpenRouter", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
+async function testMoonshot(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const modelsUrl = "https://api.moonshot.cn/v1/models"
+  const balanceUrl = "https://api.moonshot.cn/v1/users/me/balance"
+  const headers = { Authorization: `Bearer ${key}` }
+
+  log("info", "Provider: Moonshot AI (Kimi)")
+  log("info", "Endpoint: GET /v1/models")
+  log("curl", buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(modelsUrl, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    log("ok", `Valid — ${models.length} Moonshot models accessible`)
+
+    // Fetch balance
+    let balance: string | undefined
+    try {
+      const balRes = await fetch(balanceUrl, { headers, signal: AbortSignal.timeout(6_000) })
+      if (balRes.ok) {
+        const balData = await balRes.json().catch(() => ({}))
+        const avail = balData?.data?.available_balance
+        const voucher = balData?.data?.voucher_balance
+        const cash = balData?.data?.cash_balance
+        if (avail !== undefined) {
+          balance = `¥${parseFloat(avail).toFixed(4)} available (cash: ¥${parseFloat(cash ?? 0).toFixed(2)}, voucher: ¥${parseFloat(voucher ?? 0).toFixed(2)})`
+          log("info", `Balance: ${balance}`)
+        }
+      }
+    } catch { /* best-effort */ }
+
+    return {
+      valid: true, provider: "Moonshot/Kimi", message: `Valid — ${models.length} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), balance, errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "Moonshot/Kimi", message: "Invalid — key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Moonshot/Kimi", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
+async function testNovita(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const modelsUrl = "https://api.novita.ai/openai/v1/models"
+  const balanceUrl = "https://api.novita.ai/openapi/v1/billing/balance/detail"
+  const headers = { Authorization: `Bearer ${key}` }
+
+  log("info", "Provider: Novita AI")
+  log("info", "Endpoint: GET /openai/v1/models")
+  log("curl", buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(modelsUrl, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    log("ok", `Valid — ${models.length} Novita models accessible`)
+
+    // Fetch credit balance
+    let balance: string | undefined
+    try {
+      const balRes = await fetch(balanceUrl, { headers, signal: AbortSignal.timeout(6_000) })
+      if (balRes.ok) {
+        const balData = await balRes.json().catch(() => ({}))
+        const bal = balData?.data?.balance ?? balData?.balance
+        const currency = balData?.data?.currency ?? "USD"
+        if (bal !== undefined) {
+          balance = `$${parseFloat(bal).toFixed(4)} ${currency}`
+          log("info", `Balance: ${balance}`)
+        }
+      }
+    } catch { /* best-effort */ }
+
+    return {
+      valid: true, provider: "Novita AI", message: `Valid — ${models.length} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), balance, errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "Novita AI", message: "Invalid — key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Novita AI", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
+async function testHyperbolic(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const modelsUrl = "https://api.hyperbolic.xyz/v1/models"
+  const balanceUrl = "https://api.hyperbolic.xyz/billing/get_current_balance"
+  const headers = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }
+
+  log("info", "Provider: Hyperbolic")
+  log("info", "Endpoint: GET /v1/models")
+  log("curl", buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(modelsUrl, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    log("ok", `Valid — ${models.length} Hyperbolic models accessible`)
+
+    // Fetch credit balance
+    let balance: string | undefined
+    try {
+      const balRes = await fetch(balanceUrl, { headers, signal: AbortSignal.timeout(6_000) })
+      if (balRes.ok) {
+        const balData = await balRes.json().catch(() => ({}))
+        const credits = balData?.credits ?? balData?.balance
+        if (credits !== undefined) {
+          balance = `$${parseFloat(credits).toFixed(4)} credits`
+          log("info", `Balance: ${balance}`)
+        }
+      }
+    } catch { /* best-effort */ }
+
+    return {
+      valid: true, provider: "Hyperbolic", message: `Valid — ${models.length} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), balance, errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url: modelsUrl, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "Hyperbolic", message: "Invalid — key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Hyperbolic", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
+async function testCerebras(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const url = "https://api.cerebras.ai/v1/models"
+  const headers = { Authorization: `Bearer ${key}` }
+
+  log("info", "Provider: Cerebras")
+  log("info", "Endpoint: GET /v1/models")
+  log("curl", buildCurl({ method: "GET", url, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    log("ok", `Valid — ${models.length} Cerebras models accessible`)
+    return {
+      valid: true, provider: "Cerebras", message: `Valid — ${models.length} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "Cerebras", message: "Invalid — key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Cerebras", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
+async function testFireworks(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const url = "https://api.fireworks.ai/inference/v1/models"
+  const headers = { Authorization: `Bearer ${key}` }
+
+  log("info", "Provider: Fireworks AI")
+  log("info", "Endpoint: GET /inference/v1/models")
+  log("curl", buildCurl({ method: "GET", url, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    log("ok", `Valid — ${models.length} Fireworks models accessible`)
+    return {
+      valid: true, provider: "Fireworks AI", message: `Valid — ${models.length} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "Fireworks AI", message: "Invalid — key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "Fireworks AI", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
+async function testSambaNova(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const url = "https://api.sambanova.ai/v1/models"
+  const headers = { Authorization: `Bearer ${key}` }
+
+  log("info", "Provider: SambaNova")
+  log("info", "Endpoint: GET /v1/models")
+  log("curl", buildCurl({ method: "GET", url, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    log("ok", `Valid — ${models.length} SambaNova models accessible`)
+    return {
+      valid: true, provider: "SambaNova", message: `Valid — ${models.length} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "SambaNova", message: "Invalid — key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "SambaNova", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
+async function testNVIDIA(key: string): Promise<TestKeyResult> {
+  const { log, logs, start } = makeLogger()
+  const url = "https://integrate.api.nvidia.com/v1/models"
+  const headers = { Authorization: `Bearer ${key}` }
+
+  log("info", "Provider: NVIDIA NIM")
+  log("info", "Endpoint: GET /v1/models")
+  log("curl", buildCurl({ method: "GET", url, headers, maskKey: true }))
+  log("req",  `Sending request... Authorization: Bearer ${key.slice(0, 12)}...`)
+
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(12_000) })
+  const latencyMs = Date.now() - start
+  const responseHeaders = captureHeaders(res, IMPORTANT_HEADERS)
+
+  log("res", `HTTP ${res.status} ${res.statusText} (${latencyMs}ms)`)
+
+  if (res.status === 200) {
+    const data = await res.json().catch(() => ({}))
+    const models: string[] = Array.isArray(data?.data) ? data.data.map((m: Record<string, unknown>) => String(m.id)) : []
+    log("ok", `Valid — ${models.length} NVIDIA NIM models accessible`)
+    return {
+      valid: true, provider: "NVIDIA NIM", message: `Valid — ${models.length} models accessible`, detail: "HTTP 200",
+      logs, latencyMs, responseHeaders, modelCount: models.length, modelList: models.slice(0, 8), errorReason: null,
+      curlDisplay: buildCurl({ method: "GET", url, headers, maskKey: true }),
+      curlFull: buildCurl({ method: "GET", url, headers, maskKey: false }),
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    const err = body?.error?.message ?? "Unauthorized"
+    log("err", `${res.status}: ${err}`)
+    return { valid: false, provider: "NVIDIA NIM", message: "Invalid — key rejected", detail: err, logs, latencyMs, responseHeaders, errorReason: "wrong_key" }
+  }
+  log("err", `Unexpected HTTP ${res.status}`)
+  return { valid: false, provider: "NVIDIA NIM", message: `Unexpected HTTP ${res.status}`, detail: `HTTP ${res.status}`, logs, latencyMs, responseHeaders, errorReason: null }
+}
+
 // ── Label → tester map ────────────────────────────────────────────────────────
 
 type Tester = (key: string) => Promise<TestKeyResult>
@@ -965,6 +1411,18 @@ const TESTERS: Record<string, Tester> = {
   "Qwen API Key": testQwen,
   "Zhipu API Key": testZhipu,
   "Together AI Key": testTogether,
+  // Newly added providers with balance/credit support
+  "OpenRouter API Key": testOpenRouter,
+  "Moonshot API Key": testMoonshot,
+  "Kimi API Key": testMoonshot,
+  "Novita AI API Key": testNovita,
+  "Hyperbolic API Key": testHyperbolic,
+  "Cerebras API Key": testCerebras,
+  "Fireworks API Key": testFireworks,
+  "Fireworks AI API Key": testFireworks,
+  "SambaNova API Key": testSambaNova,
+  "NVIDIA API Key": testNVIDIA,
+  "NVIDIA NIM API Key": testNVIDIA,
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
