@@ -8,6 +8,39 @@ import {
   clearAllWorkingKeys,
   type WorkingKeyRecord,
 } from "@/lib/working-keys-store"
+import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
+import ExportApiPanel from "@/components/export-api-panel"
+
+// Build a ready-to-run curl command for a working key record
+function buildCurlCommand(record: WorkingKeyRecord): string {
+  const endpoint = resolveProviderEndpoint(record.providerId, record.apiKey)
+  if (!endpoint) return `# endpoint requires extra config (account ID / resource name)\n# Provider: ${record.providerName}`
+
+  const headers = buildProviderHeaders(record.providerId, record.apiKey)
+
+  // Replace key placeholder in endpoint (e.g. Google's ?key=...)
+  const url = endpoint.includes("{{MODEL}}")
+    ? endpoint.replace("{{MODEL}}", record.modelId)
+    : endpoint
+
+  const body: Record<string, unknown> = {
+    model: record.modelId,
+    max_tokens: 100,
+    messages: [{ role: "user", content: "Say hello" }],
+  }
+
+  const headerFlags = Object.entries(headers)
+    .map(([k, v]) => {
+      // Mask the actual key in the header value for display
+      const masked = typeof v === "string" && v.includes(record.apiKey)
+        ? v.replace(record.apiKey, record.apiKey.slice(0, 4) + "••••" + record.apiKey.slice(-4))
+        : v
+      return `  -H '${k}: ${masked}'`
+    })
+    .join(" \\\n")
+
+  return `curl -X POST '${url}' \\\n${headerFlags} \\\n  -d '${JSON.stringify(body)}'`
+}
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -45,6 +78,15 @@ function FilterIcon() {
   )
 }
 
+function TerminalIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 6l3 3-3 3M9 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 // ── Masked key display ────────────────────────────────────────────────────────
 
 function maskKey(key: string): string {
@@ -65,6 +107,7 @@ function RecordRow({
 }) {
   const [copiedKey, setCopiedKey]     = useState(false)
   const [copiedModel, setCopiedModel] = useState(false)
+  const [copiedCurl, setCopiedCurl]   = useState(false)
   const [confirmDel, setConfirmDel]   = useState(false)
 
   const handleCopyKey = useCallback(() => {
@@ -81,6 +124,14 @@ function RecordRow({
       setTimeout(() => setCopiedModel(false), 1500)
     }).catch(() => {})
   }, [record.modelId])
+
+  const handleCopyCurl = useCallback(() => {
+    const cmd = buildCurlCommand(record)
+    copyToClipboard(cmd).then(() => {
+      setCopiedCurl(true)
+      setTimeout(() => setCopiedCurl(false), 2000)
+    }).catch(() => {})
+  }, [record])
 
   const handleDelete = useCallback(() => {
     if (!confirmDel) {
@@ -151,19 +202,43 @@ function RecordRow({
         </button>
       </div>
 
-      {/* API Key row */}
-      <div className="flex items-center gap-2 pl-3.5">
-        <KeyIcon />
-        <span className="text-[10px] font-mono text-muted-foreground/60 flex-1 truncate">
-          {maskKey(record.apiKey)}
-        </span>
-        <button
-          onClick={handleCopyKey}
-          className="flex items-center gap-1 text-[9px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors flex-shrink-0"
-        >
-          <CopyIcon />
-          {copiedKey ? "Copied!" : "Copy Key"}
-        </button>
+      {/* API Key + cURL row */}
+      <div className="flex flex-col gap-1.5 pl-3.5">
+        <div className="flex items-center gap-2">
+          <KeyIcon />
+          <span className="text-[10px] font-mono text-muted-foreground/60 flex-1 truncate">
+            {maskKey(record.apiKey)}
+          </span>
+          <button
+            onClick={handleCopyKey}
+            className="flex items-center gap-1 text-[9px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors flex-shrink-0"
+          >
+            <CopyIcon />
+            {copiedKey ? "Copied!" : "Copy Key"}
+          </button>
+        </div>
+
+        {/* cURL command row */}
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground/30">
+            <TerminalIcon />
+          </span>
+          <span className="text-[9px] font-mono text-muted-foreground/40 flex-1 truncate">
+            curl -X POST &apos;{resolveProviderEndpoint(record.providerId, record.apiKey) ?? "N/A"}&apos;
+          </span>
+          <button
+            onClick={handleCopyCurl}
+            className={`flex items-center gap-1 text-[9px] px-2 py-0.5 rounded border transition-colors flex-shrink-0 ${
+              copiedCurl
+                ? "border-green-500/40 bg-green-500/10 text-green-400"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
+            }`}
+            title="Copy full cURL command"
+          >
+            <TerminalIcon />
+            {copiedCurl ? "Copied!" : "Copy cURL"}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -321,8 +396,11 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
       </div>
 
       <p className="text-[9px] text-muted-foreground/40 text-center">
-        Stored locally in browser. Keys are never sent to any server.
+        Stored locally in browser. Raw keys are never exposed via the API.
       </p>
+
+      {/* Export API section */}
+      <ExportApiPanel keys={records} />
     </div>
   )
 }

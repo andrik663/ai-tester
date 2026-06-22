@@ -51,15 +51,16 @@ export function appendWorkingResults(
 ): WorkingKeyRecord[] {
   const existing = loadWorkingKeys()
 
-  const newRecords: WorkingKeyRecord[] = results.map((r) => ({
-    id: `${providerId}::${r.modelId}::${Date.now()}`,
+  const batchTs = Date.now()
+  const newRecords: WorkingKeyRecord[] = results.map((r, i) => ({
+    id: `${providerId}::${r.modelId}::${batchTs + i}`,
     providerId,
     providerName,
     apiKey,
     modelId: r.modelId,
     latencyMs: r.latencyMs,
     tokenUsage: r.tokenUsage,
-    savedAt: Date.now(),
+    savedAt: batchTs + i,
   }))
 
   // Deduplicate: if same provider + model + key already saved, replace it

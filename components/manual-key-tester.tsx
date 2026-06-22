@@ -1236,7 +1236,7 @@ function VideoTabIcon() {
   )
 }
 
-// ── Log level styles ───────────────────��─��───────────────────��────────────────
+// ── Log level styles ──���────────────────��─��───────────────────��────────────────
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
@@ -1418,7 +1418,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ───���────────────────────────────────────────────────
+  // ── Vision / OCR helpers ─���─���────────────────────────��─��─────────────────────
 
   function handleImageFile(
     file: File,
@@ -1757,38 +1757,7 @@ export default function ManualKeyTester() {
                 <EyeIcon show={showKey} />
               </button>
             </div>
-            {apiKey && (
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[9px] text-muted-foreground/60 font-mono truncate">
-                  {apiKey.slice(0, 12)}{"•".repeat(Math.max(0, apiKey.length - 12))}
-                </p>
-                {result && (
-                  <button
-                    onClick={shareResult}
-                    title="Copy test result to clipboard"
-                    className="flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors flex-shrink-0"
-                  >
-                    {copiedShare ? (
-                      <>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        <span className="text-green-400">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-                          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                          <polyline points="16 6 12 2 8 6" />
-                          <line x1="12" y1="2" x2="12" y2="15" />
-                        </svg>
-                        Share
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
+
             {/* Create API key link */}
             {selectedPreset.createKeyUrl && (
               <a
@@ -1806,6 +1775,32 @@ export default function ManualKeyTester() {
                   <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </a>
+            )}
+
+            {apiKey && result && (
+              <button
+                onClick={shareResult}
+                title="Copy test result to clipboard"
+                className="inline-flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors self-start"
+              >
+                {copiedShare ? (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span className="text-green-400">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                    Share result
+                  </>
+                )}
+              </button>
             )}
           </div>
 
@@ -2144,6 +2139,18 @@ export default function ManualKeyTester() {
           <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9">
             {([
               {
+                id: "multi-batch" as const,
+                label: "Batch",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                    <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    <circle cx="10" cy="3" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="6" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="9" r="1.5" fill="currentColor" />
+                  </svg>
+                ),
+              },
+              {
                 id: "chat" as const,
                 label: "Chat",
                 icon: (
@@ -2191,18 +2198,6 @@ export default function ManualKeyTester() {
                   </svg>
                 ),
               },
-              {
-                id: "multi-batch" as const,
-                label: "Batch",
-                icon: (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-                    <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    <circle cx="10" cy="3" r="1.5" fill="currentColor" />
-                    <circle cx="10" cy="6" r="1.5" fill="currentColor" />
-                    <circle cx="10" cy="9" r="1.5" fill="currentColor" />
-                  </svg>
-                ),
-              },
             ]).map((t) => (
               <button
                 key={t.id}
@@ -2227,44 +2222,78 @@ export default function ManualKeyTester() {
             {/* Chat messages area */}
             <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 flex flex-col gap-3">
               {chatHistory.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full gap-5 text-center py-16">
-                  {/* Icon — clean SVG, no broken images */}
-                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_24px_oklch(0.76_0.17_192_/_0.12)]">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-primary">
-                      <circle cx="7" cy="12" r="4" />
-                      <path d="M11 12h9M17 10v4" />
-                    </svg>
-                  </div>
+                <div className="flex flex-col items-center justify-center h-full gap-6 text-center py-8 max-w-lg mx-auto w-full">
 
-                  <div className="flex flex-col gap-2">
-                    <p className="text-base font-semibold text-foreground text-balance">{selectedPreset.name}</p>
-                    <p className="text-xs text-muted-foreground max-w-xs leading-relaxed text-pretty">
-                      Type a message below to test your API key with a real request. Response, latency, and token usage will appear here.
-                    </p>
-                  </div>
-
-                  {!apiKey && (
-                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border bg-secondary/40 max-w-xs">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0">
-                        <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                      </svg>
-                      <p className="text-[10px] text-muted-foreground">
-                        Enter your API key in the <span className="text-foreground font-medium">API Key</span> field on the left first.
+                  {/* Provider icon + name */}
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_28px_oklch(0.76_0.17_192_/_0.15)]">
+                      {PROVIDER_LOGOS[selectedPreset.id] ? (
+                        <ProviderLogo providerId={selectedPreset.id} className="w-8 h-8" />
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-primary">
+                          <circle cx="7" cy="12" r="4" />
+                          <path d="M11 12h9M17 10v4" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-foreground text-balance">{selectedPreset.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {apiKey ? "Key entered — send a message below to test it" : "Enter your API key on the left to get started"}
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Key status / CTA */}
+                  {!apiKey && (
+                    <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+                      <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-secondary/30 text-left w-full">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <div>
+                          <p className="text-[11px] font-medium text-foreground">No API key entered</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                            Paste your API key in the sidebar. Keys are never stored or sent to our servers — all requests go directly to the provider.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* What you get */}
+                      <div className="grid grid-cols-2 gap-2 w-full">
+                        {[
+                          { icon: "✓", label: "Response latency (ms)", color: "text-green-400" },
+                          { icon: "⚡", label: "Token usage", color: "text-yellow-400" },
+                          { icon: "◉", label: "Rate limit remaining", color: "text-primary" },
+                          { icon: "⊘", label: "Raw JSON response", color: "text-sky-400" },
+                        ].map((item) => (
+                          <div key={item.label} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/40">
+                            <span className={`text-[13px] ${item.color} flex-shrink-0`}>{item.icon}</span>
+                            <span className="text-[10px] text-muted-foreground leading-tight">{item.label}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-1.5 justify-center max-w-xs">
-                    {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setPrompt(s)}
-                        className="text-[10px] px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/60 hover:bg-secondary/60 transition-colors"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Quick prompts */}
+                  {apiKey && (
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-[10px] text-muted-foreground/60">Or send a test message:</p>
+                      <div className="flex flex-wrap gap-1.5 justify-center">
+                        {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setPrompt(s)}
+                            className="text-[10px] px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/60 hover:bg-secondary/60 transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2297,39 +2326,60 @@ export default function ManualKeyTester() {
 
               {/* Result stats bar */}
               {result && (
-                <div className={`flex flex-wrap items-center gap-3 px-3 py-2 rounded-xl border text-[10px] font-mono ${
-                  result.ok ? "border-green-400/20 bg-green-400/5" : "border-red-400/20 bg-red-400/5"
+                <div className={`rounded-xl border overflow-hidden ${
+                  result.ok ? "border-green-500/25 bg-green-500/5" : "border-red-500/25 bg-red-500/5"
                 }`}>
-                  <span className={`font-semibold ${result.ok ? "text-green-400" : "text-red-400"}`}>
-                    HTTP {result.status}
-                  </span>
-                  <span className="text-muted-foreground">{result.durationMs}ms</span>
-                  {result.tokenUsage?.promptTokens !== undefined && (
-                    <span className="text-muted-foreground">in: <span className="text-foreground">{result.tokenUsage.promptTokens}</span></span>
-                  )}
-                  {result.tokenUsage?.completionTokens !== undefined && (
-                    <span className="text-muted-foreground">out: <span className="text-foreground">{result.tokenUsage.completionTokens}</span></span>
-                  )}
-                  {/* Rate limit quick view */}
-                  {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
-                    <span className="text-muted-foreground">
-                      req left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
-                    </span>
-                  )}
-                  {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
-                    <span className="text-muted-foreground">
-                      tok left: <span className="text-foreground">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
-                    </span>
-                  )}
-                  {/* cURL copy */}
-                  {result.curlFull && (
-                    <button
-                      onClick={copyCurlFull}
-                      className="ml-auto flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <CopyIcon />
-                      {copiedCurlFull ? <span className="text-green-400">Copied</span> : "cURL"}
-                    </button>
+                  {/* Top status row */}
+                  <div className={`flex items-center justify-between px-4 py-2.5 border-b ${
+                    result.ok ? "border-green-500/15" : "border-red-500/15"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${result.ok ? "bg-green-400" : "bg-red-400"}`} />
+                      <span className={`text-sm font-bold ${result.ok ? "text-green-400" : "text-red-400"}`}>
+                        HTTP {result.status} — {result.ok ? "Success" : "Failed"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {result.durationMs !== undefined && (
+                        <span className="text-[11px] font-mono text-muted-foreground">
+                          <span className="text-foreground font-semibold">{result.durationMs}</span>ms
+                        </span>
+                      )}
+                      {result.curlFull && (
+                        <button
+                          onClick={copyCurlFull}
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-border/50 bg-card/40 hover:bg-secondary transition-colors"
+                        >
+                          <CopyIcon />
+                          {copiedCurlFull ? <span className="text-green-400">Copied</span> : "cURL"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {/* Stats grid */}
+                  {(result.tokenUsage?.promptTokens !== undefined || result.responseHeaders?.["x-ratelimit-remaining-requests"] || result.responseHeaders?.["x-ratelimit-remaining-tokens"]) && (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-[10px] font-mono">
+                      {result.tokenUsage?.promptTokens !== undefined && (
+                        <span className="text-muted-foreground">
+                          in: <span className="text-foreground font-semibold">{result.tokenUsage.promptTokens}</span> tok
+                        </span>
+                      )}
+                      {result.tokenUsage?.completionTokens !== undefined && (
+                        <span className="text-muted-foreground">
+                          out: <span className="text-foreground font-semibold">{result.tokenUsage.completionTokens}</span> tok
+                        </span>
+                      )}
+                      {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
+                        <span className="text-muted-foreground">
+                          req left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
+                        </span>
+                      )}
+                      {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
+                        <span className="text-muted-foreground">
+                          tok left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -2373,7 +2423,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��──────────────────────────────────��───── */}
+        {/* ── VISION TAB ────────────��──────────────────────────────────��───��─ */}
         {activeTab === "vision" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
@@ -2724,7 +2774,12 @@ export default function ManualKeyTester() {
         {/* ── MULTI-KEY BATCH TAB ───────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            <MultiKeyBatch />
+            <MultiKeyBatch
+              onKeysSaved={() => {
+                setWorkingKeysTick((t) => t + 1)
+                setActiveTab("working-keys")
+              }}
+            />
           </div>
         )}
 
