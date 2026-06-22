@@ -1088,14 +1088,6 @@ const PROVIDER_LOGOS: Record<string, string> = {
   anyscale:    `${BASE}/anyscale/default.svg`,
 }
 
-/** Convert ISO 3166-1 alpha-2 code to a regional-indicator emoji flag (e.g. "US" → "🇺🇸") */
-function getFlagEmoji(countryCode: string): string {
-  if (!countryCode || countryCode.length !== 2) return ""
-  const points = Array.from(countryCode.toUpperCase()).map(
-    (c) => 0x1f1e0 - 0x41 + c.charCodeAt(0)
-  )
-  return String.fromCodePoint(...points)
-}
 
 function ProviderLogo({ providerId, className = "w-4 h-4" }: { providerId: string; className?: string }) {
   const src = PROVIDER_LOGOS[providerId]
@@ -1693,8 +1685,8 @@ export default function ManualKeyTester() {
                   </span>
                   <span className="flex-1 min-w-0 truncate">{p.name}</span>
                   {p.country && (
-                    <span className="flex-shrink-0 text-[11px] leading-none opacity-60" aria-label={p.country}>
-                      {getFlagEmoji(p.country)}
+                    <span className="flex-shrink-0 text-[9px] font-mono font-semibold tracking-wider text-muted-foreground/50 uppercase">
+                      {p.country}
                     </span>
                   )}
                 </button>
@@ -2161,8 +2153,8 @@ export default function ManualKeyTester() {
             <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70" />
             {selectedPreset.name}
             {selectedPreset.country && (
-              <span className="opacity-50 text-[11px]" aria-label={selectedPreset.country}>
-                {getFlagEmoji(selectedPreset.country)}
+              <span className="text-[9px] font-mono font-semibold tracking-wider text-muted-foreground/40 uppercase">
+                {selectedPreset.country}
               </span>
             )}
           </span>
