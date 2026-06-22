@@ -3,16 +3,62 @@
 import { useState, useRef, useCallback } from "react"
 import type { MultiKeyResult, MultiKeyTestResponse } from "@/app/api/multi-key-test/route"
 
-// ── Supported provider IDs (must match manual-test BODY_TEMPLATES) ────────────
+// ── Provider format catalogue ─────────────────────────────────────────────────
+// Each entry shows the user exactly what to paste in their .txt file.
 
-const KNOWN_PROVIDERS = [
-  "dahono", "anthropic", "openai", "google", "xai", "deepseek", "qwen",
-  "zhipu", "minimax", "cerebras", "fireworks", "novita", "cloudflare",
-  "openrouter", "sambanova", "nvidia", "hyperbolic", "ai21", "groq",
-  "together", "mistral", "cohere", "perplexity", "huggingface", "replicate",
-  "moonshot", "baidu", "yi", "stepfun", "hunyuan", "azure", "upstage",
-  "writer", "lepton", "inception", "ibm", "deepinfra", "anyscale",
+interface ProviderFormat {
+  id: string
+  label: string
+  country: string
+  example: string        // the line to put in the .txt file
+  keyHint: string        // short description of key format
+  autoDetect?: boolean   // can be detected from key prefix alone
+}
+
+const PROVIDER_FORMATS: ProviderFormat[] = [
+  { id: "dahono",      label: "Dahono Labs Gateway", country: "ID", example: "dahono:YOUR_KEY",      keyHint: "gateway key" },
+  { id: "anthropic",   label: "Claude (Anthropic)",  country: "US", example: "anthropic:sk-ant-...", keyHint: "sk-ant-...", autoDetect: true },
+  { id: "openai",      label: "GPT (OpenAI)",        country: "US", example: "openai:sk-...",        keyHint: "sk-...",     autoDetect: true },
+  { id: "google",      label: "Gemini (Google)",     country: "US", example: "google:AIza...",       keyHint: "AIza...",    autoDetect: true },
+  { id: "xai",         label: "Grok (xAI)",          country: "US", example: "xai:xai-...",          keyHint: "xai-...",    autoDetect: true },
+  { id: "deepseek",    label: "DeepSeek",            country: "CN", example: "deepseek:YOUR_KEY",    keyHint: "API key" },
+  { id: "qwen",        label: "Qwen (Alibaba)",      country: "CN", example: "qwen:YOUR_KEY",        keyHint: "DashScope key" },
+  { id: "zhipu",       label: "GLM (Zhipu AI)",      country: "CN", example: "zhipu:YOUR_KEY",       keyHint: "BigModel key" },
+  { id: "minimax",     label: "MiniMax",             country: "CN", example: "minimax:YOUR_KEY",     keyHint: "API key" },
+  { id: "cerebras",    label: "Cerebras",            country: "US", example: "cerebras:YOUR_KEY",    keyHint: "API key" },
+  { id: "fireworks",   label: "Fireworks AI",        country: "US", example: "fireworks:YOUR_KEY",   keyHint: "fw-..." },
+  { id: "novita",      label: "Novita AI",           country: "US", example: "novita:YOUR_KEY",      keyHint: "API key" },
+  { id: "cloudflare",  label: "Cloudflare Workers AI", country: "US", example: "cloudflare:YOUR_KEY", keyHint: "CF token" },
+  { id: "openrouter",  label: "OpenRouter",          country: "US", example: "openrouter:sk-or-v1-...", keyHint: "sk-or-...", autoDetect: true },
+  { id: "sambanova",   label: "SambaNova",           country: "US", example: "sambanova:YOUR_KEY",   keyHint: "API key" },
+  { id: "nvidia",      label: "NVIDIA NIM",          country: "US", example: "nvidia:nvapi-...",     keyHint: "nvapi-..." },
+  { id: "hyperbolic",  label: "Hyperbolic",          country: "US", example: "hyperbolic:YOUR_KEY",  keyHint: "API key" },
+  { id: "ai21",        label: "AI21 Labs",           country: "IL", example: "ai21:YOUR_KEY",        keyHint: "API key" },
+  { id: "groq",        label: "Groq",                country: "US", example: "groq:gsk_...",          keyHint: "gsk_...",    autoDetect: true },
+  { id: "together",    label: "Together AI",         country: "US", example: "together:YOUR_KEY",    keyHint: "API key" },
+  { id: "mistral",     label: "Mistral AI",          country: "FR", example: "mistral:YOUR_KEY",     keyHint: "API key" },
+  { id: "cohere",      label: "Cohere",              country: "CA", example: "cohere:YOUR_KEY",      keyHint: "API key" },
+  { id: "perplexity",  label: "Perplexity",          country: "US", example: "perplexity:pplx-...",  keyHint: "pplx-..." },
+  { id: "huggingface", label: "HuggingFace",         country: "US", example: "huggingface:hf_...",   keyHint: "hf_...", autoDetect: true },
+  { id: "replicate",   label: "Replicate",           country: "US", example: "replicate:r8_...",     keyHint: "r8_...",     autoDetect: true },
+  { id: "moonshot",    label: "Moonshot AI (Kimi)",  country: "CN", example: "moonshot:YOUR_KEY",    keyHint: "API key" },
+  { id: "baidu",       label: "Baidu ERNIE",         country: "CN", example: "baidu:YOUR_KEY",       keyHint: "Qianfan key" },
+  { id: "yi",          label: "01.AI (Yi)",          country: "CN", example: "yi:YOUR_KEY",          keyHint: "API key" },
+  { id: "stepfun",     label: "Stepfun",             country: "CN", example: "stepfun:YOUR_KEY",     keyHint: "API key" },
+  { id: "hunyuan",     label: "Tencent Hunyuan",     country: "CN", example: "hunyuan:YOUR_KEY",     keyHint: "API key" },
+  { id: "azure",       label: "Azure OpenAI",        country: "US", example: "azure:YOUR_KEY",       keyHint: "Azure key" },
+  { id: "upstage",     label: "Upstage Solar",       country: "KR", example: "upstage:YOUR_KEY",     keyHint: "API key" },
+  { id: "writer",      label: "Writer AI (Palmyra)", country: "US", example: "writer:YOUR_KEY",      keyHint: "API key" },
+  { id: "lepton",      label: "LeptonAI",            country: "US", example: "lepton:YOUR_KEY",      keyHint: "API key" },
+  { id: "inception",   label: "Inception (Mercury)", country: "US", example: "inception:YOUR_KEY",   keyHint: "API key" },
+  { id: "ibm",         label: "IBM Granite (WatsonX)", country: "US", example: "ibm:YOUR_KEY",       keyHint: "IAM token" },
+  { id: "deepinfra",   label: "Deep Infra",          country: "US", example: "deepinfra:YOUR_KEY",   keyHint: "API key" },
+  { id: "anyscale",    label: "Anyscale",            country: "US", example: "anyscale:esecret_...", keyHint: "esecret_..." },
+  { id: "neets",       label: "Neets AI",            country: "US", example: "neets:YOUR_KEY",       keyHint: "API key" },
+  { id: "lamini",      label: "Lamini AI",           country: "US", example: "lamini:YOUR_KEY",      keyHint: "API key" },
 ]
+
+const KNOWN_PROVIDERS = PROVIDER_FORMATS.map((p) => p.id)
 
 // ── Parse a .txt file ─────────────────────────────────────────────────────────
 //
@@ -122,16 +168,30 @@ function Spinner() {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MultiKeyBatch() {
-  const [entries, setEntries]       = useState<ParsedEntry[]>([])
-  const [prompt, setPrompt]         = useState("halo")
-  const [running, setRunning]       = useState(false)
-  const [results, setResults]       = useState<MultiKeyResult[]>([])
-  const [summary, setSummary]       = useState<{ passed: number; failed: number; totalMs: number } | null>(null)
-  const [dragOver, setDragOver]     = useState(false)
-  const [error, setError]           = useState<string | null>(null)
+  const [entries, setEntries]         = useState<ParsedEntry[]>([])
+  const [prompt, setPrompt]           = useState("halo")
+  const [running, setRunning]         = useState(false)
+  const [results, setResults]         = useState<MultiKeyResult[]>([])
+  const [summary, setSummary]         = useState<{ passed: number; failed: number; totalMs: number } | null>(null)
+  const [dragOver, setDragOver]       = useState(false)
+  const [error, setError]             = useState<string | null>(null)
   const [manualInput, setManualInput] = useState("")
-  const [showManual, setShowManual] = useState(false)
+  const [showManual, setShowManual]   = useState(false)
+  const [showGuide, setShowGuide]     = useState(false)
+  const [copiedId, setCopiedId]       = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  function copyText(text: string, id: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 1500)
+    })
+  }
+
+  function copyAllFormats() {
+    const lines = PROVIDER_FORMATS.map((p) => `${p.example}`)
+    copyText(lines.join("\n"), "all")
+  }
 
   // ── Parse & load entries ──────────────────────────────────────────────────
 
@@ -322,6 +382,93 @@ export default function MultiKeyBatch() {
             )}
           </div>
         )}
+
+        {/* ── Provider Format Guide ────────────────────────────────────────── */}
+        <div className="rounded-xl border border-border overflow-hidden flex-shrink-0">
+          {/* Guide header — always visible */}
+          <button
+            onClick={() => setShowGuide((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2.5 bg-secondary/40 hover:bg-secondary/60 transition-colors"
+          >
+            <span className="flex items-center gap-2 text-[11px] font-semibold text-foreground">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-muted-foreground" aria-hidden>
+                <rect x="1" y="2" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M3 5h6M3 7h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              Provider Format Guide
+              <span className="text-[9px] font-normal text-muted-foreground/50">{PROVIDER_FORMATS.length} providers</span>
+            </span>
+            <div className="flex items-center gap-2">
+              {showGuide && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); copyAllFormats() }}
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded border transition-colors ${
+                    copiedId === "all"
+                      ? "border-emerald-400/40 text-emerald-400 bg-emerald-400/10"
+                      : "border-border text-muted-foreground hover:text-foreground hover:border-border/80"
+                  }`}
+                >
+                  {copiedId === "all" ? "Copied!" : "Copy All"}
+                </button>
+              )}
+              <svg
+                width="10" height="10" viewBox="0 0 10 10" fill="none"
+                className={`text-muted-foreground/60 transition-transform ${showGuide ? "rotate-180" : ""}`}
+                aria-hidden
+              >
+                <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </button>
+
+          {/* Guide body */}
+          {showGuide && (
+            <div className="overflow-y-auto max-h-72 divide-y divide-border/40">
+              {PROVIDER_FORMATS.map((pf) => (
+                <div key={pf.id} className="flex items-center gap-3 px-3 py-2 hover:bg-secondary/20 transition-colors group">
+                  {/* Provider info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-medium text-foreground truncate">{pf.label}</span>
+                      <span className="text-[9px] font-mono font-semibold text-muted-foreground/40 uppercase flex-shrink-0">{pf.country}</span>
+                      {pf.autoDetect && (
+                        <span className="text-[8px] px-1 rounded bg-primary/10 text-primary font-semibold flex-shrink-0">auto</span>
+                      )}
+                    </div>
+                    <code className="text-[10px] font-mono text-muted-foreground/70 block truncate">{pf.example}</code>
+                  </div>
+                  {/* Copy button */}
+                  <button
+                    onClick={() => copyText(pf.example, pf.id)}
+                    title={`Copy format for ${pf.label}`}
+                    className={`flex-shrink-0 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-all ${
+                      copiedId === pf.id
+                        ? "border-emerald-400/40 text-emerald-400 bg-emerald-400/10"
+                        : "border-border/60 text-muted-foreground/50 hover:text-foreground hover:border-border opacity-0 group-hover:opacity-100"
+                    }`}
+                  >
+                    {copiedId === pf.id ? (
+                      <>
+                        <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+                          <path d="M2 5l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+                          <rect x="3" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+                          <path d="M1 4v4a1 1 0 001 1h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* ── Loaded entries table ─────────────────────────────────────────── */}
         {entries.length > 0 && (
