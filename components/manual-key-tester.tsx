@@ -1784,20 +1784,22 @@ export default function ManualKeyTester() {
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info">("unified")
   // Onboarding banner — dismissed in localStorage
-  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true
-    return localStorage.getItem("ai_tester_onboarding_dismissed") === "1"
-  })
+  // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
+  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
+  useEffect(() => {
+    setOnboardingDismissed(localStorage.getItem("ai_tester_onboarding_dismissed") === "1")
+  }, [])
   function dismissOnboarding() {
     localStorage.setItem("ai_tester_onboarding_dismissed", "1")
     setOnboardingDismissed(true)
   }
 
   // Remember API key per provider — stored obfuscated in localStorage (btoa/atob)
-  const [rememberKey, setRememberKey] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false
-    return localStorage.getItem("ai_tester_remember_pref") === "1"
-  })
+  // Start as false (matches SSR), sync from localStorage after mount
+  const [rememberKey, setRememberKey] = useState<boolean>(false)
+  useEffect(() => {
+    setRememberKey(localStorage.getItem("ai_tester_remember_pref") === "1")
+  }, [])
   // Load saved key when provider changes or remember preference loads
   useEffect(() => {
     if (!rememberKey) return
@@ -2795,7 +2797,7 @@ export default function ManualKeyTester() {
         </div>{/* end scrollable body */}
       </aside>
 
-      {/* ── RIGHT: Tabbed panel ────────────────────────────────────────────── */}
+      {/* ── RIGHT: Tabbed panel ──────────────────────────────���─────────────── */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
         {/* ── HEADER: mobile config toggle + tab bar ──────────────────────── */}
