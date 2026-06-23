@@ -1972,7 +1972,7 @@ export default function ManualKeyTester() {
 
       {/* ── LEFT: Config panel ─────────────────────────────────────────────── */}
       <aside className={`
-        flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-y-auto
+        flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
         w-72 md:w-64 lg:w-72
         transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
@@ -1990,7 +1990,7 @@ export default function ManualKeyTester() {
             </div>
             <div>
               <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Key Tester</p>
-              <p className="text-[10px] text-muted-foreground">40+ providers supported</p>
+              <p className="text-[10px] text-muted-foreground">{PRESETS.length} providers supported</p>
             </div>
           </div>
           <button
@@ -2004,11 +2004,12 @@ export default function ManualKeyTester() {
           </button>
         </div>
 
-        <div className="flex-1 px-4 py-4 flex flex-col gap-5">
+        {/* ── Top scrollable section: onboarding + provider list ── */}
+        <div className="flex flex-col" style={{height: onboardingDismissed ? "70vh" : "55vh"}}>
 
           {/* Onboarding banner — shown once, dismissable */}
           {!onboardingDismissed && (
-            <div className="rounded-xl border border-primary/25 bg-primary/6 p-3 flex flex-col gap-2 relative">
+            <div className="mx-4 mt-4 rounded-xl border border-primary/25 bg-primary/6 p-3 flex flex-col gap-2 relative flex-shrink-0">
               <button
                 onClick={dismissOnboarding}
                 className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
@@ -2034,11 +2035,11 @@ export default function ManualKeyTester() {
             </div>
           )}
 
-          {/* Provider selector */}
-          <div className="flex flex-col gap-1.5">
+          {/* Provider selector header */}
+          <div className="px-4 pt-4 pb-1.5 flex-shrink-0">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-                Provider <span className="normal-case font-normal text-muted-foreground/70">({PRESETS.length - 1} supported)</span>
+                Provider <span className="normal-case font-normal text-muted-foreground/70">({PRESETS.length} supported)</span>
               </label>
               {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
                 <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
@@ -2046,8 +2047,11 @@ export default function ManualKeyTester() {
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-px flex-1 overflow-y-auto">
-              {PRESETS.map((p) => (
+          </div>
+
+          {/* Provider list — full scrollable */}
+          <div className="flex-1 overflow-y-auto px-4 pb-2 flex flex-col gap-px">
+            {PRESETS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
@@ -2076,8 +2080,11 @@ export default function ManualKeyTester() {
                   )}
                 </button>
               ))}
-            </div>
           </div>
+        </div>
+
+        {/* ── Bottom fixed section: API key + endpoint + settings ── */}
+        <div className="flex flex-col gap-5 px-4 py-4 border-t border-border flex-shrink-0 overflow-y-auto max-h-[55vh]">
 
           {/* API Key */}
           <div className="flex flex-col gap-2">
