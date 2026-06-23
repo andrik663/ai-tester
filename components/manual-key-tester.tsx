@@ -1487,6 +1487,43 @@ export default function ManualKeyTester() {
   }, [apiKey, rememberKey, selectedPreset.id])
   // Sub-tab inside "unified"
   const [unifiedSubTab, setUnifiedSubTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "compare">("chat")
+  
+  // Per-tab model selectors — each tab remembers its own model choice
+  const [chatModel, setChatModel] = useState<string>("")
+  const [visionModel, setVisionModel] = useState<string>("")
+  const [imageGenModel, setImageGenModel] = useState<string>("")
+  const [videoGenModel, setVideoGenModel] = useState<string>("")
+  
+  // Get the current model based on active sub-tab
+  const getCurrentModel = () => {
+    switch (unifiedSubTab) {
+      case "chat":       return chatModel
+      case "vision":     return visionModel
+      case "image-gen":  return imageGenModel
+      case "video-gen":  return videoGenModel
+      default:           return ""
+    }
+  }
+  
+  const setCurrentModel = (model: string) => {
+    switch (unifiedSubTab) {
+      case "chat":       setChatModel(model); break
+      case "vision":     setVisionModel(model); break
+      case "image-gen":  setImageGenModel(model); break
+      case "video-gen":  setVideoGenModel(model); break
+    }
+  }
+  
+  // Set default model when provider changes
+  useEffect(() => {
+    if (selectedPreset.models && selectedPreset.models.length > 0) {
+      const defaultModel = selectedPreset.models[0].id
+      setChatModel(defaultModel)
+      setVisionModel(defaultModel)
+      setImageGenModel(defaultModel)
+      setVideoGenModel(defaultModel)
+    }
+  }, [selectedPreset.id])
   // Compare mode state
   const [comparePrompt, setComparePrompt] = useState("Say hello in one sentence.")
   const [compareSlots, setCompareSlots] = useState<Array<{ providerId: string; apiKey: string }>>([
@@ -2584,6 +2621,36 @@ export default function ManualKeyTester() {
         {activeTab === "unified" && unifiedSubTab === "chat" && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
+            {/* Provider Header Bar */}
+            <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {PROVIDER_LOGOS[selectedPreset.id] ? (
+                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
+                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
+                  </svg>
+                )}
+                <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
+              </div>
+              
+              {/* Model Selector */}
+              {selectedPreset.models && selectedPreset.models.length > 0 && (
+                <select
+                  value={chatModel}
+                  onChange={(e) => setChatModel(e.target.value)}
+                  className="text-xs font-semibold bg-background text-foreground border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  title="Select model for this provider"
+                >
+                  {selectedPreset.models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
             {/* Chat messages area */}
             <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 flex flex-col gap-3">
               {chatHistory.length === 0 && (
@@ -2873,6 +2940,36 @@ export default function ManualKeyTester() {
         {/* ── VISION TAB ────────────��──────────────────────────────────����───��─ */}
         {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
+            {/* Provider Header Bar */}
+            <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {PROVIDER_LOGOS[selectedPreset.id] ? (
+                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
+                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
+                  </svg>
+                )}
+                <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
+              </div>
+              
+              {/* Model Selector */}
+              {selectedPreset.models && selectedPreset.models.length > 0 && (
+                <select
+                  value={visionModel}
+                  onChange={(e) => setVisionModel(e.target.value)}
+                  className="text-xs font-semibold bg-background text-foreground border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  title="Select vision model for this provider"
+                >
+                  {selectedPreset.models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
               {visionHistory.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
@@ -3158,7 +3255,37 @@ export default function ManualKeyTester() {
                   </p>
                 </div>
               )}
-              <div className="flex-1 min-h-0 overflow-hidden">
+              {/* Provider Header Bar */}
+            <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {PROVIDER_LOGOS[selectedPreset.id] ? (
+                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
+                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
+                  </svg>
+                )}
+                <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
+              </div>
+              
+              {/* Model Selector */}
+              {selectedPreset.models && selectedPreset.models.length > 0 && (
+                <select
+                  value={imageGenModel}
+                  onChange={(e) => setImageGenModel(e.target.value)}
+                  className="text-xs font-semibold bg-background text-foreground border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  title="Select image model for this provider"
+                >
+                  {selectedPreset.models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-hidden">
                 <ImageTester
                   apiKey={apiKey}
                   model={imageModel}
@@ -3185,6 +3312,36 @@ export default function ManualKeyTester() {
                   </p>
                 </div>
               )}
+              {/* Provider Header Bar */}
+              <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {PROVIDER_LOGOS[selectedPreset.id] ? (
+                    <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
+                      <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
+                    </svg>
+                  )}
+                  <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
+                </div>
+                
+                {/* Model Selector */}
+                {selectedPreset.models && selectedPreset.models.length > 0 && (
+                  <select
+                    value={videoGenModel}
+                    onChange={(e) => setVideoGenModel(e.target.value)}
+                    className="text-xs font-semibold bg-background text-foreground border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                    title="Select video model for this provider"
+                  >
+                    {selectedPreset.models.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
               <div className="flex-1 min-h-0 overflow-hidden">
                 <VideoTester
                   apiKey={apiKey}
