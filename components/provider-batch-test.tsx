@@ -391,7 +391,7 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
       </button>
 
       {!canRun && !loading && (
-        <p className="text-[9px] text-muted-foreground/50 text-center">
+        <p className="text-xs text-muted-foreground/70 text-center">
           Enter an API key above to run batch test
         </p>
       )}
