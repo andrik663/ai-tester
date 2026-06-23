@@ -1179,6 +1179,8 @@ const PROVIDER_LOGOS: Record<string, string> = {
   deepinfra:   `${BASE}/deepinfra/default.svg`,
   anyscale:    `${BASE}/anyscale/default.svg`,
   meta:        `${BASE}/meta/default.svg`,
+  lamini:      `${BASE}/lamini/default.svg`,
+  neets:       `${BASE}/neets-ai/default.svg`,
 }
 
 
