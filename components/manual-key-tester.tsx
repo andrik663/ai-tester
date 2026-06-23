@@ -43,30 +43,61 @@ interface ProviderPreset {
 
 // ── Auto-detect provider from key prefix ─────────────────────────────────────
 // Returns a preset id string when the key format matches a known provider.
+// Ordered most-specific → least-specific to avoid false positives.
 function detectProviderFromKey(key: string): string | null {
   if (!key || key.trim().length < 4) return null
   const k = key.trim()
-  if (k.startsWith("sk-ant-api"))                           return "anthropic"
-  if (k.startsWith("sk-ant-"))                              return "anthropic"
-  if (k.startsWith("AIzaSy") || k.startsWith("AIza"))      return "google"
-  if (k.startsWith("gsk_"))                                 return "groq"
-  if (k.startsWith("hf_"))                                  return "huggingface"
-  if (k.startsWith("ghp_") || k.startsWith("github_pat_")) return null // GitHub — not an AI provider here
-  if (k.startsWith("sk_live_") || k.startsWith("sk_test_")) return null // Stripe
-  if (k.startsWith("xai-"))                                 return "xai"
-  if (k.startsWith("sk-proj-") || k.startsWith("sk-None-")) return "openai"
-  // DeepSeek keys look like sk-<hex> — differentiated by length and by not matching OpenAI patterns
-  if (k.startsWith("sk-") && !k.startsWith("sk_") && k.length > 40) {
-    // OpenAI keys are 56 chars starting sk-proj- or sk-None- (already caught) or older sk- 51 chars
-    // DeepSeek uses sk- too but shorter. Best effort — return openai as it's more common.
-    return "openai"
+
+  // ── Exact / unmistakable prefixes ────────────────────────────────────────
+  if (k.startsWith("sk-ant-api"))         return "anthropic"   // Claude (Anthropic) — api key
+  if (k.startsWith("sk-ant-"))            return "anthropic"   // Claude (Anthropic) — service key
+  if (k.startsWith("AIzaSy"))             return "google"      // Gemini (Google AI Studio)
+  if (k.startsWith("AIza"))              return "google"       // Google — older format
+  if (k.startsWith("gsk_"))              return "groq"         // Groq
+  if (k.startsWith("hf_"))              return "huggingface"   // HuggingFace
+  if (k.startsWith("xai-"))             return "xai"           // Grok (xAI)
+  if (k.startsWith("pplx-"))            return "perplexity"    // Perplexity
+  if (k.startsWith("or-v1-"))           return "openrouter"    // OpenRouter (new format)
+  if (k.startsWith("or-"))              return "openrouter"    // OpenRouter
+  if (k.startsWith("fw-"))              return "fireworks"     // Fireworks AI
+  if (k.startsWith("nvapi-"))           return "nvidia"        // NVIDIA NIM
+  if (k.startsWith("dk-"))             return "dahono"         // Dahono Labs Gateway
+  if (k.startsWith("dc-"))             return "dahono"         // Dahono Labs Gateway (alt)
+  if (k.startsWith("r8_"))             return "replicate"      // Replicate
+  if (k.startsWith("up_"))             return "upstage"        // Upstage Solar
+  if (k.startsWith("sn-"))             return "sambanova"      // SambaNova
+  if (k.startsWith("csk-"))            return "cerebras"       // Cerebras (some keys)
+  if (k.startsWith("cbrss_"))          return "cerebras"       // Cerebras (new format)
+  if (k.startsWith("hyp_"))            return "hyperbolic"     // Hyperbolic
+  if (k.startsWith("J2-") || k.startsWith("j2-")) return "ai21"  // AI21 Labs (Jurassic prefix)
+  if (k.startsWith("msauth_"))         return "mistral"        // Mistral (some enterprise keys)
+  if (k.startsWith("lp_"))             return "lepton"         // LeptonAI
+  if (k.startsWith("lmn_") || k.startsWith("lmni_")) return "lamini" // Lamini AI
+  if (k.startsWith("di_"))             return "deepinfra"      // Deep Infra
+  if (k.startsWith("esecret_"))        return "anyscale"       // Anyscale (old)
+  if (k.startsWith("esec_"))           return "anyscale"       // Anyscale
+  if (k.startsWith("neets-"))          return "neets"          // Neets AI
+
+  // ── OpenAI — project keys (most specific first) ───────────────────────────
+  if (k.startsWith("sk-proj-"))         return "openai"        // OpenAI project key
+  if (k.startsWith("sk-svcacct-"))      return "openai"        // OpenAI service account
+  if (k.startsWith("sk-None-"))         return "openai"        // OpenAI legacy
+
+  // ── sk- ambiguous: OpenAI vs DeepSeek vs Together vs others ──────────────
+  // DeepSeek keys are typically 35–40 chars; OpenAI legacy sk- are 51 chars.
+  // Together AI keys are also sk- but exactly 64 hex chars.
+  if (k.startsWith("sk-") && !k.startsWith("sk_")) {
+    if (k.length >= 60) return "together"     // Together AI — long hex key
+    if (k.length >= 45) return "openai"       // OpenAI legacy
+    if (k.length >= 32) return "deepseek"     // DeepSeek
+    return "openai"                           // fallback
   }
-  if (k.startsWith("pplx-"))                                return "perplexity"
-  if (k.startsWith("or-"))                                  return "openrouter"
-  if (k.startsWith("fw-"))                                  return "fireworks"
-  if (k.startsWith("nvapi-"))                               return "nvidia"
-  if (k.startsWith("dc-"))                                  return "dahono"
-  if (k.startsWith("dk-"))                                  return "dahono"
+
+  // ── Non sk- generic bearer tokens — no reliable pattern, skip ─────────────
+  // Providers using opaque UUIDs / random tokens: Cohere, Mistral (non-msauth),
+  // MiniMax, Zhipu, Qwen, Moonshot, Baidu, Yi, Stepfun, Hunyuan, Cloudflare,
+  // Azure, Writer, BFL, Bytedance, Recraft, Ideogram, Luma, IBM, Amazon, Novita,
+  // Inception, DeepInfra (non-di_ prefix), SambaNova (non-sn-), Cerebras (non-csk-)
   return null
 }
 
@@ -1377,7 +1408,7 @@ export default function ManualKeyTester() {
   const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect">("chat")
   // Auto-detect tab state
   const [detectInput, setDetectInput]   = useState("")
-  const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown"; prefix: string; reason: string } | null>(null)
+  const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
   // Increment to trigger a fresh KeyInfoPanel fetch (bumped after successful chat)
@@ -2936,46 +2967,97 @@ export default function ManualKeyTester() {
         {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────── */}
         {activeTab === "auto-detect" && (() => {
           // Full provider pattern table — mirrors detectProviderFromKey but with metadata
-          const DETECT_PATTERNS: Array<{
+          type DetectPattern = {
             prefix: string
             providerId: string
             providerName: string
             example: string
-            confidence: "high" | "low"
+            confidence: "high" | "low" | "none"
             note?: string
-          }> = [
-            { prefix: "sk-ant-api",  providerId: "anthropic",    providerName: "Claude (Anthropic)",    example: "sk-ant-api03-…",     confidence: "high" },
-            { prefix: "sk-ant-",     providerId: "anthropic",    providerName: "Claude (Anthropic)",    example: "sk-ant-…",           confidence: "high" },
-            { prefix: "AIzaSy",      providerId: "google",       providerName: "Gemini (Google)",       example: "AIzaSy…",            confidence: "high" },
-            { prefix: "gsk_",        providerId: "groq",         providerName: "Groq",                  example: "gsk_…",              confidence: "high" },
-            { prefix: "hf_",         providerId: "huggingface",  providerName: "HuggingFace",           example: "hf_…",               confidence: "high" },
-            { prefix: "xai-",        providerId: "xai",          providerName: "Grok (xAI)",            example: "xai-…",              confidence: "high" },
-            { prefix: "sk-proj-",    providerId: "openai",       providerName: "GPT (OpenAI)",          example: "sk-proj-…",          confidence: "high" },
-            { prefix: "sk-None-",    providerId: "openai",       providerName: "GPT (OpenAI)",          example: "sk-None-…",          confidence: "high" },
-            { prefix: "pplx-",       providerId: "perplexity",   providerName: "Perplexity",            example: "pplx-…",             confidence: "high" },
-            { prefix: "or-",         providerId: "openrouter",   providerName: "OpenRouter",            example: "or-v1-…",            confidence: "high" },
-            { prefix: "fw-",         providerId: "fireworks",    providerName: "Fireworks AI",          example: "fw-…",               confidence: "high" },
-            { prefix: "nvapi-",      providerId: "nvidia",       providerName: "NVIDIA NIM",            example: "nvapi-…",            confidence: "high" },
-            { prefix: "dk-",         providerId: "dahono",       providerName: "Dahono Labs Gateway",   example: "dk-…",               confidence: "high" },
-            { prefix: "dc-",         providerId: "dahono",       providerName: "Dahono Labs Gateway",   example: "dc-…",               confidence: "high" },
-            { prefix: "sk-",         providerId: "openai",       providerName: "GPT (OpenAI) / DeepSeek", example: "sk-… (>40 chars)", confidence: "low",  note: "Could also be DeepSeek — key length and context used as tiebreaker" },
+          }
+          const DETECT_PATTERNS: DetectPattern[] = [
+            // ── High-confidence exact prefixes ──────────────────────────────
+            { prefix: "sk-ant-api",  providerId: "anthropic",   providerName: "Claude (Anthropic)",      example: "sk-ant-api03-…",       confidence: "high" },
+            { prefix: "sk-ant-",     providerId: "anthropic",   providerName: "Claude (Anthropic)",      example: "sk-ant-…",             confidence: "high" },
+            { prefix: "AIzaSy",      providerId: "google",      providerName: "Gemini (Google)",         example: "AIzaSy…",              confidence: "high" },
+            { prefix: "AIza",        providerId: "google",      providerName: "Gemini (Google)",         example: "AIza…",                confidence: "high" },
+            { prefix: "gsk_",        providerId: "groq",        providerName: "Groq",                    example: "gsk_abc…",             confidence: "high" },
+            { prefix: "hf_",         providerId: "huggingface", providerName: "HuggingFace",             example: "hf_abc…",              confidence: "high" },
+            { prefix: "xai-",        providerId: "xai",         providerName: "Grok (xAI)",              example: "xai-abc…",             confidence: "high" },
+            { prefix: "pplx-",       providerId: "perplexity",  providerName: "Perplexity",              example: "pplx-abc…",            confidence: "high" },
+            { prefix: "or-v1-",      providerId: "openrouter",  providerName: "OpenRouter",              example: "or-v1-abc…",           confidence: "high" },
+            { prefix: "or-",         providerId: "openrouter",  providerName: "OpenRouter",              example: "or-abc…",              confidence: "high" },
+            { prefix: "fw-",         providerId: "fireworks",   providerName: "Fireworks AI",            example: "fw-abc…",              confidence: "high" },
+            { prefix: "nvapi-",      providerId: "nvidia",      providerName: "NVIDIA NIM",              example: "nvapi-abc…",           confidence: "high" },
+            { prefix: "dk-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dk-abc…",              confidence: "high" },
+            { prefix: "dc-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dc-abc…",              confidence: "high" },
+            { prefix: "r8_",         providerId: "replicate",   providerName: "Replicate",               example: "r8_abc…",              confidence: "high" },
+            { prefix: "up_",         providerId: "upstage",     providerName: "Upstage Solar",           example: "up_abc…",              confidence: "high" },
+            { prefix: "sn-",         providerId: "sambanova",   providerName: "SambaNova",               example: "sn-abc…",              confidence: "high" },
+            { prefix: "csk-",        providerId: "cerebras",    providerName: "Cerebras",                example: "csk-abc…",             confidence: "high" },
+            { prefix: "cbrss_",      providerId: "cerebras",    providerName: "Cerebras",                example: "cbrss_abc…",           confidence: "high" },
+            { prefix: "hyp_",        providerId: "hyperbolic",  providerName: "Hyperbolic",              example: "hyp_abc…",             confidence: "high" },
+            { prefix: "J2-",         providerId: "ai21",        providerName: "AI21 Labs",               example: "J2-abc…",              confidence: "high" },
+            { prefix: "msauth_",     providerId: "mistral",     providerName: "Mistral AI",              example: "msauth_abc…",          confidence: "high" },
+            { prefix: "lp_",         providerId: "lepton",      providerName: "LeptonAI",                example: "lp_abc…",              confidence: "high" },
+            { prefix: "lmn_",        providerId: "lamini",      providerName: "Lamini AI",               example: "lmn_abc…",             confidence: "high" },
+            { prefix: "di_",         providerId: "deepinfra",   providerName: "Deep Infra",              example: "di_abc…",              confidence: "high" },
+            { prefix: "esec_",       providerId: "anyscale",    providerName: "Anyscale",                example: "esec_abc…",            confidence: "high" },
+            { prefix: "neets-",      providerId: "neets",       providerName: "Neets AI",                example: "neets-abc…",           confidence: "high" },
+            // ── OpenAI exact formats ────────────────────────────────────────
+            { prefix: "sk-proj-",    providerId: "openai",      providerName: "GPT (OpenAI)",            example: "sk-proj-abc…",         confidence: "high" },
+            { prefix: "sk-svcacct-", providerId: "openai",      providerName: "GPT (OpenAI)",            example: "sk-svcacct-abc…",      confidence: "high" },
+            { prefix: "sk-None-",    providerId: "openai",      providerName: "GPT (OpenAI)",            example: "sk-None-abc…",         confidence: "high" },
+            // ── sk- ambiguous — length-based tiebreaker ─────────────────────
+            { prefix: "sk-",         providerId: "together",    providerName: "Together AI",             example: "sk-… (64 hex chars)",  confidence: "low",  note: "sk- key ≥60 chars is likely Together AI — identical prefix to OpenAI/DeepSeek" },
+            { prefix: "sk-",         providerId: "openai",      providerName: "GPT (OpenAI) legacy",     example: "sk-… (45–59 chars)",   confidence: "low",  note: "sk- key 45–59 chars is likely OpenAI legacy format" },
+            { prefix: "sk-",         providerId: "deepseek",    providerName: "DeepSeek",                example: "sk-… (32–44 chars)",   confidence: "low",  note: "sk- key 32–44 chars is likely DeepSeek — cannot distinguish from short OpenAI keys with certainty" },
+            // ── No reliable prefix — opaque UUID/random tokens ──────────────
+            { prefix: "—",           providerId: "cohere",      providerName: "Cohere",                  example: "random 40-char hex",   confidence: "none", note: "Opaque random token — cannot be distinguished by prefix" },
+            { prefix: "—",           providerId: "mistral",     providerName: "Mistral AI",              example: "random UUID",          confidence: "none", note: "Opaque random token — cannot be distinguished by prefix" },
+            { prefix: "—",           providerId: "together",    providerName: "Together AI",             example: "short random token",   confidence: "none", note: "Short random token variant — cannot be distinguished by prefix" },
+            { prefix: "—",           providerId: "minimax",     providerName: "MiniMax",                 example: "numeric ID",           confidence: "none", note: "MiniMax keys are numeric IDs — not prefix-detectable" },
+            { prefix: "—",           providerId: "zhipu",       providerName: "GLM (Zhipu AI)",          example: "JWT token",            confidence: "none", note: "Zhipu keys are JWT tokens — not prefix-detectable" },
+            { prefix: "—",           providerId: "qwen",        providerName: "Qwen (Alibaba)",          example: "random string",        confidence: "none", note: "Alibaba DashScope keys have no fixed prefix" },
+            { prefix: "—",           providerId: "moonshot",    providerName: "Moonshot AI (Kimi)",      example: "random string",        confidence: "none", note: "Moonshot keys have no fixed prefix" },
+            { prefix: "—",           providerId: "baidu",       providerName: "Baidu ERNIE (Qianfan)",   example: "random string",        confidence: "none", note: "Baidu Qianfan keys have no fixed prefix" },
+            { prefix: "—",           providerId: "yi",          providerName: "01.AI (Yi)",              example: "random string",        confidence: "none", note: "Yi keys have no fixed prefix" },
+            { prefix: "—",           providerId: "stepfun",     providerName: "Stepfun",                 example: "random string",        confidence: "none", note: "Stepfun keys have no fixed prefix" },
+            { prefix: "—",           providerId: "hunyuan",     providerName: "Tencent Hunyuan",         example: "random string",        confidence: "none", note: "Hunyuan keys have no fixed prefix" },
+            { prefix: "—",           providerId: "cloudflare",  providerName: "Cloudflare Workers AI",   example: "accountId|apiToken",   confidence: "none", note: "Cloudflare keys use accountId|apiToken composite format" },
+            { prefix: "—",           providerId: "azure",       providerName: "Azure OpenAI",            example: "32-char hex",          confidence: "none", note: "Azure keys are 32-char hex — indistinguishable from other hex keys" },
+            { prefix: "—",           providerId: "writer",      providerName: "Writer AI (Palmyra)",     example: "random string",        confidence: "none", note: "Writer keys have no fixed prefix" },
+            { prefix: "—",           providerId: "bfl",         providerName: "Black Forest Labs (FLUX)", example: "random string",       confidence: "none", note: "BFL keys have no fixed prefix" },
+            { prefix: "—",           providerId: "bytedance",   providerName: "Bytedance (SeedDream)",   example: "random string",        confidence: "none", note: "Bytedance Ark keys have no fixed prefix" },
+            { prefix: "—",           providerId: "recraft",     providerName: "Recraft AI",              example: "random string",        confidence: "none", note: "Recraft keys have no fixed prefix" },
+            { prefix: "—",           providerId: "ideogram",    providerName: "Ideogram AI",             example: "random string",        confidence: "none", note: "Ideogram keys have no fixed prefix" },
+            { prefix: "—",           providerId: "luma",        providerName: "Luma AI (Photon)",        example: "random string",        confidence: "none", note: "Luma keys have no fixed prefix" },
+            { prefix: "—",           providerId: "amazon",      providerName: "Amazon Nova (Bedrock)",   example: "AKID… / session token", confidence: "none", note: "AWS keys use AKID prefix but require additional SigV4 signing — not auto-switchable" },
+            { prefix: "—",           providerId: "ibm",         providerName: "IBM Granite (WatsonX)",   example: "IAM API key",          confidence: "none", note: "IBM WatsonX keys are IAM tokens — not prefix-detectable" },
+            { prefix: "—",           providerId: "novita",      providerName: "Novita AI",               example: "random UUID",          confidence: "none", note: "Novita keys are UUIDs — not prefix-detectable" },
+            { prefix: "—",           providerId: "inception",   providerName: "Inception (Mercury)",     example: "random string",        confidence: "none", note: "Inception keys have no fixed prefix" },
+            { prefix: "—",           providerId: "deepinfra",   providerName: "Deep Infra (non-di_)",    example: "random string",        confidence: "none", note: "Some Deep Infra keys lack the di_ prefix — use di_ keys for auto-detection" },
           ]
 
           function runDetect(raw: string): typeof detectResult {
             if (!raw.trim()) return null
             const k = raw.trim()
+            // Only match patterns that have real prefixes (not the "—" sentinel)
             for (const p of DETECT_PATTERNS) {
-              if (k.startsWith(p.prefix)) {
-                // For generic sk- check length
-                if (p.prefix === "sk-" && k.length <= 40) continue
-                const preset = PRESETS.find((pr) => pr.id === p.providerId)
-                return {
-                  providerId: p.providerId,
-                  providerName: p.providerName,
-                  confidence: p.confidence,
-                  prefix: k.slice(0, Math.min(p.prefix.length + 4, k.length)) + "…",
-                  reason: p.note ?? `Key starts with "${p.prefix}" — exclusive to ${p.providerName}`,
-                }
+              if (p.prefix === "—") continue
+              if (!k.startsWith(p.prefix)) continue
+              // For generic sk- apply length-based tiebreaker
+              if (p.prefix === "sk-") {
+                if (p.providerId === "together" && k.length < 60) continue
+                if (p.providerId === "openai"   && (k.length < 45 || k.length >= 60)) continue
+                if (p.providerId === "deepseek" && (k.length < 32 || k.length >= 45)) continue
+              }
+              return {
+                providerId: p.providerId,
+                providerName: p.providerName,
+                confidence: p.confidence,
+                prefix: k.slice(0, Math.min(p.prefix.length + 4, k.length)) + "…",
+                reason: p.note ?? `Key starts with "${p.prefix}" — exclusive to ${p.providerName}`,
               }
             }
             return {
@@ -2983,7 +3065,7 @@ export default function ManualKeyTester() {
               providerName: null,
               confidence: "unknown",
               prefix: k.slice(0, 10) + (k.length > 10 ? "…" : ""),
-              reason: "No matching prefix found. Provider could not be determined from key format alone.",
+              reason: "No matching prefix found. This provider likely uses an opaque random token — see the undetectable providers list below.",
             }
           }
 
@@ -3094,64 +3176,97 @@ export default function ManualKeyTester() {
                 </div>
               )}
 
-              {/* Pattern reference table */}
-              <div className="flex flex-col gap-2">
-                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-                  Known key prefixes ({DETECT_PATTERNS.length})
-                </h3>
-                <div className="rounded-md border border-border overflow-hidden">
-                  <table className="w-full text-[11px]">
-                    <thead>
-                      <tr className="border-b border-border bg-secondary/40">
-                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Prefix</th>
-                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Provider</th>
-                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground hidden sm:table-cell">Example</th>
-                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Conf.</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {DETECT_PATTERNS.map((p, i) => {
-                        const isActive = liveResult?.providerId === p.providerId && detectInput.trim().startsWith(p.prefix)
-                        return (
-                          <tr
-                            key={i}
-                            className={`border-b border-border/50 last:border-0 transition-colors ${
-                              isActive ? "bg-primary/8" : "hover:bg-secondary/30"
-                            }`}
-                          >
-                            <td className="px-3 py-2">
-                              <code className={`font-mono font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>
-                                {p.prefix}
-                              </code>
-                            </td>
-                            <td className="px-3 py-2">
-                              <div className="flex items-center gap-1.5">
-                                <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
-                                <span className="text-muted-foreground truncate max-w-[120px]">{p.providerName}</span>
-                              </div>
-                            </td>
-                            <td className="px-3 py-2 hidden sm:table-cell">
-                              <code className="text-muted-foreground/60 font-mono">{p.example}</code>
-                            </td>
-                            <td className="px-3 py-2">
-                              <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                                p.confidence === "high"
-                                  ? "text-green-400 bg-green-400/10"
-                                  : "text-yellow-400 bg-yellow-400/10"
-                              }`}>
-                                {p.confidence}
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="text-[10px] text-muted-foreground/50">
-                  Providers with random or UUID-style keys (Replicate, Cohere, Together AI, etc.) cannot be identified by prefix alone.
-                </p>
-              </div>
+              {/* Pattern reference table — detectable */}
+              {(() => {
+                const detectable   = DETECT_PATTERNS.filter((p) => p.confidence !== "none")
+                const undetectable = DETECT_PATTERNS.filter((p) => p.confidence === "none")
+                return (
+                  <div className="flex flex-col gap-4">
+
+                    {/* Detectable */}
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        Auto-detectable by prefix ({detectable.length} patterns)
+                      </h3>
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="border-b border-border bg-secondary/40">
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Prefix</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Provider</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground hidden sm:table-cell">Example</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Conf.</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {detectable.map((p, i) => {
+                              const isActive = liveResult?.providerId === p.providerId && p.prefix !== "—" && detectInput.trim().startsWith(p.prefix)
+                              return (
+                                <tr key={i} className={`border-b border-border/50 last:border-0 transition-colors ${isActive ? "bg-primary/8" : "hover:bg-secondary/30"}`}>
+                                  <td className="px-3 py-2">
+                                    <code className={`font-mono font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>{p.prefix}</code>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <div className="flex items-center gap-1.5">
+                                      <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
+                                      <span className="text-muted-foreground truncate max-w-[130px]">{p.providerName}</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-2 hidden sm:table-cell">
+                                    <code className="text-muted-foreground/60 font-mono">{p.example}</code>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${p.confidence === "high" ? "text-green-400 bg-green-400/10" : "text-yellow-400 bg-yellow-400/10"}`}>
+                                      {p.confidence}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Undetectable */}
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        Cannot be detected by prefix ({undetectable.length} providers)
+                      </h3>
+                      <div className="rounded-md border border-border/50 overflow-hidden">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="border-b border-border/50 bg-secondary/20">
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60">Provider</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60 hidden sm:table-cell">Key format</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60">Reason</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {undetectable.map((p, i) => (
+                              <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors">
+                                <td className="px-3 py-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-40" />
+                                    <span className="text-muted-foreground/60 truncate max-w-[130px]">{p.providerName}</span>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2 hidden sm:table-cell">
+                                  <code className="text-muted-foreground/40 font-mono">{p.example}</code>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <span className="text-muted-foreground/40 text-[10px] leading-snug">{p.note}</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                  </div>
+                )
+              })()}
 
             </div>
           )
