@@ -390,7 +390,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "minimax/minimax-m2-7",                              label: "MiniMax M2.7 (Hot)",          tag: "MiniMax",    ctx: "200K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
       { id: "minimax/minimax-m2-5-highspeed",                    label: "MiniMax M2.5-Highspeed",      tag: "MiniMax",    ctx: "200K ctx", in: "$0.6/Mt",   out: "$2.4/Mt",   cache: "$0.03/Mt" },
       { id: "minimax/minimax-m1",                                label: "MiniMax M1",                  tag: "MiniMax",    ctx: "1M ctx",   in: "$0.55/Mt",  out: "$2.2/Mt",   cache: "" },
-      // ── Kimi ────���───────────────────���────────────────────────────────────
+      // ── Kimi ────�����───────────────────���────────────────────────────────────
       { id: "moonshotai/kimi-k2-6",                              label: "Kimi K2.6 (New)",             tag: "MoonshotAI", ctx: "256K ctx", in: "$0.8/Mt",   out: "$3.4/Mt",   cache: "$0.16/Mt" },
       { id: "moonshotai/kimi-k2-instruct",                       label: "Kimi K2 Instruct",            tag: "MoonshotAI", ctx: "131K ctx", in: "$0.57/Mt",  out: "$2.3/Mt",   cache: "" },
       { id: "moonshotai/kimi-k2-thinking",                       label: "Kimi K2 Thinking",            tag: "MoonshotAI", ctx: "256K ctx", in: "$0.6/Mt",   out: "$2.5/Mt",   cache: "$0.15/Mt" },
@@ -1793,8 +1793,8 @@ export default function ManualKeyTester() {
           {/* Provider selector */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
+                Provider <span className="normal-case font-normal text-muted-foreground/70">({PRESETS.length - 1} supported)</span>
               </label>
               {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
                 <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
@@ -1807,10 +1807,10 @@ export default function ManualKeyTester() {
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
-                  className={`text-[11px] font-medium px-2.5 py-1.5 rounded transition-colors text-left w-full flex items-center gap-2 group ${
+                  className={`text-xs font-medium px-2.5 py-2 rounded transition-colors text-left w-full flex items-center gap-2 group ${
                     selectedPreset.id === p.id
                       ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                      : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
                   }`}
                 >
                   <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors overflow-hidden ${
@@ -1826,7 +1826,7 @@ export default function ManualKeyTester() {
                   </span>
                   <span className="flex-1 min-w-0 truncate">{p.name}</span>
                   {p.country && (
-                    <span className="flex-shrink-0 text-[9px] font-mono font-semibold tracking-wider text-muted-foreground/50 uppercase">
+                    <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
                       {p.country}
                     </span>
                   )}
@@ -1838,7 +1838,7 @@ export default function ManualKeyTester() {
           {/* API Key */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
                 API Key
               </label>
               {apiKey && (
@@ -1860,7 +1860,7 @@ export default function ManualKeyTester() {
                 value={apiKey}
                 onChange={(e) => handleApiKeyChange(e.target.value)}
                 placeholder="sk-ant-... / sk-... / AIza..."
-                className="w-full rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                className="w-full rounded-md border border-border bg-background text-foreground text-xs font-mono px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
               />
               <button
                 onClick={() => setShowKey((v) => !v)}
@@ -1929,14 +1929,14 @@ export default function ManualKeyTester() {
 
           {/* Endpoint */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
               Endpoint URL
             </label>
             <div className="flex gap-1">
               <select
                 value={method}
                 onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
-                className="text-[10px] font-mono bg-background border border-border rounded px-1.5 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
+                className="text-xs font-mono bg-background border border-border rounded px-1.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
               >
                 {["POST", "GET", "PUT", "DELETE"].map((m) => (
                   <option key={m} value={m}>{m}</option>
@@ -1947,7 +1947,7 @@ export default function ManualKeyTester() {
                 value={endpoint}
                 onChange={(e) => setEndpoint(e.target.value)}
                 placeholder="https://api.example.com/v1/..."
-                className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-[10px] font-mono px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-xs font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
               />
             </div>
             {selectedPreset.docsUrl && (
@@ -1955,7 +1955,7 @@ export default function ManualKeyTester() {
                 href={selectedPreset.docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[9px] text-primary/70 hover:text-primary transition-colors"
+                className="text-xs text-primary/80 hover:text-primary transition-colors"
               >
                 View API docs →
               </a>
@@ -1965,11 +1965,11 @@ export default function ManualKeyTester() {
           {/* Dahono model picker — shown when provider is Dahono */}
           {selectedPreset.id === "dahono" && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
                 Model
-                {dahonoModelsFetching && <span className="ml-1 font-normal normal-case text-muted-foreground/50">fetching...</span>}
+                {dahonoModelsFetching && <span className="ml-1 font-normal normal-case text-muted-foreground/70">fetching...</span>}
                 {!dahonoModelsFetching && dahonoModels.length > 0 && (
-                  <span className="ml-1 font-normal normal-case text-muted-foreground/50">
+                  <span className="ml-1 font-normal normal-case text-muted-foreground/70">
                     {dahonoModels.length} models from gateway
                   </span>
                 )}
@@ -1981,7 +1981,7 @@ export default function ManualKeyTester() {
                     setSelectedDahonoModel(e.target.value)
                     updateDahonoBodyModel(e.target.value)
                   }}
-                  className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring w-full"
+                  className="text-xs font-mono bg-background border border-border rounded px-2 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring w-full"
                 >
                   {["free", "starter", "pro", "business"].map((tier) => {
                     const tier_models = dahonoModels.filter((m) => m.tier === tier)
@@ -1996,7 +1996,7 @@ export default function ManualKeyTester() {
                   })}
                 </select>
               ) : (
-                <p className="text-[9px] text-muted-foreground/50">
+                <p className="text-xs text-muted-foreground/75">
                   Enter your Dahono API key above to auto-load all {dahonoModelsFetching ? "..." : "models"} from the gateway.
                 </p>
               )}
@@ -2005,7 +2005,7 @@ export default function ManualKeyTester() {
 
           {/* Batch Model Test — Run All Models (all providers) */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
               Batch Model Test
             </label>
             <ProviderBatchTest
@@ -2018,21 +2018,21 @@ export default function ManualKeyTester() {
 
           {/* Headers */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
               Headers
             </label>
             <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
-            <p className="text-[9px] text-muted-foreground/50">
-              Use <code className="text-primary/70">{"{{API_KEY}}"}</code> as placeholder — replaced with your key on send.
+            <p className="text-xs text-muted-foreground/75">
+              Use <code className="text-primary/80">{"{{API_KEY}}"}</code> as placeholder — replaced with your key on send.
             </p>
           </div>
 
           {/* Compact model catalog (providers with rich model list) */}
           {selectedPreset.models && selectedPreset.models.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+              <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
                 Models ({selectedPreset.models.length})
-                <span className="ml-1 normal-case font-normal text-muted-foreground/40">— click to use</span>
+                <span className="ml-1 normal-case font-normal text-muted-foreground/70">— click to use</span>
               </p>
               <div className="max-h-64 overflow-y-auto flex flex-col gap-0.5 pr-0.5">
                 {selectedPreset.models.map((m) => {
@@ -2062,16 +2062,16 @@ export default function ManualKeyTester() {
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`text-[10px] font-medium truncate ${isActive ? "text-primary" : "text-foreground group-hover:text-foreground"}`}>
+                        <span className={`text-xs font-medium truncate ${isActive ? "text-primary" : "text-foreground group-hover:text-foreground"}`}>
                           {m.label}
                         </span>
-                        <span className="text-[9px] text-muted-foreground/50 bg-muted/40 px-1 py-0.5 rounded flex-shrink-0">{m.tag}</span>
+                        <span className="text-[10px] text-muted-foreground/70 bg-muted/40 px-1.5 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
                       </div>
                       <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span className="text-[9px] text-muted-foreground/70">In: <span className="text-emerald-400/80">{m.in}</span></span>
-                        <span className="text-[9px] text-muted-foreground/70">Out: <span className="text-amber-400/80">{m.out}</span></span>
-                        {m.cache && <span className="text-[9px] text-muted-foreground/70">Cache: <span className="text-sky-400/80">{m.cache}</span></span>}
-                        <span className="text-[9px] text-muted-foreground/50">{m.ctx}</span>
+                        <span className="text-[11px] text-muted-foreground/80">In: <span className="text-emerald-400">{m.in}</span></span>
+                        <span className="text-[11px] text-muted-foreground/80">Out: <span className="text-amber-400">{m.out}</span></span>
+                        {m.cache && <span className="text-[11px] text-muted-foreground/80">Cache: <span className="text-sky-400">{m.cache}</span></span>}
+                        <span className="text-[11px] text-muted-foreground/60">{m.ctx}</span>
                       </div>
                     </button>
                   )
@@ -2112,7 +2112,7 @@ export default function ManualKeyTester() {
             const isImageSupported = imageModels.length > 0
             return (
               <div className="flex flex-col gap-3 pt-1 border-t border-border">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Image Gen Config</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">Image Gen Config</p>
 
                 {!isImageSupported ? (
                   <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
@@ -2121,7 +2121,7 @@ export default function ManualKeyTester() {
                 ) : (
                   <>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Model</label>
                       {imageModels.map((m) => (
                         <button key={m.id} onClick={() => setImageModel(m.id)}
                           className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
@@ -2138,7 +2138,7 @@ export default function ManualKeyTester() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Aspect Ratio</label>
                       <div className="grid grid-cols-2 gap-1.5">
                         {IMAGE_ASPECT_RATIOS.map((r) => (
                           <button key={r} onClick={() => setImageAspectRatio(r)}
@@ -2165,7 +2165,7 @@ export default function ManualKeyTester() {
             const isVideoSupported = videoModels.length > 0
             return (
               <div className="flex flex-col gap-3 pt-1 border-t border-border">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Video Gen Config</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">Video Gen Config</p>
 
                 {!isVideoSupported ? (
                   <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
@@ -2174,7 +2174,7 @@ export default function ManualKeyTester() {
                 ) : (
                   <>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Model</label>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Model</label>
                       <select
                         value={videoModel}
                         onChange={(e) => setVideoModel(e.target.value)}
@@ -2185,7 +2185,7 @@ export default function ManualKeyTester() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Aspect Ratio</label>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Aspect Ratio</label>
                       <div className="flex gap-2">
                         {videoAspects.map((r) => (
                           <button key={r} onClick={() => setVideoAspectRatio(r)}
@@ -2241,7 +2241,7 @@ export default function ManualKeyTester() {
               <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
               <span className="truncate hidden sm:block">{selectedPreset.name}</span>
               {selectedPreset.country && (
-                <span className="text-[9px] font-mono text-muted-foreground/40 uppercase hidden sm:block">{selectedPreset.country}</span>
+                <span className="text-[11px] font-mono text-muted-foreground/70 uppercase hidden sm:block">{selectedPreset.country}</span>
               )}
             </span>
 
@@ -3325,7 +3325,7 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── MULTI-KEY BATCH TAB ───────────────────────────────────────────── */}
+        {/* ── MULTI-KEY BATCH TAB ───────────────────────────────��───────────── */}
         {activeTab === "multi-batch" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <MultiKeyBatch

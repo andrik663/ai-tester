@@ -273,13 +273,13 @@ function ExpandedDetail({
       {/* Reply / Error */}
       {result?.chatReply && (
         <div className="flex flex-col gap-1">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Reply</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Reply</span>
           <p className="text-[11px] text-foreground/70 leading-relaxed">{result.chatReply}</p>
         </div>
       )}
       {result?.error && !result.ok && (
         <div className="flex flex-col gap-1">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">Error</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-red-400/80">Error</span>
           <p className="text-[10px] text-red-400/70 font-mono leading-relaxed break-all">{result.error}</p>
         </div>
       )}
@@ -287,23 +287,23 @@ function ExpandedDetail({
       {/* Token breakdown */}
       {result?.tokenUsage && (
         <div className="flex flex-col gap-1">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Token Usage</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Token Usage</span>
           <div className="flex items-center gap-4">
             {result.tokenUsage.promptTokens !== null && (
               <div className="flex flex-col items-start">
-                <span className="text-[8px] text-sky-400/60 font-bold uppercase tracking-wider">Input</span>
+                <span className="text-[10px] text-sky-400/80 font-bold uppercase tracking-wider">Input</span>
                 <span className="text-sm font-mono font-bold text-sky-400 tabular-nums">{result.tokenUsage.promptTokens.toLocaleString()}</span>
               </div>
             )}
             {result.tokenUsage.completionTokens !== null && (
               <div className="flex flex-col items-start">
-                <span className="text-[8px] text-violet-400/60 font-bold uppercase tracking-wider">Output</span>
+                <span className="text-[10px] text-violet-400/80 font-bold uppercase tracking-wider">Output</span>
                 <span className="text-sm font-mono font-bold text-violet-400 tabular-nums">{result.tokenUsage.completionTokens.toLocaleString()}</span>
               </div>
             )}
             {result.tokenUsage.totalTokens !== null && (
               <div className="flex flex-col items-start">
-                <span className="text-[8px] text-muted-foreground/40 font-bold uppercase tracking-wider">Total</span>
+                <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Total</span>
                 <span className="text-sm font-mono font-bold text-foreground/60 tabular-nums">{result.tokenUsage.totalTokens.toLocaleString()}</span>
               </div>
             )}
@@ -314,7 +314,7 @@ function ExpandedDetail({
       {/* Available models — active model is already highlighted in the chip list below (issue 5: removed duplicate plain-text "Model:" line) */}
       {models.length > 0 && (
         <div className="flex flex-col gap-1">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
             Available Models ({models.length})
           </span>
           <div className="flex flex-wrap gap-1">
@@ -498,7 +498,7 @@ function DesktopRow({
         </td>
 
         {/* Key */}
-        <td className="px-2 py-2.5 font-mono text-muted-foreground/45 text-[10px] w-32 max-w-[128px]">
+        <td className="px-2 py-2.5 font-mono text-muted-foreground/70 text-xs w-32 max-w-[128px]">
           <span className="truncate block">{maskApiKey(entry.apiKey)}</span>
         </td>
 
@@ -1148,7 +1148,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                 <path d="M3 5h6M3 7h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
               Provider Format Guide
-              <span className="text-[9px] font-normal text-muted-foreground/50">{PROVIDER_FORMATS.length} providers</span>
+              <span className="text-xs font-normal text-muted-foreground/70">{PROVIDER_FORMATS.length} providers</span>
             </span>
             <div className="flex items-center gap-2">
               {showGuide && (
@@ -1196,9 +1196,9 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                           </span>
                         )}
                       </div>
-                      <code className="text-[10px] font-mono text-muted-foreground/55 block mt-0.5 break-all">{pf.example}</code>
+                      <code className="text-xs font-mono text-muted-foreground/80 block mt-0.5 break-all">{pf.example}</code>
                       {isLive ? (
-                        <p className="text-[9px] text-muted-foreground/40 mt-1 leading-none">
+                        <p className="text-[10px] text-muted-foreground/65 mt-1 leading-snug">
                           Models fetched live from {pf.label} API at test time
                           {models.length > 0 && ` (${models.length}+ known static fallback)`}
                         </p>
@@ -1207,10 +1207,10 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                           {models.map((m) => (
                             <span
                               key={m.id}
-                              className={`text-[8px] font-mono px-1 py-0 rounded border leading-tight ${
+                              className={`text-[10px] font-mono px-1.5 py-0.5 rounded border leading-tight ${
                                 m.default
-                                  ? "border-emerald-500/25 text-emerald-400/60 bg-emerald-500/5"
-                                  : "border-border/30 text-muted-foreground/35"
+                                  ? "border-emerald-500/40 text-emerald-400/90 bg-emerald-500/8"
+                                  : "border-border/50 text-muted-foreground/60"
                               }`}
                             >
                               {m.label}
@@ -1281,7 +1281,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
                 <div className="flex-1 min-w-0">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 block mb-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-foreground/65 block mb-1">
                     Test Prompt
                   </label>
                   <input
@@ -1327,26 +1327,26 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
             {testMode === "quick" && summary && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400/50">Passed</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400/70">Passed</span>
                   <span className="text-xl font-bold font-mono text-emerald-400 leading-none tabular-nums">{summary.passed}</span>
-                  <span className="text-[9px] text-emerald-400/40 tabular-nums">{Math.round((summary.passed / results.length) * 100)}%</span>
+                  <span className="text-xs text-emerald-400/60 tabular-nums">{Math.round((summary.passed / results.length) * 100)}%</span>
                 </div>
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-red-500/5 border border-red-500/20">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">Failed</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-red-400/70">Failed</span>
                   <span className="text-xl font-bold font-mono text-red-400 leading-none tabular-nums">{summary.failed}</span>
-                  <span className="text-[9px] text-red-400/40 tabular-nums">{Math.round((summary.failed / results.length) * 100)}%</span>
+                  <span className="text-xs text-red-400/60 tabular-nums">{Math.round((summary.failed / results.length) * 100)}%</span>
                 </div>
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Total Tokens</span>
-                  <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Total Tokens</span>
+                  <span className="text-xl font-bold font-mono text-foreground/80 leading-none tabular-nums">
                     {totalTokens > 0 ? totalTokens.toLocaleString() : "—"}
                   </span>
-                  <span className="text-[9px] text-muted-foreground/30">all keys</span>
+                  <span className="text-xs text-muted-foreground/60">all keys</span>
                 </div>
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Avg Latency</span>
-                  <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">{avgLatency}ms</span>
-                  <span className="text-[9px] text-muted-foreground/30 tabular-nums">{summary.totalMs}ms total</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Avg Latency</span>
+                  <span className="text-xl font-bold font-mono text-foreground/80 leading-none tabular-nums">{avgLatency}ms</span>
+                  <span className="text-xs text-muted-foreground/60 tabular-nums">{summary.totalMs}ms total</span>
                 </div>
               </div>
             )}
@@ -1407,7 +1407,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
             {/* ── All-models results ────────────────────────────────────────── */}
             {testMode === "all" && allModelsResults.length > 0 && (
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground/65">
                   Results — {allModelsResults.length} {allModelsResults.length === 1 ? "key" : "keys"} tested
                 </span>
                 {allModelsResults.map((kr, i) => (
@@ -1425,10 +1425,10 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               {/* Mobile header */}
               <div className="flex items-center justify-between px-3 py-2 bg-secondary/60 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40 w-5">#</span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Provider / Key / Model</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 w-5">#</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Provider / Key / Model</span>
                 </div>
-                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Status / Tokens</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Status / Tokens</span>
               </div>
               {entries.map((entry, idx) => {
                 const res = getResult(entry)
@@ -1455,17 +1455,17 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                 <table className="w-full text-[11px] min-w-[520px]">
                   <thead>
                     <tr className="border-b border-border bg-secondary/60">
-                      <th className="text-left px-3 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-8">#</th>
-                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-36">Provider</th>
-                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-32">Key</th>
-                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-32">Model</th>
-                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-20">Status</th>
-                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/40 uppercase tracking-wider text-[8px] w-24">
+                      <th className="text-left px-3 py-2.5 font-bold text-muted-foreground/70 uppercase tracking-wider text-[10px] w-8">#</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/70 uppercase tracking-wider text-[10px] w-36">Provider</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/70 uppercase tracking-wider text-[10px] w-32">Key</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/70 uppercase tracking-wider text-[10px] w-32">Model</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/70 uppercase tracking-wider text-[10px] w-20">Status</th>
+                      <th className="text-left px-2 py-2.5 font-bold text-muted-foreground/70 uppercase tracking-wider text-[10px] w-24">
                         <div className="flex flex-col gap-0.5">
                           <span>Tokens</span>
-                          <span className="flex gap-1.5 font-normal text-[7px] normal-case tracking-normal">
-                            <span className="text-sky-400/50">in</span>
-                            <span className="text-violet-400/50">out</span>
+                          <span className="flex gap-1.5 font-normal text-[9px] normal-case tracking-normal">
+                            <span className="text-sky-400/70">in</span>
+                            <span className="text-violet-400/70">out</span>
                           </span>
                         </div>
                       </th>
