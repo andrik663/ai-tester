@@ -1160,18 +1160,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://openrouter.ai/keys",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
   },
-  {
-    id: "bytedance-seed",
-    name: "ByteDance Seed",
-    country: "CN",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "bytedance-seed/seed-2.0-lite", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/bytedance-seed",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-red-400 bg-red-400/10 border-red-400/20",
-  },
+
   {
     id: "cognitivecomputations",
     name: "Cognitive Computations",
@@ -1208,18 +1197,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://openrouter.ai/keys",
     color: "text-red-500 bg-red-500/10 border-red-500/20",
   },
-  {
-    id: "ibm-granite",
-    name: "IBM Granite",
-    country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "ibm-granite/granite-4.1-8b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/ibm-granite",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-blue-600 bg-blue-600/10 border-blue-600/20",
-  },
+
   {
     id: "inclusionai",
     name: "Inclusion AI",
@@ -1280,18 +1258,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://openrouter.ai/keys",
     color: "text-pink-500 bg-pink-500/10 border-pink-500/20",
   },
-  {
-    id: "meta-llama",
-    name: "Meta Llama",
-    country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "meta-llama/llama-4-maverick", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/meta-llama",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
-  },
+
   {
     id: "microsoft",
     name: "Microsoft Phi",
@@ -1304,30 +1271,8 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://openrouter.ai/keys",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
   },
-  {
-    id: "mistralai",
-    name: "Mistral AI",
-    country: "FR",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "mistralai/mistral-medium-3-5", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/mistralai",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
-  },
-  {
-    id: "moonshotai",
-    name: "Moonshot AI",
-    country: "CN",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "moonshotai/kimi-k2.7-code", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/moonshotai",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-slate-300 bg-slate-300/10 border-slate-300/20",
-  },
+
+
   {
     id: "morph",
     name: "Morph",
@@ -1436,18 +1381,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://openrouter.ai/keys",
     color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
   },
-  {
-    id: "tencent",
-    name: "Tencent Hunyuan",
-    country: "CN",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "tencent/hy3-preview", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/tencent",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
-  },
+
   {
     id: "thedrummer",
     name: "The Drummer",
@@ -1472,18 +1406,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://openrouter.ai/keys",
     color: "text-teal-300 bg-teal-300/10 border-teal-300/20",
   },
-  {
-    id: "x-ai",
-    name: "xAI Grok",
-    country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "x-ai/grok-3", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/x-ai",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-white bg-white/10 border-white/20",
-  },
+
   {
     id: "xiaomi",
     name: "Xiaomi MiMo",
@@ -1496,18 +1419,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://openrouter.ai/keys",
     color: "text-orange-500 bg-orange-500/10 border-orange-500/20",
   },
-  {
-    id: "z-ai",
-    name: "Z.ai (GLM)",
-    country: "CN",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
-    method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "z-ai/glm-5.2", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/z-ai",
-    createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
-  },
+
   // ── Custom ────────────────────────────────────────────────────────────────
   {
     id: "custom",
@@ -1582,20 +1494,19 @@ const PROVIDER_LOGOS: Record<string, string> = {
   "aion-labs":       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23CA8A04' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EAI%3C/text%3E%3C/svg%3E",
   "allenai":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%237C3AED' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EAI2%3C/text%3E%3C/svg%3E",
   "arcee-ai":        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231D4ED8' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EAR%3C/text%3E%3C/svg%3E",
-  "bytedance-seed":  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23DC2626' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EBS%3C/text%3E%3C/svg%3E",
+
   "cognitivecomputations": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230891B2' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ECC%3C/text%3E%3C/svg%3E",
   "deepcogito":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230F766E' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EDC%3C/text%3E%3C/svg%3E",
   "gryphe":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23B91C1C' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EGR%3C/text%3E%3C/svg%3E",
-  "ibm-granite":     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231D4ED8' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EIBM%3C/text%3E%3C/svg%3E",
+
   "inclusionai":     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23EA580C' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EIA%3C/text%3E%3C/svg%3E",
   "inflection":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%236D28D9' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EPi%3C/text%3E%3C/svg%3E",
   "kwaipilot":       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23DC2626' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EKP%3C/text%3E%3C/svg%3E",
   "liquid":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230284C7' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ELQ%3C/text%3E%3C/svg%3E",
   "mancer":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23BE185D' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EMN%3C/text%3E%3C/svg%3E",
-  "meta-llama":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231D4ED8' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ELL%3C/text%3E%3C/svg%3E",
+
   "microsoft":       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230078D4' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EPhi%3C/text%3E%3C/svg%3E",
-  "mistralai":       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23F97316' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EMI%3C/text%3E%3C/svg%3E",
-  "moonshotai":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23334155' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EKM%3C/text%3E%3C/svg%3E",
+
   "morph":           "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%237C3AED' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EMO%3C/text%3E%3C/svg%3E",
   "nex-agi":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23059669' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ENX%3C/text%3E%3C/svg%3E",
   "nousresearch":    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%234338CA' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ENR%3C/text%3E%3C/svg%3E",
@@ -1605,12 +1516,12 @@ const PROVIDER_LOGOS: Record<string, string> = {
   "relace":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23A21CAF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ERL%3C/text%3E%3C/svg%3E",
   "sao10k":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230369A1' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ES10%3C/text%3E%3C/svg%3E",
   "switchpoint":     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2365A30D' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ESP%3C/text%3E%3C/svg%3E",
-  "tencent":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231D4ED8' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ETX%3C/text%3E%3C/svg%3E",
+
   "thedrummer":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23B45309' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ETD%3C/text%3E%3C/svg%3E",
   "undi95":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230D9488' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EU95%3C/text%3E%3C/svg%3E",
-  "x-ai":            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23111111' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3Ex%3C/text%3E%3C/svg%3E",
+
   "xiaomi":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23EA580C' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EMi%3C/text%3E%3C/svg%3E",
-  "z-ai":            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231E40AF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EZ%3C/text%3E%3C/svg%3E",
+
   "~anthropic":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23333333' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='%23CCCCCC' font-family='Arial'%3E~A%3C/text%3E%3C/svg%3E",
   "~google":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23333333' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='%23CCCCCC' font-family='Arial'%3E~G%3C/text%3E%3C/svg%3E",
   "~moonshotai":     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23333333' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='38' font-weight='bold' text-anchor='middle' fill='%23CCCCCC' font-family='Arial'%3E~M%3C/text%3E%3C/svg%3E",
