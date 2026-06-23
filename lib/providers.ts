@@ -1011,6 +1011,25 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
+  // ── Meta AI (llama.com) ───────────────────────────────────────────────────
+  meta: {
+    id: "meta",
+    models: [
+      "Llama-4-Maverick-17B-128E-Instruct-FP8",
+      "Llama-4-Scout-17B-16E-Instruct",
+      "Llama-3.3-70B-Instruct",
+      "Llama-3.1-70B-Instruct",
+      "Llama-3.1-8B-Instruct",
+    ],
+    endpoint: "https://api.llama.com/compat/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
   // ── Azure OpenAI (requires resource name — skipped without config) ─────────
   azure: {
     id: "azure",

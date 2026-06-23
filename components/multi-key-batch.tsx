@@ -31,6 +31,7 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "qwen",        label: "Qwen (Alibaba)",        country: "CN", flag: "🇨🇳", example: "qwen:YOUR_KEY",           keyHint: "DashScope key" },
   { id: "zhipu",       label: "Zhipu GLM",             country: "CN", flag: "🇨🇳", example: "zhipu:YOUR_KEY",          keyHint: "BigModel key" },
   { id: "minimax",     label: "MiniMax",               country: "CN", flag: "🇨🇳", example: "minimax:YOUR_KEY",        keyHint: "API key" },
+  { id: "meta",        label: "Meta AI",               country: "US", flag: "🇺🇸", example: "meta:YOUR_KEY",           keyHint: "Llama API key" },
   { id: "cerebras",    label: "Cerebras",              country: "US", flag: "🇺🇸", example: "cerebras:YOUR_KEY",       keyHint: "API key" },
   { id: "fireworks",   label: "Fireworks AI",          country: "US", flag: "🇺🇸", example: "fireworks:YOUR_KEY",      keyHint: "fw-..." },
   { id: "novita",      label: "Novita AI",             country: "US", flag: "🇺🇸", example: "novita:YOUR_KEY",         keyHint: "API key" },

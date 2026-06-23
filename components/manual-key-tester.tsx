@@ -291,6 +291,34 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://platform.minimax.io/user-center/basic-information/interface-key",
     color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
   },
+  // ── Meta AI (llama.com) ───────────────────────────────────────────────────
+  {
+    id: "meta",
+    name: "Meta AI",
+    country: "US",
+    endpoint: "https://api.llama.com/compat/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "Llama-4-Scout-17B-16E-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "Llama-4-Maverick-17B-128E-Instruct-FP8", label: "Llama 4 Maverick 17B FP8", tag: "flagship", ctx: "1M ctx",   in: "$0.27/Mt",  out: "$0.85/Mt",  cache: "" },
+      { id: "Llama-4-Scout-17B-16E-Instruct",          label: "Llama 4 Scout 17B",        tag: "fast",     ctx: "131K ctx", in: "$0.18/Mt",  out: "$0.59/Mt",  cache: "" },
+      { id: "Llama-3.3-70B-Instruct",                  label: "Llama 3.3 70B",            tag: "stable",   ctx: "131K ctx", in: "$0.20/Mt",  out: "$0.60/Mt",  cache: "" },
+      { id: "Llama-3.1-70B-Instruct",                  label: "Llama 3.1 70B",            tag: "stable",   ctx: "131K ctx", in: "$0.20/Mt",  out: "$0.60/Mt",  cache: "" },
+      { id: "Llama-3.1-8B-Instruct",                   label: "Llama 3.1 8B",             tag: "mini",     ctx: "131K ctx", in: "$0.02/Mt",  out: "$0.05/Mt",  cache: "" },
+    ],
+    docsUrl: "https://llama.developer.meta.com/docs/overview",
+    createKeyUrl: "https://llama.developer.meta.com/",
+    color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
+  },
+  // ── Meta / Llama providers via 3rd-party ──────────────────────────────────
   // ── Meta / Llama providers ─────────────────────────────────────────────��──
   {
     id: "cerebras",
@@ -1102,7 +1130,7 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Provider logos (theSVG.org CDN) ────────────────────────────────────────��──
+// ── Provider logos (theSVG.org CDN) ──────────────���─────────────────────────��──
 // Using jsDelivr mirror for performance. Variants: light = white for dark BG, default fallback.
 const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
 
@@ -1151,6 +1179,7 @@ const PROVIDER_LOGOS: Record<string, string> = {
   ibm:         `${BASE}/ibm/default.svg`,
   deepinfra:   `${BASE}/deepinfra/default.svg`,
   anyscale:    `${BASE}/anyscale/default.svg`,
+  meta:        `${BASE}/meta/default.svg`,
 }
 
 
