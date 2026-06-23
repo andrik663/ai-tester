@@ -3129,15 +3129,15 @@ export default function ManualKeyTester() {
 
               {/* Title */}
               <div>
-                <h2 className="text-sm font-semibold text-foreground">Auto-detect Provider</h2>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <h2 className="text-base font-semibold text-foreground tracking-tight">Auto-detect Provider</h2>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   Paste any API key and the system identifies the provider from its prefix.
                 </p>
               </div>
 
               {/* Input */}
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   Paste API key to identify
                 </label>
                 <input
@@ -3173,15 +3173,15 @@ export default function ManualKeyTester() {
                 }`}>
                   {/* Header row */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       {detectedPreset && (
-                        <ProviderLogo providerId={detectedPreset.id} className="w-5 h-5 flex-shrink-0" />
+                        <ProviderLogo providerId={detectedPreset.id} className="w-6 h-6 flex-shrink-0" />
                       )}
-                      <span className="text-sm font-semibold text-foreground truncate">
+                      <span className="text-sm font-semibold text-foreground truncate tracking-tight">
                         {liveResult.providerName ?? "Unknown Provider"}
                       </span>
                     </div>
-                    <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                    <span className={`flex-shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
                       liveResult.confidence === "high"  ? "text-green-400 bg-green-400/10 border-green-400/30"
                       : liveResult.confidence === "low" ? "text-yellow-400 bg-yellow-400/10 border-yellow-400/30"
                       : "text-muted-foreground bg-secondary border-border"
@@ -3191,15 +3191,15 @@ export default function ManualKeyTester() {
                   </div>
 
                   {/* Detected prefix */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest w-14 flex-shrink-0">Prefix</span>
-                    <code className="text-[11px] font-mono bg-secondary/60 px-2 py-0.5 rounded text-foreground">{liveResult.prefix}</code>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider w-14 flex-shrink-0">Prefix</span>
+                    <code className="text-xs font-mono bg-secondary/60 px-2.5 py-1 rounded text-foreground">{liveResult.prefix}</code>
                   </div>
 
                   {/* Reason */}
-                  <div className="flex items-start gap-2">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest w-14 flex-shrink-0 pt-0.5">Reason</span>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">{liveResult.reason}</p>
+                  <div className="flex items-start gap-3">
+                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider w-14 flex-shrink-0 pt-0.5">Reason</span>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{liveResult.reason}</p>
                   </div>
 
                   {/* CTA — use this provider */}
@@ -3238,38 +3238,38 @@ export default function ManualKeyTester() {
 
                     {/* Detectable */}
                     <div className="flex flex-col gap-2">
-                      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                      <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                         Auto-detectable by prefix ({detectable.length} patterns)
                       </h3>
                       <div className="rounded-md border border-border overflow-hidden">
-                        <table className="w-full text-[11px]">
+                        <table className="w-full text-xs">
                           <thead>
                             <tr className="border-b border-border bg-secondary/40">
-                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Prefix</th>
-                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Provider</th>
-                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground hidden sm:table-cell">Example</th>
-                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Conf.</th>
+                              <th className="text-left px-3 py-2.5 font-semibold text-foreground/80 text-[11px] uppercase tracking-wider">Prefix</th>
+                              <th className="text-left px-3 py-2.5 font-semibold text-foreground/80 text-[11px] uppercase tracking-wider">Provider</th>
+                              <th className="text-left px-3 py-2.5 font-semibold text-foreground/80 text-[11px] uppercase tracking-wider hidden sm:table-cell">Example</th>
+                              <th className="text-left px-3 py-2.5 font-semibold text-foreground/80 text-[11px] uppercase tracking-wider">Conf.</th>
                             </tr>
                           </thead>
                           <tbody>
                             {detectable.map((p, i) => {
                               const isActive = liveResult?.providerId === p.providerId && p.prefix !== "—" && detectInput.trim().startsWith(p.prefix)
                               return (
-                                <tr key={i} className={`border-b border-border/50 last:border-0 transition-colors ${isActive ? "bg-primary/8" : "hover:bg-secondary/30"}`}>
-                                  <td className="px-3 py-2">
-                                    <code className={`font-mono font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>{p.prefix}</code>
+                                <tr key={i} className={`border-b border-border/50 last:border-0 transition-colors ${isActive ? "bg-primary/10" : "hover:bg-secondary/30"}`}>
+                                  <td className="px-3 py-2.5">
+                                    <code className={`font-mono font-semibold text-[12px] ${isActive ? "text-primary" : "text-foreground"}`}>{p.prefix}</code>
                                   </td>
-                                  <td className="px-3 py-2">
-                                    <div className="flex items-center gap-1.5">
-                                      <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
-                                      <span className="text-muted-foreground truncate max-w-[130px]">{p.providerName}</span>
+                                  <td className="px-3 py-2.5">
+                                    <div className="flex items-center gap-2">
+                                      <ProviderLogo providerId={p.providerId} className="w-4 h-4 flex-shrink-0 opacity-80" />
+                                      <span className="text-foreground font-medium truncate max-w-[130px]">{p.providerName}</span>
                                     </div>
                                   </td>
-                                  <td className="px-3 py-2 hidden sm:table-cell">
-                                    <code className="text-muted-foreground/60 font-mono">{p.example}</code>
+                                  <td className="px-3 py-2.5 hidden sm:table-cell">
+                                    <code className="text-muted-foreground font-mono text-[11px] bg-secondary/50 px-1.5 py-0.5 rounded">{p.example}</code>
                                   </td>
-                                  <td className="px-3 py-2">
-                                    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${p.confidence === "high" ? "text-green-400 bg-green-400/10" : "text-yellow-400 bg-yellow-400/10"}`}>
+                                  <td className="px-3 py-2.5">
+                                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.confidence === "high" ? "text-green-400 bg-green-400/10 border border-green-400/20" : "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20"}`}>
                                       {p.confidence}
                                     </span>
                                   </td>
@@ -3283,32 +3283,32 @@ export default function ManualKeyTester() {
 
                     {/* Undetectable */}
                     <div className="flex flex-col gap-2">
-                      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                      <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                         Cannot be detected by prefix ({undetectable.length} providers)
                       </h3>
-                      <div className="rounded-md border border-border/50 overflow-hidden">
-                        <table className="w-full text-[11px]">
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <table className="w-full text-xs">
                           <thead>
-                            <tr className="border-b border-border/50 bg-secondary/20">
-                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60">Provider</th>
-                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60 hidden sm:table-cell">Key format</th>
-                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60">Reason</th>
+                            <tr className="border-b border-border bg-secondary/40">
+                              <th className="text-left px-3 py-2.5 font-semibold text-foreground/80 text-[11px] uppercase tracking-wider">Provider</th>
+                              <th className="text-left px-3 py-2.5 font-semibold text-foreground/80 text-[11px] uppercase tracking-wider hidden sm:table-cell">Key format</th>
+                              <th className="text-left px-3 py-2.5 font-semibold text-foreground/80 text-[11px] uppercase tracking-wider">Reason</th>
                             </tr>
                           </thead>
                           <tbody>
                             {undetectable.map((p, i) => (
-                              <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors">
-                                <td className="px-3 py-2">
-                                  <div className="flex items-center gap-1.5">
-                                    <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-40" />
-                                    <span className="text-muted-foreground/60 truncate max-w-[130px]">{p.providerName}</span>
+                              <tr key={i} className="border-b border-border/40 last:border-0 hover:bg-secondary/30 transition-colors">
+                                <td className="px-3 py-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <ProviderLogo providerId={p.providerId} className="w-4 h-4 flex-shrink-0 opacity-70" />
+                                    <span className="text-foreground font-medium truncate max-w-[130px]">{p.providerName}</span>
                                   </div>
                                 </td>
-                                <td className="px-3 py-2 hidden sm:table-cell">
-                                  <code className="text-muted-foreground/40 font-mono">{p.example}</code>
+                                <td className="px-3 py-2.5 hidden sm:table-cell">
+                                  <code className="text-muted-foreground font-mono text-[11px] bg-secondary/50 px-1.5 py-0.5 rounded">{p.example}</code>
                                 </td>
-                                <td className="px-3 py-2">
-                                  <span className="text-muted-foreground/40 text-[10px] leading-snug">{p.note}</span>
+                                <td className="px-3 py-2.5">
+                                  <span className="text-muted-foreground text-[11px] leading-relaxed">{p.note}</span>
                                 </td>
                               </tr>
                             ))}
