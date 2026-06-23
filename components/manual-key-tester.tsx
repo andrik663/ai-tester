@@ -390,7 +390,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "minimax/minimax-m2-7",                              label: "MiniMax M2.7 (Hot)",          tag: "MiniMax",    ctx: "200K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
       { id: "minimax/minimax-m2-5-highspeed",                    label: "MiniMax M2.5-Highspeed",      tag: "MiniMax",    ctx: "200K ctx", in: "$0.6/Mt",   out: "$2.4/Mt",   cache: "$0.03/Mt" },
       { id: "minimax/minimax-m1",                                label: "MiniMax M1",                  tag: "MiniMax",    ctx: "1M ctx",   in: "$0.55/Mt",  out: "$2.2/Mt",   cache: "" },
-      // ── Kimi ────────────────────────���────────────────────────────────────
+      // ── Kimi ────���───────────────────���────────────────────────────────────
       { id: "moonshotai/kimi-k2-6",                              label: "Kimi K2.6 (New)",             tag: "MoonshotAI", ctx: "256K ctx", in: "$0.8/Mt",   out: "$3.4/Mt",   cache: "$0.16/Mt" },
       { id: "moonshotai/kimi-k2-instruct",                       label: "Kimi K2 Instruct",            tag: "MoonshotAI", ctx: "131K ctx", in: "$0.57/Mt",  out: "$2.3/Mt",   cache: "" },
       { id: "moonshotai/kimi-k2-thinking",                       label: "Kimi K2 Thinking",            tag: "MoonshotAI", ctx: "256K ctx", in: "$0.6/Mt",   out: "$2.5/Mt",   cache: "$0.15/Mt" },
@@ -1101,7 +1101,7 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Provider logos (theSVG.org CDN) ───────────────────────────────────────────
+// ── Provider logos (theSVG.org CDN) ────────────────────────────────────────��──
 // Using jsDelivr mirror for performance. Variants: light = white for dark BG, default fallback.
 const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
 
@@ -1406,7 +1406,9 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect" | "info">("chat")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect" | "info">("unified")
+  // Sub-tab inside "unified"
+  const [unifiedSubTab, setUnifiedSubTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen">("chat")
   // Auto-detect tab state
   const [detectInput, setDetectInput]   = useState("")
   const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
@@ -2105,7 +2107,7 @@ export default function ManualKeyTester() {
           </div>
 
           {/* ── Image Gen config — provider-aware ── */}
-          {activeTab === "image-gen" && (() => {
+          {activeTab === "unified" && unifiedSubTab === "image-gen" && (() => {
             const imageModels = getImageCapabilities(selectedPreset.id)
             const isImageSupported = imageModels.length > 0
             return (
@@ -2158,7 +2160,7 @@ export default function ManualKeyTester() {
           })()}
 
           {/* ── Video Gen config — provider-aware ── */}
-          {activeTab === "video-gen" && (() => {
+          {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
             const { models: videoModels, aspectRatios: videoAspects } = getVideoCapabilities(selectedPreset.id)
             const isVideoSupported = videoModels.length > 0
             return (
@@ -2244,12 +2246,12 @@ export default function ManualKeyTester() {
             </span>
 
             {/* Response status chip — vision/chat result */}
-            {activeTab === "vision" && visionResult && (
+            {activeTab === "unified" && unifiedSubTab === "vision" && visionResult && (
               <span className={`text-[10px] font-mono flex-shrink-0 ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
                 {visionResult.status} · {visionResult.durationMs}ms
               </span>
             )}
-            {activeTab === "chat" && result && (
+            {activeTab === "unified" && unifiedSubTab === "chat" && result && (
               <span className={`text-[10px] font-mono flex-shrink-0 ${result.ok ? "text-green-400" : "text-red-400"}`}>
                 {result.status} · {result.durationMs}ms
               </span>
@@ -2259,6 +2261,18 @@ export default function ManualKeyTester() {
           {/* Tab row — scrollable on mobile */}
           <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9">
             {([
+              {
+                id: "unified" as const,
+                label: "Unified",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                ),
+              },
               {
                 id: "multi-batch" as const,
                 label: "Batch",
@@ -2270,35 +2284,6 @@ export default function ManualKeyTester() {
                     <circle cx="10" cy="9" r="1.5" fill="currentColor" />
                   </svg>
                 ),
-              },
-              {
-                id: "chat" as const,
-                label: "Chat",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                ),
-              },
-              {
-                id: "vision" as const,
-                label: "Vision",
-                icon: <ImageIcon />,
-              },
-              {
-                id: "ocr" as const,
-                label: "OCR",
-                icon: <ScanIcon />,
-              },
-              {
-                id: "image-gen" as const,
-                label: "Image",
-                icon: <PhotoIcon />,
-              },
-              {
-                id: "video-gen" as const,
-                label: "Video",
-                icon: <VideoTabIcon />,
               },
               {
                 id: "working-keys" as const,
@@ -2356,10 +2341,60 @@ export default function ManualKeyTester() {
               </button>
             ))}
           </div>
+
+          {/* Sub-tab row — only shown inside Unified tab */}
+          {activeTab === "unified" && (
+            <div className="flex items-center gap-0.5 px-3 h-8 bg-sidebar/60 border-t border-border/40 overflow-x-auto scrollbar-none">
+              {([
+                {
+                  id: "chat" as const,
+                  label: "Chat",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: "vision" as const,
+                  label: "Vision",
+                  icon: <ImageIcon />,
+                },
+                {
+                  id: "ocr" as const,
+                  label: "OCR",
+                  icon: <ScanIcon />,
+                },
+                {
+                  id: "image-gen" as const,
+                  label: "Image Gen",
+                  icon: <PhotoIcon />,
+                },
+                {
+                  id: "video-gen" as const,
+                  label: "Video Gen",
+                  icon: <VideoTabIcon />,
+                },
+              ]).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setUnifiedSubTab(t.id)}
+                  className={`flex items-center gap-1 px-2 h-6 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                    unifiedSubTab === t.id
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  {t.icon}
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ��─ CHAT TAB ─────────────────────────────────────────────────────── */}
-        {activeTab === "chat" && (
+        {activeTab === "unified" && unifiedSubTab === "chat" && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
             {/* Chat messages area */}
@@ -2629,7 +2664,7 @@ export default function ManualKeyTester() {
         )}
 
         {/* ── VISION TAB ────────────��──────────────────────────────────����───��─ */}
-        {activeTab === "vision" && (
+        {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
               {visionHistory.length === 0 && (
@@ -2776,8 +2811,8 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── OCR TAB ──────────────────────────────────────────────────────── */}
-        {activeTab === "ocr" && (
+        {/* ── OCR TAB ──────────────────────────────────────��───────────────── */}
+        {activeTab === "unified" && unifiedSubTab === "ocr" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
               {!ocrResult && !ocrLoading && (
@@ -2902,7 +2937,7 @@ export default function ManualKeyTester() {
         )}
 
         {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
-        {activeTab === "image-gen" && (() => {
+        {activeTab === "unified" && unifiedSubTab === "image-gen" && (() => {
           const imageModels = getImageCapabilities(selectedPreset.id)
           const isImageSupported = imageModels.length > 0
           return (
@@ -2929,7 +2964,7 @@ export default function ManualKeyTester() {
         })()}
 
         {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
-        {activeTab === "video-gen" && (() => {
+        {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
           const { models: videoModels } = getVideoCapabilities(selectedPreset.id)
           const isVideoSupported = videoModels.length > 0
           return (
@@ -3172,7 +3207,8 @@ export default function ManualKeyTester() {
                     <button
                       onClick={() => {
                         handleApiKeyChange(detectInput)
-                        setActiveTab("chat")
+                        setActiveTab("unified")
+                        setUnifiedSubTab("chat")
                         const preset = PRESETS.find((p) => p.id === detectedPreset.id)
                         if (preset) {
                           setSelectedPreset(preset)
