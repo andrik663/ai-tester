@@ -12,6 +12,8 @@ import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
+import KeyInfoPanel from "@/components/key-info-panel"
+import ProviderInfoPanel from "@/components/provider-info-panel"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -38,6 +40,66 @@ interface ProviderPreset {
   createKeyUrl: string   // direct link to API key creation page
   color: string
   models?: ProviderModelInfo[]  // compact model catalog with pricing
+}
+
+// ── Auto-detect provider from key prefix ─────────────────────────────────────
+// Returns a preset id string when the key format matches a known provider.
+// Ordered most-specific → least-specific to avoid false positives.
+function detectProviderFromKey(key: string): string | null {
+  if (!key || key.trim().length < 4) return null
+  const k = key.trim()
+
+  // ── Exact / unmistakable prefixes ────────────────────────────────────────
+  if (k.startsWith("sk-ant-api"))         return "anthropic"   // Claude (Anthropic) — api key
+  if (k.startsWith("sk-ant-"))            return "anthropic"   // Claude (Anthropic) — service key
+  if (k.startsWith("AIzaSy"))             return "google"      // Gemini (Google AI Studio)
+  if (k.startsWith("AIza"))              return "google"       // Google — older format
+  if (k.startsWith("gsk_"))              return "groq"         // Groq
+  if (k.startsWith("hf_"))              return "huggingface"   // HuggingFace
+  if (k.startsWith("xai-"))             return "xai"           // Grok (xAI)
+  if (k.startsWith("pplx-"))            return "perplexity"    // Perplexity
+  if (k.startsWith("or-v1-"))           return "openrouter"    // OpenRouter (new format)
+  if (k.startsWith("or-"))              return "openrouter"    // OpenRouter
+  if (k.startsWith("fw-"))              return "fireworks"     // Fireworks AI
+  if (k.startsWith("nvapi-"))           return "nvidia"        // NVIDIA NIM
+  if (k.startsWith("dk-"))             return "dahono"         // Dahono Labs Gateway
+  if (k.startsWith("dc-"))             return "dahono"         // Dahono Labs Gateway (alt)
+  if (k.startsWith("r8_"))             return "replicate"      // Replicate
+  if (k.startsWith("up_"))             return "upstage"        // Upstage Solar
+  if (k.startsWith("sn-"))             return "sambanova"      // SambaNova
+  if (k.startsWith("csk-"))            return "cerebras"       // Cerebras (some keys)
+  if (k.startsWith("cbrss_"))          return "cerebras"       // Cerebras (new format)
+  if (k.startsWith("hyp_"))            return "hyperbolic"     // Hyperbolic
+  if (k.startsWith("J2-") || k.startsWith("j2-")) return "ai21"  // AI21 Labs (Jurassic prefix)
+  if (k.startsWith("msauth_"))         return "mistral"        // Mistral (some enterprise keys)
+  if (k.startsWith("lp_"))             return "lepton"         // LeptonAI
+  if (k.startsWith("lmn_") || k.startsWith("lmni_")) return "lamini" // Lamini AI
+  if (k.startsWith("di_"))             return "deepinfra"      // Deep Infra
+  if (k.startsWith("esecret_"))        return "anyscale"       // Anyscale (old)
+  if (k.startsWith("esec_"))           return "anyscale"       // Anyscale
+  if (k.startsWith("neets-"))          return "neets"          // Neets AI
+
+  // ── OpenAI — project keys (most specific first) ───────────────────────────
+  if (k.startsWith("sk-proj-"))         return "openai"        // OpenAI project key
+  if (k.startsWith("sk-svcacct-"))      return "openai"        // OpenAI service account
+  if (k.startsWith("sk-None-"))         return "openai"        // OpenAI legacy
+
+  // ── sk- ambiguous: OpenAI vs DeepSeek vs Together vs others ──────────────
+  // DeepSeek keys are typically 35–40 chars; OpenAI legacy sk- are 51 chars.
+  // Together AI keys are also sk- but exactly 64 hex chars.
+  if (k.startsWith("sk-") && !k.startsWith("sk_")) {
+    if (k.length >= 60) return "together"     // Together AI — long hex key
+    if (k.length >= 45) return "openai"       // OpenAI legacy
+    if (k.length >= 32) return "deepseek"     // DeepSeek
+    return "openai"                           // fallback
+  }
+
+  // ── Non sk- generic bearer tokens — no reliable pattern, skip ─────────────
+  // Providers using opaque UUIDs / random tokens: Cohere, Mistral (non-msauth),
+  // MiniMax, Zhipu, Qwen, Moonshot, Baidu, Yi, Stepfun, Hunyuan, Cloudflare,
+  // Azure, Writer, BFL, Bytedance, Recraft, Ideogram, Luma, IBM, Amazon, Novita,
+  // Inception, DeepInfra (non-di_ prefix), SambaNova (non-sn-), Cerebras (non-csk-)
+  return null
 }
 
 const PRESETS: ProviderPreset[] = [
@@ -328,7 +390,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "minimax/minimax-m2-7",                              label: "MiniMax M2.7 (Hot)",          tag: "MiniMax",    ctx: "200K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
       { id: "minimax/minimax-m2-5-highspeed",                    label: "MiniMax M2.5-Highspeed",      tag: "MiniMax",    ctx: "200K ctx", in: "$0.6/Mt",   out: "$2.4/Mt",   cache: "$0.03/Mt" },
       { id: "minimax/minimax-m1",                                label: "MiniMax M1",                  tag: "MiniMax",    ctx: "1M ctx",   in: "$0.55/Mt",  out: "$2.2/Mt",   cache: "" },
-      // ── Kimi ─────────────────────────────────────────────────────────────
+      // ── Kimi ────���───────────────────���────────────────────────────────────
       { id: "moonshotai/kimi-k2-6",                              label: "Kimi K2.6 (New)",             tag: "MoonshotAI", ctx: "256K ctx", in: "$0.8/Mt",   out: "$3.4/Mt",   cache: "$0.16/Mt" },
       { id: "moonshotai/kimi-k2-instruct",                       label: "Kimi K2 Instruct",            tag: "MoonshotAI", ctx: "131K ctx", in: "$0.57/Mt",  out: "$2.3/Mt",   cache: "" },
       { id: "moonshotai/kimi-k2-thinking",                       label: "Kimi K2 Thinking",            tag: "MoonshotAI", ctx: "256K ctx", in: "$0.6/Mt",   out: "$2.5/Mt",   cache: "$0.15/Mt" },
@@ -340,7 +402,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "meta-llama/llama-4-scout-17b-16e-instruct",         label: "Llama 4 Scout",               tag: "Meta",       ctx: "131K ctx", in: "$0.18/Mt",  out: "$0.59/Mt",  cache: "" },
       { id: "meta-llama/llama-3.3-70b-instruct",                 label: "Llama 3.3 70B",               tag: "Meta",       ctx: "131K ctx", in: "$0.135/Mt", out: "$0.4/Mt",   cache: "" },
       { id: "meta-llama/llama-3.1-8b-instruct",                  label: "Llama 3.1 8B",                tag: "Meta",       ctx: "16K ctx",  in: "$0.02/Mt",  out: "$0.05/Mt",  cache: "" },
-      // ── OpenAI OSS ───────────────────────────────────────────────────────
+      // ── OpenAI OSS ──────────────────────────────────────────��────────────
       { id: "openai/openai-gpt-oss-120b",                        label: "OpenAI GPT OSS 120B",         tag: "OpenAI",     ctx: "131K ctx", in: "$0.05/Mt",  out: "$0.25/Mt",  cache: "" },
       { id: "openai/openai-gpt-oss-20b",                         label: "OpenAI GPT OSS 20B",          tag: "OpenAI",     ctx: "131K ctx", in: "$0.04/Mt",  out: "$0.15/Mt",  cache: "" },
     ],
@@ -1039,7 +1101,7 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Provider logos (theSVG.org CDN) ───────────────────────────────────────────
+// ── Provider logos (theSVG.org CDN) ────────────────────────────────────────��──
 // Using jsDelivr mirror for performance. Variants: light = white for dark BG, default fallback.
 const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
 
@@ -1344,9 +1406,18 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch">("chat")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect" | "info">("unified")
+  // Sub-tab inside "unified"
+  const [unifiedSubTab, setUnifiedSubTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen">("chat")
+  // Auto-detect tab state
+  const [detectInput, setDetectInput]   = useState("")
+  const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
+  // Increment to trigger a fresh KeyInfoPanel fetch (bumped after successful chat)
+  const [keyInfoTick, setKeyInfoTick] = useState(0)
+  // Last known response headers — passed to KeyInfoPanel for rate limit data
+  const [lastResponseHeaders, setLastResponseHeaders] = useState<Record<string, string> | undefined>(undefined)
   // Image Gen config — default to first Google image model
   const [imageModel, setImageModel] = useState(() => getImageCapabilities("google")[0]?.id ?? "")
   const [imageAspectRatio, setImageAspectRatio] = useState("1:1")
@@ -1368,11 +1439,36 @@ export default function ManualKeyTester() {
   const visionEndRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Debounce API key changes by 400ms
+  // Debounce API key changes by 400ms — also auto-detects provider from key prefix
   const handleApiKeyChange = useCallback((val: string) => {
     setApiKey(val)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => setDebouncedApiKey(val), 400)
+    debounceRef.current = setTimeout(() => {
+      setDebouncedApiKey(val)
+      // Auto-detect: if the current preset is "custom" or the key prefix clearly matches a different provider, switch
+      const detectedId = detectProviderFromKey(val)
+      if (detectedId) {
+        setSelectedPreset((current) => {
+          if (current.id === detectedId) return current  // already correct
+          // Only auto-switch when the user hasn't explicitly customized the endpoint
+          const detected = PRESETS.find((p) => p.id === detectedId)
+          if (detected) {
+            // Apply full preset (endpoint, headers, body) — mirrors applyPreset but without setResult
+            setEndpoint(detected.endpoint)
+            setMethod(detected.method)
+            setHeaderRows(Object.entries(detected.headers).map(([k, v], i) => ({ key: k, value: v, id: i })))
+            setBodyTemplate(detected.bodyTemplate)
+            const imgModels = getImageCapabilities(detected.id)
+            if (imgModels.length > 0) setImageModel(imgModels[0].id)
+            const { models: vidModels } = getVideoCapabilities(detected.id)
+            if (vidModels.length > 0) setVideoModel(vidModels[0].id)
+            return detected
+          }
+          return current
+        })
+      }
+    }, 400)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -1569,6 +1665,16 @@ export default function ManualKeyTester() {
       const data: ManualTestResult = await res.json()
       setResult(data)
 
+      // Capture response headers for KeyInfoPanel rate-limit enrichment
+      if (data.responseHeaders) {
+        setLastResponseHeaders(data.responseHeaders)
+      }
+
+      // After a successful chat, bump key info so balance/rate-limit refreshes
+      if (data.ok) {
+        setKeyInfoTick((t) => t + 1)
+      }
+
       const reply = data.chatReply ?? (data.ok ? data.responseBody : null)
       if (reply) {
         const assistantMsg: ChatMessage = {
@@ -1686,9 +1792,16 @@ export default function ManualKeyTester() {
 
           {/* Provider selector */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Provider <span className="normal-case font-normal text-muted-foreground/50">({PRESETS.length - 1} supported)</span>
+              </label>
+              {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
+                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
+                  auto-detected
+                </span>
+              )}
+            </div>
             <div className="flex flex-col gap-px max-h-52 overflow-y-auto">
               {PRESETS.map((p) => (
                 <button
@@ -1803,6 +1916,16 @@ export default function ManualKeyTester() {
               </button>
             )}
           </div>
+
+          {/* Key Info Panel — enriched data after key is entered */}
+          {apiKey.trim().length >= 8 && (
+            <KeyInfoPanel
+              provider={selectedPreset.id}
+              apiKey={apiKey}
+              responseHeaders={lastResponseHeaders}
+              fetchTick={keyInfoTick}
+            />
+          )}
 
           {/* Endpoint */}
           <div className="flex flex-col gap-2">
@@ -1984,7 +2107,7 @@ export default function ManualKeyTester() {
           </div>
 
           {/* ── Image Gen config — provider-aware ── */}
-          {activeTab === "image-gen" && (() => {
+          {activeTab === "unified" && unifiedSubTab === "image-gen" && (() => {
             const imageModels = getImageCapabilities(selectedPreset.id)
             const isImageSupported = imageModels.length > 0
             return (
@@ -2037,7 +2160,7 @@ export default function ManualKeyTester() {
           })()}
 
           {/* ── Video Gen config — provider-aware ── */}
-          {activeTab === "video-gen" && (() => {
+          {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
             const { models: videoModels, aspectRatios: videoAspects } = getVideoCapabilities(selectedPreset.id)
             const isVideoSupported = videoModels.length > 0
             return (
@@ -2123,12 +2246,12 @@ export default function ManualKeyTester() {
             </span>
 
             {/* Response status chip — vision/chat result */}
-            {activeTab === "vision" && visionResult && (
+            {activeTab === "unified" && unifiedSubTab === "vision" && visionResult && (
               <span className={`text-[10px] font-mono flex-shrink-0 ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
                 {visionResult.status} · {visionResult.durationMs}ms
               </span>
             )}
-            {activeTab === "chat" && result && (
+            {activeTab === "unified" && unifiedSubTab === "chat" && result && (
               <span className={`text-[10px] font-mono flex-shrink-0 ${result.ok ? "text-green-400" : "text-red-400"}`}>
                 {result.status} · {result.durationMs}ms
               </span>
@@ -2138,6 +2261,18 @@ export default function ManualKeyTester() {
           {/* Tab row — scrollable on mobile */}
           <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9">
             {([
+              {
+                id: "unified" as const,
+                label: "Unified",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                ),
+              },
               {
                 id: "multi-batch" as const,
                 label: "Batch",
@@ -2149,35 +2284,6 @@ export default function ManualKeyTester() {
                     <circle cx="10" cy="9" r="1.5" fill="currentColor" />
                   </svg>
                 ),
-              },
-              {
-                id: "chat" as const,
-                label: "Chat",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                ),
-              },
-              {
-                id: "vision" as const,
-                label: "Vision",
-                icon: <ImageIcon />,
-              },
-              {
-                id: "ocr" as const,
-                label: "OCR",
-                icon: <ScanIcon />,
-              },
-              {
-                id: "image-gen" as const,
-                label: "Image",
-                icon: <PhotoIcon />,
-              },
-              {
-                id: "video-gen" as const,
-                label: "Video",
-                icon: <VideoTabIcon />,
               },
               {
                 id: "working-keys" as const,
@@ -2198,6 +2304,28 @@ export default function ManualKeyTester() {
                   </svg>
                 ),
               },
+              {
+                id: "auto-detect" as const,
+                label: "Detect",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M21 21l-4.35-4.35" />
+                    <path d="M11 8v6M8 11h6" />
+                  </svg>
+                ),
+              },
+              {
+                id: "info" as const,
+                label: "Info",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                ),
+              },
             ]).map((t) => (
               <button
                 key={t.id}
@@ -2213,10 +2341,60 @@ export default function ManualKeyTester() {
               </button>
             ))}
           </div>
+
+          {/* Sub-tab row — only shown inside Unified tab */}
+          {activeTab === "unified" && (
+            <div className="flex items-center gap-0.5 px-3 h-8 bg-sidebar/60 border-t border-border/40 overflow-x-auto scrollbar-none">
+              {([
+                {
+                  id: "chat" as const,
+                  label: "Chat",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: "vision" as const,
+                  label: "Vision",
+                  icon: <ImageIcon />,
+                },
+                {
+                  id: "ocr" as const,
+                  label: "OCR",
+                  icon: <ScanIcon />,
+                },
+                {
+                  id: "image-gen" as const,
+                  label: "Image Gen",
+                  icon: <PhotoIcon />,
+                },
+                {
+                  id: "video-gen" as const,
+                  label: "Video Gen",
+                  icon: <VideoTabIcon />,
+                },
+              ]).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setUnifiedSubTab(t.id)}
+                  className={`flex items-center gap-1 px-2 h-6 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                    unifiedSubTab === t.id
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  {t.icon}
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* ── CHAT TAB ─────────────────────────────────────────────────────── */}
-        {activeTab === "chat" && (
+        {/* ��─ CHAT TAB ─────────────────────────────────────────────────────── */}
+        {activeTab === "unified" && unifiedSubTab === "chat" && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
             {/* Chat messages area */}
@@ -2357,30 +2535,92 @@ export default function ManualKeyTester() {
                     </div>
                   </div>
                   {/* Stats grid */}
-                  {(result.tokenUsage?.promptTokens !== undefined || result.responseHeaders?.["x-ratelimit-remaining-requests"] || result.responseHeaders?.["x-ratelimit-remaining-tokens"]) && (
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-[10px] font-mono">
-                      {result.tokenUsage?.promptTokens !== undefined && (
-                        <span className="text-muted-foreground">
-                          in: <span className="text-foreground font-semibold">{result.tokenUsage.promptTokens}</span> tok
-                        </span>
-                      )}
-                      {result.tokenUsage?.completionTokens !== undefined && (
-                        <span className="text-muted-foreground">
-                          out: <span className="text-foreground font-semibold">{result.tokenUsage.completionTokens}</span> tok
-                        </span>
-                      )}
-                      {result.responseHeaders?.["x-ratelimit-remaining-requests"] && (
-                        <span className="text-muted-foreground">
-                          req left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-requests"]}</span>
-                        </span>
-                      )}
-                      {result.responseHeaders?.["x-ratelimit-remaining-tokens"] && (
-                        <span className="text-muted-foreground">
-                          tok left: <span className="text-sky-400 font-semibold">{result.responseHeaders["x-ratelimit-remaining-tokens"]}</span>
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {(() => {
+                    const rh = result.responseHeaders ?? {}
+                    const reqRem = rh["x-ratelimit-remaining-requests"] ?? rh["anthropic-ratelimit-requests-remaining"]
+                    const reqLim = rh["x-ratelimit-limit-requests"] ?? rh["anthropic-ratelimit-requests-limit"]
+                    const reqReset = rh["x-ratelimit-reset-requests"] ?? rh["anthropic-ratelimit-requests-reset"]
+                    const tokRem = rh["x-ratelimit-remaining-tokens"] ?? rh["anthropic-ratelimit-tokens-remaining"]
+                    const tokLim = rh["x-ratelimit-limit-tokens"] ?? rh["anthropic-ratelimit-tokens-limit"]
+                    const hasStats = result.tokenUsage?.promptTokens !== undefined || reqRem || tokRem
+                    if (!hasStats) return null
+
+                    function fmtReset(s?: string): string | null {
+                      if (!s) return null
+                      const iso = s.match(/^PT?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+\.?\d*)S)?$/i)
+                      if (iso) {
+                        const h = parseInt(iso[1] ?? "0"), m = parseInt(iso[2] ?? "0"), sec = Math.round(parseFloat(iso[3] ?? "0"))
+                        const parts: string[] = []
+                        if (h) parts.push(`${h}h`)
+                        if (m) parts.push(`${m}m`)
+                        if (sec) parts.push(`${sec}s`)
+                        return parts.join(" ") || null
+                      }
+                      const compact = s.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?/)
+                      if (compact && (compact[1] || compact[2] || compact[3])) {
+                        const parts: string[] = []
+                        if (compact[1]) parts.push(`${compact[1]}h`)
+                        if (compact[2]) parts.push(`${compact[2]}m`)
+                        if (compact[3]) parts.push(`${Math.round(parseFloat(compact[3]))}s`)
+                        return parts.join(" ") || null
+                      }
+                      try {
+                        const dt = new Date(s)
+                        if (!isNaN(dt.getTime())) {
+                          const diff = Math.round((dt.getTime() - Date.now()) / 1000)
+                          if (diff < 0) return "soon"
+                          if (diff < 60) return `${diff}s`
+                          if (diff < 3600) return `${Math.round(diff/60)}m`
+                          return `${Math.round(diff/3600)}h`
+                        }
+                      } catch { /* ignore */ }
+                      return null
+                    }
+
+                    function pctAccent(rem?: string, lim?: string): string {
+                      if (!rem || !lim) return "text-sky-400"
+                      const pct = Math.round((parseInt(rem) / parseInt(lim)) * 100)
+                      if (pct > 60) return "text-green-400"
+                      if (pct > 25) return "text-yellow-400"
+                      return "text-red-400"
+                    }
+
+                    const reqResetLabel = fmtReset(reqReset)
+
+                    return (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-[10px] font-mono border-t border-inherit/20">
+                        {result.tokenUsage?.promptTokens !== undefined && (
+                          <span className="text-muted-foreground">
+                            in: <span className="text-foreground font-semibold">{result.tokenUsage.promptTokens}</span> tok
+                          </span>
+                        )}
+                        {result.tokenUsage?.completionTokens !== undefined && (
+                          <span className="text-muted-foreground">
+                            out: <span className="text-foreground font-semibold">{result.tokenUsage.completionTokens}</span> tok
+                          </span>
+                        )}
+                        {reqRem && (
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            req: <span className={`font-semibold ${pctAccent(reqRem, reqLim)}`}>
+                              {reqLim ? `${reqRem}/${reqLim}` : reqRem}
+                            </span>
+                            {reqResetLabel && (
+                              <span className="text-[9px] text-sky-400/70 bg-sky-400/8 px-1 rounded">
+                                ↺{reqResetLabel}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                        {tokRem && (
+                          <span className="text-muted-foreground">
+                            tok: <span className={`font-semibold ${pctAccent(tokRem, tokLim)}`}>
+                              {tokLim ? `${tokRem}/${tokLim}` : tokRem}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
 
@@ -2423,8 +2663,8 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��──────────────────────────────────��───��─ */}
-        {activeTab === "vision" && (
+        {/* ── VISION TAB ────────────��──────────────────────────────────����───��─ */}
+        {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
               {visionHistory.length === 0 && (
@@ -2571,8 +2811,8 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── OCR TAB ──────────────────────────────────────────────────────── */}
-        {activeTab === "ocr" && (
+        {/* ── OCR TAB ──────────────────────────────────────��───────────────── */}
+        {activeTab === "unified" && unifiedSubTab === "ocr" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
               {!ocrResult && !ocrLoading && (
@@ -2697,7 +2937,7 @@ export default function ManualKeyTester() {
         )}
 
         {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
-        {activeTab === "image-gen" && (() => {
+        {activeTab === "unified" && unifiedSubTab === "image-gen" && (() => {
           const imageModels = getImageCapabilities(selectedPreset.id)
           const isImageSupported = imageModels.length > 0
           return (
@@ -2724,7 +2964,7 @@ export default function ManualKeyTester() {
         })()}
 
         {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
-        {activeTab === "video-gen" && (() => {
+        {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
           const { models: videoModels } = getVideoCapabilities(selectedPreset.id)
           const isVideoSupported = videoModels.length > 0
           return (
@@ -2770,6 +3010,320 @@ export default function ManualKeyTester() {
             <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
           </div>
         )}
+
+        {/* ── INFO TAB ─────────────────────────────────────────────────────── */}
+        {activeTab === "info" && (
+          <ProviderInfoPanel apiKey={apiKey || undefined} />
+        )}
+
+        {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────── */}
+        {activeTab === "auto-detect" && (() => {
+          // Full provider pattern table — mirrors detectProviderFromKey but with metadata
+          type DetectPattern = {
+            prefix: string
+            providerId: string
+            providerName: string
+            example: string
+            confidence: "high" | "low" | "none"
+            note?: string
+          }
+          const DETECT_PATTERNS: DetectPattern[] = [
+            // ── High-confidence exact prefixes ──────────────────────────────
+            { prefix: "sk-ant-api",  providerId: "anthropic",   providerName: "Claude (Anthropic)",      example: "sk-ant-api03-…",       confidence: "high" },
+            { prefix: "sk-ant-",     providerId: "anthropic",   providerName: "Claude (Anthropic)",      example: "sk-ant-…",             confidence: "high" },
+            { prefix: "AIzaSy",      providerId: "google",      providerName: "Gemini (Google)",         example: "AIzaSy…",              confidence: "high" },
+            { prefix: "AIza",        providerId: "google",      providerName: "Gemini (Google)",         example: "AIza…",                confidence: "high" },
+            { prefix: "gsk_",        providerId: "groq",        providerName: "Groq",                    example: "gsk_abc…",             confidence: "high" },
+            { prefix: "hf_",         providerId: "huggingface", providerName: "HuggingFace",             example: "hf_abc…",              confidence: "high" },
+            { prefix: "xai-",        providerId: "xai",         providerName: "Grok (xAI)",              example: "xai-abc…",             confidence: "high" },
+            { prefix: "pplx-",       providerId: "perplexity",  providerName: "Perplexity",              example: "pplx-abc…",            confidence: "high" },
+            { prefix: "or-v1-",      providerId: "openrouter",  providerName: "OpenRouter",              example: "or-v1-abc…",           confidence: "high" },
+            { prefix: "or-",         providerId: "openrouter",  providerName: "OpenRouter",              example: "or-abc…",              confidence: "high" },
+            { prefix: "fw-",         providerId: "fireworks",   providerName: "Fireworks AI",            example: "fw-abc…",              confidence: "high" },
+            { prefix: "nvapi-",      providerId: "nvidia",      providerName: "NVIDIA NIM",              example: "nvapi-abc…",           confidence: "high" },
+            { prefix: "dk-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dk-abc…",              confidence: "high" },
+            { prefix: "dc-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dc-abc…",              confidence: "high" },
+            { prefix: "r8_",         providerId: "replicate",   providerName: "Replicate",               example: "r8_abc…",              confidence: "high" },
+            { prefix: "up_",         providerId: "upstage",     providerName: "Upstage Solar",           example: "up_abc…",              confidence: "high" },
+            { prefix: "sn-",         providerId: "sambanova",   providerName: "SambaNova",               example: "sn-abc…",              confidence: "high" },
+            { prefix: "csk-",        providerId: "cerebras",    providerName: "Cerebras",                example: "csk-abc…",             confidence: "high" },
+            { prefix: "cbrss_",      providerId: "cerebras",    providerName: "Cerebras",                example: "cbrss_abc…",           confidence: "high" },
+            { prefix: "hyp_",        providerId: "hyperbolic",  providerName: "Hyperbolic",              example: "hyp_abc…",             confidence: "high" },
+            { prefix: "J2-",         providerId: "ai21",        providerName: "AI21 Labs",               example: "J2-abc…",              confidence: "high" },
+            { prefix: "msauth_",     providerId: "mistral",     providerName: "Mistral AI",              example: "msauth_abc…",          confidence: "high" },
+            { prefix: "lp_",         providerId: "lepton",      providerName: "LeptonAI",                example: "lp_abc…",              confidence: "high" },
+            { prefix: "lmn_",        providerId: "lamini",      providerName: "Lamini AI",               example: "lmn_abc…",             confidence: "high" },
+            { prefix: "di_",         providerId: "deepinfra",   providerName: "Deep Infra",              example: "di_abc…",              confidence: "high" },
+            { prefix: "esec_",       providerId: "anyscale",    providerName: "Anyscale",                example: "esec_abc…",            confidence: "high" },
+            { prefix: "neets-",      providerId: "neets",       providerName: "Neets AI",                example: "neets-abc…",           confidence: "high" },
+            // ── OpenAI exact formats ────────────────────────────────────────
+            { prefix: "sk-proj-",    providerId: "openai",      providerName: "GPT (OpenAI)",            example: "sk-proj-abc…",         confidence: "high" },
+            { prefix: "sk-svcacct-", providerId: "openai",      providerName: "GPT (OpenAI)",            example: "sk-svcacct-abc…",      confidence: "high" },
+            { prefix: "sk-None-",    providerId: "openai",      providerName: "GPT (OpenAI)",            example: "sk-None-abc…",         confidence: "high" },
+            // ── sk- ambiguous — length-based tiebreaker ─────────────────────
+            { prefix: "sk-",         providerId: "together",    providerName: "Together AI",             example: "sk-… (64 hex chars)",  confidence: "low",  note: "sk- key ≥60 chars is likely Together AI — identical prefix to OpenAI/DeepSeek" },
+            { prefix: "sk-",         providerId: "openai",      providerName: "GPT (OpenAI) legacy",     example: "sk-… (45–59 chars)",   confidence: "low",  note: "sk- key 45–59 chars is likely OpenAI legacy format" },
+            { prefix: "sk-",         providerId: "deepseek",    providerName: "DeepSeek",                example: "sk-… (32–44 chars)",   confidence: "low",  note: "sk- key 32–44 chars is likely DeepSeek — cannot distinguish from short OpenAI keys with certainty" },
+            // ── No reliable prefix — opaque UUID/random tokens ──────────────
+            { prefix: "—",           providerId: "cohere",      providerName: "Cohere",                  example: "random 40-char hex",   confidence: "none", note: "Opaque random token — cannot be distinguished by prefix" },
+            { prefix: "—",           providerId: "mistral",     providerName: "Mistral AI",              example: "random UUID",          confidence: "none", note: "Opaque random token — cannot be distinguished by prefix" },
+            { prefix: "—",           providerId: "together",    providerName: "Together AI",             example: "short random token",   confidence: "none", note: "Short random token variant — cannot be distinguished by prefix" },
+            { prefix: "—",           providerId: "minimax",     providerName: "MiniMax",                 example: "numeric ID",           confidence: "none", note: "MiniMax keys are numeric IDs — not prefix-detectable" },
+            { prefix: "—",           providerId: "zhipu",       providerName: "GLM (Zhipu AI)",          example: "JWT token",            confidence: "none", note: "Zhipu keys are JWT tokens — not prefix-detectable" },
+            { prefix: "—",           providerId: "qwen",        providerName: "Qwen (Alibaba)",          example: "random string",        confidence: "none", note: "Alibaba DashScope keys have no fixed prefix" },
+            { prefix: "—",           providerId: "moonshot",    providerName: "Moonshot AI (Kimi)",      example: "random string",        confidence: "none", note: "Moonshot keys have no fixed prefix" },
+            { prefix: "—",           providerId: "baidu",       providerName: "Baidu ERNIE (Qianfan)",   example: "random string",        confidence: "none", note: "Baidu Qianfan keys have no fixed prefix" },
+            { prefix: "—",           providerId: "yi",          providerName: "01.AI (Yi)",              example: "random string",        confidence: "none", note: "Yi keys have no fixed prefix" },
+            { prefix: "—",           providerId: "stepfun",     providerName: "Stepfun",                 example: "random string",        confidence: "none", note: "Stepfun keys have no fixed prefix" },
+            { prefix: "—",           providerId: "hunyuan",     providerName: "Tencent Hunyuan",         example: "random string",        confidence: "none", note: "Hunyuan keys have no fixed prefix" },
+            { prefix: "—",           providerId: "cloudflare",  providerName: "Cloudflare Workers AI",   example: "accountId|apiToken",   confidence: "none", note: "Cloudflare keys use accountId|apiToken composite format" },
+            { prefix: "—",           providerId: "azure",       providerName: "Azure OpenAI",            example: "32-char hex",          confidence: "none", note: "Azure keys are 32-char hex — indistinguishable from other hex keys" },
+            { prefix: "—",           providerId: "writer",      providerName: "Writer AI (Palmyra)",     example: "random string",        confidence: "none", note: "Writer keys have no fixed prefix" },
+            { prefix: "—",           providerId: "bfl",         providerName: "Black Forest Labs (FLUX)", example: "random string",       confidence: "none", note: "BFL keys have no fixed prefix" },
+            { prefix: "—",           providerId: "bytedance",   providerName: "Bytedance (SeedDream)",   example: "random string",        confidence: "none", note: "Bytedance Ark keys have no fixed prefix" },
+            { prefix: "—",           providerId: "recraft",     providerName: "Recraft AI",              example: "random string",        confidence: "none", note: "Recraft keys have no fixed prefix" },
+            { prefix: "—",           providerId: "ideogram",    providerName: "Ideogram AI",             example: "random string",        confidence: "none", note: "Ideogram keys have no fixed prefix" },
+            { prefix: "—",           providerId: "luma",        providerName: "Luma AI (Photon)",        example: "random string",        confidence: "none", note: "Luma keys have no fixed prefix" },
+            { prefix: "—",           providerId: "amazon",      providerName: "Amazon Nova (Bedrock)",   example: "AKID… / session token", confidence: "none", note: "AWS keys use AKID prefix but require additional SigV4 signing — not auto-switchable" },
+            { prefix: "—",           providerId: "ibm",         providerName: "IBM Granite (WatsonX)",   example: "IAM API key",          confidence: "none", note: "IBM WatsonX keys are IAM tokens — not prefix-detectable" },
+            { prefix: "—",           providerId: "novita",      providerName: "Novita AI",               example: "random UUID",          confidence: "none", note: "Novita keys are UUIDs — not prefix-detectable" },
+            { prefix: "—",           providerId: "inception",   providerName: "Inception (Mercury)",     example: "random string",        confidence: "none", note: "Inception keys have no fixed prefix" },
+            { prefix: "—",           providerId: "deepinfra",   providerName: "Deep Infra (non-di_)",    example: "random string",        confidence: "none", note: "Some Deep Infra keys lack the di_ prefix — use di_ keys for auto-detection" },
+          ]
+
+          function runDetect(raw: string): typeof detectResult {
+            if (!raw.trim()) return null
+            const k = raw.trim()
+            // Only match patterns that have real prefixes (not the "—" sentinel)
+            for (const p of DETECT_PATTERNS) {
+              if (p.prefix === "—") continue
+              if (!k.startsWith(p.prefix)) continue
+              // For generic sk- apply length-based tiebreaker
+              if (p.prefix === "sk-") {
+                if (p.providerId === "together" && k.length < 60) continue
+                if (p.providerId === "openai"   && (k.length < 45 || k.length >= 60)) continue
+                if (p.providerId === "deepseek" && (k.length < 32 || k.length >= 45)) continue
+              }
+              return {
+                providerId: p.providerId,
+                providerName: p.providerName,
+                confidence: p.confidence,
+                prefix: k.slice(0, Math.min(p.prefix.length + 4, k.length)) + "…",
+                reason: p.note ?? `Key starts with "${p.prefix}" — exclusive to ${p.providerName}`,
+              }
+            }
+            return {
+              providerId: null,
+              providerName: null,
+              confidence: "unknown",
+              prefix: k.slice(0, 10) + (k.length > 10 ? "…" : ""),
+              reason: "No matching prefix found. This provider likely uses an opaque random token — see the undetectable providers list below.",
+            }
+          }
+
+          const liveResult = runDetect(detectInput)
+          const detectedPreset = liveResult?.providerId ? PRESETS.find((p) => p.id === liveResult.providerId) : null
+
+          return (
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 py-5 flex flex-col gap-5">
+
+              {/* Title */}
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Auto-detect Provider</h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Paste any API key and the system identifies the provider from its prefix.
+                </p>
+              </div>
+
+              {/* Input */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Paste API key to identify
+                </label>
+                <input
+                  type="password"
+                  value={detectInput}
+                  onChange={(e) => setDetectInput(e.target.value)}
+                  placeholder="sk-ant-api03-… or AIzaSy… or gsk_…"
+                  className="w-full bg-secondary/40 border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                {detectInput && (
+                  <button
+                    onClick={() => setDetectInput("")}
+                    className="flex items-center gap-1.5 self-start px-2.5 py-1.5 rounded-md text-[11px] font-medium text-red-400 bg-red-500/8 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/40 transition-all"
+                    aria-label="Delete key"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                    </svg>
+                    Delete key
+                  </button>
+                )}
+              </div>
+
+              {/* Live result card */}
+              {liveResult && (
+                <div className={`rounded-lg border p-4 flex flex-col gap-3 transition-all ${
+                  liveResult.confidence === "high"    ? "border-green-500/30 bg-green-500/5"
+                  : liveResult.confidence === "low"   ? "border-yellow-500/30 bg-yellow-500/5"
+                  : "border-border bg-secondary/20"
+                }`}>
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {detectedPreset && (
+                        <ProviderLogo providerId={detectedPreset.id} className="w-5 h-5 flex-shrink-0" />
+                      )}
+                      <span className="text-sm font-semibold text-foreground truncate">
+                        {liveResult.providerName ?? "Unknown Provider"}
+                      </span>
+                    </div>
+                    <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                      liveResult.confidence === "high"  ? "text-green-400 bg-green-400/10 border-green-400/30"
+                      : liveResult.confidence === "low" ? "text-yellow-400 bg-yellow-400/10 border-yellow-400/30"
+                      : "text-muted-foreground bg-secondary border-border"
+                    }`}>
+                      {liveResult.confidence === "high" ? "High confidence" : liveResult.confidence === "low" ? "Low confidence" : "Unrecognised"}
+                    </span>
+                  </div>
+
+                  {/* Detected prefix */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest w-14 flex-shrink-0">Prefix</span>
+                    <code className="text-[11px] font-mono bg-secondary/60 px-2 py-0.5 rounded text-foreground">{liveResult.prefix}</code>
+                  </div>
+
+                  {/* Reason */}
+                  <div className="flex items-start gap-2">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest w-14 flex-shrink-0 pt-0.5">Reason</span>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{liveResult.reason}</p>
+                  </div>
+
+                  {/* CTA — use this provider */}
+                  {detectedPreset && (
+                    <button
+                      onClick={() => {
+                        handleApiKeyChange(detectInput)
+                        setActiveTab("unified")
+                        setUnifiedSubTab("chat")
+                        const preset = PRESETS.find((p) => p.id === detectedPreset.id)
+                        if (preset) {
+                          setSelectedPreset(preset)
+                          setEndpoint(preset.endpoint)
+                          setMethod(preset.method)
+                          setHeaderRows(Object.entries(preset.headers).map(([k, v], i) => ({ key: k, value: v, id: i })))
+                          setBodyTemplate(preset.bodyTemplate)
+                        }
+                      }}
+                      className="mt-1 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-[11px] font-semibold bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition-all"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                      Use as {detectedPreset.name} key and go to Chat
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Pattern reference table — detectable */}
+              {(() => {
+                const detectable   = DETECT_PATTERNS.filter((p) => p.confidence !== "none")
+                const undetectable = DETECT_PATTERNS.filter((p) => p.confidence === "none")
+                return (
+                  <div className="flex flex-col gap-4">
+
+                    {/* Detectable */}
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        Auto-detectable by prefix ({detectable.length} patterns)
+                      </h3>
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="border-b border-border bg-secondary/40">
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Prefix</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Provider</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground hidden sm:table-cell">Example</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Conf.</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {detectable.map((p, i) => {
+                              const isActive = liveResult?.providerId === p.providerId && p.prefix !== "—" && detectInput.trim().startsWith(p.prefix)
+                              return (
+                                <tr key={i} className={`border-b border-border/50 last:border-0 transition-colors ${isActive ? "bg-primary/8" : "hover:bg-secondary/30"}`}>
+                                  <td className="px-3 py-2">
+                                    <code className={`font-mono font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>{p.prefix}</code>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <div className="flex items-center gap-1.5">
+                                      <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
+                                      <span className="text-muted-foreground truncate max-w-[130px]">{p.providerName}</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-2 hidden sm:table-cell">
+                                    <code className="text-muted-foreground/60 font-mono">{p.example}</code>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${p.confidence === "high" ? "text-green-400 bg-green-400/10" : "text-yellow-400 bg-yellow-400/10"}`}>
+                                      {p.confidence}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Undetectable */}
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        Cannot be detected by prefix ({undetectable.length} providers)
+                      </h3>
+                      <div className="rounded-md border border-border/50 overflow-hidden">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="border-b border-border/50 bg-secondary/20">
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60">Provider</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60 hidden sm:table-cell">Key format</th>
+                              <th className="text-left px-3 py-2 font-semibold text-muted-foreground/60">Reason</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {undetectable.map((p, i) => (
+                              <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors">
+                                <td className="px-3 py-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <ProviderLogo providerId={p.providerId} className="w-3.5 h-3.5 flex-shrink-0 opacity-40" />
+                                    <span className="text-muted-foreground/60 truncate max-w-[130px]">{p.providerName}</span>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2 hidden sm:table-cell">
+                                  <code className="text-muted-foreground/40 font-mono">{p.example}</code>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <span className="text-muted-foreground/40 text-[10px] leading-snug">{p.note}</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                  </div>
+                )
+              })()}
+
+            </div>
+          )
+        })()}
 
         {/* ── MULTI-KEY BATCH TAB ───────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
