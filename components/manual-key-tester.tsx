@@ -13,6 +13,7 @@ import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
 import KeyInfoPanel from "@/components/key-info-panel"
+import ProviderInfoPanel from "@/components/provider-info-panel"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -389,7 +390,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "minimax/minimax-m2-7",                              label: "MiniMax M2.7 (Hot)",          tag: "MiniMax",    ctx: "200K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
       { id: "minimax/minimax-m2-5-highspeed",                    label: "MiniMax M2.5-Highspeed",      tag: "MiniMax",    ctx: "200K ctx", in: "$0.6/Mt",   out: "$2.4/Mt",   cache: "$0.03/Mt" },
       { id: "minimax/minimax-m1",                                label: "MiniMax M1",                  tag: "MiniMax",    ctx: "1M ctx",   in: "$0.55/Mt",  out: "$2.2/Mt",   cache: "" },
-      // ── Kimi ─────────────────────────────────────────────────────────────
+      // ── Kimi ────────────────────────���────────────────────────────────────
       { id: "moonshotai/kimi-k2-6",                              label: "Kimi K2.6 (New)",             tag: "MoonshotAI", ctx: "256K ctx", in: "$0.8/Mt",   out: "$3.4/Mt",   cache: "$0.16/Mt" },
       { id: "moonshotai/kimi-k2-instruct",                       label: "Kimi K2 Instruct",            tag: "MoonshotAI", ctx: "131K ctx", in: "$0.57/Mt",  out: "$2.3/Mt",   cache: "" },
       { id: "moonshotai/kimi-k2-thinking",                       label: "Kimi K2 Thinking",            tag: "MoonshotAI", ctx: "256K ctx", in: "$0.6/Mt",   out: "$2.5/Mt",   cache: "$0.15/Mt" },
@@ -1405,7 +1406,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect">("chat")
+  const [activeTab, setActiveTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect" | "info">("chat")
   // Auto-detect tab state
   const [detectInput, setDetectInput]   = useState("")
   const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
@@ -2329,6 +2330,17 @@ export default function ManualKeyTester() {
                   </svg>
                 ),
               },
+              {
+                id: "info" as const,
+                label: "Info",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                ),
+              },
             ]).map((t) => (
               <button
                 key={t.id}
@@ -2962,6 +2974,11 @@ export default function ManualKeyTester() {
           <div className="flex-1 min-h-0 overflow-hidden">
             <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
           </div>
+        )}
+
+        {/* ── INFO TAB ─────────────────────────────────────────────────────── */}
+        {activeTab === "info" && (
+          <ProviderInfoPanel apiKey={apiKey || undefined} />
         )}
 
         {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────── */}
