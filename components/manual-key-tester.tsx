@@ -2046,7 +2046,7 @@ export default function ManualKeyTester() {
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-px max-h-52 overflow-y-auto">
+            <div className="flex flex-col gap-px flex-1 overflow-y-auto">
               {PRESETS.map((p) => (
                 <button
                   key={p.id}
