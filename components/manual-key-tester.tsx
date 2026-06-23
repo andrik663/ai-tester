@@ -12,6 +12,7 @@ import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
+import { explainApiError } from "@/lib/explain-api-error"
 import KeyInfoPanel from "@/components/key-info-panel"
 import ProviderInfoPanel from "@/components/provider-info-panel"
 
@@ -390,7 +391,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "minimax/minimax-m2-7",                              label: "MiniMax M2.7 (Hot)",          tag: "MiniMax",    ctx: "200K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
       { id: "minimax/minimax-m2-5-highspeed",                    label: "MiniMax M2.5-Highspeed",      tag: "MiniMax",    ctx: "200K ctx", in: "$0.6/Mt",   out: "$2.4/Mt",   cache: "$0.03/Mt" },
       { id: "minimax/minimax-m1",                                label: "MiniMax M1",                  tag: "MiniMax",    ctx: "1M ctx",   in: "$0.55/Mt",  out: "$2.2/Mt",   cache: "" },
-      // ── Kimi ────�����───────────────────���────────────────────────────────────
+      // ── Kimi ────�������───────────────────���────────────────────────────────────
       { id: "moonshotai/kimi-k2-6",                              label: "Kimi K2.6 (New)",             tag: "MoonshotAI", ctx: "256K ctx", in: "$0.8/Mt",   out: "$3.4/Mt",   cache: "$0.16/Mt" },
       { id: "moonshotai/kimi-k2-instruct",                       label: "Kimi K2 Instruct",            tag: "MoonshotAI", ctx: "131K ctx", in: "$0.57/Mt",  out: "$2.3/Mt",   cache: "" },
       { id: "moonshotai/kimi-k2-thinking",                       label: "Kimi K2 Thinking",            tag: "MoonshotAI", ctx: "256K ctx", in: "$0.6/Mt",   out: "$2.5/Mt",   cache: "$0.15/Mt" },
@@ -1407,8 +1408,113 @@ export default function ManualKeyTester() {
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect" | "info">("unified")
+  // Onboarding banner — dismissed in localStorage
+  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true
+    return localStorage.getItem("ai_tester_onboarding_dismissed") === "1"
+  })
+  function dismissOnboarding() {
+    localStorage.setItem("ai_tester_onboarding_dismissed", "1")
+    setOnboardingDismissed(true)
+  }
+
+  // Remember API key per provider — stored obfuscated in localStorage (btoa/atob)
+  const [rememberKey, setRememberKey] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    return localStorage.getItem("ai_tester_remember_pref") === "1"
+  })
+  // Load saved key when provider changes or remember preference loads
+  useEffect(() => {
+    if (!rememberKey) return
+    const saved = localStorage.getItem(`ai_tester_key_${selectedPreset.id}`)
+    if (saved) {
+      try {
+        const decoded = atob(saved)
+        handleApiKeyChange(decoded)
+      } catch { /* ignore malformed */ }
+    } else {
+      // Clear key when switching to a provider with no saved key
+      handleApiKeyChange("")
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPreset.id, rememberKey])
+
+  function handleRememberToggle(checked: boolean) {
+    setRememberKey(checked)
+    localStorage.setItem("ai_tester_remember_pref", checked ? "1" : "0")
+    if (checked && apiKey) {
+      localStorage.setItem(`ai_tester_key_${selectedPreset.id}`, btoa(apiKey))
+    } else if (!checked) {
+      // Clear all saved keys
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("ai_tester_key_"))
+        .forEach((k) => localStorage.removeItem(k))
+    }
+  }
+
+  // Persist key whenever it changes and rememberKey is on
+  useEffect(() => {
+    if (!rememberKey || !apiKey) return
+    localStorage.setItem(`ai_tester_key_${selectedPreset.id}`, btoa(apiKey))
+  }, [apiKey, rememberKey, selectedPreset.id])
   // Sub-tab inside "unified"
-  const [unifiedSubTab, setUnifiedSubTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen">("chat")
+  const [unifiedSubTab, setUnifiedSubTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "compare">("chat")
+  // Compare mode state
+  const [comparePrompt, setComparePrompt] = useState("Say hello in one sentence.")
+  const [compareSlots, setCompareSlots] = useState<Array<{ providerId: string; apiKey: string }>>([
+    { providerId: "anthropic", apiKey: "" },
+    { providerId: "openai",    apiKey: "" },
+    { providerId: "google",    apiKey: "" },
+  ])
+  const [compareResults, setCompareResults] = useState<Array<{ result: ManualTestResult | null; loading: boolean }>>([
+    { result: null, loading: false },
+    { result: null, loading: false },
+    { result: null, loading: false },
+  ])
+  async function runCompare() {
+    setCompareResults(compareSlots.map(() => ({ result: null, loading: true })))
+    const requests = compareSlots.map(async (slot, i) => {
+      const preset = PRESETS.find((p) => p.id === slot.providerId)
+      if (!preset || !slot.apiKey.trim()) {
+        setCompareResults((prev) => {
+          const next = [...prev]
+          next[i] = { result: null, loading: false }
+          return next
+        })
+        return
+      }
+      try {
+        const res = await fetch("/api/manual-test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: preset.id,
+            apiKey: slot.apiKey.trim(),
+            endpoint: preset.endpoint,
+            method: preset.method,
+            headers: preset.headers,
+            prompt: comparePrompt,
+          }),
+        })
+        const data: ManualTestResult = await res.json()
+        setCompareResults((prev) => {
+          const next = [...prev]
+          next[i] = { result: data, loading: false }
+          return next
+        })
+      } catch (err) {
+        setCompareResults((prev) => {
+          const next = [...prev]
+          next[i] = {
+            result: { ok: false, status: 0, statusText: err instanceof Error ? err.message : "Request failed", responseBody: "", logs: [], curlCommand: "", curlFull: "", requestBodySent: "", durationMs: 0 } as ManualTestResult,
+            loading: false,
+          }
+          return next
+        })
+      }
+    })
+    await Promise.all(requests)
+  }
   // Auto-detect tab state
   const [detectInput, setDetectInput]   = useState("")
   const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
@@ -1790,6 +1896,34 @@ export default function ManualKeyTester() {
 
         <div className="flex-1 px-4 py-4 flex flex-col gap-5">
 
+          {/* Onboarding banner — shown once, dismissable */}
+          {!onboardingDismissed && (
+            <div className="rounded-xl border border-primary/25 bg-primary/6 p-3 flex flex-col gap-2 relative">
+              <button
+                onClick={dismissOnboarding}
+                className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Dismiss"
+              >
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
+                  <path d="M12 4L4 12M4 4l8 8" />
+                </svg>
+              </button>
+              <p className="text-xs font-semibold text-foreground pr-5">Quick start</p>
+              <ol className="flex flex-col gap-1.5">
+                {[
+                  { n: "1", text: "Pick a provider from the list below" },
+                  { n: "2", text: "Paste your API key in the field" },
+                  { n: "3", text: "Go to the Test tab and send a message" },
+                ].map((s) => (
+                  <li key={s.n} className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-primary mt-0.5">{s.n}</span>
+                    <span className="text-[11px] text-muted-foreground leading-snug">{s.text}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
           {/* Provider selector */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
@@ -1869,6 +2003,33 @@ export default function ManualKeyTester() {
               >
                 <EyeIcon show={showKey} />
               </button>
+            </div>
+
+            {/* Remember key toggle */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer select-none group" htmlFor="remember-key-toggle">
+                <button
+                  id="remember-key-toggle"
+                  role="switch"
+                  aria-checked={rememberKey}
+                  onClick={() => handleRememberToggle(!rememberKey)}
+                  className={`relative w-7 h-4 rounded-full border transition-all flex-shrink-0 ${
+                    rememberKey ? "bg-primary/80 border-primary/60" : "bg-secondary border-border"
+                  }`}
+                >
+                  <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${
+                    rememberKey ? "left-3.5" : "left-0.5"
+                  }`} />
+                </button>
+                <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
+                  Remember key for this provider
+                </span>
+              </label>
+              {rememberKey && (
+                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
+                  saved
+                </span>
+              )}
             </div>
 
             {/* Create API key link */}
@@ -2263,13 +2424,10 @@ export default function ManualKeyTester() {
             {([
               {
                 id: "unified" as const,
-                label: "Unified",
+                label: "Test",
                 icon: (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                 ),
               },
@@ -2287,7 +2445,7 @@ export default function ManualKeyTester() {
               },
               {
                 id: "working-keys" as const,
-                label: "Keys",
+                label: "Saved",
                 icon: (
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
                     <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
@@ -2297,16 +2455,18 @@ export default function ManualKeyTester() {
               },
               {
                 id: "sbg-agent" as const,
-                label: "SBG",
+                label: "Gateway",
                 icon: (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
                   </svg>
                 ),
               },
               {
                 id: "auto-detect" as const,
-                label: "Detect",
+                label: "Identify",
                 icon: (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
                     <circle cx="11" cy="11" r="7" />
@@ -2317,12 +2477,11 @@ export default function ManualKeyTester() {
               },
               {
                 id: "info" as const,
-                label: "Info",
+                label: "Pricing",
                 icon: (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                   </svg>
                 ),
               },
@@ -2374,6 +2533,16 @@ export default function ManualKeyTester() {
                   id: "video-gen" as const,
                   label: "Video Gen",
                   icon: <VideoTabIcon />,
+                },
+                {
+                  id: "compare" as const,
+                  label: "Compare",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                      <rect x="3" y="3" width="7" height="18" rx="1" />
+                      <rect x="14" y="3" width="7" height="18" rx="1" />
+                    </svg>
+                  ),
                 },
               ]).map((t) => (
                 <button
@@ -2534,6 +2703,26 @@ export default function ManualKeyTester() {
                       )}
                     </div>
                   </div>
+                  {/* Error explanation */}
+                  {!result.ok && (() => {
+                    const exp = explainApiError(result.status, result.responseBody ?? result.statusText)
+                    if (!exp) return null
+                    return (
+                      <div className="flex flex-col gap-1 px-4 py-3 border-b border-red-500/10 bg-red-500/3">
+                        <div className="flex items-start gap-2">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-semibold text-red-300">{exp.cause}</span>
+                            <span className="text-[11px] text-muted-foreground leading-snug">{exp.suggestion}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
                   {/* Stats grid */}
                   {(() => {
                     const rh = result.responseHeaders ?? {}
@@ -2990,6 +3179,140 @@ export default function ManualKeyTester() {
           )
         })()}
 
+        {/* ── COMPARE TAB ──────────────────────────────────────────────────── */}
+        {activeTab === "unified" && unifiedSubTab === "compare" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="max-w-5xl mx-auto px-4 py-5 flex flex-col gap-5">
+
+              {/* Header */}
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Side-by-side Comparison</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Send the same prompt to up to 3 providers simultaneously and compare responses, latency, and token usage.</p>
+              </div>
+
+              {/* Prompt input */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Test Prompt</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={comparePrompt}
+                    onChange={(e) => setComparePrompt(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") runCompare() }}
+                    placeholder="Enter a prompt to send to all providers..."
+                    className="flex-1 rounded-lg border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                  />
+                  <button
+                    onClick={runCompare}
+                    disabled={compareSlots.every(s => !s.apiKey.trim()) || !comparePrompt.trim()}
+                    className="flex items-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Run All
+                  </button>
+                </div>
+              </div>
+
+              {/* Comparison columns */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {compareSlots.map((slot, i) => {
+                  const res = compareResults[i]
+                  const preset = PRESETS.find((p) => p.id === slot.providerId)
+                  return (
+                    <div key={i} className="flex flex-col gap-2 rounded-xl border border-border bg-card/40 overflow-hidden">
+                      {/* Column header */}
+                      <div className="px-3 pt-3 pb-2 border-b border-border/50 flex flex-col gap-2 bg-secondary/20">
+                        <div className="flex items-center gap-2">
+                          {preset && PROVIDER_LOGOS[preset.id] && (
+                            <ProviderLogo providerId={preset.id} className="w-4 h-4 flex-shrink-0" />
+                          )}
+                          <select
+                            value={slot.providerId}
+                            onChange={(e) => {
+                              setCompareSlots((prev) => {
+                                const next = [...prev]
+                                next[i] = { ...next[i], providerId: e.target.value }
+                                return next
+                              })
+                            }}
+                            className="flex-1 text-xs font-semibold bg-transparent text-foreground focus:outline-none cursor-pointer"
+                          >
+                            {PRESETS.filter((p) => p.id !== "custom").map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <input
+                          type="password"
+                          value={slot.apiKey}
+                          onChange={(e) => {
+                            setCompareSlots((prev) => {
+                              const next = [...prev]
+                              next[i] = { ...next[i], apiKey: e.target.value }
+                              return next
+                            })
+                          }}
+                          placeholder="API key for this slot..."
+                          className="w-full rounded border border-border bg-background text-foreground text-xs font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                        />
+                      </div>
+
+                      {/* Result area */}
+                      <div className="px-3 pb-3 flex-1 flex flex-col gap-2 min-h-[120px]">
+                        {res.loading && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                            <SpinnerIcon />
+                            Waiting...
+                          </div>
+                        )}
+                        {!res.loading && res.result && (
+                          <>
+                            {/* Status bar */}
+                            <div className={`flex items-center gap-2 text-xs font-semibold ${res.result.ok ? "text-green-400" : "text-red-400"}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${res.result.ok ? "bg-green-400" : "bg-red-400"}`} />
+                              HTTP {res.result.status}
+                              {res.result.durationMs !== undefined && (
+                                <span className="text-muted-foreground font-normal ml-auto">{res.result.durationMs}ms</span>
+                              )}
+                            </div>
+                            {/* Token usage */}
+                            {res.result.tokenUsage && (
+                              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                                <span>in <span className="text-foreground font-mono">{res.result.tokenUsage.promptTokens}</span></span>
+                                <span>out <span className="text-foreground font-mono">{res.result.tokenUsage.completionTokens}</span></span>
+                                <span>total <span className="text-foreground font-mono">{res.result.tokenUsage.totalTokens}</span></span>
+                              </div>
+                            )}
+                            {/* Reply */}
+                            {res.result.ok && res.result.chatReply && (
+                              <div className="rounded-lg border border-border bg-background/60 px-3 py-2.5 flex-1">
+                                <pre className="text-xs text-foreground leading-relaxed whitespace-pre-wrap font-sans">{res.result.chatReply}</pre>
+                              </div>
+                            )}
+                            {!res.result.ok && (
+                              <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-[11px] text-red-400 leading-relaxed break-all">
+                                {res.result.statusText || `HTTP ${res.result.status}`}
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {!res.loading && !res.result && (
+                          <p className="text-[11px] text-muted-foreground/50 mt-2">
+                            {slot.apiKey ? "Press Run All to test" : "Enter an API key above"}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+            </div>
+          </div>
+        )}
+
         {/* ── WORKING KEYS TAB ──────────────────────────────────────────────── */}
         {activeTab === "working-keys" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -3085,7 +3408,7 @@ export default function ManualKeyTester() {
             { prefix: "—",           providerId: "ideogram",    providerName: "Ideogram AI",             example: "random string",        confidence: "none", note: "Ideogram keys have no fixed prefix" },
             { prefix: "—",           providerId: "luma",        providerName: "Luma AI (Photon)",        example: "random string",        confidence: "none", note: "Luma keys have no fixed prefix" },
             { prefix: "—",           providerId: "amazon",      providerName: "Amazon Nova (Bedrock)",   example: "AKID… / session token", confidence: "none", note: "AWS keys use AKID prefix but require additional SigV4 signing — not auto-switchable" },
-            { prefix: "—",           providerId: "ibm",         providerName: "IBM Granite (WatsonX)",   example: "IAM API key",          confidence: "none", note: "IBM WatsonX keys are IAM tokens — not prefix-detectable" },
+            { prefix: "���",           providerId: "ibm",         providerName: "IBM Granite (WatsonX)",   example: "IAM API key",          confidence: "none", note: "IBM WatsonX keys are IAM tokens — not prefix-detectable" },
             { prefix: "—",           providerId: "novita",      providerName: "Novita AI",               example: "random UUID",          confidence: "none", note: "Novita keys are UUIDs — not prefix-detectable" },
             { prefix: "—",           providerId: "inception",   providerName: "Inception (Mercury)",     example: "random string",        confidence: "none", note: "Inception keys have no fixed prefix" },
             { prefix: "—",           providerId: "deepinfra",   providerName: "Deep Infra (non-di_)",    example: "random string",        confidence: "none", note: "Some Deep Infra keys lack the di_ prefix — use di_ keys for auto-detection" },
@@ -3129,9 +3452,9 @@ export default function ManualKeyTester() {
 
               {/* Title */}
               <div>
-                <h2 className="text-base font-semibold text-foreground tracking-tight">Auto-detect Provider</h2>
+                <h2 className="text-base font-semibold text-foreground tracking-tight">Identify Provider</h2>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Paste any API key and the system identifies the provider from its prefix.
+                  Paste any API key — the system instantly recognises the provider from its prefix pattern.
                 </p>
               </div>
 

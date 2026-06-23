@@ -503,15 +503,32 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
 
           {/* Empty state */}
           {!hasMessages && (
-            <div className="flex flex-col items-center justify-center py-10 gap-6">
+            <div className="flex flex-col items-center justify-center py-8 gap-6">
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <span className="text-lg font-bold text-primary font-mono">SBG</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-primary">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
+                  </svg>
                 </div>
-                <p className="text-sm font-semibold text-foreground">Ask me anything</p>
-                <p className="text-xs text-muted-foreground max-w-[240px] leading-relaxed">
-                  Research, write code, or save notes — powered by {isOllama ? "Ollama" : "Hermes via OpenRouter"}.
+                <p className="text-sm font-semibold text-foreground">AI Gateway</p>
+                <p className="text-xs text-muted-foreground max-w-[260px] leading-relaxed">
+                  A general-purpose AI assistant powered by {isOllama ? "your local Ollama models" : "Hermes via OpenRouter"}. Use it to research, write code, compare models, or ask anything — independent of your provider API keys.
                 </p>
+              </div>
+
+              {/* What it's for */}
+              <div className="grid grid-cols-2 gap-2 w-full max-w-sm">
+                {[
+                  { label: "Different from Test tab", desc: "Uses a fixed OpenRouter/Ollama connection — not your own keys" },
+                  { label: "General purpose", desc: "Research, code, writing, comparisons — anything you need" },
+                ].map((item) => (
+                  <div key={item.label} className="flex flex-col gap-1 px-3 py-2.5 rounded-xl border border-border bg-card/40">
+                    <p className="text-[11px] font-semibold text-foreground">{item.label}</p>
+                    <p className="text-[10px] text-muted-foreground leading-snug">{item.desc}</p>
+                  </div>
+                ))}
               </div>
 
               <div className="grid grid-cols-1 gap-2 w-full max-w-sm">
@@ -521,10 +538,10 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
                     onClick={() => { setInput(p.text); inputRef.current?.focus() }}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border hover:border-primary/30 bg-card hover:bg-primary/5 text-left transition-colors group"
                   >
-                    <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-wider w-14 flex-shrink-0 group-hover:text-primary/60 transition-colors">
+                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider w-14 flex-shrink-0 group-hover:text-primary/70 transition-colors">
                       {p.label}
                     </span>
-                    <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors leading-snug">
+                    <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors leading-snug">
                       {p.text}
                     </span>
                   </button>
@@ -537,7 +554,7 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           {messages.map(msg => (
             <div key={msg.id} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
               <p className="text-[9px] uppercase tracking-widest font-semibold text-muted-foreground/40 px-1">
-                {msg.role === "user" ? "You" : "SBG"}
+                {msg.role === "user" ? "You" : "Gateway"}
               </p>
               <div className={`flex flex-col gap-2 ${msg.role === "user" ? "items-end max-w-[82%]" : "items-start w-full max-w-full"}`}>
                 {msg.parts.map((part, pi) => {

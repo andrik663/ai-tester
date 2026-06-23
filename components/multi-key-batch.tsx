@@ -7,6 +7,7 @@ import type { KeyAllModelsResult, MultiKeyAllResponse, ModelTestResult } from "@
 import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
 import { copyToClipboard } from "@/lib/clipboard"
 import { appendWorkingResults } from "@/lib/working-keys-store"
+import { explainApiError } from "@/lib/explain-api-error"
 
 // ── Provider format catalogue ─────────────────────────────────────────────────
 
@@ -675,9 +676,24 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
 
           {/* Error */}
           {!r.ok && r.errorMsg && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Error</span>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-semibold">Error</span>
               <p className="text-[10px] font-mono text-red-400 bg-red-400/5 rounded px-2.5 py-2 border border-red-400/15 break-all">{r.errorMsg}</p>
+              {(() => {
+                const exp = explainApiError(r.status, r.errorMsg)
+                if (!exp) return null
+                return (
+                  <div className="flex items-start gap-1.5 px-2.5 py-2 rounded bg-red-500/4 border border-red-500/12">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-red-400/70 flex-shrink-0 mt-0.5">
+                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <div>
+                      <p className="text-[10px] font-semibold text-red-300/90">{exp.cause}</p>
+                      <p className="text-[10px] text-muted-foreground leading-snug">{exp.suggestion}</p>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
 
@@ -1068,38 +1084,57 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
         {/* ── Drop zone ──────────────────────────────────────────────────────── */}
         {entries.length === 0 && (
-          <div
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileRef.current?.click()}
-            className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-8 px-4 text-center select-none ${
-              dragOver
-                ? "border-primary/60 bg-primary/5"
-                : "border-border hover:border-border/80 hover:bg-secondary/30"
-            }`}
-          >
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/40" aria-hidden>
-              <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M10 10h12M10 14h12M10 18h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <div>
-              <p className="text-sm font-medium text-foreground">Drop a .txt file or tap to browse</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">One API key per line</p>
-              <div className="mt-2 text-left inline-block bg-secondary/50 rounded px-3 py-2 text-[10px] font-mono text-muted-foreground space-y-0.5">
-                <p className="text-foreground/50"># Accepted formats:</p>
-                <p>anthropic:sk-ant-...</p>
-                <p>openai sk-proj-...</p>
-                <p>sk-or-v1-... &nbsp;&nbsp;(auto-detect)</p>
-              </div>
+          <div className="flex flex-col gap-3">
+            {/* How it works — 3 steps */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { step: "1", title: "Load keys", desc: "Drop a .txt file or paste keys below" },
+                { step: "2", title: "Enter a prompt", desc: "One short prompt sent to all providers" },
+                { step: "3", title: "See results", desc: "Status, latency and tokens per key" },
+              ].map((s) => (
+                <div key={s.step} className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl border border-border bg-card/40">
+                  <span className="text-[10px] font-bold text-primary/70 font-mono">Step {s.step}</span>
+                  <p className="text-xs font-semibold text-foreground">{s.title}</p>
+                  <p className="text-[10px] text-muted-foreground leading-snug">{s.desc}</p>
+                </div>
+              ))}
             </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".txt,text/plain"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-            />
+
+            {/* Drop zone */}
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileRef.current?.click()}
+              className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-7 px-4 text-center select-none ${
+                dragOver
+                  ? "border-primary/60 bg-primary/5"
+                  : "border-border hover:border-border/80 hover:bg-secondary/30"
+              }`}
+            >
+              <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/40" aria-hidden>
+                <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M10 10h12M10 14h12M10 18h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-foreground">Drop a .txt file or tap to browse</p>
+                <p className="text-xs text-muted-foreground mt-0.5">One API key per line — formats accepted:</p>
+                <div className="mt-2 text-left inline-block bg-secondary/50 rounded px-3 py-2 text-[10px] font-mono text-muted-foreground space-y-0.5">
+                  <p className="text-muted-foreground/60"># with prefix (explicit)</p>
+                  <p>anthropic:sk-ant-...</p>
+                  <p>openai:sk-proj-...</p>
+                  <p className="text-muted-foreground/60 mt-1"># without prefix (auto-detect)</p>
+                  <p>sk-or-v1-...</p>
+                </div>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".txt,text/plain"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+              />
+            </div>
           </div>
         )}
 
