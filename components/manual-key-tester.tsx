@@ -1134,23 +1134,23 @@ const PRESETS: ProviderPreset[] = [
 const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
 
 const PROVIDER_LOGOS: Record<string, string> = {
-  dahono:      `${BASE}/dahono/color.svg`,
-  anthropic:   `${BASE}/anthropic/light.svg`,
+  dahono:      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%238B5CF6' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ED%3C/text%3E%3C/svg%3E",
+  anthropic:   `${BASE}/anthropic/color.svg`,
   openai:      `${BASE}/openai/dark.svg`,
   google:      `${BASE}/google/default.svg`,
-  xai:         `${BASE}/x/mono.svg`,
+  xai:         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23000000' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='50' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E",
   deepseek:    `${BASE}/deepseek/default.svg`,
-  qwen:        `${BASE}/alibaba-cloud/mono.svg`,
-  zhipu:       `${BASE}/zhipuai/default.svg`,
+  qwen:        `${BASE}/alibaba-cloud/default.svg`,
+  zhipu:       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231890FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EZ%3C/text%3E%3C/svg%3E",
   minimax:     `${BASE}/minimax/default.svg`,
-  cerebras:    `${BASE}/cerebras/mono.svg`,
+  cerebras:    `${BASE}/cerebras/default.svg`,
   fireworks:   `${BASE}/fireworks-ai/default.svg`,
-  novita:      `${BASE}/novita/default.svg`,
-  cloudflare:  `${BASE}/cloudflare-workers/default.svg`,
+  novita:      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2333A9FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EN%3C/text%3E%3C/svg%3E",
+  cloudflare:  `${BASE}/cloudflare/default.svg`,
   openrouter:  `${BASE}/openrouter/default.svg`,
   sambanova:   `${BASE}/sambanova/default.svg`,
-  nvidia:      `${BASE}/nvidia/mono.svg`,
-  hyperbolic:  `${BASE}/hyperbolic/default.svg`,
+  nvidia:      `${BASE}/nvidia/default.svg`,
+  hyperbolic:  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FF00FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EH%3C/text%3E%3C/svg%3E",
   ai21:        `${BASE}/ai21-labs/default.svg`,
   groq:        `${BASE}/groq/default.svg`,
   together:    `${BASE}/together-ai/default.svg`,
@@ -1161,26 +1161,26 @@ const PROVIDER_LOGOS: Record<string, string> = {
   replicate:   `${BASE}/replicate/default.svg`,
   moonshot:    `${BASE}/moonshot-ai/default.svg`,
   baidu:       `${BASE}/baidu/default.svg`,
-  yi:          `${BASE}/01dotai/mono.svg`,
+  yi:          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23008B8B' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EY%3C/text%3E%3C/svg%3E",
   stepfun:     `${BASE}/stepfun/default.svg`,
-  hunyuan:     `${BASE}/tencent/mono.svg`,
+  hunyuan:     `${BASE}/tencent/default.svg`,
   azure:       `${BASE}/microsoft-azure/default.svg`,
   upstage:     `${BASE}/upstage/default.svg`,
   writer:      `${BASE}/writer/default.svg`,
   lepton:      `${BASE}/lepton-ai/default.svg`,
   bfl:         `${BASE}/black-forest-labs/default.svg`,
   bytedance:   `${BASE}/bytedance/default.svg`,
-  recraft:     `${BASE}/recraft/default.svg`,
-  ideogram:    `${BASE}/ideogram/default.svg`,
+  recraft:     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FF6B35' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ER%3C/text%3E%3C/svg%3E",
+  ideogram:    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23000000' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EIG%3C/text%3E%3C/svg%3E",
   luma:        `${BASE}/luma-ai/default.svg`,
-  amazon:      `${BASE}/amazon-web-services/mono.svg`,
-  inception:   `${BASE}/inception/default.svg`,
+  amazon:      `${BASE}/amazon-web-services/default.svg`,
+  inception:   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%238B00FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EIN%3C/text%3E%3C/svg%3E",
   ibm:         `${BASE}/ibm/default.svg`,
-  deepinfra:   `${BASE}/deepinfra/default.svg`,
+  deepinfra:   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23222222' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EDI%3C/text%3E%3C/svg%3E",
   anyscale:    `${BASE}/anyscale/default.svg`,
   meta:        `${BASE}/meta/default.svg`,
-  lamini:      `${BASE}/lamini/default.svg`,
-  neets:       `${BASE}/neets-ai/default.svg`,
+  lamini:      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2300D9FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EL%3C/text%3E%3C/svg%3E",
+  neets:       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FF006E' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EN%3C/text%3E%3C/svg%3E",
 }
 
 
@@ -2014,7 +2014,7 @@ export default function ManualKeyTester() {
                       : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
                   }`}
                 >
-                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors overflow-hidden ${
+                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors ${
                     selectedPreset.id === p.id ? "opacity-100" : "opacity-60 group-hover:opacity-90"
                   }`}>
                     {PROVIDER_LOGOS[p.id] ? (
