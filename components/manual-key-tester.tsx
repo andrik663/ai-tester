@@ -8,7 +8,6 @@ import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
-import SBGAgent from "@/components/sbg-agent"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
@@ -1436,7 +1435,7 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "sbg-agent" | "multi-batch" | "auto-detect" | "info">("unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info">("unified")
   // Onboarding banner — dismissed in localStorage
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() => {
     if (typeof window === "undefined") return true
@@ -2482,17 +2481,7 @@ export default function ManualKeyTester() {
                   </svg>
                 ),
               },
-              {
-                id: "sbg-agent" as const,
-                label: "Gateway",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
-                  </svg>
-                ),
-              },
+
               {
                 id: "auto-detect" as const,
                 label: "Identify",
@@ -3353,13 +3342,6 @@ export default function ManualKeyTester() {
                 setConfigOpen(true)
               }}
             />
-          </div>
-        )}
-
-        {/* ── SBG AGENT TAB ────────────────────────────────��────────────────── */}
-        {activeTab === "sbg-agent" && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <SBGAgent openRouterApiKey={selectedPreset.id === "openrouter" ? apiKey : ""} />
           </div>
         )}
 
