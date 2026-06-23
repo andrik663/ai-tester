@@ -20,8 +20,11 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import {
   PROVIDER_INFO_LIST,
   ALL_PROMO_MODELS,
+  DISCOUNTED_MODELS,
   TIER_META,
   formatPrice,
+  calcDiscount,
+  TODAY_DATE,
   type ProviderInfo,
   type ModelPricing,
 } from "@/lib/provider-info"
@@ -36,6 +39,8 @@ interface LiveModelData {
 }
 type TierFilter   = "all" | ProviderInfo["tier"]
 type RegionFilter = "all" | "US" | "CN" | "EU/KR/IL" | "Other"
+type PriceSort    = "none" | "free" | "cheapest" | "expensive"
+type PromoView    = "all" | "discounted"
 
 // ── Small icons ───────────────────────────────────────────────────────────────
 function Icon({ d, className = "w-3 h-3" }: { d: string; className?: string }) {
@@ -368,15 +373,31 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
   const [tierFilter, setTierFilter]     = useState<TierFilter>("all")
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all")
   const [freeOnly, setFreeOnly]         = useState(false)
+  const [priceSort, setPriceSort]       = useState<PriceSort>("none")
+  const [promoView, setPromoView]       = useState<PromoView>("all")
   const [view, setView]                 = useState<"providers" | "promos">("providers")
   const [expandAll, setExpandAll]       = useState(false)
+  const [lastRefreshed, setLastRefreshed] = useState<string>("")
+
+  // Daily auto-refresh: track last refresh date in localStorage
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("providerCatalogRefreshedAt") : null
+    if (stored !== TODAY_DATE) {
+      // New day — trigger a visual refresh indicator and update stored date
+      localStorage.setItem("providerCatalogRefreshedAt", TODAY_DATE)
+      setLastRefreshed(TODAY_DATE)
+    } else {
+      setLastRefreshed(stored ?? TODAY_DATE)
+    }
+  }, [])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
-    return PROVIDER_INFO_LIST.filter((p) => {
+    let list = PROVIDER_INFO_LIST.filter((p) => {
       if (tierFilter !== "all" && p.tier !== tierFilter) return false
       if (!matchRegion(p.hq, regionFilter)) return false
       if (freeOnly && !p.hasFreeTier) return false
+      if (priceSort === "free" && !p.hasFreeTier) return false
       if (!q) return true
       return (
         p.name.toLowerCase().includes(q) ||
@@ -385,7 +406,26 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
         p.models.some((m) => m.id.toLowerCase().includes(q))
       )
     })
-  }, [search, tierFilter, regionFilter, freeOnly])
+    // Price sort
+    if (priceSort === "cheapest") {
+      list = [...list].sort((a, b) => {
+        const aMin = Math.min(...a.models.filter(m => m.inputPer1M !== null && !m.deprecated).map(m => m.inputPer1M as number))
+        const bMin = Math.min(...b.models.filter(m => m.inputPer1M !== null && !m.deprecated).map(m => m.inputPer1M as number))
+        const aVal = isFinite(aMin) ? aMin : Infinity
+        const bVal = isFinite(bMin) ? bMin : Infinity
+        return aVal - bVal
+      })
+    } else if (priceSort === "expensive") {
+      list = [...list].sort((a, b) => {
+        const aMax = Math.max(...a.models.filter(m => m.inputPer1M !== null && !m.deprecated).map(m => m.inputPer1M as number))
+        const bMax = Math.max(...b.models.filter(m => m.inputPer1M !== null && !m.deprecated).map(m => m.inputPer1M as number))
+        const aVal = isFinite(aMax) ? aMax : -Infinity
+        const bVal = isFinite(bMax) ? bMax : -Infinity
+        return bVal - aVal
+      })
+    }
+    return list
+  }, [search, tierFilter, regionFilter, freeOnly, priceSort])
 
   const promoCount = ALL_PROMO_MODELS.length
   const freeCount  = PROVIDER_INFO_LIST.filter((p) => p.hasFreeTier).length
@@ -400,9 +440,19 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-foreground">Provider Catalog</h2>
-            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-              {PROVIDER_INFO_LIST.length} providers &middot; {freeCount} free tiers &middot; {promoCount} featured models
-            </p>
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              <p className="text-[10px] text-muted-foreground/60">
+                {PROVIDER_INFO_LIST.length} providers &middot; {freeCount} free tiers &middot; {promoCount} featured models
+              </p>
+              {lastRefreshed && (
+                <span className="text-[9px] text-sky-400/60 bg-sky-400/8 border border-sky-400/15 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-2 h-2" aria-hidden>
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                  </svg>
+                  Updated {lastRefreshed}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-1 bg-secondary/40 rounded-md p-0.5 border border-border/50 flex-shrink-0">
             {(["providers", "promos"] as const).map((v) => (
@@ -496,6 +546,46 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
             {expandAll ? "Collapse all" : "Expand all"}
           </button>
         </div>
+
+        {/* Price sort row */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 flex-shrink-0 pr-1">
+            Price
+          </span>
+          {([
+            { id: "none",      label: "Default" },
+            { id: "free",      label: "Free only" },
+            { id: "cheapest",  label: "Cheapest first" },
+            { id: "expensive", label: "Most expensive" },
+          ] as { id: PriceSort; label: string }[]).map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setPriceSort((v) => v === opt.id ? "none" : opt.id)}
+              className={`flex-shrink-0 px-2.5 py-0.5 rounded text-[10px] font-medium border transition-all ${
+                priceSort === opt.id
+                  ? opt.id === "free"
+                    ? "text-green-400 bg-green-400/10 border-green-400/30"
+                    : opt.id === "cheapest"
+                    ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/30"
+                    : opt.id === "expensive"
+                    ? "text-rose-400 bg-rose-400/10 border-rose-400/30"
+                    : "bg-foreground text-background border-foreground"
+                  : "text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
+              }`}
+            >
+              {opt.id === "free" && (
+                <span className="mr-1">$0</span>
+              )}
+              {opt.id === "cheapest" && (
+                <span className="mr-1">↑</span>
+              )}
+              {opt.id === "expensive" && (
+                <span className="mr-1">↓</span>
+              )}
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Content ───────────────────────────────────────────────────── */}
@@ -504,57 +594,108 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
         {/* ── Promos view ─────────────────────────────────────────── */}
         {view === "promos" && (
           <div className="flex flex-col gap-3">
-            <p className="text-[10px] text-muted-foreground/50">
-              Featured, new, or discounted models — updated {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}.
-              Click a badge to open the provider announcement.
-            </p>
+            {/* Promo sub-filter row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-[10px] text-muted-foreground/50 flex-1 min-w-0">
+                Featured, new, or discounted models — updated {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}.
+              </p>
+              <div className="flex items-center gap-1 bg-secondary/30 rounded-md p-0.5 border border-border/40 flex-shrink-0">
+                {([
+                  { id: "all",        label: `All (${ALL_PROMO_MODELS.length})` },
+                  { id: "discounted", label: `Discounts (${DISCOUNTED_MODELS.length})` },
+                ] as { id: PromoView; label: string }[]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setPromoView(opt.id)}
+                    className={`px-2.5 py-1 rounded text-[10px] font-medium transition-all ${
+                      promoView === opt.id
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Mobile: stacked cards; Tablet+: 2-col grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {ALL_PROMO_MODELS.map(({ provider, model }) => (
-                <div key={`${provider.id}:${model.id}`}
-                  className="flex items-start gap-3 px-3 py-2.5 rounded-lg border border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[11px] font-semibold text-foreground">{provider.name}</span>
-                      <HQFlag code={provider.hq} />
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${TIER_META[provider.tier].className}`}>
-                        {TIER_META[provider.tier].label}
-                      </span>
+              {(promoView === "discounted" ? DISCOUNTED_MODELS.map(d => ({ provider: d.provider, model: d.model })) : ALL_PROMO_MODELS).map(({ provider, model }) => {
+                const hasDiscount = model.promoOriginalInputPer1M !== undefined && model.inputPer1M !== null
+                const discountPct = hasDiscount ? calcDiscount(model.promoOriginalInputPer1M!, model.inputPer1M!) : 0
+                return (
+                  <div key={`${provider.id}:${model.id}`}
+                    className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
+                      hasDiscount
+                        ? "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/8"
+                        : "border-border/50 bg-secondary/10 hover:bg-secondary/20"
+                    }`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] font-semibold text-foreground">{provider.name}</span>
+                        <HQFlag code={provider.hq} />
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${TIER_META[provider.tier].className}`}>
+                          {TIER_META[provider.tier].label}
+                        </span>
+                        {hasDiscount && discountPct > 0 && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                            -{discountPct}%
+                          </span>
+                        )}
+                      </div>
+                      <code className="text-[10px] font-mono text-muted-foreground/70 mt-0.5 block truncate" title={model.id}>
+                        {model.id.split("/").pop() ?? model.id}
+                      </code>
+                      <div className="mt-1">
+                        <PromoBadge label={model.promoLabel} link={model.promoLink} />
+                      </div>
                     </div>
-                    <code className="text-[10px] font-mono text-muted-foreground/70 mt-0.5 block truncate" title={model.id}>
-                      {model.id.split("/").pop() ?? model.id}
-                    </code>
-                    <div className="mt-1">
-                      <PromoBadge label={model.promoLabel} link={model.promoLink} />
+                    <div className="flex-shrink-0 flex flex-col items-end gap-0.5 text-right min-w-[90px]">
+                      {model.inputPer1M !== null ? (
+                        <>
+                          {/* Input price row */}
+                          <div className="flex items-baseline gap-1.5">
+                            {hasDiscount && (
+                              <span className="text-[9px] font-mono text-muted-foreground/35 line-through">
+                                {formatPrice(model.promoOriginalInputPer1M!)}
+                              </span>
+                            )}
+                            <span className={`text-[11px] font-mono font-semibold ${hasDiscount ? "text-emerald-400" : "text-foreground"}`}>
+                              {formatPrice(model.inputPer1M)}
+                            </span>
+                            <span className="text-muted-foreground/40 text-[9px]">in</span>
+                          </div>
+                          {/* Output price row */}
+                          <div className="flex items-baseline gap-1.5">
+                            {hasDiscount && (
+                              <span className="text-[9px] font-mono text-muted-foreground/35 line-through">
+                                {formatPrice(model.promoOriginalOutputPer1M ?? null)}
+                              </span>
+                            )}
+                            <span className={`text-[11px] font-mono ${hasDiscount ? "text-emerald-400/80" : "text-foreground"}`}>
+                              {formatPrice(model.outputPer1M)}
+                            </span>
+                            <span className="text-muted-foreground/40 text-[9px]">out</span>
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-[11px] font-mono text-green-400 font-semibold">Free</span>
+                      )}
+                      {model.contextK && (
+                        <span className="text-[9px] font-mono text-muted-foreground/40">{model.contextK >= 1000 ? `${model.contextK / 1000}M` : `${model.contextK}K`} ctx</span>
+                      )}
+                      {model.promoLink && (
+                        <a href={model.promoLink} target="_blank" rel="noopener noreferrer"
+                          className="text-[9px] text-primary/60 hover:text-primary transition-colors flex items-center gap-0.5 mt-0.5">
+                          <ExternalLinkIcon className="w-2 h-2" />
+                          Details
+                        </a>
+                      )}
                     </div>
                   </div>
-                  <div className="flex-shrink-0 flex flex-col items-end gap-0.5 text-right">
-                    {model.inputPer1M !== null ? (
-                      <>
-                        <span className="text-[11px] font-mono text-foreground">
-                          {formatPrice(model.inputPer1M)} <span className="text-muted-foreground/40 text-[9px]">in</span>
-                        </span>
-                        <span className="text-[11px] font-mono text-foreground">
-                          {formatPrice(model.outputPer1M)} <span className="text-muted-foreground/40 text-[9px]">out</span>
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[11px] font-mono text-green-400">Free</span>
-                    )}
-                    {model.contextK && (
-                      <span className="text-[9px] font-mono text-muted-foreground/40">{model.contextK}K ctx</span>
-                    )}
-                    {model.promoLink && (
-                      <a href={model.promoLink} target="_blank" rel="noopener noreferrer"
-                        className="text-[9px] text-primary/60 hover:text-primary transition-colors flex items-center gap-0.5 mt-0.5">
-                        <ExternalLinkIcon className="w-2 h-2" />
-                        Details
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

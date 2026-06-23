@@ -11,12 +11,14 @@
 
 export interface ModelPricing {
   id: string
-  inputPer1M: number | null   // USD per 1M input tokens  (null = not listed / free)
-  outputPer1M: number | null  // USD per 1M output tokens
-  contextK: number | null     // context window in thousands of tokens
-  promo?: boolean             // launch discount / featured / free-tier
-  promoLabel?: string         // e.g. "Free", "50% off", "New"
-  promoLink?: string          // direct link to blog post, docs, or pricing for this model
+  inputPer1M: number | null         // USD per 1M input tokens  (null = not listed / free)
+  outputPer1M: number | null        // USD per 1M output tokens
+  contextK: number | null           // context window in thousands of tokens
+  promo?: boolean                   // launch discount / featured / free-tier
+  promoLabel?: string               // e.g. "Free", "50% off", "New"
+  promoLink?: string                // direct link to blog post, docs, or pricing for this model
+  promoOriginalInputPer1M?: number  // full price before promo (null means no discount — just featured)
+  promoOriginalOutputPer1M?: number // full output price before promo
   deprecated?: boolean
 }
 
@@ -46,7 +48,14 @@ function m(
   inputPer1M: number | null,
   outputPer1M: number | null,
   contextK: number | null,
-  opts?: { promo?: boolean; promoLabel?: string; promoLink?: string; deprecated?: boolean },
+  opts?: {
+    promo?: boolean
+    promoLabel?: string
+    promoLink?: string
+    promoOriginalInputPer1M?: number
+    promoOriginalOutputPer1M?: number
+    deprecated?: boolean
+  },
 ): ModelPricing {
   return { id, inputPer1M, outputPer1M, contextK, ...opts }
 }
@@ -102,7 +111,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [
       m("gpt-5.5",            5.00,  30.00, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://openai.com/index/gpt-5-5/" }),
       m("gpt-5.4",            2.50,  15.00, 1000, { promo: true, promoLabel: "Balanced",   promoLink: "https://openai.com/index/gpt-5-4/" }),
-      m("gpt-5.4-mini",       0.75,   4.50,  400, { promo: true, promoLabel: "Best value", promoLink: "https://openai.com/index/gpt-5-4-mini/" }),
+      m("gpt-5.4-mini",       0.75,   4.50,  400, { promo: true, promoLabel: "Best value", promoLink: "https://openai.com/index/gpt-5-4-mini/", promoOriginalInputPer1M: 2.50, promoOriginalOutputPer1M: 10.00 }),
       m("gpt-5",             10.00,  40.00, 1000),
       m("gpt-5-mini",         0.40,   1.60, 1000),
       m("gpt-5-nano",         0.10,   0.40, 1000),
@@ -143,9 +152,9 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("gemini-3-flash",             null,  null, 1000, { promo: true, promoLabel: "Popular",    promoLink: "https://ai.google.dev/gemini-api/docs/models/gemini#gemini-3-flash" }),
       m("gemini-3.1-flash-lite",      null,  null, 1000, { promo: true, promoLabel: "Cheapest",   promoLink: "https://ai.google.dev/pricing" }),
       // ── Gemini 2.5.x ───────────────────────────────────────────────────────
-      m("gemini-2.5-pro",             1.25, 10.00, 1000, { promo: true, promoLabel: "Best value", promoLink: "https://ai.google.dev/gemini-api/docs/models/gemini#gemini-2.5-pro" }),
+      m("gemini-2.5-pro",             1.25, 10.00, 1000, { promo: true, promoLabel: "Best value", promoLink: "https://ai.google.dev/gemini-api/docs/models/gemini#gemini-2.5-pro", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("gemini-2.5-flash",           0.30,  2.50, 1000),
-      m("gemini-2.5-flash-lite",      0.10,  0.40, 1000, { promo: true, promoLabel: "Free tier",  promoLink: "https://ai.google.dev/pricing" }),
+      m("gemini-2.5-flash-lite",      0.10,  0.40, 1000, { promo: true, promoLabel: "Free tier",  promoLink: "https://ai.google.dev/pricing", promoOriginalInputPer1M: 0.30, promoOriginalOutputPer1M: 2.50 }),
       // ── Generative media ───────────────────────────────────────────────────
       m("veo-3.1-preview",            null,  null, null,  { promo: true, promoLabel: "Video gen",  promoLink: "https://ai.google.dev/gemini-api/docs/models/gemini#veo" }),
       m("veo-3.0",                    null,  null, null),
@@ -205,8 +214,8 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      m("deepseek-v4-flash", 0.14,  0.28, 1000, { promo: true, promoLabel: "Best price", promoLink: "https://api-docs.deepseek.com/quick_start/pricing" }),
-      m("deepseek-v4-pro",   0.435, 0.87, 1000, { promo: true, promoLabel: "Reasoning",  promoLink: "https://api-docs.deepseek.com/quick_start/pricing" }),
+      m("deepseek-v4-flash", 0.14,  0.28, 1000, { promo: true, promoLabel: "Best price", promoLink: "https://api-docs.deepseek.com/quick_start/pricing", promoOriginalInputPer1M: 0.27, promoOriginalOutputPer1M: 1.10 }),
+      m("deepseek-v4-pro",   0.435, 0.87, 1000, { promo: true, promoLabel: "Reasoning",  promoLink: "https://api-docs.deepseek.com/quick_start/pricing", promoOriginalInputPer1M: 0.55, promoOriginalOutputPer1M: 2.19 }),
       // Aliases (deprecated July 2026)
       m("deepseek-chat",     0.14,  0.28,   64, { deprecated: true }),
       m("deepseek-reasoner", 0.55,  2.19,   64, { deprecated: true }),
@@ -233,7 +242,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("openai/gpt-oss-120b",                           0.15, 0.60, 131, { promo: true, promoLabel: "OpenAI OSS", promoLink: "https://console.groq.com/docs/models" }),
       m("openai/gpt-oss-20b",                            0.075,0.30, 131, { promo: true, promoLabel: "Fast OSS",   promoLink: "https://console.groq.com/docs/models" }),
       m("llama-3.3-70b-versatile",                       0.59, 0.79, 131),
-      m("llama-3.1-8b-instant",                          0.05, 0.08, 131, { promo: true, promoLabel: "Cheapest",   promoLink: "https://groq.com/pricing/" }),
+      m("llama-3.1-8b-instant",                          0.05, 0.08, 131, { promo: true, promoLabel: "Cheapest",   promoLink: "https://groq.com/pricing/", promoOriginalInputPer1M: 0.20, promoOriginalOutputPer1M: 0.20 }),
       // ── Preview ────────────────────────────────────────────────────────────
       m("meta-llama/llama-4-scout-17b-16e-instruct",     0.11, 0.34, 131, { promo: true, promoLabel: "Free tier",  promoLink: "https://groq.com/pricing/" }),
       m("qwen/qwen3-32b",                                0.29, 0.59, 131, { promo: true, promoLabel: "Reasoning",  promoLink: "https://console.groq.com/docs/models" }),
@@ -304,7 +313,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("command-a-reasoning-08-2025",     null,  null, 256, { promo: true, promoLabel: "Reasoning",  promoLink: "https://docs.cohere.com/v2/docs/models" }),
       m("command-a-translate-08-2025",     null,  null,   8, { promo: true, promoLabel: "Translate",  promoLink: "https://docs.cohere.com/v2/docs/models" }),
       m("command-r-plus-08-2024",          2.50, 10.00, 128),
-      m("command-r7b-12-2024",             0.04,  0.15, 128, { promo: true, promoLabel: "Cheapest",   promoLink: "https://cohere.com/pricing" }),
+      m("command-r7b-12-2024",             0.04,  0.15, 128, { promo: true, promoLabel: "Cheapest",   promoLink: "https://cohere.com/pricing", promoOriginalInputPer1M: 0.15, promoOriginalOutputPer1M: 0.60 }),
       // ── Aya multilingual ───────────────────────────────────────────────────
       m("c4ai-aya-expanse-32b",            null,  null, 128, { promo: true, promoLabel: "23 langs",   promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
       m("c4ai-aya-vision-32b",             null,  null,  16, { promo: true, promoLabel: "Multimodal", promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
@@ -403,7 +412,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── OpenRouter ────────────────────────────────────────────────────────────
+  // ── OpenRouter ───────────────────────────────────────────────────────���────
   openrouter: {
     id: "openrouter",
     name: "OpenRouter",
@@ -624,14 +633,14 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     lastUpdated: "2026-06-23",
     models: [
       // ── Qwen3.x ────────────────────────────────────────────────────────────
-      m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/" }),
+      m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
       m("qwen3-235b-a22b",          0.22, 0.88, 1000, { promo: true, promoLabel: "MoE 235B",   promoLink: "https://qwenlm.github.io/blog/qwen3/" }),
       m("qwen3.5-9b",               0.17, 0.25,  262, { promo: true, promoLabel: "Vision",     promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-32b",                0.14, 0.28,  131, { promo: true, promoLabel: "Popular",    promoLink: "https://qwenlm.github.io/blog/qwen3/" }),
       m("qwen3-8b",                 0.035,0.07,  131, { promo: true, promoLabel: "Cheapest" }),
-      // ── Qwen VL (Vision-Language) ──────────────────────────────────────────
+      // ── Qwen VL (Vision-Language) ────────────────────────────��─────────────
       m("qwen3-vl-32b-instruct",    null, null,  131, { promo: true, promoLabel: "Vision LLM", promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen2.5-vl-72b-instruct",  0.38, 0.40,   32),
       // ── Embedding / TTS ────────────────────────────────────────────────────
@@ -902,10 +911,10 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [
       // ── DeepSeek ───────────────────────────────────────────────────────────
       m("deepseek-ai/DeepSeek-V4-Pro",                      1.30, 2.60, 1024, { promo: true, promoLabel: "Flagship",  promoLink: "https://deepinfra.com/pricing" }),
-      m("deepseek-ai/DeepSeek-V4-Flash",                    0.10, 0.20, 1024, { promo: true, promoLabel: "Cheapest",  promoLink: "https://deepinfra.com/pricing" }),
+      m("deepseek-ai/DeepSeek-V4-Flash",                    0.10, 0.20, 1024, { promo: true, promoLabel: "Cheapest",  promoLink: "https://deepinfra.com/pricing", promoOriginalInputPer1M: 0.27, promoOriginalOutputPer1M: 1.10 }),
       m("deepseek-ai/DeepSeek-V3.2",                        0.26, 0.38,  160),
       m("deepseek-ai/DeepSeek-R1-0528",                     0.50, 2.15,  160),
-      // ── Qwen3 ─────────────────────────────────────────────────────────────
+      // ── Qwen3 ──────────────────────────────────────��──────────────────────
       m("Qwen/Qwen3.7-Max",                                 2.50, 7.50,  250, { promo: true, promoLabel: "Qwen3.7",   promoLink: "https://deepinfra.com/pricing" }),
       m("Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",        0.30, 1.00,  256, { promo: true, promoLabel: "Coder",     promoLink: "https://deepinfra.com/pricing" }),
       m("Qwen/Qwen3-235B-A22B-Instruct-2507",               0.09, 0.10,  256),
@@ -1133,10 +1142,36 @@ export const TIER_META: Record<ProviderInfo["tier"], { label: string; className:
   specialised:{ label: "Specialised",className: "text-rose-400 bg-rose-400/10 border-rose-400/20" },
 }
 
-/** Format price: "$0.27" or "Free" */
+/** Format price: "$0.270" or "Free" or "—" */
 export function formatPrice(price: number | null): string {
   if (price === null) return "—"
   if (price === 0) return "Free"
   if (price < 0.01) return `$${(price * 1000).toFixed(2)}/B`
   return `$${price.toFixed(price < 1 ? 3 : 2)}`
 }
+
+/** Calculate discount percentage from original → promo price (0–100) */
+export function calcDiscount(original: number, promo: number): number {
+  if (original <= 0) return 0
+  return Math.round(((original - promo) / original) * 100)
+}
+
+/** All models that have real promo discounts (promoOriginalInputPer1M is set) */
+export const DISCOUNTED_MODELS: Array<{ provider: ProviderInfo; model: ModelPricing; discountPct: number }> = (() => {
+  const result: Array<{ provider: ProviderInfo; model: ModelPricing; discountPct: number }> = []
+  for (const provider of PROVIDER_INFO_LIST) {
+    for (const model of provider.models) {
+      if (model.promo && !model.deprecated && model.promoOriginalInputPer1M !== undefined && model.inputPer1M !== null) {
+        result.push({
+          provider,
+          model,
+          discountPct: calcDiscount(model.promoOriginalInputPer1M, model.inputPer1M),
+        })
+      }
+    }
+  }
+  return result.sort((a, b) => b.discountPct - a.discountPct)
+})()
+
+/** ISO date string of today in YYYY-MM-DD */
+export const TODAY_DATE = new Date().toISOString().slice(0, 10)
