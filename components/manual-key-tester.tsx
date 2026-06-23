@@ -2004,8 +2004,8 @@ export default function ManualKeyTester() {
           </button>
         </div>
 
-        {/* ── Top scrollable section: onboarding + provider list ── */}
-        <div className="flex flex-col" style={{height: onboardingDismissed ? "70vh" : "55vh"}}>
+        {/* ── Scrollable sidebar body ── */}
+        <div className="flex-1 overflow-y-auto flex flex-col">
 
           {/* Onboarding banner — shown once, dismissable */}
           {!onboardingDismissed && (
@@ -2049,8 +2049,8 @@ export default function ManualKeyTester() {
             </div>
           </div>
 
-          {/* Provider list — full scrollable */}
-          <div className="flex-1 overflow-y-auto px-4 pb-2 flex flex-col gap-px">
+          {/* Provider list — fixed height scrollable box */}
+          <div className="overflow-y-auto px-4 pb-2 flex flex-col gap-px" style={{height: "320px", minHeight: "320px"}}>
             {PRESETS.map((p) => (
                 <button
                   key={p.id}
@@ -2081,12 +2081,9 @@ export default function ManualKeyTester() {
                 </button>
               ))}
           </div>
-        </div>
 
-        {/* ── Bottom fixed section: API key + endpoint + settings ── */}
-        <div className="flex flex-col gap-5 px-4 py-4 border-t border-border flex-shrink-0 overflow-y-auto max-h-[55vh]">
-
-          {/* API Key */}
+          {/* API Key + rest of sidebar settings */}
+          <div className="flex flex-col gap-5 px-4 py-4 border-t border-border mt-1">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
@@ -2492,7 +2489,8 @@ export default function ManualKeyTester() {
             Clear All History
           </button>
 
-        </div>
+          </div>{/* end gap-5 section */}
+        </div>{/* end scrollable body */}
       </aside>
 
       {/* ── RIGHT: Tabbed panel ────────────────────────────────────────────── */}
