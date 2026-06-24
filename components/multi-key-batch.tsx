@@ -61,8 +61,12 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "ibm",         label: "IBM Granite (WatsonX)", country: "US", flag: "🇺🇸", example: "ibm:YOUR_KEY",            keyHint: "IAM token" },
   { id: "deepinfra",   label: "Deep Infra",            country: "US", flag: "🇺🇸", example: "deepinfra:YOUR_KEY",      keyHint: "API key" },
   { id: "anyscale",    label: "Anyscale",              country: "US", flag: "🇺🇸", example: "anyscale:esecret_...",    keyHint: "esecret_...", autoDetect: true },
-  { id: "neets",       label: "Neets AI",              country: "US", flag: "🇺🇸", example: "neets:YOUR_KEY",          keyHint: "API key" },
-  { id: "lamini",      label: "Lamini AI",             country: "US", flag: "🇺🇸", example: "lamini:YOUR_KEY",         keyHint: "API key" },
+  { id: "neets",        label: "Neets AI",               country: "US", flag: "🇺🇸", example: "neets:YOUR_KEY",          keyHint: "API key" },
+  { id: "lamini",       label: "Lamini AI",              country: "US", flag: "🇺🇸", example: "lamini:YOUR_KEY",         keyHint: "API key" },
+  { id: "siliconflow",  label: "SiliconFlow",            country: "CN", flag: "🇨🇳", example: "siliconflow:YOUR_KEY",    keyHint: "API key" },
+  { id: "nebius",       label: "Nebius AI",              country: "EU", flag: "🇪🇺", example: "nebius:YOUR_KEY",         keyHint: "API key" },
+  { id: "featherless",  label: "Featherless AI",         country: "US", flag: "🇺🇸", example: "featherless:YOUR_KEY",    keyHint: "API key" },
+  { id: "friendli",     label: "Friendli AI",            country: "KR", flag: "🇰🇷", example: "friendli:YOUR_KEY",       keyHint: "API key" },
 ]
 
 const KNOWN_PROVIDERS = PROVIDER_FORMATS.map((p) => p.id)

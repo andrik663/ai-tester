@@ -1042,6 +1042,66 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     }),
     extractReply: openaiReply,
   },
+
+  // ── SiliconFlow ───────────────────────────────────────────────────────────
+  siliconflow: {
+    id: "siliconflow",
+    modelsEndpoint: "https://api.siliconflow.cn/v1/models",
+    models: [
+      "deepseek-ai/DeepSeek-V3",
+      "deepseek-ai/DeepSeek-R1",
+      "Qwen/Qwen3-235B-A22B",
+      "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    ],
+    endpoint: "https://api.siliconflow.cn/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Nebius AI (ex-Yandex) ─────────────────────────────────────────────────
+  nebius: {
+    id: "nebius",
+    modelsEndpoint: "https://api.studio.nebius.com/v1/models",
+    models: ["meta-llama/Llama-3.3-70B-Instruct", "deepseek-ai/DeepSeek-R1", "Qwen/Qwen3-235B-A22B-Instruct"],
+    endpoint: "https://api.studio.nebius.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Featherless AI ────────────────────────────────────────────────────────
+  featherless: {
+    id: "featherless",
+    modelsEndpoint: "https://api.featherless.ai/v1/models",
+    models: ["meta-llama/Llama-3.3-70B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3"],
+    endpoint: "https://api.featherless.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Friendli AI ───────────────────────────────────────────────────────────
+  friendli: {
+    id: "friendli",
+    models: ["meta-llama-3-70b-instruct", "mistral-7b-instruct-v0-3"],
+    endpoint: "https://inference.friendli.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
 }
 
 // ── PROVIDER_MODELS — derived from PROVIDER_CONFIGS (single source) ───────────
