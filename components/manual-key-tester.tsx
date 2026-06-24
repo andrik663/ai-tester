@@ -317,7 +317,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://llama.developer.meta.com/",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
-  // ── Meta / Llama providers via 3rd-party ────��─────────────────────────────
+  // ── Meta / Llama providers via 3rd-party ────���─────────────────────────────
   // ── Meta / Llama providers ─────────────────────────────────────────────��──
   {
     id: "cerebras",
@@ -1438,108 +1438,132 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Provider logos (theSVG.org CDN) ──────────────���─────────────────────────��──
-// Using jsDelivr mirror for performance. Variants: light = white for dark BG, default fallback.
-const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
+// ── Provider logos — OpenRouter official CDN ─────────────────────────────────
+// Pattern: https://openrouter.ai/meta/{or-slug}.png
+// Maps our internal provider IDs → OpenRouter slugs where they differ.
+const OR_CDN = "https://openrouter.ai/meta"
 
-const PROVIDER_LOGOS: Record<string, string> = {
-  dahono:      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%238B5CF6' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ED%3C/text%3E%3C/svg%3E",
-  anthropic:   `${BASE}/anthropic/color.svg`,
-  openai:      `${BASE}/openai/dark.svg`,
-  google:      `${BASE}/google/default.svg`,
-  xai:         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23000000' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='50' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E",
-  deepseek:    `${BASE}/deepseek/default.svg`,
-  qwen:        `${BASE}/alibaba-cloud/default.svg`,
-  zhipu:       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231890FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EZ%3C/text%3E%3C/svg%3E",
-  minimax:     `${BASE}/minimax/default.svg`,
-  cerebras:    `${BASE}/cerebras/default.svg`,
-  fireworks:   `${BASE}/fireworks-ai/default.svg`,
-  novita:      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2333A9FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EN%3C/text%3E%3C/svg%3E",
-  cloudflare:  `${BASE}/cloudflare/default.svg`,
-  openrouter:  `${BASE}/openrouter/default.svg`,
-  sambanova:   `${BASE}/sambanova/default.svg`,
-  nvidia:      `${BASE}/nvidia/default.svg`,
-  hyperbolic:  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FF00FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EH%3C/text%3E%3C/svg%3E",
-  ai21:        `${BASE}/ai21-labs/default.svg`,
-  groq:        `${BASE}/groq/default.svg`,
-  together:    `${BASE}/together-ai/default.svg`,
-  mistral:     `${BASE}/mistral-ai/default.svg`,
-  cohere:      `${BASE}/cohere/default.svg`,
-  perplexity:  `${BASE}/perplexity/default.svg`,
-  huggingface: `${BASE}/hugging-face/default.svg`,
-  replicate:   `${BASE}/replicate/default.svg`,
-  moonshot:    `${BASE}/moonshot-ai/default.svg`,
-  baidu:       `${BASE}/baidu/default.svg`,
-  yi:          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23008B8B' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EY%3C/text%3E%3C/svg%3E",
-  stepfun:     `${BASE}/stepfun/default.svg`,
-  hunyuan:     `${BASE}/tencent/default.svg`,
-  azure:       `${BASE}/microsoft-azure/default.svg`,
-  upstage:     `${BASE}/upstage/default.svg`,
-  writer:      `${BASE}/writer/default.svg`,
-  lepton:      `${BASE}/lepton-ai/default.svg`,
-  bfl:         `${BASE}/black-forest-labs/default.svg`,
-  bytedance:   `${BASE}/bytedance/default.svg`,
-  recraft:     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FF6B35' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ER%3C/text%3E%3C/svg%3E",
-  ideogram:    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23000000' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EIG%3C/text%3E%3C/svg%3E",
-  luma:        `${BASE}/luma-ai/default.svg`,
-  amazon:      `${BASE}/amazon-web-services/default.svg`,
-  inception:   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%238B00FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EIN%3C/text%3E%3C/svg%3E",
-  ibm:         `${BASE}/ibm/default.svg`,
-  deepinfra:   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23222222' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EDI%3C/text%3E%3C/svg%3E",
-  anyscale:    `${BASE}/anyscale/default.svg`,
-  meta:        `${BASE}/meta/default.svg`,
-  lamini:      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2300D9FF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EL%3C/text%3E%3C/svg%3E",
-  neets:       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FF006E' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EN%3C/text%3E%3C/svg%3E",
-  // OpenRouter providers (June 2026)
-  "aion-labs":       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23CA8A04' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EAI%3C/text%3E%3C/svg%3E",
-  "allenai":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%237C3AED' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EAI2%3C/text%3E%3C/svg%3E",
-  "arcee-ai":        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231D4ED8' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EAR%3C/text%3E%3C/svg%3E",
+// Map our provider id → OpenRouter slug (only needed when they differ)
+const OR_SLUG: Record<string, string> = {
+  // Direct API providers mapped to their OR equivalent
+  google:       "google-ai-studio",
+  qwen:         "alibaba",
+  zhipu:        "z-ai",
+  hunyuan:      "moonshotai",   // Tencent → closest OR equivalent
+  moonshot:     "moonshotai",
+  azure:        "azure",
+  bfl:          "black-forest-labs",
+  amazon:       "amazon-bedrock",
+  novita:       "novita",
+  openrouter:   "openrouter",
+  fireworks:    "fireworks",
+  together:     "together",
+  huggingface:  "huggingface",
+  deepinfra:    "deepinfra",
+  sambanova:    "sambanova",
+  nvidia:       "nvidia",
+  ai21:         "ai21",
+  groq:         "groq",
+  mistral:      "mistral",
+  cohere:       "cohere",
+  perplexity:   "perplexity",
+  baidu:        "baidu",
+  stepfun:      "stepfun",
+  upstage:      "upstage",
+  cerebras:     "cerebras",
+  cloudflare:   "cloudflare",
+  inception:    "inception",
+  ibm:          "ibm",
+  meta:         "meta-llama",
+  replicate:    "replicate",
+  lepton:       "lepton",
+  bytedance:    "bytedance-seed",
+  anyscale:     "anyscale",
+  recraft:      "recraft",
+  luma:         "luma",
+  writer:       "writer",
+  hyperbolic:   "hyperbolic",
+  // OR-prefixed providers already use the correct slug
+  "aion-labs":        "aion-labs",
+  "allenai":          "allenai",
+  "arcee-ai":         "arcee-ai",
+  "cognitivecomputations": "cognitivecomputations",
+  "deepcogito":       "deepcogito",
+  "gryphe":           "gryphe",
+  "inclusionai":      "inclusionai",
+  "inflection":       "inflection",
+  "kwaipilot":        "kwaipilot",
+  "liquid":           "liquid",
+  "mancer":           "mancer",
+  "microsoft":        "microsoft",
+  "morph":            "morph",
+  "nex-agi":          "nex-agi",
+  "nousresearch":     "nousresearch",
+  "perceptron":       "perceptron",
+  "poolside":         "poolside",
+  "rekaai":           "reka",
+  "relace":           "relace",
+  "sao10k":           "sao10k",
+  "switchpoint":      "switchpoint",
+  "thedrummer":       "thedrummer",
+  "undi95":           "undi95",
+  "xiaomi":           "xiaomi",
+}
 
-  "cognitivecomputations": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230891B2' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ECC%3C/text%3E%3C/svg%3E",
-  "deepcogito":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230F766E' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EDC%3C/text%3E%3C/svg%3E",
-  "gryphe":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23B91C1C' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EGR%3C/text%3E%3C/svg%3E",
+/** Returns the OpenRouter CDN logo URL for a provider ID */
+function getProviderLogoUrl(providerId: string): string {
+  const slug = OR_SLUG[providerId] ?? providerId
+  return `${OR_CDN}/${slug}.png`
+}
 
-  "inclusionai":     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23EA580C' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EIA%3C/text%3E%3C/svg%3E",
-  "inflection":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%236D28D9' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EPi%3C/text%3E%3C/svg%3E",
-  "kwaipilot":       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23DC2626' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EKP%3C/text%3E%3C/svg%3E",
-  "liquid":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230284C7' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ELQ%3C/text%3E%3C/svg%3E",
-  "mancer":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23BE185D' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EMN%3C/text%3E%3C/svg%3E",
-
-  "microsoft":       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230078D4' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EPhi%3C/text%3E%3C/svg%3E",
-
-  "morph":           "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%237C3AED' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EMO%3C/text%3E%3C/svg%3E",
-  "nex-agi":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23059669' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ENX%3C/text%3E%3C/svg%3E",
-  "nousresearch":    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%234338CA' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ENR%3C/text%3E%3C/svg%3E",
-  "perceptron":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23E11D48' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EPC%3C/text%3E%3C/svg%3E",
-  "poolside":        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230E7490' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EPS%3C/text%3E%3C/svg%3E",
-  "rekaai":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%237C3AED' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ERK%3C/text%3E%3C/svg%3E",
-  "relace":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23A21CAF' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ERL%3C/text%3E%3C/svg%3E",
-  "sao10k":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230369A1' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ES10%3C/text%3E%3C/svg%3E",
-  "switchpoint":     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2365A30D' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ESP%3C/text%3E%3C/svg%3E",
-
-  "thedrummer":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23B45309' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ETD%3C/text%3E%3C/svg%3E",
-  "undi95":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230D9488' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EU95%3C/text%3E%3C/svg%3E",
-
-  "xiaomi":          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23EA580C' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='64' font-size='34' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EMi%3C/text%3E%3C/svg%3E",
-
-  "~anthropic":      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23333333' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='%23CCCCCC' font-family='Arial'%3E~A%3C/text%3E%3C/svg%3E",
-  "~google":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23333333' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='%23CCCCCC' font-family='Arial'%3E~G%3C/text%3E%3C/svg%3E",
-  "~moonshotai":     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23333333' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='38' font-weight='bold' text-anchor='middle' fill='%23CCCCCC' font-family='Arial'%3E~M%3C/text%3E%3C/svg%3E",
-  "~openai":         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23333333' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='60' font-size='40' font-weight='bold' text-anchor='middle' fill='%23CCCCCC' font-family='Arial'%3E~O%3C/text%3E%3C/svg%3E",
+/** Deterministic color from provider name for initials fallback */
+function providerColor(name: string): string {
+  const colors = [
+    "#6366f1","#8b5cf6","#ec4899","#f43f5e","#f97316",
+    "#eab308","#22c55e","#14b8a6","#0ea5e9","#3b82f6",
+  ]
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff
+  return colors[Math.abs(h) % colors.length]
 }
 
 
-function ProviderLogo({ providerId, className = "w-4 h-4" }: { providerId: string; className?: string }) {
-  const src = PROVIDER_LOGOS[providerId]
-  if (!src) return null
+function ProviderLogo({
+  providerId,
+  providerName = "",
+  className = "w-4 h-4",
+}: {
+  providerId: string
+  providerName?: string
+  className?: string
+}) {
+  const [failed, setFailed] = useState(false)
+  const logoUrl = getProviderLogoUrl(providerId)
+  // Skip dahono (custom logo) — show initials badge
+  const isDahono = providerId === "dahono"
+  const initials = (providerName || providerId).replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?"
+  const bg = isDahono ? "#8b5cf6" : providerColor(providerName || providerId)
+
+  if (isDahono || failed) {
+    return (
+      <span
+        aria-hidden
+        className={`${className} flex-shrink-0 rounded-lg flex items-center justify-center text-white font-bold leading-none`}
+        style={{ background: bg, fontSize: "40%", letterSpacing: "-0.02em" }}
+      >
+        {initials}
+      </span>
+    )
+  }
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={logoUrl}
       alt=""
       aria-hidden
-      className={`${className} object-contain flex-shrink-0`}
-      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
+      className={`${className} object-contain flex-shrink-0 rounded-lg`}
+      onError={() => setFailed(true)}
     />
   )
 }
@@ -2368,13 +2392,7 @@ export default function ManualKeyTester() {
                   <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors ${
                     selectedPreset.id === p.id ? "opacity-100" : "opacity-60 group-hover:opacity-90"
                   }`}>
-                    {PROVIDER_LOGOS[p.id] ? (
-                      <ProviderLogo providerId={p.id} className="w-4 h-4" />
-                    ) : (
-                      <span className={`w-1.5 h-1.5 rounded-full border transition-colors ${
-                        selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
-                      }`} />
-                    )}
+                    <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
                   </span>
                   <span className="flex-1 min-w-0 truncate">{p.name}</span>
                   {p.country && (
@@ -2818,7 +2836,7 @@ export default function ManualKeyTester() {
 
             {/* Provider badge */}
             <span className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate min-w-0 flex-1">
-              <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
+              <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
               <span className="truncate hidden sm:block">{selectedPreset.name}</span>
               {selectedPreset.country && (
                 <span className="text-[11px] font-mono text-muted-foreground/70 uppercase hidden sm:block">{selectedPreset.country}</span>
@@ -2978,13 +2996,7 @@ export default function ManualKeyTester() {
             {/* Provider Header Bar */}
             <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
               <div className="flex items-center gap-2.5 min-w-0">
-                {PROVIDER_LOGOS[selectedPreset.id] ? (
-                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                  </svg>
-                )}
+                <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                 <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
               </div>
               
@@ -3013,14 +3025,7 @@ export default function ManualKeyTester() {
                   {/* Provider icon + name */}
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_28px_oklch(0.76_0.17_192_/_0.15)]">
-                      {PROVIDER_LOGOS[selectedPreset.id] ? (
-                        <ProviderLogo providerId={selectedPreset.id} className="w-8 h-8" />
-                      ) : (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-primary">
-                          <circle cx="7" cy="12" r="4" />
-                          <path d="M11 12h9M17 10v4" />
-                        </svg>
-                      )}
+                      <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-8 h-8" />
                     </div>
                     <div>
                       <p className="text-lg font-semibold text-foreground text-balance">{selectedPreset.name}</p>
@@ -3101,7 +3106,7 @@ export default function ManualKeyTester() {
               {loading && (
                 <div className="flex items-start gap-2">
                   <div className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${selectedPreset.color}`}>
-                    <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4" />
+                    <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4" />
                   </div>
                   <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-2">
                     <SpinnerIcon />
@@ -3297,13 +3302,7 @@ export default function ManualKeyTester() {
             {/* Provider Header Bar */}
             <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
               <div className="flex items-center gap-2.5 min-w-0">
-                {PROVIDER_LOGOS[selectedPreset.id] ? (
-                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                  </svg>
-                )}
+                <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                 <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
               </div>
               
@@ -3612,13 +3611,7 @@ export default function ManualKeyTester() {
               {/* Provider Header Bar */}
             <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
               <div className="flex items-center gap-2.5 min-w-0">
-                {PROVIDER_LOGOS[selectedPreset.id] ? (
-                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                  </svg>
-                )}
+                <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                 <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
               </div>
               
@@ -3651,7 +3644,7 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
+        {/* ── VIDEO GEN TAB ─────────────────────────────────────────────��──── */}
         {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
           const { models: videoModels } = getVideoCapabilities(selectedPreset.id)
           const isVideoSupported = videoModels.length > 0
@@ -3669,13 +3662,7 @@ export default function ManualKeyTester() {
               {/* Provider Header Bar */}
               <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {PROVIDER_LOGOS[selectedPreset.id] ? (
-                    <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                      <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                    </svg>
-                  )}
+                  <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                   <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
                 </div>
                 
@@ -3754,9 +3741,7 @@ export default function ManualKeyTester() {
                       {/* Column header */}
                       <div className="px-3 pt-3 pb-2 border-b border-border/50 flex flex-col gap-2 bg-secondary/20">
                         <div className="flex items-center gap-2">
-                          {preset && PROVIDER_LOGOS[preset.id] && (
-                            <ProviderLogo providerId={preset.id} className="w-4 h-4 flex-shrink-0" />
-                          )}
+                          {preset && <ProviderLogo providerId={preset.id} providerName={preset.name} className="w-4 h-4 flex-shrink-0" />}
                           <select
                             value={slot.providerId}
                             onChange={(e) => {
@@ -4020,7 +4005,7 @@ export default function ManualKeyTester() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
                       {detectedPreset && (
-                        <ProviderLogo providerId={detectedPreset.id} className="w-6 h-6 flex-shrink-0" />
+                        <ProviderLogo providerId={detectedPreset.id} providerName={detectedPreset.name} className="w-6 h-6 flex-shrink-0" />
                       )}
                       <span className="text-sm font-semibold text-foreground truncate tracking-tight">
                         {liveResult.providerName ?? "Unknown Provider"}
@@ -4106,7 +4091,7 @@ export default function ManualKeyTester() {
                                   </td>
                                   <td className="px-3 py-2.5">
                                     <div className="flex items-center gap-2">
-                                      <ProviderLogo providerId={p.providerId} className="w-4 h-4 flex-shrink-0 opacity-80" />
+                                      <ProviderLogo providerId={p.providerId} providerName={p.providerName} className="w-4 h-4 flex-shrink-0 opacity-80" />
                                       <span className="text-foreground font-medium truncate max-w-[130px]">{p.providerName}</span>
                                     </div>
                                   </td>
@@ -4145,7 +4130,7 @@ export default function ManualKeyTester() {
                               <tr key={i} className="border-b border-border/40 last:border-0 hover:bg-secondary/30 transition-colors">
                                 <td className="px-3 py-2.5">
                                   <div className="flex items-center gap-2">
-                                    <ProviderLogo providerId={p.providerId} className="w-4 h-4 flex-shrink-0 opacity-70" />
+                                    <ProviderLogo providerId={p.providerId} providerName={p.providerName} className="w-4 h-4 flex-shrink-0 opacity-70" />
                                     <span className="text-foreground font-medium truncate max-w-[130px]">{p.providerName}</span>
                                   </div>
                                 </td>

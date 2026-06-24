@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ────────────────────────────────────────────────────────────
+      // ── Qwen3.x ────────────────────────────��───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -1104,6 +1104,464 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("gpt-4.1-mini", 0.40,  1.60, 1000, { promo: true, promoLabel: "Best value",promoLink: "https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new" }),
       m("gpt-4o",       2.50, 10.00,  128),
       m("gpt-4o-mini",  0.15,  0.60,  128),
+    ],
+  },
+
+  // ── New providers added 2026-06-24 (from OpenRouter catalog) ─────────────────
+
+  // ── Arcee AI ──────────────────────────────────────────────────────────────────
+  "arcee-ai": {
+    id: "arcee-ai", name: "Arcee AI",
+    website: "https://arcee.ai", pricingUrl: "https://arcee.ai/pricing",
+    docsUrl: "https://docs.arcee.ai",
+    description: "Specialised in small, efficient models via Mixture-of-Experts. Focuses on enterprise fine-tuning and on-device deployment.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("arcee-blaze", null, null, 128, { promo: true, promoLabel: "MoE" }), m("arcee-lite", null, null, 32) ],
+  },
+
+  // ── AionLabs ─────────────────────────────────────────────────────────────────
+  "aion-labs": {
+    id: "aion-labs", name: "AionLabs",
+    website: "https://aionlabs.net", pricingUrl: "https://aionlabs.net",
+    description: "Israeli AI lab. Aion-1 series models for reasoning and instruction following.",
+    hq: "IL", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("aion-1", null, null, 128, { promo: true, promoLabel: "Flagship" }), m("aion-1-mini", null, null, 32) ],
+  },
+
+  // ── AkashML ───────────────────────────────────────────────────────────────────
+  akashml: {
+    id: "akashml", name: "AkashML",
+    website: "https://akash.network", pricingUrl: "https://console.akash.network",
+    docsUrl: "https://docs.akash.network",
+    description: "Decentralised cloud GPU marketplace. Runs open-source models on permissionless compute.",
+    hq: "US", tier: "budget", hasFreeTier: true, liveModels: true, lastUpdated: "2026-06-24",
+    models: [ m("meta-llama/llama-3.3-70b-instruct", 0.10, 0.20, 128, { promo: true, promoLabel: "Decentralised" }) ],
+  },
+
+  // ── Amazon Bedrock ────────────────────────────────────────────────────────────
+  "amazon-bedrock": {
+    id: "amazon-bedrock", name: "Amazon Bedrock",
+    website: "https://aws.amazon.com/bedrock", pricingUrl: "https://aws.amazon.com/bedrock/pricing",
+    docsUrl: "https://docs.aws.amazon.com/bedrock",
+    statusUrl: "https://health.aws.amazon.com/health/status",
+    description: "AWS managed service hosting 30+ foundation models including Claude, Llama, Titan, Mistral, and Stable Diffusion.",
+    hq: "US", tier: "gateway", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("anthropic.claude-opus-4-5-20251101-v1:0", null, null, 200, { promo: true, promoLabel: "Claude" }),
+      m("meta.llama4-scout-17b-16e-instruct-v1:0", null, null, 512, { promo: true, promoLabel: "Llama 4" }),
+      m("amazon.titan-text-express-v1", null, null, 8),
+    ],
+  },
+
+  // ── AtlasCloud ────────────────────────────────────────────────────────────────
+  "atlas-cloud": {
+    id: "atlas-cloud", name: "AtlasCloud",
+    website: "https://atlascloud.ai", pricingUrl: "https://atlascloud.ai/pricing",
+    description: "GPU cloud for AI inference. Serves open-source models with competitive pricing.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b", 0.09, 0.18, 128, { promo: true, promoLabel: "Fast" }) ],
+  },
+
+  // ── BaseTen ───────────────────────────────────────────────────────────────────
+  baseten: {
+    id: "baseten", name: "BaseTen",
+    website: "https://baseten.co", pricingUrl: "https://baseten.co/pricing",
+    docsUrl: "https://docs.baseten.co",
+    description: "ML deployment platform for custom model serving. Deploy and scale any Hugging Face model instantly.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3-70b-instruct", null, null, 8, { promo: true, promoLabel: "Custom deploy" }) ],
+  },
+
+  // ── Black Forest Labs ─────────────────────────────────────────────────────────
+  "black-forest-labs": {
+    id: "black-forest-labs", name: "Black Forest Labs",
+    website: "https://blackforestlabs.ai", pricingUrl: "https://docs.bfl.ml/pricing",
+    docsUrl: "https://docs.bfl.ml",
+    description: "Creators of FLUX image generation models. FLUX.1 Pro/Dev/Schnell lead image-gen benchmarks.",
+    hq: "DE", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("flux-1.1-pro-ultra", null, null, null, { promo: true, promoLabel: "Ultra" }),
+      m("flux-1.1-pro",       null, null, null, { promo: true, promoLabel: "Pro" }),
+      m("flux-1-dev",         null, null, null),
+      m("flux-1-schnell",     null, null, null, { promo: true, promoLabel: "Fastest" }),
+    ],
+  },
+
+  // ── Cerebras ─────────────────────────────────────────────────────────────────
+  // Already exists — overriding with extended info if missing
+  // ── Chutes ───────────────────────────────────────────────────────────────────
+  chutes: {
+    id: "chutes", name: "Chutes",
+    website: "https://chutes.ai", pricingUrl: "https://chutes.ai/pricing",
+    description: "Decentralised AI inference marketplace on bittensor subnet. Run open-source models competitively.",
+    hq: "US", tier: "budget", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("deepseek-v3", 0.14, 0.28, 128, { promo: true, promoLabel: "Low cost" }) ],
+  },
+
+  // ── Clarifai ─────────────────────────────────────────────────────────────────
+  clarifai: {
+    id: "clarifai", name: "Clarifai",
+    website: "https://clarifai.com", pricingUrl: "https://clarifai.com/pricing",
+    docsUrl: "https://docs.clarifai.com",
+    description: "AI platform for computer vision, NLP, and audio. 80+ hosted models including Llama, GPT, Claude.",
+    hq: "US", tier: "gateway", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "Free tier" }) ],
+  },
+
+  // ── Crusoe ────────────────────────────────────────────────────────────────────
+  crusoe: {
+    id: "crusoe", name: "Crusoe",
+    website: "https://crusoe.ai", pricingUrl: "https://crusoe.ai/cloud/pricing",
+    docsUrl: "https://docs.crusoe.ai",
+    description: "Carbon-neutral GPU cloud. Runs sustainable AI workloads on stranded energy.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.1-405b-instruct", null, null, 128, { promo: true, promoLabel: "Eco" }) ],
+  },
+
+  // ── DeepInfra ─────────────────────────────────────────────────────────────────
+  // Already exists
+
+  // ── DigitalOcean ──────────────────────────────────────────────────────────────
+  digitalocean: {
+    id: "digitalocean", name: "DigitalOcean",
+    website: "https://www.digitalocean.com/products/ai-ml", pricingUrl: "https://www.digitalocean.com/pricing/ai-ml",
+    docsUrl: "https://docs.digitalocean.com/products/ai-ml",
+    description: "Developer cloud with GenAI models on managed GPU droplets. Llama, Mistral, and more.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("llama3-8b-instruct", null, null, 8),
+      m("llama3-70b-instruct", null, null, 8, { promo: true, promoLabel: "Popular" }),
+    ],
+  },
+
+  // ── Featherless ───────────────────────────────────────────────────────────────
+  featherless: {
+    id: "featherless", name: "Featherless",
+    website: "https://featherless.ai", pricingUrl: "https://featherless.ai/pricing",
+    description: "Serverless fine-tuned model hosting. Deploy any HuggingFace model as an API instantly.",
+    hq: "US", tier: "specialised", hasFreeTier: true, liveModels: true, lastUpdated: "2026-06-24",
+    models: [ m("qwen2.5-72b-instruct", null, null, 128, { promo: true, promoLabel: "Serverless" }) ],
+  },
+
+  // ── Fireworks AI ─────────────────────────────────────────────────────────────
+  // Already exists
+
+  // ── Friendli ─────────────────────────────────────────────────────────────────
+  friendli: {
+    id: "friendli", name: "Friendli",
+    website: "https://friendli.ai", pricingUrl: "https://friendli.ai/pricing",
+    docsUrl: "https://docs.friendli.ai",
+    description: "Korean AI serving platform. Llama, DeepSeek, Qwen with GPU-optimised inference at scale.",
+    hq: "KR", tier: "mid", hasFreeTier: false, liveModels: true, lastUpdated: "2026-06-24",
+    models: [
+      m("meta-llama-3.3-70b-instruct", 0.15, 0.30, 128, { promo: true, promoLabel: "Fast" }),
+      m("deepseek-v3", 0.14, 0.28, 128),
+    ],
+  },
+
+  // ── GMICloud ─────────────────────────────────────────────────────────────────
+  gmicloud: {
+    id: "gmicloud", name: "GMICloud",
+    website: "https://gmicloud.ai", pricingUrl: "https://gmicloud.ai/pricing",
+    description: "GPU marketplace for AI inference. On-demand and spot GPU clusters.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b", 0.09, 0.18, 128, { promo: true, promoLabel: "Spot" }) ],
+  },
+
+  // ── Google AI Studio ─────────────────────────────────────────────────────────
+  "google-ai-studio": {
+    id: "google-ai-studio", name: "Google AI Studio",
+    website: "https://aistudio.google.com", pricingUrl: "https://ai.google.dev/pricing",
+    docsUrl: "https://ai.google.dev/gemini-api/docs",
+    description: "Free Gemini API access via AI Studio. 2M context. Free tier available with rate limits.",
+    hq: "US", tier: "gateway", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("gemini-3-flash", null, null, 1000, { promo: true, promoLabel: "Free" }),
+      m("gemini-2.5-flash", null, null, 1000, { promo: true, promoLabel: "Free tier" }),
+    ],
+  },
+
+  // ── Google Vertex ─────────────────────────────────────────────────────────────
+  "google-vertex": {
+    id: "google-vertex", name: "Google Vertex AI",
+    website: "https://cloud.google.com/vertex-ai", pricingUrl: "https://cloud.google.com/vertex-ai/pricing",
+    docsUrl: "https://cloud.google.com/vertex-ai/docs",
+    description: "Enterprise Gemini and PaLM via Google Cloud. IAM-secured, private, and enterprise-ready.",
+    hq: "US", tier: "gateway", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("gemini-3-flash", 0.30, 2.50, 1000, { promo: true, promoLabel: "Enterprise" }),
+      m("gemini-2.5-pro", 1.25, 10.00, 1000),
+    ],
+  },
+
+  // ── Inception ─────────────────────────────────────────────────────────────────
+  // Already exists
+
+  // ── Inceptron ─────────────────────────────────────────────────────────────────
+  inceptron: {
+    id: "inceptron", name: "Inceptron",
+    website: "https://inceptron.se", pricingUrl: "https://inceptron.se/pricing",
+    description: "Swedish AI inference provider. European data residency for GDPR-compliant AI.",
+    hq: "SE", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "EU" }) ],
+  },
+
+  // ── Infermatic ────────────────────────────────────────────────────────────────
+  infermatic: {
+    id: "infermatic", name: "Infermatic",
+    website: "https://infermatic.ai", pricingUrl: "https://infermatic.ai/pricing",
+    description: "High-performance serverless AI inference. 1000+ tok/s on popular open-source models.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b-instruct", 0.07, 0.14, 128, { promo: true, promoLabel: "Ultra-fast" }) ],
+  },
+
+  // ── Inflection ───────────────────────────────────────────────────────────────
+  inflection: {
+    id: "inflection", name: "Inflection AI",
+    website: "https://inflection.ai", pricingUrl: "https://developers.inflection.ai",
+    docsUrl: "https://developers.inflection.ai",
+    description: "Maker of Pi personal AI. Inflection-3.5 with empathetic conversational capabilities.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("inflection-3.5", null, null, 128, { promo: true, promoLabel: "Flagship" }),
+      m("inflection-3-pi", null, null, 32),
+    ],
+  },
+
+  // ── io.net ────────────────────────────────────────────────────────────────────
+  "io-net": {
+    id: "io-net", name: "io.net",
+    website: "https://io.net", pricingUrl: "https://io.net/pricing",
+    docsUrl: "https://docs.io.net",
+    description: "Decentralised GPU cloud. Cost-effective inference powered by distributed idle GPUs.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.1-70b-instruct", 0.06, 0.12, 128, { promo: true, promoLabel: "DePIN" }) ],
+  },
+
+  // ── Liquid ────────────────────────────────────────────────────────────────────
+  liquid: {
+    id: "liquid", name: "Liquid AI",
+    website: "https://liquid.ai", pricingUrl: "https://liquid.ai/api",
+    docsUrl: "https://docs.liquid.ai",
+    description: "Liquid Foundation Models (LFM). Novel liquid neural networks for edge and cloud deployment.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("lfm-7b",  null, null, 32, { promo: true, promoLabel: "Novel arch" }),
+      m("lfm-40b", null, null, 128, { promo: true, promoLabel: "Flagship" }),
+    ],
+  },
+
+  // ── Mancer ────────────────────────────────────────────────────────────────────
+  mancer: {
+    id: "mancer", name: "Mancer",
+    website: "https://mancer.tech", pricingUrl: "https://mancer.tech/pricing",
+    description: "Uncensored AI inference provider. Hosts permissive open-source models with no content filters.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("weaver-alpha", null, null, 8, { promo: true, promoLabel: "Permissive" }) ],
+  },
+
+  // ── Moonshot AI ───────────────────────────────────────────────────────────────
+  moonshotai: {
+    id: "moonshotai", name: "Moonshot AI",
+    website: "https://moonshot.ai", pricingUrl: "https://platform.moonshot.ai/pricing",
+    docsUrl: "https://platform.moonshot.ai/docs",
+    description: "Chinese AI lab, makers of Kimi. Kimi K2 and K1.5 with 1M context and coding focus.",
+    hq: "CN", tier: "mid", hasFreeTier: false, liveModels: true, lastUpdated: "2026-06-24",
+    models: [
+      m("kimi-k2.7-code", null, null, 128, { promo: true, promoLabel: "Coding" }),
+      m("kimi-k2.6",      null, null, 1000, { promo: true, promoLabel: "1M ctx" }),
+      m("moonshot-v1-128k", null, null, 128),
+    ],
+  },
+
+  // ── Morph ─────────────────────────────────────────────────────────────────────
+  morph: {
+    id: "morph", name: "Morph",
+    website: "https://morphllm.com", pricingUrl: "https://morphllm.com/pricing",
+    docsUrl: "https://docs.morphllm.com",
+    description: "Specialises in fast code editing and diff-application models for developer tools.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("morph-v3", null, null, 32, { promo: true, promoLabel: "Code edit" }) ],
+  },
+
+  // ── Nebius ────────────────────────────────────────────────────────────────────
+  nebius: {
+    id: "nebius", name: "Nebius",
+    website: "https://nebius.com", pricingUrl: "https://nebius.com/prices",
+    docsUrl: "https://docs.nebius.com",
+    description: "Yandex spinout. European GPU cloud with open-source model hosting and fine-tuning.",
+    hq: "NL", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("meta-llama/llama-3.3-70b-instruct", 0.13, 0.40, 128, { promo: true, promoLabel: "EU" }),
+      m("deepseek-v3", 0.14, 0.28, 128),
+    ],
+  },
+
+  // ── Nex AGI ───────────────────────────────────────────────────────────────────
+  "nex-agi": {
+    id: "nex-agi", name: "Nex AGI",
+    website: "https://nexagi.com", pricingUrl: "https://nexagi.com/pricing",
+    description: "Chinese AI lab focused on reasoning and agentic models. Nex-1 with chain-of-thought.",
+    hq: "CN", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("nex-1-reasoning", null, null, 128, { promo: true, promoLabel: "Reasoning" }) ],
+  },
+
+  // ── NextBit ───────────────────────────────────────────────────────────────────
+  nextbit: {
+    id: "nextbit", name: "NextBit",
+    website: "https://nextbit.ai", pricingUrl: "https://nextbit.ai/pricing",
+    description: "Spanish AI startup. Efficient LLMs for European enterprise customers.",
+    hq: "ES", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("nextbit-7b", null, null, 32, { promo: true, promoLabel: "EU" }) ],
+  },
+
+  // ── Nous Research ─────────────────────────────────────────────────────────────
+  nousresearch: {
+    id: "nousresearch", name: "Nous Research",
+    website: "https://nousresearch.com", pricingUrl: "https://nousresearch.com",
+    description: "Open-source AI research lab. Hermes, Capybara fine-tunes for advanced instruction following.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("hermes-3-405b-instruct", null, null, 128, { promo: true, promoLabel: "Hermes" }),
+      m("hermes-3-70b-instruct",  null, null, 128),
+    ],
+  },
+
+  // ── Perceptron ───────────────────────────────────────────────────────────────
+  perceptron: {
+    id: "perceptron", name: "Perceptron",
+    website: "https://perceptron.ai", pricingUrl: "https://perceptron.ai/pricing",
+    description: "Fast and cheap inference for open-source LLMs with OpenAI-compatible API.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b-instruct", 0.05, 0.10, 128, { promo: true, promoLabel: "Cheapest" }) ],
+  },
+
+  // ── Phala ─────────────────────────────────────────────────────────────────────
+  phala: {
+    id: "phala", name: "Phala Network",
+    website: "https://phala.network", pricingUrl: "https://red-pill.ai",
+    docsUrl: "https://docs.phala.network",
+    description: "Confidential AI inference with TEE (Trusted Execution Environment). Privacy-preserving compute.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "Confidential" }) ],
+  },
+
+  // ── Poolside ─────────────────────────────────────────────────────────────────
+  poolside: {
+    id: "poolside", name: "Poolside",
+    website: "https://poolside.ai", pricingUrl: "https://poolside.ai",
+    description: "Specialised code generation AI. Malibu model trained on synthetic code execution data.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("malibu", null, null, 64, { promo: true, promoLabel: "Code" }) ],
+  },
+
+  // ── Reka ──────────────────────────────────────────────────────────────────────
+  reka: {
+    id: "reka", name: "Reka AI",
+    website: "https://reka.ai", pricingUrl: "https://platform.reka.ai/pricing",
+    docsUrl: "https://platform.reka.ai/docs",
+    description: "Multimodal frontier models trained from scratch. Reka Core, Flash, Edge for vision + text.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("reka-core",  null, null, 128, { promo: true, promoLabel: "Multimodal" }),
+      m("reka-flash", null, null, 128, { promo: true, promoLabel: "Fast" }),
+      m("reka-edge",  null, null, 128),
+    ],
+  },
+
+  // ── Relace ────────────────────────────────────────────────────────────────────
+  relace: {
+    id: "relace", name: "Relace",
+    website: "https://relace.ai", pricingUrl: "https://relace.ai/pricing",
+    description: "Real-time code editing specialised model. Instant-fill code completions with <1s latency.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("instant-apply", null, null, 8, { promo: true, promoLabel: "Code edit" }) ],
+  },
+
+  // ── SambaNova ─────────────────────────────────────────────────────────────────
+  // Already exists
+
+  // ── Seed ──────────────────────────────────────────────────────────────────────
+  seed: {
+    id: "seed", name: "Seed",
+    website: "https://seed.sg", pricingUrl: "https://seed.sg/pricing",
+    description: "Singapore AI lab. Seed-X series with multilingual and code capabilities.",
+    hq: "SG", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("seed-x-7b", null, null, 128, { promo: true, promoLabel: "Multilingual" }) ],
+  },
+
+  // ── SiliconFlow ───────────────────────────────────────────────────────────────
+  siliconflow: {
+    id: "siliconflow", name: "SiliconFlow",
+    website: "https://siliconflow.cn", pricingUrl: "https://siliconflow.cn/pricing",
+    docsUrl: "https://docs.siliconflow.cn",
+    description: "Chinese AI inference platform. 60+ open-source models at competitive prices with free tier.",
+    hq: "CN", tier: "budget", hasFreeTier: true, liveModels: true, lastUpdated: "2026-06-24",
+    models: [
+      m("deepseek-v3",         0.14, 0.28, 64, { promo: true, promoLabel: "Best price" }),
+      m("qwen2.5-72b-instruct",0.12, 0.24, 128, { promo: true, promoLabel: "Free tier" }),
+      m("llama-3.3-70b-instruct",0.10, 0.20, 128),
+    ],
+  },
+
+  // ── Switchpoint ───────────────────────────────────────────────────────────────
+  switchpoint: {
+    id: "switchpoint", name: "Switchpoint",
+    website: "https://switchpoint.ai", pricingUrl: "https://switchpoint.ai/pricing",
+    description: "AI routing and inference aggregator. Automatically routes requests to optimal providers.",
+    hq: "US", tier: "gateway", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("auto", null, null, null, { promo: true, promoLabel: "Auto-route" }) ],
+  },
+
+  // ── Together AI ───────────────────────────────────────────────────────────────
+  // Already exists
+
+  // ── Upstage ───────────────────────────────────────────────────────────────────
+  // Already exists
+
+  // ── Venice ────────────────────────────────────────────────────────────────────
+  venice: {
+    id: "venice", name: "Venice AI",
+    website: "https://venice.ai", pricingUrl: "https://venice.ai/pricing",
+    docsUrl: "https://docs.venice.ai",
+    description: "Privacy-first AI inference. No logs, no training on prompts. Runs Llama, Mistral on private nodes.",
+    hq: "US", tier: "specialised", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
+    models: [
+      m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "Private" }),
+      m("mistral-31-24b",         null, null, 128),
+    ],
+  },
+
+  // ── WandB (Weave) ─────────────────────────────────────────────────────────────
+  wandb: {
+    id: "wandb", name: "Weights & Biases",
+    website: "https://wandb.ai", pricingUrl: "https://wandb.ai/pricing",
+    docsUrl: "https://docs.wandb.ai",
+    description: "MLOps platform with hosted model inference via Weave. Track experiments and deploy models.",
+    hq: "US", tier: "specialised", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "MLOps" }) ],
+  },
+
+  // ── Xiaomi ────────────────────────────────────────────────────────────────────
+  xiaomi: {
+    id: "xiaomi", name: "Xiaomi AI",
+    website: "https://ai.xiaomi.com", pricingUrl: "https://ai.xiaomi.com/api",
+    description: "Xiaomi's AI research arm. MiMo series of reasoning models trained on math and code.",
+    hq: "CN", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    models: [ m("mimo-7b", null, null, 128, { promo: true, promoLabel: "Reasoning" }) ],
+  },
+
+  // ── Z.AI ──────────────────────────────────────────────────────────────────────
+  "z-ai": {
+    id: "z-ai", name: "Z.AI (Zhipu)",
+    website: "https://z.ai", pricingUrl: "https://open.bigmodel.cn/pricing",
+    docsUrl: "https://open.bigmodel.cn/dev/api",
+    description: "Zhipu AI's global brand. GLM-5.x family with vision, code, and long-context capabilities.",
+    hq: "CN", tier: "mid", hasFreeTier: true, liveModels: true, lastUpdated: "2026-06-24",
+    models: [
+      m("glm-5.2",       null, null, 128, { promo: true, promoLabel: "Newest" }),
+      m("glm-5.1",       null, null, 128, { promo: true, promoLabel: "Flagship" }),
+      m("glm-z1-flash",  null, null, 64,  { promo: true, promoLabel: "Free" }),
     ],
   },
 }

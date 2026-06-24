@@ -42,6 +42,44 @@ type RegionFilter = "all" | "US" | "CN" | "EU/KR/IL" | "Other"
 type PriceSort    = "none" | "free" | "cheapest" | "expensive"
 type PromoView    = "all" | "discounted"
 
+// ── Provider logo (OpenRouter official CDN) ───────────────────────────────────
+const OR_CDN = "https://openrouter.ai/meta"
+
+const OR_SLUG_MAP: Record<string, string> = {
+  google: "google-ai-studio", qwen: "alibaba", zhipu: "z-ai",
+  hunyuan: "moonshotai", moonshot: "moonshotai", bfl: "black-forest-labs",
+  amazon: "amazon-bedrock", moonshotai: "moonshotai",
+  "aion-labs": "aion-labs", "arcee-ai": "arcee-ai", "atlas-cloud": "atlas-cloud",
+  "amazon-bedrock": "amazon-bedrock", "google-ai-studio": "google-ai-studio",
+  "google-vertex": "google-vertex", "z-ai": "z-ai", "nex-agi": "nex-agi",
+}
+
+function getLogoUrl(providerId: string): string {
+  return `${OR_CDN}/${OR_SLUG_MAP[providerId] ?? providerId}.png`
+}
+
+function providerBgColor(name: string): string {
+  const palette = ["#6366f1","#8b5cf6","#ec4899","#f43f5e","#f97316","#eab308","#22c55e","#14b8a6","#0ea5e9","#3b82f6"]
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff
+  return palette[Math.abs(h) % palette.length]
+}
+
+function ProviderLogo({ id, name, className = "w-8 h-8" }: { id: string; name: string; className?: string }) {
+  const [failed, setFailed] = useState(false)
+  const initials = name.replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?"
+  if (failed) {
+    return (
+      <span aria-hidden className={`${className} flex-shrink-0 rounded-xl flex items-center justify-center text-white font-bold leading-none`}
+        style={{ background: providerBgColor(name), fontSize: "35%" }}>
+        {initials}
+      </span>
+    )
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={getLogoUrl(id)} alt="" aria-hidden className={`${className} object-contain rounded-xl flex-shrink-0`} onError={() => setFailed(true)} />
+}
+
 // ── Small icons ───────────────────────────────────────────────────────────────
 function Icon({ d, className = "w-3 h-3" }: { d: string; className?: string }) {
   return (
@@ -244,13 +282,8 @@ function ProviderCard({ provider, apiKey, defaultExpanded }: {
         className="w-full flex items-start gap-3 px-4 py-3 text-left"
         aria-expanded={expanded}
       >
-        {/* Chevron */}
-        <span className="flex-shrink-0 mt-0.5 text-muted-foreground/50">
-          {expanded
-            ? <Icon d="M6 9l6 6 6-6" className="w-3.5 h-3.5" />
-            : <Icon d="M9 18l6-6-6-6" className="w-3.5 h-3.5" />
-          }
-        </span>
+        {/* Provider logo */}
+        <ProviderLogo id={provider.id} name={provider.name} className="w-8 h-8 mt-0.5" />
 
         {/* Body */}
         <div className="flex-1 min-w-0">
