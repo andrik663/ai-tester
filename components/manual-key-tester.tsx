@@ -14,7 +14,7 @@ import { copyToClipboard } from "@/lib/clipboard"
 import { explainApiError } from "@/lib/explain-api-error"
 import KeyInfoPanel from "@/components/key-info-panel"
 import ProviderInfoPanel from "@/components/provider-info-panel"
-import DevLoginModal from "@/components/dev-login-modal"
+import DevLoginModal, { DevLogoutConfirmModal, type AutoLockResult } from "@/components/dev-login-modal"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -1834,8 +1834,9 @@ export default function ManualKeyTester() {
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   // ── Developer auth state ─────────────────────────────────────────────────
-  const [isDev, setIsDev]               = useState(false)
-  const [devModalOpen, setDevModalOpen] = useState(false)
+  const [isDev, setIsDev]                     = useState(false)
+  const [devModalOpen, setDevModalOpen]       = useState(false)
+  const [devLogoutOpen, setDevLogoutOpen]     = useState(false)
 
   // On mount, verify dev session cookie with server
   useEffect(() => {
@@ -1845,9 +1846,61 @@ export default function ManualKeyTester() {
       .catch(() => {})
   }, [])
 
-  const handleDevLogout = useCallback(async () => {
+  // Count of current working keys stored in localStorage
+  const getWorkingKeyCount = useCallback((): number => {
+    try {
+      const raw = localStorage.getItem("ai_tester_working_keys")
+      if (!raw) return 0
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed.length : 0
+    } catch { return 0 }
+  }, [])
+
+  // Auto-lock all working keys to DB, then log out — called by confirm modal
+  const handleAutoLockAndLogout = useCallback(async (): Promise<AutoLockResult> => {
+    const EXPORT_TOKEN_KEY = "export_api_token_v1"
+    const token = localStorage.getItem(EXPORT_TOKEN_KEY) ?? ""
+
+    let total = 0, locked = 0, failed = 0
+
+    if (token) {
+      try {
+        const raw = localStorage.getItem("ai_tester_working_keys")
+        const keys: Array<{
+          providerId: string; providerName: string; modelId: string;
+          apiKey: string; latencyMs?: number
+        }> = raw ? JSON.parse(raw) : []
+        total = keys.length
+
+        await Promise.all(keys.map(async (k) => {
+          try {
+            const res = await fetch("/api/locked-keys/lock", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                providerId:          k.providerId,
+                providerName:        k.providerName,
+                modelId:             k.modelId,
+                apiKey:              k.apiKey,
+                latencyMs:           k.latencyMs ?? null,
+                refreshIntervalHours: 24,
+              }),
+            })
+            if (res.ok) locked++; else failed++
+          } catch { failed++ }
+        }))
+      } catch { /* ignore parse errors */ }
+    }
+
+    // Perform actual logout after locking
     await fetch("/api/dev/logout", { method: "POST" })
     setIsDev(false)
+    setDevLogoutOpen(false)
+
+    return { total, locked, failed }
   }, [])
 
   // Tab state
@@ -2976,7 +3029,7 @@ export default function ManualKeyTester() {
             <div className="ml-auto flex-shrink-0 pl-2">
               {isDev ? (
                 <button
-                  onClick={handleDevLogout}
+                  onClick={() => setDevLogoutOpen(true)}
                   title="Developer — click to logout"
                   className="flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap transition-all bg-primary/10 border border-primary/25 text-primary hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive"
                 >
@@ -4247,6 +4300,14 @@ export default function ManualKeyTester() {
         open={devModalOpen}
         onClose={() => setDevModalOpen(false)}
         onAuth={(dev) => setIsDev(dev)}
+      />
+
+      {/* Developer logout confirm + auto-lock modal */}
+      <DevLogoutConfirmModal
+        open={devLogoutOpen}
+        keyCount={devLogoutOpen ? getWorkingKeyCount() : 0}
+        onCancel={() => setDevLogoutOpen(false)}
+        onConfirm={handleAutoLockAndLogout}
       />
     </div>
   )
