@@ -14,6 +14,7 @@ import { copyToClipboard } from "@/lib/clipboard"
 import { explainApiError } from "@/lib/explain-api-error"
 import KeyInfoPanel from "@/components/key-info-panel"
 import ProviderInfoPanel from "@/components/provider-info-panel"
+import DevLoginModal from "@/components/dev-login-modal"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -1832,6 +1833,23 @@ export default function ManualKeyTester() {
   const [copiedShare, setCopiedShare] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
+  // ── Developer auth state ─────────────────────────────────────────────────
+  const [isDev, setIsDev]               = useState(false)
+  const [devModalOpen, setDevModalOpen] = useState(false)
+
+  // On mount, verify dev session cookie with server
+  useEffect(() => {
+    fetch("/api/dev/me")
+      .then((r) => r.json())
+      .then((d) => { if (d.isDev) setIsDev(true) })
+      .catch(() => {})
+  }, [])
+
+  const handleDevLogout = useCallback(async () => {
+    await fetch("/api/dev/logout", { method: "POST" })
+    setIsDev(false)
+  }, [])
+
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info">("unified")
   // Onboarding banner — dismissed in localStorage
@@ -2884,7 +2902,7 @@ export default function ManualKeyTester() {
           </div>
 
           {/* Tab row — scrollable on mobile */}
-          <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9">
+          <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9 relative">
             {([
               {
                 id: "unified" as const,
@@ -2953,6 +2971,34 @@ export default function ManualKeyTester() {
                 {t.label}
               </button>
             ))}
+
+            {/* ── Dev login button — right side of tab bar ── */}
+            <div className="ml-auto flex-shrink-0 pl-2">
+              {isDev ? (
+                <button
+                  onClick={handleDevLogout}
+                  title="Developer — click to logout"
+                  className="flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap transition-all bg-primary/10 border border-primary/25 text-primary hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive"
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path d="M8 1.5L2 4v4c0 3.31 2.52 5.74 6 6.5 3.48-.76 6-3.19 6-6.5V4L8 1.5z" fill="oklch(0.76 0.17 192 / 0.25)" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                    <path d="M5.5 8l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Dev
+                </button>
+              ) : (
+                <button
+                  onClick={() => setDevModalOpen(true)}
+                  title="Login as Developer"
+                  className="flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap transition-all text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/40 border border-transparent hover:border-border/60"
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path d="M8 1.5L2 4v4c0 3.31 2.52 5.74 6 6.5 3.48-.76 6-3.19 6-6.5V4L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                  </svg>
+                  Dev
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Sub-tab row — only shown inside Unified tab */}
@@ -4195,6 +4241,13 @@ export default function ManualKeyTester() {
         )}
 
       </div>
+
+      {/* Developer login modal */}
+      <DevLoginModal
+        open={devModalOpen}
+        onClose={() => setDevModalOpen(false)}
+        onAuth={(dev) => setIsDev(dev)}
+      />
     </div>
   )
 }
