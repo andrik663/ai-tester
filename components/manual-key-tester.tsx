@@ -1438,85 +1438,112 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Provider logos — OpenRouter official CDN ─────────────────────────────────
-// Pattern: https://openrouter.ai/meta/{or-slug}.png
-// Maps our internal provider IDs → OpenRouter slugs where they differ.
-const OR_CDN = "https://openrouter.ai/meta"
-
-// Map our provider id → OpenRouter slug (only needed when they differ)
-const OR_SLUG: Record<string, string> = {
-  // Direct API providers mapped to their OR equivalent
-  google:       "google-ai-studio",
-  qwen:         "alibaba",
-  zhipu:        "z-ai",
-  hunyuan:      "moonshotai",   // Tencent → closest OR equivalent
-  moonshot:     "moonshotai",
-  azure:        "azure",
-  bfl:          "black-forest-labs",
-  amazon:       "amazon-bedrock",
-  novita:       "novita",
-  openrouter:   "openrouter",
-  fireworks:    "fireworks",
-  together:     "together",
-  huggingface:  "huggingface",
-  deepinfra:    "deepinfra",
-  sambanova:    "sambanova",
-  nvidia:       "nvidia",
-  ai21:         "ai21",
-  groq:         "groq",
-  mistral:      "mistral",
-  cohere:       "cohere",
-  perplexity:   "perplexity",
-  baidu:        "baidu",
-  stepfun:      "stepfun",
-  upstage:      "upstage",
-  cerebras:     "cerebras",
-  cloudflare:   "cloudflare",
-  inception:    "inception",
-  ibm:          "ibm",
-  meta:         "meta-llama",
-  replicate:    "replicate",
-  lepton:       "lepton",
-  bytedance:    "bytedance-seed",
-  anyscale:     "anyscale",
-  recraft:      "recraft",
-  luma:         "luma",
-  writer:       "writer",
-  hyperbolic:   "hyperbolic",
-  // OR-prefixed providers already use the correct slug
-  "aion-labs":        "aion-labs",
-  "allenai":          "allenai",
-  "arcee-ai":         "arcee-ai",
-  "cognitivecomputations": "cognitivecomputations",
-  "deepcogito":       "deepcogito",
-  "gryphe":           "gryphe",
-  "inclusionai":      "inclusionai",
-  "inflection":       "inflection",
-  "kwaipilot":        "kwaipilot",
-  "liquid":           "liquid",
-  "mancer":           "mancer",
-  "microsoft":        "microsoft",
-  "morph":            "morph",
-  "nex-agi":          "nex-agi",
-  "nousresearch":     "nousresearch",
-  "perceptron":       "perceptron",
-  "poolside":         "poolside",
-  "rekaai":           "reka",
-  "relace":           "relace",
-  "sao10k":           "sao10k",
-  "switchpoint":      "switchpoint",
-  "thedrummer":       "thedrummer",
-  "undi95":           "undi95",
-  "xiaomi":           "xiaomi",
+// ── Provider logos ────────────────────────────────────────────────────────────
+// Uses Google's faviconV2 service (returns 64px PNG, no CORS issues).
+// Falls back to DuckDuckGo favicon, then branded initials badge.
+//
+// Domain map: provider id → website domain used for favicon lookup.
+const PROVIDER_DOMAIN: Record<string, string> = {
+  // Frontier
+  anthropic:      "anthropic.com",
+  openai:         "openai.com",
+  google:         "google.com",
+  xai:            "x.ai",
+  deepseek:       "deepseek.com",
+  meta:           "meta.ai",
+  // Chinese providers
+  qwen:           "alibabacloud.com",
+  zhipu:          "zhipuai.cn",
+  minimax:        "minimax.io",
+  moonshot:       "moonshot.ai",
+  moonshotai:     "moonshot.ai",
+  baidu:          "cloud.baidu.com",
+  hunyuan:        "cloud.tencent.com",
+  stepfun:        "stepfun.com",
+  bytedance:      "volcengine.com",
+  xiaomi:         "mi.com",
+  "z-ai":         "zhipuai.cn",
+  "nex-agi":      "nexagi.com",
+  kwaipilot:      "kwai.com",
+  siliconflow:    "siliconflow.cn",
+  seed:           "seed.sg",
+  // American providers
+  groq:           "groq.com",
+  cerebras:       "cerebras.ai",
+  fireworks:      "fireworks.ai",
+  together:       "together.xyz",
+  sambanova:      "sambanova.ai",
+  nvidia:         "nvidia.com",
+  perplexity:     "perplexity.ai",
+  cohere:         "cohere.com",
+  ai21:           "ai21.com",
+  replicate:      "replicate.com",
+  huggingface:    "huggingface.co",
+  cloudflare:     "cloudflare.com",
+  deepinfra:      "deepinfra.com",
+  novita:         "novita.ai",
+  upstage:        "upstage.ai",
+  inception:      "inceptionlabs.ai",
+  ibm:            "ibm.com",
+  anyscale:       "anyscale.com",
+  recraft:        "recraft.ai",
+  luma:           "lumalabs.ai",
+  writer:         "writer.com",
+  hyperbolic:     "hyperbolic.xyz",
+  lepton:         "lepton.ai",
+  bfl:            "blackforestlabs.ai",
+  "black-forest-labs": "blackforestlabs.ai",
+  ideogram:       "ideogram.ai",
+  amazon:         "aws.amazon.com",
+  "amazon-bedrock": "aws.amazon.com",
+  azure:          "azure.microsoft.com",
+  "google-ai-studio": "ai.google.dev",
+  "google-vertex":    "cloud.google.com",
+  openrouter:     "openrouter.ai",
+  inflection:     "inflection.ai",
+  "arcee-ai":     "arcee.ai",
+  mancer:         "mancer.tech",
+  liquid:         "liquid.ai",
+  morph:          "morphllm.com",
+  poolside:       "poolside.ai",
+  relace:         "relace.ai",
+  venice:         "venice.ai",
+  baseten:        "baseten.co",
+  wandb:          "wandb.ai",
+  featherless:    "featherless.ai",
+  friendli:       "friendli.ai",
+  nebius:         "nebius.com",
+  crusoe:         "crusoe.ai",
+  clarifai:       "clarifai.com",
+  digitalocean:   "digitalocean.com",
+  gmicloud:       "gmicloud.ai",
+  chutes:         "chutes.ai",
+  phala:          "phala.network",
+  switchpoint:    "switchpoint.ai",
+  inceptron:      "inceptron.se",
+  infermatic:     "infermatic.ai",
+  perceptron:     "perceptron.ai",
+  akashml:        "akash.network",
+  "atlas-cloud":  "atlascloud.ai",
+  "io-net":       "io.net",
+  nousresearch:   "nousresearch.com",
+  reka:           "reka.ai",
+  rekaai:         "reka.ai",
+  "aion-labs":    "aionlabs.net",
+  mistral:        "mistral.ai",
 }
 
-/** Returns the OpenRouter CDN logo URL for a provider ID */
-function getProviderLogoUrl(providerId: string): string {
-  const slug = OR_SLUG[providerId] ?? providerId
-  return `${OR_CDN}/${slug}.png`
+/** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
+function getLogoUrl(domain: string): string {
+  return `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=64`
 }
 
-/** Deterministic color from provider name for initials fallback */
+/** DuckDuckGo favicon fallback */
+function getDDGLogoUrl(domain: string): string {
+  return `https://icons.duckduckgo.com/ip3/${domain}.ico`
+}
+
+/** Deterministic brand color from name — used for initials badge */
 function providerColor(name: string): string {
   const colors = [
     "#6366f1","#8b5cf6","#ec4899","#f43f5e","#f97316",
@@ -1527,7 +1554,6 @@ function providerColor(name: string): string {
   return colors[Math.abs(h) % colors.length]
 }
 
-
 function ProviderLogo({
   providerId,
   providerName = "",
@@ -1537,14 +1563,13 @@ function ProviderLogo({
   providerName?: string
   className?: string
 }) {
-  const [failed, setFailed] = useState(false)
-  const logoUrl = getProviderLogoUrl(providerId)
-  // Skip dahono (custom logo) — show initials badge
-  const isDahono = providerId === "dahono"
-  const initials = (providerName || providerId).replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?"
-  const bg = isDahono ? "#8b5cf6" : providerColor(providerName || providerId)
+  const [stage, setStage] = useState<"primary" | "fallback" | "initials">("primary")
+  const domain = PROVIDER_DOMAIN[providerId]
+  const displayName = providerName || providerId
+  const initials = displayName.replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?"
+  const bg = providerId === "dahono" ? "#8b5cf6" : providerColor(displayName)
 
-  if (isDahono || failed) {
+  if (!domain || stage === "initials") {
     return (
       <span
         aria-hidden
@@ -1556,14 +1581,16 @@ function ProviderLogo({
     )
   }
 
+  const src = stage === "primary" ? getLogoUrl(domain) : getDDGLogoUrl(domain)
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={logoUrl}
+      src={src}
       alt=""
       aria-hidden
-      className={`${className} object-contain flex-shrink-0 rounded-lg`}
-      onError={() => setFailed(true)}
+      className={`${className} object-contain flex-shrink-0 rounded-md`}
+      onError={() => setStage(s => s === "primary" ? "fallback" : "initials")}
     />
   )
 }

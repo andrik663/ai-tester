@@ -42,20 +42,38 @@ type RegionFilter = "all" | "US" | "CN" | "EU/KR/IL" | "Other"
 type PriceSort    = "none" | "free" | "cheapest" | "expensive"
 type PromoView    = "all" | "discounted"
 
-// ── Provider logo (OpenRouter official CDN) ───────────────────────────────────
-const OR_CDN = "https://openrouter.ai/meta"
-
-const OR_SLUG_MAP: Record<string, string> = {
-  google: "google-ai-studio", qwen: "alibaba", zhipu: "z-ai",
-  hunyuan: "moonshotai", moonshot: "moonshotai", bfl: "black-forest-labs",
-  amazon: "amazon-bedrock", moonshotai: "moonshotai",
-  "aion-labs": "aion-labs", "arcee-ai": "arcee-ai", "atlas-cloud": "atlas-cloud",
-  "amazon-bedrock": "amazon-bedrock", "google-ai-studio": "google-ai-studio",
-  "google-vertex": "google-vertex", "z-ai": "z-ai", "nex-agi": "nex-agi",
-}
-
-function getLogoUrl(providerId: string): string {
-  return `${OR_CDN}/${OR_SLUG_MAP[providerId] ?? providerId}.png`
+// ── Provider logos (gstatic favicon — 64 px PNG, CORS-safe) ──────────────────
+const PROVIDER_DOMAIN_MAP: Record<string, string> = {
+  anthropic:"anthropic.com", openai:"openai.com", google:"google.com",
+  xai:"x.ai", deepseek:"deepseek.com", meta:"meta.ai",
+  qwen:"alibabacloud.com", zhipu:"zhipuai.cn", minimax:"minimax.io",
+  moonshot:"moonshot.ai", moonshotai:"moonshot.ai", baidu:"cloud.baidu.com",
+  hunyuan:"cloud.tencent.com", stepfun:"stepfun.com", bytedance:"volcengine.com",
+  xiaomi:"mi.com", "z-ai":"zhipuai.cn", "nex-agi":"nexagi.com",
+  siliconflow:"siliconflow.cn", seed:"seed.sg",
+  groq:"groq.com", cerebras:"cerebras.ai", fireworks:"fireworks.ai",
+  together:"together.xyz", sambanova:"sambanova.ai", nvidia:"nvidia.com",
+  perplexity:"perplexity.ai", cohere:"cohere.com", ai21:"ai21.com",
+  replicate:"replicate.com", huggingface:"huggingface.co",
+  cloudflare:"cloudflare.com", deepinfra:"deepinfra.com", novita:"novita.ai",
+  upstage:"upstage.ai", inception:"inceptionlabs.ai", ibm:"ibm.com",
+  anyscale:"anyscale.com", recraft:"recraft.ai", luma:"lumalabs.ai",
+  writer:"writer.com", hyperbolic:"hyperbolic.xyz", lepton:"lepton.ai",
+  bfl:"blackforestlabs.ai", "black-forest-labs":"blackforestlabs.ai",
+  amazon:"aws.amazon.com", "amazon-bedrock":"aws.amazon.com",
+  azure:"azure.microsoft.com", "google-ai-studio":"ai.google.dev",
+  "google-vertex":"cloud.google.com", openrouter:"openrouter.ai",
+  inflection:"inflection.ai", "arcee-ai":"arcee.ai", mancer:"mancer.tech",
+  liquid:"liquid.ai", morph:"morphllm.com", poolside:"poolside.ai",
+  relace:"relace.ai", venice:"venice.ai", baseten:"baseten.co",
+  wandb:"wandb.ai", featherless:"featherless.ai", friendli:"friendli.ai",
+  nebius:"nebius.com", crusoe:"crusoe.ai", clarifai:"clarifai.com",
+  digitalocean:"digitalocean.com", gmicloud:"gmicloud.ai", chutes:"chutes.ai",
+  phala:"phala.network", switchpoint:"switchpoint.ai", inceptron:"inceptron.se",
+  infermatic:"infermatic.ai", perceptron:"perceptron.ai",
+  akashml:"akash.network", "atlas-cloud":"atlascloud.ai", "io-net":"io.net",
+  nousresearch:"nousresearch.com", reka:"reka.ai", rekaai:"reka.ai",
+  "aion-labs":"aionlabs.net", mistral:"mistral.ai",
 }
 
 function providerBgColor(name: string): string {
@@ -66,9 +84,10 @@ function providerBgColor(name: string): string {
 }
 
 function ProviderLogo({ id, name, className = "w-8 h-8" }: { id: string; name: string; className?: string }) {
-  const [failed, setFailed] = useState(false)
-  const initials = name.replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?"
-  if (failed) {
+  const [stage, setStage] = useState<"primary"|"fallback"|"initials">("primary")
+  const domain = PROVIDER_DOMAIN_MAP[id]
+  const initials = name.replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()??"").join("") || "?"
+  if (!domain || stage === "initials") {
     return (
       <span aria-hidden className={`${className} flex-shrink-0 rounded-xl flex items-center justify-center text-white font-bold leading-none`}
         style={{ background: providerBgColor(name), fontSize: "35%" }}>
@@ -76,8 +95,12 @@ function ProviderLogo({ id, name, className = "w-8 h-8" }: { id: string; name: s
       </span>
     )
   }
+  const src = stage === "primary"
+    ? `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=64`
+    : `https://icons.duckduckgo.com/ip3/${domain}.ico`
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={getLogoUrl(id)} alt="" aria-hidden className={`${className} object-contain rounded-xl flex-shrink-0`} onError={() => setFailed(true)} />
+  return <img src={src} alt="" aria-hidden className={`${className} object-contain rounded-xl flex-shrink-0`}
+    onError={() => setStage(s => s === "primary" ? "fallback" : "initials")} />
 }
 
 // ── Small icons ───────────────────────────────────────────────────────────────
