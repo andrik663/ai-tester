@@ -10,6 +10,24 @@ import {
 } from "@/lib/working-keys-store"
 import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
 import ExportApiPanel from "@/components/export-api-panel"
+import UserSessionPanel, { type WorkingKeyForSession } from "@/components/user-session-panel"
+
+// ── Types for locked keys (DB-backed) ────────────────────────────────────────
+
+interface LockedKeyRecord {
+  id: string
+  providerId: string
+  providerName: string
+  modelId: string
+  apiKeyMasked: string
+  isWorking: boolean
+  latencyMs: number | null
+  lastTestedAt: string | null
+  lockedAt: string
+  nextRefreshAt: string
+  refreshIntervalHours: number
+  lastError: string | null
+}
 
 // Build a ready-to-run curl command for a working key record
 function buildCurlCommand(record: WorkingKeyRecord): string {
@@ -87,11 +105,87 @@ function TerminalIcon() {
   )
 }
 
+function LockIcon({ locked }: { locked?: boolean }) {
+  return locked ? (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="11" r="1" fill="currentColor" />
+    </svg>
+  ) : (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M5 7V5a3 3 0 016 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="11" r="1" fill="currentColor" />
+    </svg>
+  )
+}
+
+function RefreshIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path d="M13.5 8A5.5 5.5 0 112.5 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M2.5 2v3.5H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function DatabaseIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <ellipse cx="8" cy="4" rx="6" ry="2.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 4v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V4" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 8v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V8" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  )
+}
+
 // ── Masked key display ────────────────────────────────────────────────────────
 
 function maskKey(key: string): string {
   if (key.length <= 8) return "••••••••"
   return key.slice(0, 4) + "••••" + key.slice(-4)
+}
+
+// ── Shared: read EXPORT_API_TOKEN from same localStorage key as ExportApiPanel ─
+const EXPORT_TOKEN_STORAGE_KEY = "export_api_token_v1"
+function getExportToken(): string {
+  if (typeof window === "undefined") return ""
+  return localStorage.getItem(EXPORT_TOKEN_STORAGE_KEY) ?? ""
+}
+
+// ── Lock a key to DB via API ──────────────────────────────────────────────────
+
+async function lockKeyToDb(
+  record: WorkingKeyRecord,
+  refreshIntervalHours = 24,
+): Promise<{ success: boolean; error?: string }> {
+  const token = getExportToken()
+  if (!token) return { success: false, error: "Set your EXPORT_API_TOKEN in the Export panel first" }
+  try {
+    const res = await fetch("/api/locked-keys/lock", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        providerId:   record.providerId,
+        providerName: record.providerName,
+        modelId:      record.modelId,
+        apiKey:       record.apiKey,
+        latencyMs:    record.latencyMs,
+        refreshIntervalHours,
+      }),
+    })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      return { success: false, error: d.error ?? `HTTP ${res.status}` }
+    }
+    return { success: true }
+  } catch (e) {
+    return { success: false, error: String(e) }
+  }
 }
 
 // ── Single record row ─────────────────────────────────────────────────────────
@@ -100,15 +194,36 @@ function RecordRow({
   record,
   onDelete,
   onCopyKey,
+  onLocked,
 }: {
   record: WorkingKeyRecord
   onDelete: (id: string) => void
   onCopyKey: (key: string) => void
+  onLocked?: () => void
 }) {
   const [copiedKey, setCopiedKey]     = useState(false)
   const [copiedModel, setCopiedModel] = useState(false)
   const [copiedCurl, setCopiedCurl]   = useState(false)
   const [confirmDel, setConfirmDel]   = useState(false)
+  const [locking, setLocking]         = useState(false)
+  const [lockStatus, setLockStatus]   = useState<"idle" | "ok" | "error">("idle")
+  const [lockError, setLockError]     = useState<string>("")
+
+  const handleLock = useCallback(async () => {
+    setLocking(true)
+    setLockStatus("idle")
+    const result = await lockKeyToDb(record)
+    setLocking(false)
+    if (result.success) {
+      setLockStatus("ok")
+      onLocked?.()
+      setTimeout(() => setLockStatus("idle"), 3000)
+    } else {
+      setLockStatus("error")
+      setLockError(result.error ?? "Unknown error")
+      setTimeout(() => { setLockStatus("idle"); setLockError("") }, 4000)
+    }
+  }, [record, onLocked])
 
   const handleCopyKey = useCallback(() => {
     copyToClipboard(record.apiKey).then(() => {
@@ -187,6 +302,23 @@ function RecordRow({
           </div>
         </div>
 
+        {/* Lock button */}
+        <button
+          onClick={handleLock}
+          disabled={locking || lockStatus === "ok"}
+          className={`flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all disabled:opacity-60 ${
+            lockStatus === "ok"
+              ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
+              : lockStatus === "error"
+              ? "border-red-400/50 bg-red-400/10 text-red-400"
+              : "border-border text-muted-foreground/40 hover:border-cyan-400/30 hover:text-cyan-400 hover:bg-cyan-400/5"
+          }`}
+          title={lockStatus === "ok" ? "Locked to DB" : lockStatus === "error" ? lockError : "Lock key permanently to DB (auto-refreshes every 24h)"}
+        >
+          <LockIcon locked={lockStatus === "ok"} />
+          {locking ? <span>...</span> : lockStatus === "ok" ? <span>Locked</span> : lockStatus === "error" ? <span>Failed</span> : null}
+        </button>
+
         {/* Delete button */}
         <button
           onClick={handleDelete}
@@ -244,6 +376,164 @@ function RecordRow({
   )
 }
 
+// ── Locked keys section (DB-backed, auto-refresh) ────────────────────────────
+
+function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
+  const [locked, setLocked]       = useState<LockedKeyRecord[]>([])
+  const [loading, setLoading]     = useState(false)
+  const [running, setRunning]     = useState(false)
+  const [runResult, setRunResult] = useState<{ tested: number; changed: number } | null>(null)
+  const [open, setOpen]           = useState(true)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const token = getExportToken()
+      const res = await fetch("/api/locked-keys/list", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (res.ok) {
+        const d = await res.json()
+        setLocked(d.keys ?? [])
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load, refreshTick])
+
+  const handleUnlock = useCallback(async (id: string) => {
+    const token = getExportToken()
+    await fetch(`/api/locked-keys/unlock?id=${id}`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    setLocked((prev) => prev.filter((r) => r.id !== id))
+  }, [])
+
+  const handleRunNow = useCallback(async () => {
+    const token = getExportToken()
+    setRunning(true)
+    setRunResult(null)
+    try {
+      const res = await fetch("/api/locked-keys/refresh?force=true", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (res.ok) {
+        const d = await res.json()
+        setRunResult({ tested: d.tested, changed: d.changed })
+        await load()
+      }
+    } finally {
+      setRunning(false)
+    }
+  }, [load])
+
+  if (locked.length === 0 && !loading) return null
+
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Header */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center justify-between w-full"
+      >
+        <div className="flex items-center gap-2">
+          <DatabaseIcon />
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+            Locked Keys
+          </span>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+            {locked.length} permanent
+          </span>
+          <span className="text-[9px] text-muted-foreground/50">
+            · auto-refreshes every 24h
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleRunNow() }}
+            disabled={running}
+            className="flex items-center gap-1 text-[9px] px-2 py-1 rounded border border-border text-muted-foreground/50 hover:text-cyan-400 hover:border-cyan-400/40 transition-colors disabled:opacity-40"
+            title="Re-test all locked keys now"
+          >
+            <RefreshIcon />
+            {running ? "Testing..." : "Run now"}
+          </button>
+          <span className={`text-muted-foreground/40 transition-transform ${open ? "" : "rotate-180"}`}>
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </div>
+      </button>
+
+      {runResult && (
+        <div className="text-[9px] px-2 py-1 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+          Refreshed {runResult.tested} keys — {runResult.changed} changed status
+        </div>
+      )}
+
+      {open && (
+        <div className="rounded-xl border border-border overflow-hidden">
+          {loading ? (
+            <p className="px-4 py-4 text-center text-[10px] text-muted-foreground/50">Loading...</p>
+          ) : (
+            locked.map((row) => {
+              const nextRefresh = new Date(row.nextRefreshAt)
+              const lockedDate  = new Date(row.lockedAt)
+              return (
+                <div key={row.id} className="border-b border-border last:border-0 px-3 py-2.5 flex flex-col gap-1.5 hover:bg-secondary/20 transition-colors">
+                  <div className="flex items-start gap-2">
+                    <span
+                      className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${row.isWorking ? "bg-green-400" : "bg-red-400"}`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] uppercase tracking-widest font-semibold text-cyan-400/80 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded">
+                          {row.providerName}
+                        </span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded border ${row.isWorking ? "text-green-400 border-green-400/20 bg-green-400/10" : "text-red-400 border-red-400/20 bg-red-400/10"}`}>
+                          {row.isWorking ? "working" : "failed"}
+                        </span>
+                        {row.latencyMs && (
+                          <span className="text-[9px] font-mono text-muted-foreground/50">{row.latencyMs}ms</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] font-mono text-foreground/80 mt-0.5 truncate">{row.modelId}</div>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-[9px] font-mono text-muted-foreground/40">{row.apiKeyMasked}</span>
+                        <span className="text-[8px] text-muted-foreground/30">
+                          Locked {lockedDate.toLocaleDateString()} · Next refresh {nextRefresh.toLocaleString()}
+                        </span>
+                      </div>
+                      {!row.isWorking && row.lastError && (
+                        <div className="text-[8px] text-red-400/70 mt-0.5 truncate" title={row.lastError}>
+                          {row.lastError}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleUnlock(row.id)}
+                      className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground/40 hover:border-red-400/30 hover:text-red-400 transition-colors"
+                      title="Remove lock (does not delete the key from localStorage)"
+                    >
+                      <LockIcon locked={false} />
+                      Unlock
+                    </button>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -257,6 +547,18 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
   const [records, setRecords]         = useState<WorkingKeyRecord[]>([])
   const [filterProvider, setFilterProvider] = useState<string>("all")
   const [confirmClear, setConfirmClear] = useState(false)
+  const [lockedTick, setLockedTick]   = useState(0)
+  const [sessionToken, setSessionToken] = useState<string | null>(null)
+
+  // Derive session-ready keys from current working key records
+  const sessionKeys: WorkingKeyForSession[] = records.map((r) => ({
+    providerId:   r.providerId,
+    providerName: r.providerName,
+    modelId:      r.modelId,
+    apiKeyMasked: r.apiKey.slice(0, 12) + "••••••",
+    isWorking:    true,
+    latencyMs:    r.latencyMs,
+  }))
 
   // Load from localStorage
   const reload = useCallback(() => {
@@ -390,6 +692,7 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
               record={r}
               onDelete={handleDelete}
               onCopyKey={handleCopyKey}
+              onLocked={() => setLockedTick((t) => t + 1)}
             />
           ))
         )}
@@ -398,6 +701,15 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
       <p className="text-[9px] text-muted-foreground/40 text-center">
         Stored locally in browser. Raw keys are never exposed via the API.
       </p>
+
+      {/* Locked keys section — DB-backed, auto-refreshes every 24h (developer) */}
+      <LockedKeysSection refreshTick={lockedTick} />
+
+      {/* User temporary session — public users, TTL-based access */}
+      <UserSessionPanel
+        pendingKeys={sessionToken ? sessionKeys : undefined}
+        onSessionToken={setSessionToken}
+      />
 
       {/* Export API section */}
       <ExportApiPanel keys={records} />
