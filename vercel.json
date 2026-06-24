@@ -3,6 +3,10 @@
     {
       "path": "/api/locked-keys/refresh",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/session/cleanup",
+      "schedule": "0 * * * *"
     }
   ]
 }

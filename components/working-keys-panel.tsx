@@ -10,6 +10,7 @@ import {
 } from "@/lib/working-keys-store"
 import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
 import ExportApiPanel from "@/components/export-api-panel"
+import UserSessionPanel, { type WorkingKeyForSession } from "@/components/user-session-panel"
 
 // ── Types for locked keys (DB-backed) ────────────────────────────────────────
 
@@ -547,6 +548,17 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
   const [filterProvider, setFilterProvider] = useState<string>("all")
   const [confirmClear, setConfirmClear] = useState(false)
   const [lockedTick, setLockedTick]   = useState(0)
+  const [sessionToken, setSessionToken] = useState<string | null>(null)
+
+  // Derive session-ready keys from current working key records
+  const sessionKeys: WorkingKeyForSession[] = records.map((r) => ({
+    providerId:   r.providerId,
+    providerName: r.providerName,
+    modelId:      r.modelId,
+    apiKeyMasked: r.apiKey.slice(0, 12) + "••••••",
+    isWorking:    true,
+    latencyMs:    r.latencyMs,
+  }))
 
   // Load from localStorage
   const reload = useCallback(() => {
@@ -690,8 +702,14 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
         Stored locally in browser. Raw keys are never exposed via the API.
       </p>
 
-      {/* Locked keys section — DB-backed, auto-refreshes every 24h */}
+      {/* Locked keys section — DB-backed, auto-refreshes every 24h (developer) */}
       <LockedKeysSection refreshTick={lockedTick} />
+
+      {/* User temporary session — public users, TTL-based access */}
+      <UserSessionPanel
+        pendingKeys={sessionToken ? sessionKeys : undefined}
+        onSessionToken={setSessionToken}
+      />
 
       {/* Export API section */}
       <ExportApiPanel keys={records} />
