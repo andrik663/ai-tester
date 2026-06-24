@@ -317,7 +317,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://llama.developer.meta.com/",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
-  // ── Meta / Llama providers via 3rd-party ──────────────────────────────────
+  // ── Meta / Llama providers via 3rd-party ────���─────────────────────────────
   // ── Meta / Llama providers ─────────────────────────────────────────────��──
   {
     id: "cerebras",
@@ -1111,6 +1111,315 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://console.anyscale.com/credentials",
     color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
   },
+  // ── OpenRouter Providers (from OpenRouter API) ───────────────────────────
+  {
+    id: "aion-labs",
+    name: "Aion Labs",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "aion-labs/aion-2.0", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/aion-labs",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+  },
+  {
+    id: "allenai",
+    name: "Allen AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "allenai/olmo-3-32b-think", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/allenai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+  },
+  {
+    id: "anthracite-org",
+    name: "Anthracite",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "anthracite-org/magnum-v4-72b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/anthracite-org",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-gray-300 bg-gray-300/10 border-gray-300/20",
+  },
+  {
+    id: "arcee-ai",
+    name: "Arcee AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "arcee-ai/trinity-large-thinking", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/arcee-ai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  },
+
+  {
+    id: "cognitivecomputations",
+    name: "Cognitive Computations",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "cognitivecomputations/dolphin-mistral-24b-venice-edition", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/cognitivecomputations",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+  },
+  {
+    id: "deepcogito",
+    name: "Deep Cogito",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "deepcogito/cogito-v2.1-671b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/deepcogito",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-teal-400 bg-teal-400/10 border-teal-400/20",
+  },
+  {
+    id: "gryphe",
+    name: "Gryphe",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "gryphe/mythomax-l2-13b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/gryphe",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-red-500 bg-red-500/10 border-red-500/20",
+  },
+
+  {
+    id: "inclusionai",
+    name: "Inclusion AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "inclusionai/ring-2.6-1t", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/inclusionai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+  },
+  {
+    id: "inflection",
+    name: "Inflection AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "inflection/inflection-3-productivity", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/inflection",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+  },
+  {
+    id: "kwaipilot",
+    name: "Kwaipilot",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "kwaipilot/kat-coder-pro-v2", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/kwaipilot",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-red-400 bg-red-400/10 border-red-400/20",
+  },
+  {
+    id: "liquid",
+    name: "Liquid AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "liquid/lfm-2-24b-a2b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/liquid",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-sky-400 bg-sky-400/10 border-sky-400/20",
+  },
+  {
+    id: "mancer",
+    name: "Mancer",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "mancer/weaver", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/mancer",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-pink-500 bg-pink-500/10 border-pink-500/20",
+  },
+
+  {
+    id: "microsoft",
+    name: "Microsoft Phi",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "microsoft/phi-4-mini-instruct", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/microsoft",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  },
+
+
+  {
+    id: "morph",
+    name: "Morph",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "morph/morph-v3-large", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/morph",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+  },
+  {
+    id: "nex-agi",
+    name: "Nex AGI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "nex-agi/nex-n2-pro", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/nex-agi",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+  },
+  {
+    id: "nousresearch",
+    name: "Nous Research",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "nousresearch/hermes-4-70b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/nousresearch",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
+  },
+  {
+    id: "perceptron",
+    name: "Perceptron",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "perceptron/perceptron-mk1", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/perceptron",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-rose-400 bg-rose-400/10 border-rose-400/20",
+  },
+  {
+    id: "poolside",
+    name: "Poolside AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "poolside/laguna-xs.2", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/poolside",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+  },
+  {
+    id: "rekaai",
+    name: "Reka AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "rekaai/reka-edge", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/rekaai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-violet-500 bg-violet-500/10 border-violet-500/20",
+  },
+  {
+    id: "relace",
+    name: "Relace",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "relace/relace-search", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/relace",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/20",
+  },
+  {
+    id: "sao10k",
+    name: "Sao10k",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "sao10k/l3.1-70b-hanami-x1", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/sao10k",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
+  },
+  {
+    id: "switchpoint",
+    name: "Switchpoint",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "switchpoint/router", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/switchpoint",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
+  },
+
+  {
+    id: "thedrummer",
+    name: "The Drummer",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "thedrummer/cydonia-24b-v4.1", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/thedrummer",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+  },
+  {
+    id: "undi95",
+    name: "Undi95",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "undi95/remm-slerp-l2-13b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/undi95",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-teal-300 bg-teal-300/10 border-teal-300/20",
+  },
+
+  {
+    id: "xiaomi",
+    name: "Xiaomi MiMo",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "xiaomi/mimo-v2.5-pro", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    docsUrl: "https://openrouter.ai/xiaomi",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-orange-500 bg-orange-500/10 border-orange-500/20",
+  },
+
   // ── Custom ────────────────────────────────────────────────────────────────
   {
     id: "custom",
@@ -1129,70 +1438,159 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Provider logos (theSVG.org CDN) ──────────────���─────────────────────────��──
-// Using jsDelivr mirror for performance. Variants: light = white for dark BG, default fallback.
-const BASE = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons"
-
-const PROVIDER_LOGOS: Record<string, string> = {
-  dahono:      `${BASE}/dahono/color.svg`,
-  anthropic:   `${BASE}/anthropic/light.svg`,
-  openai:      `${BASE}/openai/dark.svg`,
-  google:      `${BASE}/google/default.svg`,
-  xai:         `${BASE}/x/mono.svg`,
-  deepseek:    `${BASE}/deepseek/default.svg`,
-  qwen:        `${BASE}/alibaba-cloud/mono.svg`,
-  zhipu:       `${BASE}/zhipuai/default.svg`,
-  minimax:     `${BASE}/minimax/default.svg`,
-  cerebras:    `${BASE}/cerebras/mono.svg`,
-  fireworks:   `${BASE}/fireworks-ai/default.svg`,
-  novita:      `${BASE}/novita/default.svg`,
-  cloudflare:  `${BASE}/cloudflare-workers/default.svg`,
-  openrouter:  `${BASE}/openrouter/default.svg`,
-  sambanova:   `${BASE}/sambanova/default.svg`,
-  nvidia:      `${BASE}/nvidia/mono.svg`,
-  hyperbolic:  `${BASE}/hyperbolic/default.svg`,
-  ai21:        `${BASE}/ai21-labs/default.svg`,
-  groq:        `${BASE}/groq/default.svg`,
-  together:    `${BASE}/together-ai/default.svg`,
-  mistral:     `${BASE}/mistral-ai/default.svg`,
-  cohere:      `${BASE}/cohere/default.svg`,
-  perplexity:  `${BASE}/perplexity/default.svg`,
-  huggingface: `${BASE}/hugging-face/default.svg`,
-  replicate:   `${BASE}/replicate/default.svg`,
-  moonshot:    `${BASE}/moonshot-ai/default.svg`,
-  baidu:       `${BASE}/baidu/default.svg`,
-  yi:          `${BASE}/01dotai/mono.svg`,
-  stepfun:     `${BASE}/stepfun/default.svg`,
-  hunyuan:     `${BASE}/tencent/mono.svg`,
-  azure:       `${BASE}/microsoft-azure/default.svg`,
-  upstage:     `${BASE}/upstage/default.svg`,
-  writer:      `${BASE}/writer/default.svg`,
-  lepton:      `${BASE}/lepton-ai/default.svg`,
-  bfl:         `${BASE}/black-forest-labs/default.svg`,
-  bytedance:   `${BASE}/bytedance/default.svg`,
-  recraft:     `${BASE}/recraft/default.svg`,
-  ideogram:    `${BASE}/ideogram/default.svg`,
-  luma:        `${BASE}/luma-ai/default.svg`,
-  amazon:      `${BASE}/amazon-web-services/mono.svg`,
-  inception:   `${BASE}/inception/default.svg`,
-  ibm:         `${BASE}/ibm/default.svg`,
-  deepinfra:   `${BASE}/deepinfra/default.svg`,
-  anyscale:    `${BASE}/anyscale/default.svg`,
-  meta:        `${BASE}/meta/default.svg`,
+// ── Provider logos ────────────────────────────────────────────────────────────
+// Uses Google's faviconV2 service (returns 64px PNG, no CORS issues).
+// Falls back to DuckDuckGo favicon, then branded initials badge.
+//
+// Domain map: provider id → website domain used for favicon lookup.
+const PROVIDER_DOMAIN: Record<string, string> = {
+  // Frontier
+  anthropic:      "anthropic.com",
+  openai:         "openai.com",
+  google:         "google.com",
+  xai:            "x.ai",
+  deepseek:       "deepseek.com",
+  meta:           "meta.ai",
+  // Chinese providers
+  qwen:           "alibabacloud.com",
+  zhipu:          "zhipuai.cn",
+  minimax:        "minimax.io",
+  moonshot:       "moonshot.ai",
+  moonshotai:     "moonshot.ai",
+  baidu:          "cloud.baidu.com",
+  hunyuan:        "cloud.tencent.com",
+  stepfun:        "stepfun.com",
+  bytedance:      "volcengine.com",
+  xiaomi:         "mi.com",
+  "z-ai":         "zhipuai.cn",
+  "nex-agi":      "nexagi.com",
+  kwaipilot:      "kwai.com",
+  siliconflow:    "siliconflow.cn",
+  seed:           "seed.sg",
+  // American providers
+  groq:           "groq.com",
+  cerebras:       "cerebras.ai",
+  fireworks:      "fireworks.ai",
+  together:       "together.xyz",
+  sambanova:      "sambanova.ai",
+  nvidia:         "nvidia.com",
+  perplexity:     "perplexity.ai",
+  cohere:         "cohere.com",
+  ai21:           "ai21.com",
+  replicate:      "replicate.com",
+  huggingface:    "huggingface.co",
+  cloudflare:     "cloudflare.com",
+  deepinfra:      "deepinfra.com",
+  novita:         "novita.ai",
+  upstage:        "upstage.ai",
+  inception:      "inceptionlabs.ai",
+  ibm:            "ibm.com",
+  anyscale:       "anyscale.com",
+  recraft:        "recraft.ai",
+  luma:           "lumalabs.ai",
+  writer:         "writer.com",
+  hyperbolic:     "hyperbolic.xyz",
+  lepton:         "lepton.ai",
+  bfl:            "blackforestlabs.ai",
+  "black-forest-labs": "blackforestlabs.ai",
+  ideogram:       "ideogram.ai",
+  amazon:         "aws.amazon.com",
+  "amazon-bedrock": "aws.amazon.com",
+  azure:          "azure.microsoft.com",
+  "google-ai-studio": "ai.google.dev",
+  "google-vertex":    "cloud.google.com",
+  openrouter:     "openrouter.ai",
+  inflection:     "inflection.ai",
+  "arcee-ai":     "arcee.ai",
+  mancer:         "mancer.tech",
+  liquid:         "liquid.ai",
+  morph:          "morphllm.com",
+  poolside:       "poolside.ai",
+  relace:         "relace.ai",
+  venice:         "venice.ai",
+  baseten:        "baseten.co",
+  wandb:          "wandb.ai",
+  featherless:    "featherless.ai",
+  friendli:       "friendli.ai",
+  nebius:         "nebius.com",
+  crusoe:         "crusoe.ai",
+  clarifai:       "clarifai.com",
+  digitalocean:   "digitalocean.com",
+  gmicloud:       "gmicloud.ai",
+  chutes:         "chutes.ai",
+  phala:          "phala.network",
+  switchpoint:    "switchpoint.ai",
+  inceptron:      "inceptron.se",
+  infermatic:     "infermatic.ai",
+  perceptron:     "perceptron.ai",
+  akashml:        "akash.network",
+  "atlas-cloud":  "atlascloud.ai",
+  "io-net":       "io.net",
+  nousresearch:   "nousresearch.com",
+  reka:           "reka.ai",
+  rekaai:         "reka.ai",
+  "aion-labs":    "aionlabs.net",
+  mistral:        "mistral.ai",
 }
 
+/** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
+function getLogoUrl(domain: string): string {
+  return `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=64`
+}
 
-function ProviderLogo({ providerId, className = "w-4 h-4" }: { providerId: string; className?: string }) {
-  const src = PROVIDER_LOGOS[providerId]
-  if (!src) return null
+/** DuckDuckGo favicon fallback */
+function getDDGLogoUrl(domain: string): string {
+  return `https://icons.duckduckgo.com/ip3/${domain}.ico`
+}
+
+/** Deterministic brand color from name — used for initials badge */
+function providerColor(name: string): string {
+  const colors = [
+    "#6366f1","#8b5cf6","#ec4899","#f43f5e","#f97316",
+    "#eab308","#22c55e","#14b8a6","#0ea5e9","#3b82f6",
+  ]
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff
+  return colors[Math.abs(h) % colors.length]
+}
+
+function ProviderLogo({
+  providerId,
+  providerName = "",
+  className = "w-4 h-4",
+}: {
+  providerId: string
+  providerName?: string
+  className?: string
+}) {
+  const [stage, setStage] = useState<"primary" | "fallback" | "initials">("primary")
+  const domain = PROVIDER_DOMAIN[providerId]
+  const displayName = providerName || providerId
+  const initials = displayName.replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?"
+  const bg = providerId === "dahono" ? "#8b5cf6" : providerColor(displayName)
+
+  if (!domain || stage === "initials") {
+    return (
+      <span
+        aria-hidden
+        className={`${className} flex-shrink-0 rounded-lg flex items-center justify-center text-white font-bold leading-none`}
+        style={{ background: bg, fontSize: "40%", letterSpacing: "-0.02em" }}
+      >
+        {initials}
+      </span>
+    )
+  }
+
+  const src = stage === "primary" ? getLogoUrl(domain) : getDDGLogoUrl(domain)
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt=""
       aria-hidden
-      className={`${className} object-contain flex-shrink-0`}
-      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
+      className={`${className} object-contain flex-shrink-0 rounded-md`}
+      onError={() => setStage(s => s === "primary" ? "fallback" : "initials")}
     />
   )
 }
@@ -1437,20 +1835,22 @@ export default function ManualKeyTester() {
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info">("unified")
   // Onboarding banner — dismissed in localStorage
-  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true
-    return localStorage.getItem("ai_tester_onboarding_dismissed") === "1"
-  })
+  // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
+  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
+  useEffect(() => {
+    setOnboardingDismissed(localStorage.getItem("ai_tester_onboarding_dismissed") === "1")
+  }, [])
   function dismissOnboarding() {
     localStorage.setItem("ai_tester_onboarding_dismissed", "1")
     setOnboardingDismissed(true)
   }
 
   // Remember API key per provider — stored obfuscated in localStorage (btoa/atob)
-  const [rememberKey, setRememberKey] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false
-    return localStorage.getItem("ai_tester_remember_pref") === "1"
-  })
+  // Start as false (matches SSR), sync from localStorage after mount
+  const [rememberKey, setRememberKey] = useState<boolean>(false)
+  useEffect(() => {
+    setRememberKey(localStorage.getItem("ai_tester_remember_pref") === "1")
+  }, [])
   // Load saved key when provider changes or remember preference loads
   useEffect(() => {
     if (!rememberKey) return
@@ -1927,7 +2327,7 @@ export default function ManualKeyTester() {
 
       {/* ── LEFT: Config panel ─────────────────────────────────────────────── */}
       <aside className={`
-        flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-y-auto
+        flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
         w-72 md:w-64 lg:w-72
         transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
@@ -1945,7 +2345,7 @@ export default function ManualKeyTester() {
             </div>
             <div>
               <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Key Tester</p>
-              <p className="text-[10px] text-muted-foreground">40+ providers supported</p>
+              <p className="text-[10px] text-muted-foreground">{PRESETS.length} providers supported</p>
             </div>
           </div>
           <button
@@ -1959,11 +2359,12 @@ export default function ManualKeyTester() {
           </button>
         </div>
 
-        <div className="flex-1 px-4 py-4 flex flex-col gap-5">
+        {/* ── Scrollable sidebar body ── */}
+        <div className="flex-1 overflow-y-auto flex flex-col">
 
           {/* Onboarding banner — shown once, dismissable */}
           {!onboardingDismissed && (
-            <div className="rounded-xl border border-primary/25 bg-primary/6 p-3 flex flex-col gap-2 relative">
+            <div className="mx-4 mt-4 rounded-xl border border-primary/25 bg-primary/6 p-3 flex flex-col gap-2 relative flex-shrink-0">
               <button
                 onClick={dismissOnboarding}
                 className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
@@ -1989,11 +2390,11 @@ export default function ManualKeyTester() {
             </div>
           )}
 
-          {/* Provider selector */}
-          <div className="flex flex-col gap-1.5">
+          {/* Provider selector header */}
+          <div className="px-4 pt-4 pb-1.5 flex-shrink-0">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-                Provider <span className="normal-case font-normal text-muted-foreground/70">({PRESETS.length - 1} supported)</span>
+                Provider <span className="normal-case font-normal text-muted-foreground/70">({PRESETS.length} supported)</span>
               </label>
               {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
                 <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
@@ -2001,8 +2402,11 @@ export default function ManualKeyTester() {
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-px max-h-52 overflow-y-auto">
-              {PRESETS.map((p) => (
+          </div>
+
+          {/* Provider list — fixed height scrollable box */}
+          <div className="overflow-y-auto px-4 pb-2 flex flex-col gap-px" style={{height: "400px", minHeight: "400px"}}>
+            {PRESETS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
@@ -2012,16 +2416,10 @@ export default function ManualKeyTester() {
                       : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
                   }`}
                 >
-                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors overflow-hidden ${
+                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors ${
                     selectedPreset.id === p.id ? "opacity-100" : "opacity-60 group-hover:opacity-90"
                   }`}>
-                    {PROVIDER_LOGOS[p.id] ? (
-                      <ProviderLogo providerId={p.id} className="w-4 h-4" />
-                    ) : (
-                      <span className={`w-1.5 h-1.5 rounded-full border transition-colors ${
-                        selectedPreset.id === p.id ? "bg-foreground border-foreground" : "border-border group-hover:border-muted-foreground"
-                      }`} />
-                    )}
+                    <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
                   </span>
                   <span className="flex-1 min-w-0 truncate">{p.name}</span>
                   {p.country && (
@@ -2031,10 +2429,10 @@ export default function ManualKeyTester() {
                   )}
                 </button>
               ))}
-            </div>
           </div>
 
-          {/* API Key */}
+          {/* API Key + rest of sidebar settings */}
+          <div className="flex flex-col gap-5 px-4 py-4 border-t border-border mt-1">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
@@ -2440,10 +2838,11 @@ export default function ManualKeyTester() {
             Clear All History
           </button>
 
-        </div>
+          </div>{/* end gap-5 section */}
+        </div>{/* end scrollable body */}
       </aside>
 
-      {/* ── RIGHT: Tabbed panel ────────────────────────────────────────────── */}
+      {/* ── RIGHT: Tabbed panel ──────────────────────────────���─────────────── */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
         {/* ── HEADER: mobile config toggle + tab bar ──────────────────────── */}
@@ -2464,7 +2863,7 @@ export default function ManualKeyTester() {
 
             {/* Provider badge */}
             <span className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate min-w-0 flex-1">
-              <ProviderLogo providerId={selectedPreset.id} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
+              <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
               <span className="truncate hidden sm:block">{selectedPreset.name}</span>
               {selectedPreset.country && (
                 <span className="text-[11px] font-mono text-muted-foreground/70 uppercase hidden sm:block">{selectedPreset.country}</span>
@@ -2624,13 +3023,7 @@ export default function ManualKeyTester() {
             {/* Provider Header Bar */}
             <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
               <div className="flex items-center gap-2.5 min-w-0">
-                {PROVIDER_LOGOS[selectedPreset.id] ? (
-                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                  </svg>
-                )}
+                <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                 <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
               </div>
               
@@ -2659,14 +3052,7 @@ export default function ManualKeyTester() {
                   {/* Provider icon + name */}
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_28px_oklch(0.76_0.17_192_/_0.15)]">
-                      {PROVIDER_LOGOS[selectedPreset.id] ? (
-                        <ProviderLogo providerId={selectedPreset.id} className="w-8 h-8" />
-                      ) : (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-primary">
-                          <circle cx="7" cy="12" r="4" />
-                          <path d="M11 12h9M17 10v4" />
-                        </svg>
-                      )}
+                      <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-8 h-8" />
                     </div>
                     <div>
                       <p className="text-lg font-semibold text-foreground text-balance">{selectedPreset.name}</p>
@@ -2747,7 +3133,7 @@ export default function ManualKeyTester() {
               {loading && (
                 <div className="flex items-start gap-2">
                   <div className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${selectedPreset.color}`}>
-                    <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4" />
+                    <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4" />
                   </div>
                   <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-2">
                     <SpinnerIcon />
@@ -2943,13 +3329,7 @@ export default function ManualKeyTester() {
             {/* Provider Header Bar */}
             <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
               <div className="flex items-center gap-2.5 min-w-0">
-                {PROVIDER_LOGOS[selectedPreset.id] ? (
-                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                  </svg>
-                )}
+                <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                 <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
               </div>
               
@@ -3258,13 +3638,7 @@ export default function ManualKeyTester() {
               {/* Provider Header Bar */}
             <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
               <div className="flex items-center gap-2.5 min-w-0">
-                {PROVIDER_LOGOS[selectedPreset.id] ? (
-                  <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                    <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                  </svg>
-                )}
+                <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                 <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
               </div>
               
@@ -3297,7 +3671,7 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── VIDEO GEN TAB ────────────────────────────────────────────────── */}
+        {/* ── VIDEO GEN TAB ─────────────────────────────────────────────��──── */}
         {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
           const { models: videoModels } = getVideoCapabilities(selectedPreset.id)
           const isVideoSupported = videoModels.length > 0
@@ -3315,13 +3689,7 @@ export default function ManualKeyTester() {
               {/* Provider Header Bar */}
               <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {PROVIDER_LOGOS[selectedPreset.id] ? (
-                    <ProviderLogo providerId={selectedPreset.id} className="w-4 h-4 flex-shrink-0" />
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                      <circle cx="7" cy="12" r="4" /><path d="M11 12h9M17 10v4" />
-                    </svg>
-                  )}
+                  <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
                   <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
                 </div>
                 
@@ -3400,9 +3768,7 @@ export default function ManualKeyTester() {
                       {/* Column header */}
                       <div className="px-3 pt-3 pb-2 border-b border-border/50 flex flex-col gap-2 bg-secondary/20">
                         <div className="flex items-center gap-2">
-                          {preset && PROVIDER_LOGOS[preset.id] && (
-                            <ProviderLogo providerId={preset.id} className="w-4 h-4 flex-shrink-0" />
-                          )}
+                          {preset && <ProviderLogo providerId={preset.id} providerName={preset.name} className="w-4 h-4 flex-shrink-0" />}
                           <select
                             value={slot.providerId}
                             onChange={(e) => {
@@ -3502,7 +3868,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── INFO TAB ─────────────────────────────────────────────────────── */}
+        {/* ── INFO TAB ──────────────────────────────���──────────────────────── */}
         {activeTab === "info" && (
           <ProviderInfoPanel apiKey={apiKey || undefined} />
         )}
@@ -3666,7 +4032,7 @@ export default function ManualKeyTester() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
                       {detectedPreset && (
-                        <ProviderLogo providerId={detectedPreset.id} className="w-6 h-6 flex-shrink-0" />
+                        <ProviderLogo providerId={detectedPreset.id} providerName={detectedPreset.name} className="w-6 h-6 flex-shrink-0" />
                       )}
                       <span className="text-sm font-semibold text-foreground truncate tracking-tight">
                         {liveResult.providerName ?? "Unknown Provider"}
@@ -3752,7 +4118,7 @@ export default function ManualKeyTester() {
                                   </td>
                                   <td className="px-3 py-2.5">
                                     <div className="flex items-center gap-2">
-                                      <ProviderLogo providerId={p.providerId} className="w-4 h-4 flex-shrink-0 opacity-80" />
+                                      <ProviderLogo providerId={p.providerId} providerName={p.providerName} className="w-4 h-4 flex-shrink-0 opacity-80" />
                                       <span className="text-foreground font-medium truncate max-w-[130px]">{p.providerName}</span>
                                     </div>
                                   </td>
@@ -3791,7 +4157,7 @@ export default function ManualKeyTester() {
                               <tr key={i} className="border-b border-border/40 last:border-0 hover:bg-secondary/30 transition-colors">
                                 <td className="px-3 py-2.5">
                                   <div className="flex items-center gap-2">
-                                    <ProviderLogo providerId={p.providerId} className="w-4 h-4 flex-shrink-0 opacity-70" />
+                                    <ProviderLogo providerId={p.providerId} providerName={p.providerName} className="w-4 h-4 flex-shrink-0 opacity-70" />
                                     <span className="text-foreground font-medium truncate max-w-[130px]">{p.providerName}</span>
                                   </div>
                                 </td>
