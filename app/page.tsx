@@ -1,12 +1,12 @@
-import { headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
 import ManualKeyTester from '@/components/manual-key-tester'
 
 export default async function Page() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const cookieStore = await cookies()
+  const devSession = cookieStore.get('dev_session')?.value
 
-  if (!session?.user) {
+  if (!devSession) {
     redirect('/login')
   }
 

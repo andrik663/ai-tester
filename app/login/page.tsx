@@ -1,9 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
-import { type AuthState } from "@/components/auth-modal"
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
@@ -54,10 +52,6 @@ function SpinnerIcon() {
   )
 }
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-type Mode = "sign-in" | "sign-up"
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
@@ -65,34 +59,28 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/"
 
-  const [mode, setMode] = useState<Mode>("sign-in")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
   const [error, setError] = useState("")
   const [shake, setShake] = useState(false)
+  const passwordRef = useRef<HTMLInputElement>(null)
 
-  // If already authenticated, redirect immediately
+  // Check if already logged in via dev session
   useEffect(() => {
-    authClient.getSession().then((res) => {
-      if (res?.data?.user) {
-        router.replace(callbackUrl)
-      } else {
-        setCheckingSession(false)
-      }
-    })
+    fetch("/api/dev/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDev) {
+          router.replace(callbackUrl)
+        } else {
+          setCheckingSession(false)
+          setTimeout(() => passwordRef.current?.focus(), 60)
+        }
+      })
+      .catch(() => setCheckingSession(false))
   }, [callbackUrl, router])
-
-  function resetForm() {
-    setName("")
-    setEmail("")
-    setPassword("")
-    setError("")
-    setShowPw(false)
-  }
 
   function triggerShake() {
     setShake(true)
@@ -101,34 +89,26 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim() || !password.trim()) return
-    if (mode === "sign-up" && !name.trim()) return
+    if (!password.trim()) return
     setLoading(true)
     setError("")
 
     try {
-      if (mode === "sign-in") {
-        const { data, error: err } = await authClient.signIn.email({
-          email: email.trim(),
-          password,
-        })
-        if (err || !data) {
-          setError("Invalid credentials. Please try again.")
-          triggerShake()
-          return
-        }
-      } else {
-        const { data, error: err } = await authClient.signUp.email({
-          email: email.trim(),
-          password,
-          name: name.trim(),
-        })
-        if (err || !data) {
-          setError(err?.message ?? "Registration failed. Try a different email.")
-          triggerShake()
-          return
-        }
+      const res = await fetch("/api/dev/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? "Incorrect password. Please try again.")
+        triggerShake()
+        setPassword("")
+        setTimeout(() => passwordRef.current?.focus(), 60)
+        return
       }
+
       router.replace(callbackUrl)
       router.refresh()
     } catch {
@@ -179,91 +159,26 @@ export default function LoginPage() {
                 API Key Tester
               </h1>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                {mode === "sign-in"
-                  ? "Sign in to access your workspace"
-                  : "Create an account to get started"}
+                Enter the access password to continue
               </p>
             </div>
           </div>
 
-          {/* Mode tabs */}
-          <div className="flex rounded-lg border border-border bg-secondary/30 p-0.5 text-[11px] font-medium">
-            <button
-              type="button"
-              onClick={() => { setMode("sign-in"); resetForm() }}
-              className={`flex-1 h-7 rounded-md transition-all ${
-                mode === "sign-in"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode("sign-up"); resetForm() }}
-              className={`flex-1 h-7 rounded-md transition-all ${
-                mode === "sign-up"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Register
-            </button>
-          </div>
-
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            {mode === "sign-up" && (
-              <div className="flex flex-col gap-1">
-                <label htmlFor="name" className="text-[11px] font-medium text-muted-foreground">
-                  Full name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => { setName(e.target.value); setError("") }}
-                  placeholder="Your name"
-                  autoComplete="name"
-                  required
-                  className="w-full h-10 rounded-lg border border-border bg-secondary/40 px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-ring/40 focus:border-ring/60 transition-all"
-                />
-              </div>
-            )}
-
-            <div className="flex flex-col gap-1">
-              <label htmlFor="email" className="text-[11px] font-medium text-muted-foreground">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError("") }}
-                placeholder="you@example.com"
-                autoComplete="email"
-                required
-                className={`w-full h-10 rounded-lg border bg-secondary/40 px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-1 transition-all ${
-                  error
-                    ? "border-destructive/60 focus:ring-destructive/40"
-                    : "border-border focus:ring-ring/40 focus:border-ring/60"
-                }`}
-              />
-            </div>
-
             <div className="flex flex-col gap-1">
               <label htmlFor="password" className="text-[11px] font-medium text-muted-foreground">
-                Password
+                Access Password
               </label>
               <div className="relative">
                 <input
+                  ref={passwordRef}
                   id="password"
                   type={showPw ? "text" : "password"}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError("") }}
-                  placeholder={mode === "sign-up" ? "Create a strong password" : "Enter your password"}
-                  autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+                  placeholder="Enter access password"
+                  autoComplete="current-password"
                   required
                   className={`w-full h-10 rounded-lg border bg-secondary/40 px-3 pr-9 text-[13px] text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-1 transition-all ${
                     error
@@ -291,23 +206,18 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={
-                loading ||
-                !email.trim() ||
-                !password.trim() ||
-                (mode === "sign-up" && !name.trim())
-              }
+              disabled={loading || !password.trim()}
               className="mt-1 h-10 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
                   <SpinnerIcon />
-                  {mode === "sign-in" ? "Signing in..." : "Creating account..."}
+                  Verifying...
                 </>
               ) : (
                 <>
                   <ShieldIcon filled />
-                  {mode === "sign-in" ? "Sign In" : "Create Account"}
+                  Access
                 </>
               )}
             </button>
@@ -315,7 +225,7 @@ export default function LoginPage() {
 
           {/* Footer note */}
           <p className="text-[9px] text-muted-foreground/40 text-center leading-relaxed">
-            Session stored as an httpOnly cookie &bull; valid for 7 days
+            Dev access only &bull; Session valid for 7 days
           </p>
         </div>
       </div>
