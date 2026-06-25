@@ -130,7 +130,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://labs.dahono.com/account/api-keys",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ─────────────────���─────────────────────────────
+  // ── Tier 1: Major providers ─────────────────����─────────────────────────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -1834,6 +1834,7 @@ export default function ManualKeyTester() {
   const [showLog, setShowLog] = useState(false)
   const [showRawResponse, setShowRawResponse] = useState(false)
   const [showBodyEditor, setShowBodyEditor] = useState(false)
+  const [batchView, setBatchView] = useState<"config" | "run">("run")
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [copiedShare, setCopiedShare] = useState(false)
@@ -4122,189 +4123,181 @@ export default function ManualKeyTester() {
 
         {/* ── MULTI-KEY BATCH TAB ────────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
-          <div className="flex-1 min-h-0 flex overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-            {/* Left: Config panel */}
-            <div className="w-72 flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
-
-                {/* Endpoint */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-medium text-muted-foreground">Endpoint URL</label>
-                  <div className="flex gap-1">
-                    <select
-                      value={method}
-                      onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
-                      className="text-[11px] font-mono bg-background border border-border rounded px-1.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
-                    >
-                      {["POST", "GET", "PUT", "DELETE"].map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="url"
-                      value={endpoint}
-                      onChange={(e) => setEndpoint(e.target.value)}
-                      placeholder="https://api.example.com/v1/..."
-                      className="flex-1 min-w-0 rounded border border-border bg-background text-foreground text-[11px] font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                    />
-                  </div>
-                  {selectedPreset.docsUrl && (
-                    <a href={selectedPreset.docsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-primary/70 hover:text-primary transition-colors">
-                      View API docs →
-                    </a>
-                  )}
-                </div>
-
-                {/* Dahono model picker */}
-                {selectedPreset.id === "dahono" && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-medium text-muted-foreground">
-                      Model{dahonoModelsFetching && <span className="ml-1 font-normal text-muted-foreground/60"> fetching...</span>}
-                    </label>
-                    {dahonoModels.length > 0 ? (
-                      <select
-                        value={selectedDahonoModel}
-                        onChange={(e) => { setSelectedDahonoModel(e.target.value); updateDahonoBodyModel(e.target.value) }}
-                        className="text-[11px] font-mono bg-background border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring w-full"
-                      >
-                        {["free", "starter", "pro", "business"].map((tier) => {
-                          const tm = dahonoModels.filter((m) => m.tier === tier)
-                          if (tm.length === 0) return null
-                          return (
-                            <optgroup key={tier} label={`${tier.charAt(0).toUpperCase() + tier.slice(1)} (${tm.length})`}>
-                              {tm.map((m) => <option key={m.id} value={m.id}>{m.id}</option>)}
-                            </optgroup>
-                          )
-                        })}
-                      </select>
-                    ) : (
-                      <p className="text-[11px] text-muted-foreground/60">Enter API key to load models.</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Single-key Batch Model Test */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-medium text-muted-foreground">Single-key Batch Test</label>
-                  <ProviderBatchTest
-                    providerId={selectedPreset.id}
-                    providerName={selectedPreset.name}
-                    apiKey={apiKey}
-                    onSaved={() => setWorkingKeysTick((t) => t + 1)}
-                  />
-                </div>
-
-                {/* Headers */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-medium text-muted-foreground">Headers</label>
-                  <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
-                  <p className="text-[10px] text-muted-foreground/60">
-                    Use <code className="text-primary/70">{"{{API_KEY}}"}</code> as placeholder.
-                  </p>
-                </div>
-
-                {/* Model catalog */}
-                {selectedPreset.models && selectedPreset.models.length > 0 && (
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-[11px] font-medium text-muted-foreground">
-                      Models <span className="text-muted-foreground/50">({selectedPreset.models.length}) — tap to select</span>
-                    </p>
-                    <div className="flex flex-col gap-0.5">
-                      {selectedPreset.models.map((m) => {
-                        const isActive = bodyTemplate.includes(`"${m.id}"`)
-                        return (
-                          <button
-                            key={m.id}
-                            onClick={() => {
-                              try {
-                                const parsed = JSON.parse(bodyTemplate)
-                                parsed.model = m.id
-                                setBodyTemplate(JSON.stringify(parsed, null, 2))
-                              } catch {
-                                setBodyTemplate(JSON.stringify({ model: m.id, max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2))
-                              }
-                            }}
-                            className={`text-left w-full px-2 py-1.5 rounded transition-colors flex items-center justify-between gap-2 group ${
-                              isActive ? "bg-primary/10 border border-primary/20" : "hover:bg-secondary/50 border border-transparent"
-                            }`}
-                          >
-                            <span className={`text-[11px] font-medium truncate ${isActive ? "text-primary" : "text-foreground/80"}`}>{m.label}</span>
-                            <span className="text-[9px] text-muted-foreground/60 bg-muted/40 px-1 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Request Body Template */}
-                <div className="flex flex-col gap-1.5">
+            {/* Mobile segment toggle — hidden on md+ */}
+            <div className="flex md:hidden items-center gap-1 px-3 py-2 border-b border-border bg-sidebar/60 flex-shrink-0">
+              <div className="flex items-center gap-0.5 bg-secondary/60 rounded-lg p-0.5 w-full">
+                {(["run", "config"] as const).map((v) => (
                   <button
-                    onClick={() => setShowBodyEditor((v) => !v)}
-                    className="flex items-center justify-between text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    key={v}
+                    onClick={() => setBatchView(v)}
+                    className={`flex-1 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                      batchView === v
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    <span>Request Body</span>
-                    <ChevronIcon open={showBodyEditor} />
+                    {v === "run" ? "Multi-key Run" : "Config"}
                   </button>
-                  {showBodyEditor && (
-                    <>
-                      <textarea
-                        value={bodyTemplate}
-                        onChange={(e) => setBodyTemplate(e.target.value)}
-                        rows={8}
-                        spellCheck={false}
-                        placeholder={"{\n  \"model\": \"...\"\n}"}
-                        className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40 resize-y"
-                      />
-                      <p className="text-[9px] text-muted-foreground/50">
-                        Use <code className="text-primary/70">{"{{PROMPT}}"}</code> where message is injected.
-                      </p>
-                    </>
-                  )}
-                </div>
-
-                {/* Key info */}
-                {apiKey.trim().length >= 8 && (
-                  <KeyInfoPanel
-                    provider={selectedPreset.id}
-                    apiKey={apiKey}
-                    responseHeaders={lastResponseHeaders}
-                    fetchTick={keyInfoTick}
-                  />
-                )}
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  {apiKey && result && (
-                    <button
-                      onClick={shareResult}
-                      className="flex-1 inline-flex items-center justify-center gap-1 text-[10px] font-medium px-2 py-1.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {copiedShare ? <span className="text-green-400">Copied</span> : "Share result"}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
-                    className="flex-1 text-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary px-2 py-1.5 rounded transition-colors border border-border/50 hover:border-border text-center"
-                  >
-                    Clear history
-                  </button>
-                </div>
-
+                ))}
               </div>
             </div>
 
-            {/* Right: Multi-key batch */}
-            <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
-              <MultiKeyBatch
-                onKeysSaved={() => {
-                  setWorkingKeysTick((t) => t + 1)
-                  setActiveTab("working-keys")
-                }}
-              />
-            </div>
+            {/* Body — side-by-side on desktop, single panel on mobile */}
+            <div className="flex-1 min-h-0 flex overflow-hidden">
 
+              {/* Config panel — always visible on md+, toggled on mobile */}
+              <div className={`
+                flex-shrink-0 border-r border-border flex flex-col overflow-hidden
+                md:w-72 md:flex
+                ${batchView === "config" ? "flex w-full" : "hidden md:flex"}
+              `}>
+                <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-5">
+
+                  {/* Endpoint */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">Endpoint URL</label>
+                    <div className="flex gap-1.5">
+                      <select
+                        value={method}
+                        onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
+                        className="text-[11px] font-mono bg-background border border-border rounded px-1.5 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
+                      >
+                        {["POST", "GET", "PUT", "DELETE"].map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="url"
+                        value={endpoint}
+                        onChange={(e) => setEndpoint(e.target.value)}
+                        placeholder="https://api.example.com/v1/..."
+                        className="flex-1 min-w-0 rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                      />
+                    </div>
+                    {selectedPreset.docsUrl && (
+                      <a href={selectedPreset.docsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-primary/70 hover:text-primary transition-colors">
+                        API docs →
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Single-key batch test */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">Single-key Test</label>
+                    <ProviderBatchTest
+                      providerId={selectedPreset.id}
+                      providerName={selectedPreset.name}
+                      apiKey={apiKey}
+                      onSaved={() => setWorkingKeysTick((t) => t + 1)}
+                    />
+                  </div>
+
+                  {/* Headers */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">Headers</label>
+                    <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
+                    <p className="text-[10px] text-muted-foreground/50">
+                      <code className="text-primary/70">{"{{API_KEY}}"}</code> is replaced on send.
+                    </p>
+                  </div>
+
+                  {/* Model catalog */}
+                  {selectedPreset.models && selectedPreset.models.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-[11px] font-medium text-muted-foreground">
+                        Models <span className="text-muted-foreground/40">({selectedPreset.models.length})</span>
+                      </p>
+                      <div className="flex flex-col gap-px">
+                        {selectedPreset.models.map((m) => {
+                          const isActive = bodyTemplate.includes(`"${m.id}"`)
+                          return (
+                            <button
+                              key={m.id}
+                              onClick={() => {
+                                try {
+                                  const parsed = JSON.parse(bodyTemplate)
+                                  parsed.model = m.id
+                                  setBodyTemplate(JSON.stringify(parsed, null, 2))
+                                } catch {
+                                  setBodyTemplate(JSON.stringify({ model: m.id, max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2))
+                                }
+                              }}
+                              className={`text-left w-full px-2 py-1.5 rounded flex items-center justify-between gap-2 transition-colors ${
+                                isActive ? "bg-primary/10 border border-primary/20" : "hover:bg-secondary/50 border border-transparent"
+                              }`}
+                            >
+                              <span className={`text-[11px] truncate ${isActive ? "text-primary font-medium" : "text-foreground/70"}`}>{m.label}</span>
+                              <span className="text-[9px] text-muted-foreground/50 bg-muted/30 px-1 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Request Body */}
+                  <div className="flex flex-col gap-1.5">
+                    <button
+                      onClick={() => setShowBodyEditor((v) => !v)}
+                      className="flex items-center justify-between text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span>Request Body</span>
+                      <ChevronIcon open={showBodyEditor} />
+                    </button>
+                    {showBodyEditor && (
+                      <>
+                        <textarea
+                          value={bodyTemplate}
+                          onChange={(e) => setBodyTemplate(e.target.value)}
+                          rows={7}
+                          spellCheck={false}
+                          placeholder={"{\n  \"model\": \"...\"\n}"}
+                          className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 resize-y"
+                        />
+                        <p className="text-[9px] text-muted-foreground/40">
+                          <code className="text-primary/60">{"{{PROMPT}}"}</code> — injected message placeholder.
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Key info */}
+                  {apiKey.trim().length >= 8 && (
+                    <KeyInfoPanel
+                      provider={selectedPreset.id}
+                      apiKey={apiKey}
+                      responseHeaders={lastResponseHeaders}
+                      fetchTick={keyInfoTick}
+                    />
+                  )}
+
+                  {/* Clear */}
+                  <button
+                    onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
+                    className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground hover:bg-secondary/40 px-3 py-2 rounded border border-border/40 hover:border-border transition-colors text-center"
+                  >
+                    Clear history
+                  </button>
+
+                </div>
+              </div>
+
+              {/* Multi-key batch panel */}
+              <div className={`
+                flex-1 min-w-0 min-h-0 overflow-hidden
+                ${batchView === "run" ? "flex" : "hidden md:flex"}
+              `}>
+                <MultiKeyBatch
+                  onKeysSaved={() => {
+                    setWorkingKeysTick((t) => t + 1)
+                    setActiveTab("working-keys")
+                  }}
+                />
+              </div>
+
+            </div>
           </div>
         )}
 
