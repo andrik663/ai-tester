@@ -102,12 +102,16 @@ function buildStreamBody(
   const chatMessages = systemPrompt
     ? [{ role: "system", content: systemPrompt }, ...messages]
     : messages
+
+  // stream_options is an OpenAI extension — only send for known providers that support it
+  const supportsStreamOptions = ["openai", "openrouter", "together", "fireworks", "deepinfra", "groq"].includes(providerKey)
+
   return {
     body: {
       ...base,
       messages: chatMessages,
       stream: true,
-      stream_options: { include_usage: true },
+      ...(supportsStreamOptions ? { stream_options: { include_usage: true } } : {}),
     },
     isStreamingSupported: true,
   }

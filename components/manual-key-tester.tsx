@@ -2295,7 +2295,9 @@ export default function ManualKeyTester() {
             headers,
             messages: [...previousMessages, { role: "user", content: currentPrompt }],
             systemPrompt: systemPrompt.trim() || undefined,
-            rawBody: resolvedBody,
+            // Do NOT send rawBody for chat — let the route build the correct body
+            // from messages + model. rawBody (which contains {{PROMPT}}) is only
+            // for the single-shot Test tab.
             model: chatModel.trim() || undefined,
           }),
         })
