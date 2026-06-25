@@ -130,7 +130,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://labs.dahono.com/account/api-keys",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ─────────────────����─────────────────────────────
+  // ── Tier 1: Major providers ─────────────────�����─────────────────────────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -2603,68 +2603,6 @@ export default function ManualKeyTester() {
           </div>
 
         </div>{/* end scrollable body */}
-
-        {/* API key strip — compact bottom bar, always visible */}
-        <div className="flex-shrink-0 border-t border-border px-3 py-2.5 bg-sidebar flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground/70">API Key</span>
-            <div className="flex items-center gap-1.5">
-              {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
-                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1 py-0.5 rounded">detected</span>
-              )}
-              {apiKey && (
-                <button
-                  onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
-                  className="text-[9px] text-muted-foreground/50 hover:text-destructive transition-colors"
-                  title="Clear"
-                >
-                  clear
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="relative">
-            <input
-              type={showKey ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => handleApiKeyChange(e.target.value)}
-              placeholder="Paste API key..."
-              className="w-full rounded border border-border bg-background/80 text-foreground text-[11px] font-mono px-2 py-1.5 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
-            />
-            <button
-              onClick={() => setShowKey((v) => !v)}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
-              title={showKey ? "Hide" : "Show"}
-            >
-              <EyeIcon show={showKey} />
-            </button>
-          </div>
-          {/* Remember toggle */}
-          <button
-            role="switch"
-            aria-checked={rememberKey}
-            onClick={() => handleRememberToggle(!rememberKey)}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
-          >
-            <span className={`relative w-6 h-3.5 rounded-full border transition-all flex-shrink-0 ${rememberKey ? "bg-primary/70 border-primary/50" : "bg-secondary border-border"}`}>
-              <span className={`absolute top-[1px] w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-all ${rememberKey ? "left-[11px]" : "left-[1px]"}`} />
-            </span>
-            Remember
-            {rememberKey && <span className="text-primary/70 font-medium">· saved</span>}
-          </button>
-          {selectedPreset.createKeyUrl && !apiKey && (
-            <a
-              href={selectedPreset.createKeyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[10px] text-primary/60 hover:text-primary transition-colors"
-            >
-              <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2"/><path d="M5 3v4M3 5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-              Get {selectedPreset.name} key
-              <svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </a>
-          )}
-        </div>
       </aside>
 
       {/* ── RIGHT: Tabbed panel ──────────────────────────────���─────────────── */}
@@ -2848,7 +2786,7 @@ export default function ManualKeyTester() {
                   <div>
                     <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {apiKey ? "Ready — send a message to test" : "Enter your API key in the sidebar"}
+                      {apiKey ? "Ready — send a message to test" : "Paste your API key below to start"}
                     </p>
                   </div>
                   {apiKey && (
@@ -3085,12 +3023,42 @@ export default function ManualKeyTester() {
                   />
                 )}
               </div>
+              {/* Inline API key input — shown only when no key is set */}
+              {!apiKey.trim() && (
+                <div className="flex items-center gap-2 px-1 py-1 rounded-lg border border-primary/20 bg-primary/5">
+                  <div className="relative flex-1 min-w-0">
+                    <input
+                      type={showKey ? "text" : "password"}
+                      value={apiKey}
+                      onChange={(e) => handleApiKeyChange(e.target.value)}
+                      placeholder="Paste API key to start..."
+                      className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                    />
+                    <button
+                      onClick={() => setShowKey((v) => !v)}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      <EyeIcon show={showKey} />
+                    </button>
+                  </div>
+                  {selectedPreset.createKeyUrl && (
+                    <a
+                      href={selectedPreset.createKeyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 text-[10px] text-primary/60 hover:text-primary transition-colors whitespace-nowrap"
+                    >
+                      Get key →
+                    </a>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2 items-end">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key first..."}
+                  placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key above first..."}
                   disabled={(loading || isStreaming) || !apiKey.trim()}
                   rows={2}
                   className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
@@ -4155,6 +4123,67 @@ export default function ManualKeyTester() {
               `}>
                 <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-5">
 
+                  {/* API Key */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-medium text-muted-foreground">API Key</label>
+                      <div className="flex items-center gap-1.5">
+                        {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
+                          <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1 py-0.5 rounded">detected</span>
+                        )}
+                        {apiKey && (
+                          <button
+                            onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
+                            className="text-[9px] text-muted-foreground/50 hover:text-destructive transition-colors"
+                          >
+                            clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showKey ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => handleApiKeyChange(e.target.value)}
+                        placeholder="Paste API key..."
+                        className="w-full rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                      />
+                      <button
+                        onClick={() => setShowKey((v) => !v)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+                        title={showKey ? "Hide" : "Show"}
+                      >
+                        <EyeIcon show={showKey} />
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <button
+                        role="switch"
+                        aria-checked={rememberKey}
+                        onClick={() => handleRememberToggle(!rememberKey)}
+                        className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                      >
+                        <span className={`relative w-6 h-3.5 rounded-full border transition-all flex-shrink-0 ${rememberKey ? "bg-primary/70 border-primary/50" : "bg-secondary border-border"}`}>
+                          <span className={`absolute top-[1px] w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-all ${rememberKey ? "left-[11px]" : "left-[1px]"}`} />
+                        </span>
+                        Remember
+                        {rememberKey && <span className="text-primary/60 font-medium ml-0.5">· saved</span>}
+                      </button>
+                      {selectedPreset.createKeyUrl && !apiKey && (
+                        <a
+                          href={selectedPreset.createKeyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] text-primary/60 hover:text-primary transition-colors"
+                        >
+                          Get key
+                          <svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Endpoint */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-medium text-muted-foreground">Endpoint URL</label>
@@ -4187,7 +4216,7 @@ export default function ManualKeyTester() {
                   <div className="flex flex-col gap-1.5">
                     <div>
                       <label className="text-[11px] font-medium text-muted-foreground">Test all models — single key</label>
-                      <p className="text-[10px] text-muted-foreground/50 mt-0.5">Uses the API key from the sidebar</p>
+                      <p className="text-[10px] text-muted-foreground/50 mt-0.5">Uses the API key above</p>
                     </div>
                     <ProviderBatchTest
                       providerId={selectedPreset.id}
