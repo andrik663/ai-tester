@@ -1603,7 +1603,7 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ��────────────────────������─������───────────────────────────────────────────
+// ── Icons ���────────────────────������─������───────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -1841,6 +1841,7 @@ export default function ManualKeyTester() {
   const [copiedShare, setCopiedShare] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
+  const [sidebarSearch, setSidebarSearch] = useState("")
   // ── New feature state ────────────────────────────────────────────────────────
   // System prompt
   const [systemPrompt, setSystemPrompt]           = useState("")
@@ -2602,23 +2603,54 @@ export default function ManualKeyTester() {
             </div>
           )}
 
-          {/* Provider selector header */}
-          <div className="px-4 pt-4 pb-1.5 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-medium text-muted-foreground">
-                Provider <span className="text-muted-foreground/50">({PRESETS.length})</span>
-              </label>
-              {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
-                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
-                  auto-detected
-                </span>
+          {/* Provider search */}
+          <div className="px-3 pt-3 pb-2 flex-shrink-0">
+            <div className="relative">
+              <svg
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                strokeLinecap="round" strokeLinejoin="round"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none"
+                aria-hidden
+              >
+                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="search"
+                value={sidebarSearch}
+                onChange={(e) => setSidebarSearch(e.target.value)}
+                placeholder={`Search ${PRESETS.length} providers...`}
+                className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+              />
+              {sidebarSearch && (
+                <button
+                  onClick={() => setSidebarSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                  aria-label="Clear search"
+                >
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
+                    <path d="M12 4L4 12M4 4l8 8" />
+                  </svg>
+                </button>
               )}
             </div>
+            {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
+              <span className="mt-1.5 inline-flex text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
+                auto-detected
+              </span>
+            )}
           </div>
 
           {/* Provider list — fills available space */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-2 flex flex-col gap-px">
-            {PRESETS.map((p) => (
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2 flex flex-col gap-px">
+            {(() => {
+              const q = sidebarSearch.trim().toLowerCase()
+              const filtered = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
+              if (filtered.length === 0) return (
+                <div className="text-center py-8 text-[11px] text-muted-foreground/50">
+                  No providers match &ldquo;{sidebarSearch}&rdquo;
+                </div>
+              )
+              return filtered.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
@@ -2640,7 +2672,8 @@ export default function ManualKeyTester() {
                     </span>
                   )}
                 </button>
-              ))}
+              ))
+            })()}
           </div>
 
         </div>{/* end scrollable body */}
@@ -3162,7 +3195,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��─────���────────────────────────────����───��─ */}
+        {/* ── VISION TAB ────────────��─────���────────��───────────────────����───��─ */}
         {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             {/* Provider Header Bar */}
