@@ -1921,11 +1921,19 @@ export default function ManualKeyTester() {
   const [imageGenModel, setImageGenModel] = useState<string>("")
   const [videoGenModel, setVideoGenModel] = useState<string>("")
 
-  // Increment to force WorkingKeysPanel to re-load from localStorage
+  // Tracks saves from WorkingKeysPanel — bump to reload working models
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
-  // Working models for the current provider — loaded from saved keys
-  const [workingModels, setWorkingModels] = useState<Array<{ modelId: string; apiKey: string; latencyMs: number }>>([])
 
+  // All saved working-key records for the currently selected provider.
+  // Declared here (before any JSX) so every reference below is in-scope.
+  const [workingModels, setWorkingModels] = useState<Array<{
+    modelId: string
+    apiKey: string
+    latencyMs: number
+  }>>([])
+
+  // Reload working models whenever the provider or workingKeysTick changes,
+  // and auto-fill chatModel + apiKey from the first saved record.
   useEffect(() => {
     const records = loadWorkingKeys().filter((r) => r.providerId === selectedPreset.id)
     const seen = new Set<string>()
@@ -1935,13 +1943,16 @@ export default function ManualKeyTester() {
       seen.add(k)
       return true
     })
-    setWorkingModels(deduped.map((r) => ({ modelId: r.modelId, apiKey: r.apiKey, latencyMs: r.latencyMs })))
+    setWorkingModels(deduped.map((r) => ({
+      modelId: r.modelId,
+      apiKey: r.apiKey,
+      latencyMs: r.latencyMs,
+    })))
     if (deduped.length > 0) {
       setChatModel((prev) => prev || deduped[0].modelId)
       setApiKey((prev) => prev.trim() ? prev : deduped[0].apiKey)
     } else {
-      const firstStatic = selectedPreset.models?.[0]?.id ?? ""
-      setChatModel((prev) => prev || firstStatic)
+      setChatModel((prev) => prev || (selectedPreset.models?.[0]?.id ?? ""))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPreset.id, workingKeysTick])
