@@ -12,6 +12,12 @@ export interface ManualTestRequest {
   headers: Record<string, string>
   body?: string        // raw JSON string from user (optional)
   prompt?: string      // chat message to inject into body template
+  /** Full conversation history for multi-turn chat */
+  messages?: Array<{ role: "user" | "assistant"; content: string }>
+  /** Optional system prompt injected before user messages */
+  systemPrompt?: string
+  /** Override model in the body template */
+  model?: string
   testMode?: "chat" | "vision" | "ocr"
   imageData?: { base64: string; mimeType: string }
 }
@@ -460,7 +466,7 @@ const VISION_BODY_BUILDERS: Record<string, VisionBodyFn> = {
   }),
 }
 
-// ── Chat reply extractor ──────────────────────────────────────────────────────
+// ── Chat reply extractor ───────────────────���──────────────────────────────────
 
 function extractChatReply(providerKey: string, data: unknown): string | undefined {
   if (!data || typeof data !== "object") return undefined
@@ -573,7 +579,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const { provider, apiKey, endpoint, method, prompt, testMode, imageData } = body
+  const { provider, apiKey, endpoint, method, prompt, testMode, imageData, messages, systemPrompt, model } = body
   let { headers, body: rawBody } = body
 
   if (!apiKey?.trim()) return NextResponse.json({ error: "API key is required" }, { status: 400 })
@@ -606,16 +612,57 @@ export async function POST(req: NextRequest) {
       finalBody = JSON.stringify(builtBody)
       requestBodySent = JSON.stringify(builtBody, null, 2)
     } else if (rawBody && rawBody.trim()) {
-      // User provided raw JSON — substitute {{PROMPT}} placeholder
-      const resolved = rawBody.replace(/\{\{PROMPT\}\}/g, prompt ?? "Hello, say hi back in one sentence.")
+      // User provided raw JSON — substitute {{PROMPT}} and {{MESSAGES}} placeholders
+      const resolved = rawBody
+        .replace(/\{\{PROMPT\}\}/g, prompt ?? "Hello, say hi back in one sentence.")
       finalBody = resolved
       requestBodySent = resolved
-    } else if (prompt !== undefined) {
-      // Auto-build from template
+    } else if (prompt !== undefined || messages !== undefined) {
+      // Auto-build from template, supporting multi-turn history + system prompt
       const templateFn = BODY_TEMPLATES[providerKey]
-      const builtBody = templateFn
-        ? templateFn(prompt || "Hello, say hi back in one sentence.")
-        : { messages: [{ role: "user", content: prompt || "Hello" }] }
+      let builtBody: Record<string, unknown>
+
+      // Build conversation messages array
+      const allMessages: Array<{ role: string; content: string }> = []
+      if (messages && messages.length > 0) {
+        // Multi-turn: use full history, appending latest user prompt
+        allMessages.push(...messages)
+        if (prompt) allMessages.push({ role: "user", content: prompt })
+      }
+
+      const latestPrompt = prompt || messages?.at(-1)?.content || "Hello, say hi back in one sentence."
+
+      if (templateFn) {
+        builtBody = templateFn(latestPrompt) as Record<string, unknown>
+        // Inject full message history if provider uses messages[] array
+        if (Array.isArray(builtBody.messages) && allMessages.length > 0) {
+          builtBody.messages = allMessages
+        }
+        // Inject system prompt
+        if (systemPrompt && systemPrompt.trim()) {
+          if (providerKey === "anthropic") {
+            builtBody.system = systemPrompt
+          } else if (Array.isArray(builtBody.messages)) {
+            const hasSys = (builtBody.messages as Array<{role:string}>).some((m) => m.role === "system")
+            if (!hasSys) {
+              builtBody.messages = [{ role: "system", content: systemPrompt }, ...(builtBody.messages as Array<{role:string; content:string}>)]
+            }
+          } else if (builtBody.input !== undefined && providerKey === "xai") {
+            builtBody.input = [{ role: "system", content: systemPrompt }, ...allMessages]
+          }
+        }
+        // Override model if specified
+        if (model && model.trim()) {
+          if (builtBody.model !== undefined) builtBody.model = model
+          else if (builtBody.model_name !== undefined) builtBody.model_name = model
+        }
+      } else {
+        builtBody = { messages: systemPrompt
+          ? [{ role: "system", content: systemPrompt }, ...allMessages]
+          : allMessages.length > 0 ? allMessages : [{ role: "user", content: latestPrompt }]
+        }
+      }
+
       finalBody = JSON.stringify(builtBody)
       requestBodySent = JSON.stringify(builtBody, null, 2)
     }

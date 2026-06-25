@@ -8,14 +8,20 @@ import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
+import { loadWorkingKeys } from "@/lib/working-keys-store"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
 import { explainApiError } from "@/lib/explain-api-error"
 import KeyInfoPanel from "@/components/key-info-panel"
 import ProviderInfoPanel from "@/components/provider-info-panel"
-import AuthModal, { type AuthState } from "@/components/auth-modal"
-import { authClient } from "@/lib/auth-client"
+import HistoryPanel from "@/components/history-panel"
+import CollectionsPanel from "@/components/collections-panel"
+import EnvSwitcher from "@/components/env-switcher"
+import ModelScreenerPanel from "@/components/model-screener-panel"
+import { pushHistory, type HistoryEntry } from "@/lib/history"
+import { getActiveEnvironment, interpolate, type Environment } from "@/lib/environments"
+import type { SavedRequest } from "@/lib/collections"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -125,7 +131,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://labs.dahono.com/account/api-keys",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ───────────────────────────────────────────────
+  // ── Tier 1: Major providers ─────────────────�����─────────────────────────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -1597,7 +1603,7 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ── Icons ���────────────────────������─������───────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -1829,36 +1835,33 @@ export default function ManualKeyTester() {
   const [showLog, setShowLog] = useState(false)
   const [showRawResponse, setShowRawResponse] = useState(false)
   const [showBodyEditor, setShowBodyEditor] = useState(false)
+  const [batchView, setBatchView] = useState<"config" | "run">("run")
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
   const [copiedShare, setCopiedShare] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
-  // ── Developer auth state ─────────────────────────────────────────────────
-  const [isDev, setIsDev]               = useState(false)
-  const [devModalOpen, setDevModalOpen] = useState(false)
-  const [devUserName, setDevUserName]   = useState("")
-
-  // On mount, check existing Better Auth session
+  const [sidebarSearch, setSidebarSearch] = useState("")
+  // ── New feature state ────────────────────────────────────────────────────────
+  // System prompt
+  const [systemPrompt, setSystemPrompt]           = useState("")
+  const [showSystemPrompt, setShowSystemPrompt]   = useState(false)
+  // Streaming
+  const [streamingText, setStreamingText]         = useState("")
+  const [isStreaming, setIsStreaming]             = useState(false)
+  const [ttftMs, setTtftMs]                       = useState<number | null>(null)
+  const [useStreaming, setUseStreaming]            = useState(true)
+  // Active environment
+  const [activeEnv, setActiveEnv]                 = useState<Environment | null>(null)
+  // Notification permission
+  const [notifPerm, setNotifPerm]                 = useState<NotificationPermission>("default")
   useEffect(() => {
-    authClient.getSession()
-      .then((res) => {
-        if (res?.data?.user) {
-          setIsDev(true)
-          setDevUserName(res.data.user.name ?? res.data.user.email)
-        }
-      })
-      .catch(() => {})
+    if (typeof Notification !== "undefined") setNotifPerm(Notification.permission)
+    const env = getActiveEnvironment()
+    setActiveEnv(env)
   }, [])
-
-  const handleDevLogout = useCallback(async () => {
-    await authClient.signOut()
-    setIsDev(false)
-    setDevUserName("")
-  }, [])
-
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info">("unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved">("unified")
   // Onboarding banner — dismissed in localStorage
   // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
@@ -1918,7 +1921,43 @@ export default function ManualKeyTester() {
   const [visionModel, setVisionModel] = useState<string>("")
   const [imageGenModel, setImageGenModel] = useState<string>("")
   const [videoGenModel, setVideoGenModel] = useState<string>("")
-  
+
+  // Tracks saves from WorkingKeysPanel — bump to reload working models
+  const [workingKeysTick, setWorkingKeysTick] = useState(0)
+
+  // All saved working-key records for the currently selected provider.
+  // Declared here (before any JSX) so every reference below is in-scope.
+  const [workingModels, setWorkingModels] = useState<Array<{
+    modelId: string
+    apiKey: string
+    latencyMs: number
+  }>>([])
+
+  // Reload working models whenever the provider or workingKeysTick changes,
+  // and auto-fill chatModel + apiKey from the first saved record.
+  useEffect(() => {
+    const records = loadWorkingKeys().filter((r) => r.providerId === selectedPreset.id)
+    const seen = new Set<string>()
+    const deduped = records.filter((r) => {
+      const k = `${r.apiKey}::${r.modelId}`
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    setWorkingModels(deduped.map((r) => ({
+      modelId: r.modelId,
+      apiKey: r.apiKey,
+      latencyMs: r.latencyMs,
+    })))
+    if (deduped.length > 0) {
+      setChatModel((prev) => prev || deduped[0].modelId)
+      setApiKey((prev) => prev.trim() ? prev : deduped[0].apiKey)
+    } else {
+      setChatModel((prev) => prev || (selectedPreset.models?.[0]?.id ?? ""))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPreset.id, workingKeysTick])
+
   // Get the current model based on active sub-tab
   const getCurrentModel = () => {
     switch (unifiedSubTab) {
@@ -2008,8 +2047,7 @@ export default function ManualKeyTester() {
   // Auto-detect tab state
   const [detectInput, setDetectInput]   = useState("")
   const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
-  // Increment to force WorkingKeysPanel to re-load from localStorage
-  const [workingKeysTick, setWorkingKeysTick] = useState(0)
+
   // Increment to trigger a fresh KeyInfoPanel fetch (bumped after successful chat)
   const [keyInfoTick, setKeyInfoTick] = useState(0)
   // Last known response headers — passed to KeyInfoPanel for rate limit data
@@ -2218,6 +2256,8 @@ export default function ManualKeyTester() {
     setBodyTemplate(preset.bodyTemplate)
     setResult(null)
     setShowLog(false)
+    // Reset chat model so the useEffect auto-populates from new provider's saved keys
+    setChatModel("")
     // Reset image/video model to first supported for the new provider
     const imgModels = getImageCapabilities(preset.id)
     if (imgModels.length > 0) setImageModel(imgModels[0].id)
@@ -2226,83 +2266,209 @@ export default function ManualKeyTester() {
   }
 
   async function runTest() {
-    if (!apiKey.trim() || !prompt.trim() || loading) return
+    if (!apiKey.trim() || !prompt.trim() || loading || isStreaming) return
 
-    const userMsg: ChatMessage = {
-      role: "user",
-      content: prompt,
-      ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-    }
-    setChatHistory((prev) => [...prev, userMsg])
+    const ts = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    const userMsg: ChatMessage = { role: "user", content: prompt, ts }
     const currentPrompt = prompt
+    // Build multi-turn history: all previous messages + new user message
+    const previousMessages = chatHistory.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+
+    setChatHistory((prev) => [...prev, userMsg])
     setPrompt("")
-    setLoading(true)
     setResult(null)
+    setTtftMs(null)
 
     const headers: Record<string, string> = {}
     for (const row of headerRows) {
-      if (row.key.trim()) headers[row.key.trim()] = row.value
+      if (row.key.trim()) {
+        const val = activeEnv ? interpolate(row.value, activeEnv) : row.value
+        headers[row.key.trim()] = val
+      }
     }
+    const resolvedBody = activeEnv && bodyTemplate ? interpolate(bodyTemplate, activeEnv) : (bodyTemplate || undefined)
 
-    try {
-      const res = await fetch("/api/manual-test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider: selectedPreset.id,
-          apiKey: apiKey.trim(),
-          endpoint,
-          method,
-          headers,
-          body: bodyTemplate || undefined,
-          prompt: currentPrompt,
-        }),
-      })
-      const data: ManualTestResult = await res.json()
-      setResult(data)
+    if (useStreaming) {
+      // ── Streaming path ────────────────────────────────────────────────────
+      setIsStreaming(true)
+      setStreamingText("")
 
-      // Capture response headers for KeyInfoPanel rate-limit enrichment
-      if (data.responseHeaders) {
-        setLastResponseHeaders(data.responseHeaders)
-      }
+      let accumulated = ""
+      let finalResult: ManualTestResult | null = null
 
-      // After a successful chat, bump key info so balance/rate-limit refreshes
-      if (data.ok) {
-        setKeyInfoTick((t) => t + 1)
-      }
+      try {
+        const res = await fetch("/api/manual-test/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: selectedPreset.id,
+            apiKey: apiKey.trim(),
+            endpoint,
+            headers,
+            messages: [...previousMessages, { role: "user", content: currentPrompt }],
+            systemPrompt: systemPrompt.trim() || undefined,
+            // Do NOT send rawBody for chat — let the route build the correct body
+            // from messages + model. rawBody (which contains {{PROMPT}}) is only
+            // for the single-shot Test tab.
+            model: chatModel.trim() || undefined,
+          }),
+        })
 
-      const reply = data.chatReply ?? (data.ok ? data.responseBody : null)
-      if (reply) {
-        const assistantMsg: ChatMessage = {
-          role: "assistant",
-          content: reply,
-          ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        const reader = res.body?.getReader()
+        if (!reader) throw new Error("No stream body")
+        const dec = new TextDecoder()
+        let buf = ""
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buf += dec.decode(value, { stream: true })
+          const lines = buf.split("\n")
+          buf = lines.pop() ?? ""
+
+          for (const rawLine of lines) {
+            const line = rawLine.trim()
+            if (!line || !line.startsWith("data: ")) continue
+            try {
+              const ev = rawLine.match(/^event: (\w+)/)
+              const dataStr = line.slice(6)
+              const evName = ev?.[1] ?? "token"
+              const parsed = JSON.parse(dataStr) as Record<string, unknown>
+
+              if (evName === "token") {
+                accumulated += (parsed.text as string) ?? ""
+                setStreamingText(accumulated)
+              } else if (evName === "ttft") {
+                setTtftMs(parsed.ms as number)
+              } else if (evName === "response_headers") {
+                setLastResponseHeaders(parsed as Record<string, string>)
+              } else if (evName === "done") {
+                finalResult = {
+                  ok: true,
+                  status: 200,
+                  statusText: "OK",
+                  responseBody: accumulated,
+                  chatReply: accumulated,
+                  logs: [],
+                  curlCommand: "",
+                  curlFull: "",
+                  requestBodySent: "",
+                  durationMs: parsed.durationMs as number,
+                  ttftMs: parsed.ttftMs as number | null,
+                  tokenUsage: parsed.tokenUsage as ManualTestResult["tokenUsage"],
+                  responseHeaders: parsed.responseHeaders as Record<string, string>,
+                } as ManualTestResult & { ttftMs?: number | null }
+                setResult(finalResult)
+                if (finalResult.responseHeaders) setLastResponseHeaders(finalResult.responseHeaders)
+                setKeyInfoTick((t) => t + 1)
+              } else if (evName === "error") {
+                const errContent = (parsed.body as string) || (parsed.message as string) || "Stream error"
+                const errMsg: ChatMessage = { role: "assistant", content: `Error: ${errContent}`, ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) }
+                setChatHistory((prev) => [...prev, errMsg])
+                reader.releaseLock()
+                return
+              }
+            } catch { /* skip malformed SSE line */ }
+          }
         }
+        reader.releaseLock()
+
+        const replyTs = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        const assistantMsg: ChatMessage = { role: "assistant", content: accumulated || "(empty response)", ts: replyTs }
         setChatHistory((prev) => [...prev, assistantMsg])
-      } else {
-        const errMsg: ChatMessage = {
-          role: "assistant",
-          content: `Error: HTTP ${data.status} ${data.statusText}`,
-          ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        setStreamingText("")
+
+        // Push to history
+        pushHistory({
+          provider: selectedPreset.id,
+          providerName: selectedPreset.name,
+          model: getCurrentModel() || undefined,
+          prompt: currentPrompt,
+          reply: accumulated,
+          ok: true,
+          status: 200,
+          durationMs: finalResult?.durationMs,
+          ttftMs: (finalResult as (ManualTestResult & { ttftMs?: number | null }) | null)?.ttftMs,
+          tokenUsage: finalResult?.tokenUsage,
+          responseHeaders: finalResult?.responseHeaders,
+        })
+
+        // Browser notification for long responses
+        if (Notification.permission === "granted" && document.hidden) {
+          new Notification(`${selectedPreset.name} replied`, { body: accumulated.slice(0, 80) + "…", silent: true })
         }
+      } catch (err) {
+        const errMsg: ChatMessage = { role: "assistant", content: err instanceof Error ? err.message : "Streaming failed", ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) }
         setChatHistory((prev) => [...prev, errMsg])
+        setStreamingText("")
+      } finally {
+        setIsStreaming(false)
       }
-    } catch (err) {
-      const errMsg: ChatMessage = {
-        role: "assistant",
-        content: err instanceof Error ? err.message : "Request failed",
-        ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+    } else {
+      // ── Non-streaming path ────────────────────────────────────────────────
+      setLoading(true)
+      try {
+        const res = await fetch("/api/manual-test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: selectedPreset.id,
+            apiKey: apiKey.trim(),
+            endpoint,
+            method,
+            headers,
+            body: resolvedBody,
+            prompt: currentPrompt,
+            messages: previousMessages,
+            systemPrompt: systemPrompt.trim() || undefined,
+            model: getCurrentModel() || undefined,
+          }),
+        })
+        const data: ManualTestResult = await res.json()
+        setResult(data)
+        if (data.responseHeaders) setLastResponseHeaders(data.responseHeaders)
+        if (data.ok) setKeyInfoTick((t) => t + 1)
+
+        const reply = data.chatReply ?? (data.ok ? data.responseBody : null)
+        const replyTs = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        if (reply) {
+          const assistantMsg: ChatMessage = { role: "assistant", content: reply, ts: replyTs }
+          setChatHistory((prev) => [...prev, assistantMsg])
+        } else {
+          const errMsg: ChatMessage = { role: "assistant", content: `Error: HTTP ${data.status} ${data.statusText}`, ts: replyTs }
+          setChatHistory((prev) => [...prev, errMsg])
+        }
+
+        pushHistory({
+          provider: selectedPreset.id,
+          providerName: selectedPreset.name,
+          model: getCurrentModel() || undefined,
+          prompt: currentPrompt,
+          reply: reply ?? undefined,
+          ok: data.ok,
+          status: data.status,
+          durationMs: data.durationMs,
+          tokenUsage: data.tokenUsage,
+          responseHeaders: data.responseHeaders,
+          curlFull: data.curlFull,
+        })
+
+        if (Notification.permission === "granted" && document.hidden && reply) {
+          new Notification(`${selectedPreset.name} replied`, { body: reply.slice(0, 80) + "…", silent: true })
+        }
+      } catch (err) {
+        const errMsg: ChatMessage = { role: "assistant", content: err instanceof Error ? err.message : "Request failed", ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) }
+        setChatHistory((prev) => [...prev, errMsg])
+      } finally {
+        setLoading(false)
       }
-      setChatHistory((prev) => [...prev, errMsg])
-    } finally {
-      setLoading(false)
     }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      runTest()
+      if (!loading && !isStreaming) runTest()
     }
   }
 
@@ -2320,6 +2486,37 @@ export default function ManualKeyTester() {
       setCopiedCurlFull(true)
       setTimeout(() => setCopiedCurlFull(false), 1500)
     }).catch(() => {})
+  }
+
+  async function requestNotifPermission() {
+    if (typeof Notification === "undefined") return
+    const perm = await Notification.requestPermission()
+    setNotifPerm(perm)
+  }
+
+  function exportResultJSON() {
+    if (!result) return
+    const blob = new Blob([JSON.stringify({ provider: selectedPreset.name, ...result }, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `api-test-${selectedPreset.id}-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function exportChatMarkdown() {
+    const lines = chatHistory.map((m) =>
+      `**${m.role === "user" ? "User" : selectedPreset.name}** (${m.ts})\n\n${m.content}`
+    )
+    const md = `# Chat Export — ${selectedPreset.name}\n\n${lines.join("\n\n---\n\n")}`
+    const blob = new Blob([md], { type: "text/markdown" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `chat-${selectedPreset.id}-${Date.now()}.md`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   function shareResult() {
@@ -2354,7 +2551,7 @@ export default function ManualKeyTester() {
       <aside className={`
         flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
-        w-72 md:w-64 lg:w-72
+        w-72 md:w-60 lg:w-64
         transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
         ${configOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
@@ -2369,8 +2566,8 @@ export default function ManualKeyTester() {
               </svg>
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Key Tester</p>
-              <p className="text-[10px] text-muted-foreground">{PRESETS.length} providers supported</p>
+              <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Tester</p>
+              <p className="text-[10px] text-muted-foreground/60">{PRESETS.length} providers</p>
             </div>
           </div>
           <button
@@ -2387,51 +2584,73 @@ export default function ManualKeyTester() {
         {/* ── Scrollable sidebar body ── */}
         <div className="flex-1 overflow-y-auto flex flex-col">
 
-          {/* Onboarding banner — shown once, dismissable */}
+          {/* Onboarding hint — shown once, dismissable */}
           {!onboardingDismissed && (
-            <div className="mx-4 mt-4 rounded-xl border border-primary/25 bg-primary/6 p-3 flex flex-col gap-2 relative flex-shrink-0">
+            <div className="mx-3 mt-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 flex items-center gap-2 relative flex-shrink-0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-primary flex-shrink-0">
+                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+              </svg>
+              <p className="text-[11px] text-muted-foreground flex-1 leading-snug">Pick a provider, paste your key, then use the Test tab.</p>
               <button
                 onClick={dismissOnboarding}
-                className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+                className="w-4 h-4 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground transition-colors flex-shrink-0"
                 aria-label="Dismiss"
               >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-2.5 h-2.5">
                   <path d="M12 4L4 12M4 4l8 8" />
                 </svg>
               </button>
-              <p className="text-xs font-semibold text-foreground pr-5">Quick start</p>
-              <ol className="flex flex-col gap-1.5">
-                {[
-                  { n: "1", text: "Pick a provider from the list below" },
-                  { n: "2", text: "Paste your API key in the field" },
-                  { n: "3", text: "Go to the Test tab and send a message" },
-                ].map((s) => (
-                  <li key={s.n} className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-primary mt-0.5">{s.n}</span>
-                    <span className="text-[11px] text-muted-foreground leading-snug">{s.text}</span>
-                  </li>
-                ))}
-              </ol>
             </div>
           )}
 
-          {/* Provider selector header */}
-          <div className="px-4 pt-4 pb-1.5 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-                Provider <span className="normal-case font-normal text-muted-foreground/70">({PRESETS.length} supported)</span>
-              </label>
-              {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
-                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
-                  auto-detected
-                </span>
+          {/* Provider search */}
+          <div className="px-3 pt-3 pb-2 flex-shrink-0">
+            <div className="relative">
+              <svg
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                strokeLinecap="round" strokeLinejoin="round"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none"
+                aria-hidden
+              >
+                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="search"
+                value={sidebarSearch}
+                onChange={(e) => setSidebarSearch(e.target.value)}
+                placeholder={`Search ${PRESETS.length} providers...`}
+                className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+              />
+              {sidebarSearch && (
+                <button
+                  onClick={() => setSidebarSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                  aria-label="Clear search"
+                >
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
+                    <path d="M12 4L4 12M4 4l8 8" />
+                  </svg>
+                </button>
               )}
             </div>
+            {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
+              <span className="mt-1.5 inline-flex text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
+                auto-detected
+              </span>
+            )}
           </div>
 
-          {/* Provider list — fixed height scrollable box */}
-          <div className="overflow-y-auto px-4 pb-2 flex flex-col gap-px" style={{height: "400px", minHeight: "400px"}}>
-            {PRESETS.map((p) => (
+          {/* Provider list — fills available space */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2 flex flex-col gap-px">
+            {(() => {
+              const q = sidebarSearch.trim().toLowerCase()
+              const filtered = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
+              if (filtered.length === 0) return (
+                <div className="text-center py-8 text-[11px] text-muted-foreground/50">
+                  No providers match &ldquo;{sidebarSearch}&rdquo;
+                </div>
+              )
+              return filtered.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
@@ -2453,428 +2672,21 @@ export default function ManualKeyTester() {
                     </span>
                   )}
                 </button>
-              ))}
+              ))
+            })()}
           </div>
 
-          {/* API Key + rest of sidebar settings */}
-          <div className="flex flex-col gap-5 px-4 py-4 border-t border-border mt-1">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-                API Key
-              </label>
-              {apiKey && (
-                <button
-                  onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
-                  className="text-[9px] text-muted-foreground/60 hover:text-destructive transition-colors flex items-center gap-0.5"
-                  title="Clear API key"
-                >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  Clear
-                </button>
-              )}
-            </div>
-            <div className="relative">
-              <input
-                type={showKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => handleApiKeyChange(e.target.value)}
-                placeholder="sk-ant-... / sk-... / AIza..."
-                className="w-full rounded-md border border-border bg-background text-foreground text-xs font-mono px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
-              />
-              <button
-                onClick={() => setShowKey((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                title={showKey ? "Hide key" : "Show key"}
-              >
-                <EyeIcon show={showKey} />
-              </button>
-            </div>
-
-            {/* Remember key toggle */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer select-none group" htmlFor="remember-key-toggle">
-                <button
-                  id="remember-key-toggle"
-                  role="switch"
-                  aria-checked={rememberKey}
-                  onClick={() => handleRememberToggle(!rememberKey)}
-                  className={`relative w-7 h-4 rounded-full border transition-all flex-shrink-0 ${
-                    rememberKey ? "bg-primary/80 border-primary/60" : "bg-secondary border-border"
-                  }`}
-                >
-                  <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${
-                    rememberKey ? "left-3.5" : "left-0.5"
-                  }`} />
-                </button>
-                <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
-                  Remember key for this provider
-                </span>
-              </label>
-              {rememberKey && (
-                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
-                  saved
-                </span>
-              )}
-            </div>
-
-            {/* Create API key link */}
-            {selectedPreset.createKeyUrl && (
-              <a
-                href={selectedPreset.createKeyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[10px] text-primary/70 hover:text-primary transition-colors self-start"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M5 3v4M3 5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-                Get {selectedPreset.name} API key
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </a>
-            )}
-
-            {apiKey && result && (
-              <button
-                onClick={shareResult}
-                title="Copy test result to clipboard"
-                className="inline-flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors self-start"
-              >
-                {copiedShare ? (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span className="text-green-400">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                      <polyline points="16 6 12 2 8 6" />
-                      <line x1="12" y1="2" x2="12" y2="15" />
-                    </svg>
-                    Share result
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* Key Info Panel — enriched data after key is entered */}
-          {apiKey.trim().length >= 8 && (
-            <KeyInfoPanel
-              provider={selectedPreset.id}
-              apiKey={apiKey}
-              responseHeaders={lastResponseHeaders}
-              fetchTick={keyInfoTick}
-            />
-          )}
-
-          {/* Endpoint */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-              Endpoint URL
-            </label>
-            <div className="flex gap-1">
-              <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
-                className="text-xs font-mono bg-background border border-border rounded px-1.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
-              >
-                {["POST", "GET", "PUT", "DELETE"].map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-              <input
-                type="url"
-                value={endpoint}
-                onChange={(e) => setEndpoint(e.target.value)}
-                placeholder="https://api.example.com/v1/..."
-                className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-xs font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
-              />
-            </div>
-            {selectedPreset.docsUrl && (
-              <a
-                href={selectedPreset.docsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary/80 hover:text-primary transition-colors"
-              >
-                View API docs →
-              </a>
-            )}
-          </div>
-
-          {/* Dahono model picker — shown when provider is Dahono */}
-          {selectedPreset.id === "dahono" && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-                Model
-                {dahonoModelsFetching && <span className="ml-1 font-normal normal-case text-muted-foreground/70">fetching...</span>}
-                {!dahonoModelsFetching && dahonoModels.length > 0 && (
-                  <span className="ml-1 font-normal normal-case text-muted-foreground/70">
-                    {dahonoModels.length} models from gateway
-                  </span>
-                )}
-              </label>
-              {dahonoModels.length > 0 ? (
-                <select
-                  value={selectedDahonoModel}
-                  onChange={(e) => {
-                    setSelectedDahonoModel(e.target.value)
-                    updateDahonoBodyModel(e.target.value)
-                  }}
-                  className="text-xs font-mono bg-background border border-border rounded px-2 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring w-full"
-                >
-                  {["free", "starter", "pro", "business"].map((tier) => {
-                    const tier_models = dahonoModels.filter((m) => m.tier === tier)
-                    if (tier_models.length === 0) return null
-                    return (
-                      <optgroup key={tier} label={`${tier.charAt(0).toUpperCase() + tier.slice(1)} (${tier_models.length})`}>
-                        {tier_models.map((m) => (
-                          <option key={m.id} value={m.id}>{m.id}</option>
-                        ))}
-                      </optgroup>
-                    )
-                  })}
-                </select>
-              ) : (
-                <p className="text-xs text-muted-foreground/75">
-                  Enter your Dahono API key above to auto-load all {dahonoModelsFetching ? "..." : "models"} from the gateway.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Batch Model Test — Run All Models (all providers) */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-              Batch Model Test
-            </label>
-            <ProviderBatchTest
-              providerId={selectedPreset.id}
-              providerName={selectedPreset.name}
-              apiKey={apiKey}
-              onSaved={() => setWorkingKeysTick((t) => t + 1)}
-            />
-          </div>
-
-          {/* Headers */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-              Headers
-            </label>
-            <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
-            <p className="text-xs text-muted-foreground/75">
-              Use <code className="text-primary/80">{"{{API_KEY}}"}</code> as placeholder — replaced with your key on send.
-            </p>
-          </div>
-
-          {/* Compact model catalog (providers with rich model list) */}
-          {selectedPreset.models && selectedPreset.models.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
-                Models ({selectedPreset.models.length})
-                <span className="ml-1 normal-case font-normal text-muted-foreground/70">— click to use</span>
-              </p>
-              <div className="max-h-64 overflow-y-auto flex flex-col gap-0.5 pr-0.5">
-                {selectedPreset.models.map((m) => {
-                  // Check if this model is currently in the body template
-                  const isActive = bodyTemplate.includes(`"${m.id}"`)
-                  return (
-                    <button
-                      key={m.id}
-                      onClick={() => {
-                        try {
-                          const parsed = JSON.parse(bodyTemplate)
-                          parsed.model = m.id
-                          setBodyTemplate(JSON.stringify(parsed, null, 2))
-                        } catch {
-                          // fallback: just inject the model id into a new template
-                          setBodyTemplate(JSON.stringify({
-                            model: m.id,
-                            max_tokens: 1024,
-                            messages: [{ role: "user", content: "{{PROMPT}}" }],
-                          }, null, 2))
-                        }
-                      }}
-                      className={`text-left w-full px-2 py-1.5 rounded transition-colors flex flex-col gap-0.5 group ${
-                        isActive
-                          ? "bg-primary/10 border border-primary/20"
-                          : "hover:bg-secondary/50 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={`text-xs font-medium truncate ${isActive ? "text-primary" : "text-foreground group-hover:text-foreground"}`}>
-                          {m.label}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground/70 bg-muted/40 px-1.5 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span className="text-[11px] text-muted-foreground/80">In: <span className="text-emerald-400">{m.in}</span></span>
-                        <span className="text-[11px] text-muted-foreground/80">Out: <span className="text-amber-400">{m.out}</span></span>
-                        {m.cache && <span className="text-[11px] text-muted-foreground/80">Cache: <span className="text-sky-400">{m.cache}</span></span>}
-                        <span className="text-[11px] text-muted-foreground/60">{m.ctx}</span>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Request body */}
-          <div className="flex flex-col gap-1.5">
-            <button
-              onClick={() => setShowBodyEditor((v) => !v)}
-              className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <span>Request Body Template</span>
-              <ChevronIcon open={showBodyEditor} />
-            </button>
-            {showBodyEditor && (
-              <>
-                <textarea
-                  value={bodyTemplate}
-                  onChange={(e) => setBodyTemplate(e.target.value)}
-                  rows={8}
-                  spellCheck={false}
-                  placeholder={`{\n  "model": "...",\n  "messages": [{"role": "user", "content": "{{PROMPT}}"}]\n}`}
-                  className="w-full rounded-md border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40 resize-y"
-                />
-                <p className="text-[9px] text-muted-foreground/50">
-                  Use <code className="text-primary/70">{"{{PROMPT}}"}</code> where you want the message injected.
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* ── Image Gen config — provider-aware ── */}
-          {activeTab === "unified" && unifiedSubTab === "image-gen" && (() => {
-            const imageModels = getImageCapabilities(selectedPreset.id)
-            const isImageSupported = imageModels.length > 0
-            return (
-              <div className="flex flex-col gap-3 pt-1 border-t border-border">
-                <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">Image Gen Config</p>
-
-                {!isImageSupported ? (
-                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
-                    {selectedPreset.name} does not support image generation. Switch to Gemini, OpenAI, Together AI, Fireworks, or Replicate.
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Model</label>
-                      {imageModels.map((m) => (
-                        <button key={m.id} onClick={() => setImageModel(m.id)}
-                          className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
-                            imageModel === m.id ? "border-primary/60 bg-primary/10" : "border-border hover:bg-secondary/40"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[11px] font-semibold text-foreground">{m.label}</span>
-                            <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-primary/20 text-primary">{m.tag}</span>
-                          </div>
-                          <p className="text-[9px] text-muted-foreground leading-snug">{m.description}</p>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Aspect Ratio</label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {IMAGE_ASPECT_RATIOS.map((r) => (
-                          <button key={r} onClick={() => setImageAspectRatio(r)}
-                            className={`py-1.5 rounded-md text-[11px] font-mono font-medium border transition-colors ${
-                              imageAspectRatio === r
-                                ? "bg-primary/20 border-primary/60 text-primary"
-                                : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                            }`}
-                          >
-                            {r}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })()}
-
-          {/* ── Video Gen config — provider-aware ── */}
-          {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
-            const { models: videoModels, aspectRatios: videoAspects } = getVideoCapabilities(selectedPreset.id)
-            const isVideoSupported = videoModels.length > 0
-            return (
-              <div className="flex flex-col gap-3 pt-1 border-t border-border">
-                <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">Video Gen Config</p>
-
-                {!isVideoSupported ? (
-                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
-                    {selectedPreset.name} does not support video generation. Switch to Gemini (Google) for Veo 3.1 or MiniMax (Hailuo) for Hailuo Video.
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Model</label>
-                      <select
-                        value={videoModel}
-                        onChange={(e) => setVideoModel(e.target.value)}
-                        className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                      >
-                        {videoModels.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Aspect Ratio</label>
-                      <div className="flex gap-2">
-                        {videoAspects.map((r) => (
-                          <button key={r} onClick={() => setVideoAspectRatio(r)}
-                            className={`flex-1 py-1.5 rounded-md border text-[11px] font-mono transition-colors ${
-                              videoAspectRatio === r
-                                ? "border-primary text-primary bg-primary/10"
-                                : "border-border text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            {r}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })()}
-
-          {/* Reset */}
-          <button
-            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
-            className="text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary px-3 py-2 rounded transition-colors border border-border/50 hover:border-border w-full text-left"
-          >
-            Clear All History
-          </button>
-
-          </div>{/* end gap-5 section */}
         </div>{/* end scrollable body */}
       </aside>
 
       {/* ── RIGHT: Tabbed panel ──────────────────────────────���─────────────── */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
-        {/* ── HEADER: mobile config toggle + tab bar ──────────────────────── */}
+        {/* ── HEADER: mobile config toggle + provider badge + tab bar ───────── */}
         <div className="flex flex-col border-b border-border bg-card flex-shrink-0">
 
-          {/* Top row — mobile menu + provider badge + response status */}
-          <div className="flex items-center gap-2 px-3 h-10 border-b border-border/50 bg-card/60">
+          {/* Single combined header row */}
+          <div className="flex items-center gap-1 px-2 h-10">
             {/* Mobile: config drawer toggle */}
             <button
               onClick={() => setConfigOpen(true)}
@@ -2886,126 +2698,75 @@ export default function ManualKeyTester() {
               </svg>
             </button>
 
-            {/* Provider badge */}
-            <span className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate min-w-0 flex-1">
-              <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
-              <span className="truncate hidden sm:block">{selectedPreset.name}</span>
-              {selectedPreset.country && (
-                <span className="text-[11px] font-mono text-muted-foreground/70 uppercase hidden sm:block">{selectedPreset.country}</span>
-              )}
+            {/* Provider badge — desktop */}
+            <span className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground mr-1 flex-shrink-0">
+              <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-3 h-3 opacity-60 flex-shrink-0" />
+              <span className="font-medium text-foreground/60 max-w-[80px] truncate">{selectedPreset.name}</span>
             </span>
 
-            {/* Response status chip — vision/chat result */}
-            {activeTab === "unified" && unifiedSubTab === "vision" && visionResult && (
-              <span className={`text-[10px] font-mono flex-shrink-0 ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
-                {visionResult.status} · {visionResult.durationMs}ms
-              </span>
-            )}
-            {activeTab === "unified" && unifiedSubTab === "chat" && result && (
-              <span className={`text-[10px] font-mono flex-shrink-0 ${result.ok ? "text-green-400" : "text-red-400"}`}>
-                {result.status} · {result.durationMs}ms
-              </span>
-            )}
-          </div>
+            {/* Divider */}
+            <div className="hidden md:block w-px h-4 bg-border/60 flex-shrink-0 mr-1" />
 
-          {/* Tab row — scrollable on mobile */}
-          <div className="flex items-center gap-0.5 px-2 overflow-x-auto scrollbar-none h-9 relative">
-            {([
-              {
-                id: "unified" as const,
-                label: "Test",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                ),
-              },
-              {
-                id: "multi-batch" as const,
-                label: "Batch",
-                icon: (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-                    <path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    <circle cx="10" cy="3" r="1.5" fill="currentColor" />
-                    <circle cx="10" cy="6" r="1.5" fill="currentColor" />
-                    <circle cx="10" cy="9" r="1.5" fill="currentColor" />
-                  </svg>
-                ),
-              },
-              {
-                id: "working-keys" as const,
-                label: "Saved",
-                icon: (
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-                    <circle cx="5.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M8.5 8h6M12.5 8v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                ),
-              },
+            {/* Primary tabs — inline with header */}
+            <div className="flex items-center gap-0.5 flex-1 min-w-0">
+              {([
+                { id: "unified" as const,      label: "Test"  },
+                { id: "multi-batch" as const,   label: "Batch" },
+                { id: "working-keys" as const,  label: "Keys"  },
+                { id: "saved" as const,         label: "Saved" },
+              ]).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id as typeof activeTab)}
+                  className={`px-3 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                    activeTab === t.id || (t.id === "saved" && (activeTab === "history" || activeTab === "collections"))
+                      ? "bg-secondary text-foreground shadow-[inset_0_-2px_0_oklch(0.76_0.17_192_/_0.8)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-              {
-                id: "auto-detect" as const,
-                label: "Identify",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M21 21l-4.35-4.35" />
-                    <path d="M11 8v6M8 11h6" />
-                  </svg>
-                ),
-              },
-              {
-                id: "info" as const,
-                label: "Pricing",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                    <line x1="12" y1="1" x2="12" y2="23" />
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
-                ),
-              },
-            ]).map((t) => (
+            {/* Icon-only utility buttons — right side */}
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {/* Envs */}
               <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
-                  activeTab === t.id
-                    ? "bg-secondary text-foreground shadow-[inset_0_-2px_0_oklch(0.76_0.17_192_/_0.8)]"
+                onClick={() => setActiveTab("environments")}
+                title="Environments"
+                className={`w-7 h-7 flex items-center justify-center rounded transition-all ${
+                  activeTab === "environments"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                 }`}
               >
-                {t.icon}
-                {t.label}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                  <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
               </button>
-            ))}
-
-            {/* ── Dev login button — right side of tab bar ── */}
-            <div className="ml-auto flex-shrink-0 pl-2">
-              {isDev ? (
-                <button
-                  onClick={handleDevLogout}
-                  title="Developer — click to logout"
-                  className="flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap transition-all bg-primary/10 border border-primary/25 text-primary hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive"
-                >
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-                    <path d="M8 1.5L2 4v4c0 3.31 2.52 5.74 6 6.5 3.48-.76 6-3.19 6-6.5V4L8 1.5z" fill="oklch(0.76 0.17 192 / 0.25)" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                    <path d="M5.5 8l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {devUserName ? devUserName.split(" ")[0] : "Dev"}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setDevModalOpen(true)}
-                  title="Login as Developer"
-                  className="flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap transition-all text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/40 border border-transparent hover:border-border/60"
-                >
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-                    <path d="M8 1.5L2 4v4c0 3.31 2.52 5.74 6 6.5 3.48-.76 6-3.19 6-6.5V4L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                  </svg>
-                  Dev
-                </button>
-              )}
+              {/* Pricing */}
+              <button
+                onClick={() => setActiveTab("info")}
+                title="Pricing"
+                className={`w-7 h-7 flex items-center justify-center rounded transition-all ${
+                  activeTab === "info"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                  <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </button>
             </div>
+
+            {/* Response status chip */}
+            {activeTab === "unified" && (unifiedSubTab === "vision" ? visionResult : result) && (
+              <span className={`text-[10px] font-mono flex-shrink-0 ml-1 ${(unifiedSubTab === "vision" ? visionResult?.ok : result?.ok) ? "text-green-400" : "text-red-400"}`}>
+                {(unifiedSubTab === "vision" ? visionResult?.status : result?.status)}&nbsp;·&nbsp;{(unifiedSubTab === "vision" ? visionResult?.durationMs : result?.durationMs)}ms
+              </span>
+            )}
           </div>
 
           {/* Sub-tab row — only shown inside Unified tab */}
@@ -3033,12 +2794,12 @@ export default function ManualKeyTester() {
                 },
                 {
                   id: "image-gen" as const,
-                  label: "Image Gen",
+                  label: "Image",
                   icon: <PhotoIcon />,
                 },
                 {
                   id: "video-gen" as const,
-                  label: "Video Gen",
+                  label: "Video",
                   icon: <VideoTabIcon />,
                 },
                 {
@@ -3073,96 +2834,69 @@ export default function ManualKeyTester() {
         {activeTab === "unified" && unifiedSubTab === "chat" && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-            {/* Provider Header Bar */}
-            <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-secondary/20">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
-                <span className="text-xs font-semibold text-foreground truncate">{selectedPreset.name}</span>
-              </div>
-              
-              {/* Model Selector */}
-              {selectedPreset.models && selectedPreset.models.length > 0 && (
+            {/* Model selector bar — working keys models + static preset models */}
+            {(workingModels.length > 0 || (selectedPreset.models && selectedPreset.models.length > 0)) && (
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/50 bg-sidebar/30 flex-shrink-0">
+                <span className="text-[10px] text-muted-foreground/70 flex-shrink-0">Model</span>
                 <select
                   value={chatModel}
-                  onChange={(e) => setChatModel(e.target.value)}
-                  className="text-xs font-semibold bg-background text-foreground border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
-                  title="Select model for this provider"
+                  onChange={(e) => {
+                    setChatModel(e.target.value)
+                    // Auto-fill API key from working key if available
+                    const wm = workingModels.find((m) => m.modelId === e.target.value)
+                    if (wm && !apiKey.trim()) handleApiKeyChange(wm.apiKey)
+                  }}
+                  className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer flex-1 min-w-0 truncate"
                 >
-                  {selectedPreset.models.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
+                  {workingModels.length > 0 && (
+                    <optgroup label={`Saved working (${workingModels.length})`}>
+                      {workingModels.map((m) => (
+                        <option key={m.modelId} value={m.modelId}>
+                          {m.modelId} · {m.latencyMs}ms
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {selectedPreset.models && selectedPreset.models.length > 0 && (
+                    <optgroup label="All models">
+                      {selectedPreset.models.map((m) => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
-              )}
-            </div>
+                {workingModels.length > 0 && (
+                  <span className="text-[9px] text-primary/60 border border-primary/20 bg-primary/8 rounded px-1 py-0.5 flex-shrink-0 whitespace-nowrap">
+                    {workingModels.length} saved
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Chat messages area */}
             <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 flex flex-col gap-3">
               {chatHistory.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full gap-6 text-center py-8 max-w-lg mx-auto w-full">
-
-                  {/* Provider icon + name */}
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_28px_oklch(0.76_0.17_192_/_0.15)]">
-                      <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-8 h-8" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold text-foreground text-balance">{selectedPreset.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {apiKey ? "Key entered — send a message below to test it" : "Enter your API key on the left to get started"}
-                      </p>
-                    </div>
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-center max-w-sm mx-auto w-full">
+                  <div className="w-12 h-12 rounded-xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_oklch(0.76_0.17_192_/_0.12)]">
+                    <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-6 h-6" />
                   </div>
-
-                  {/* Key status / CTA */}
-                  {!apiKey && (
-                    <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-                      <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-secondary/30 text-left w-full">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                        <div>
-                          <p className="text-[11px] font-medium text-foreground">No API key entered</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
-                            Paste your API key in the sidebar. Keys are never stored or sent to our servers — all requests go directly to the provider.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* What you get */}
-                      <div className="grid grid-cols-2 gap-2 w-full">
-                        {[
-                          { icon: "✓", label: "Response latency (ms)", color: "text-green-400" },
-                          { icon: "⚡", label: "Token usage", color: "text-yellow-400" },
-                          { icon: "◉", label: "Rate limit remaining", color: "text-primary" },
-                          { icon: "⊘", label: "Raw JSON response", color: "text-sky-400" },
-                        ].map((item) => (
-                          <div key={item.label} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/40">
-                            <span className={`text-[13px] ${item.color} flex-shrink-0`}>{item.icon}</span>
-                            <span className="text-[10px] text-muted-foreground leading-tight">{item.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Quick prompts */}
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {apiKey ? "Ready — send a message to test" : workingModels.length > 0 ? "Loading saved key..." : "Paste your API key below to start"}
+                    </p>
+                  </div>
                   {apiKey && (
-                    <div className="flex flex-col items-center gap-2">
-                      <p className="text-[10px] text-muted-foreground/60">Or send a test message:</p>
-                      <div className="flex flex-wrap gap-1.5 justify-center">
-                        {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => setPrompt(s)}
-                            className="text-[10px] px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/60 hover:bg-secondary/60 transition-colors"
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="flex flex-wrap gap-1.5 justify-center">
+                      {["Say hello", "What can you do?", "Count to 5", "Write a haiku"].map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setPrompt(s)}
+                          className="text-[10px] px-2.5 py-1 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/50 hover:bg-secondary/60 transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -3183,12 +2917,30 @@ export default function ManualKeyTester() {
                 </div>
               ))}
 
-              {loading && (
+              {/* Streaming bubble — shows tokens as they arrive */}
+              {isStreaming && (
                 <div className="flex items-start gap-2">
-                  <div className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${selectedPreset.color}`}>
-                    <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4" />
+                  <div className="bg-card border border-primary/30 rounded-xl px-3.5 py-2.5 max-w-[85%] flex flex-col gap-1">
+                    {streamingText ? (
+                      <>
+                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">{streamingText}<span className="inline-block w-1.5 h-4 bg-primary/70 animate-pulse rounded-sm ml-0.5 align-middle" /></pre>
+                        {ttftMs !== null && (
+                          <span className="text-[9px] text-cyan-400/70 font-mono">TTFT: {ttftMs}ms</span>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <SpinnerIcon />
+                        <span className="text-[11px] text-muted-foreground">Connecting...</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-2">
+                </div>
+              )}
+
+              {loading && !isStreaming && (
+                <div className="flex items-start gap-2">
+                  <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
                     <SpinnerIcon />
                     <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
                   </div>
@@ -3342,41 +3094,108 @@ export default function ManualKeyTester() {
 
             {/* Chat input */}
             <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+
+              {/* Inline API key input — shown only when no key is set AND no working keys exist for this provider */}
+              {!apiKey.trim() && workingModels.length === 0 && (
+                <div className="flex items-center gap-2 px-1 py-1 rounded-lg border border-primary/20 bg-primary/5">
+                  <div className="relative flex-1 min-w-0">
+                    <input
+                      type={showKey ? "text" : "password"}
+                      value={apiKey}
+                      onChange={(e) => handleApiKeyChange(e.target.value)}
+                      placeholder="Paste API key to start..."
+                      className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                    />
+                    <button
+                      onClick={() => setShowKey((v) => !v)}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      <EyeIcon show={showKey} />
+                    </button>
+                  </div>
+                  {selectedPreset.createKeyUrl && (
+                    <a
+                      href={selectedPreset.createKeyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 text-[10px] text-primary/60 hover:text-primary transition-colors whitespace-nowrap"
+                    >
+                      Get key →
+                    </a>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2 items-end">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key first..."}
-                  disabled={loading || !apiKey.trim()}
+                  placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key above first..."}
+                  disabled={(loading || isStreaming) || !apiKey.trim()}
                   rows={2}
                   className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runTest}
-                  disabled={!apiKey.trim() || !prompt.trim() || loading}
+                  disabled={!apiKey.trim() || !prompt.trim() || loading || isStreaming}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 min-w-[80px] h-[46px]"
                 >
-                  {loading ? <SpinnerIcon /> : <SendIcon />}
-                  {loading ? "..." : "Send"}
+                  {loading || isStreaming ? <SpinnerIcon /> : <SendIcon />}
+                  {loading || isStreaming ? "..." : "Send"}
                 </button>
               </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <p className="text-[9px] text-muted-foreground/40">Shift+Enter for newline</p>
-                {chatHistory.length > 0 && (
+              <div className="flex items-center justify-between mt-1.5 gap-2 flex-wrap">
+                {/* Streaming toggle */}
+                <label className="flex items-center gap-1.5 cursor-pointer select-none" htmlFor="streaming-toggle">
                   <button
-                    onClick={() => { setChatHistory([]); setResult(null) }}
-                    className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                    id="streaming-toggle"
+                    role="switch"
+                    aria-checked={useStreaming}
+                    onClick={() => setUseStreaming((v) => !v)}
+                    className={`relative w-7 h-4 rounded-full border transition-all flex-shrink-0 ${useStreaming ? "bg-primary/80 border-primary/60" : "bg-secondary border-border"}`}
                   >
-                    Clear chat
+                    <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${useStreaming ? "left-3.5" : "left-0.5"}`} />
+                  </button>
+                  <span className="text-[9px] text-muted-foreground">Stream</span>
+                </label>
+                {/* Notification bell */}
+                {notifPerm !== "granted" && (
+                  <button
+                    onClick={requestNotifPermission}
+                    title="Enable notifications when response arrives"
+                    className="text-[9px] text-muted-foreground/50 hover:text-foreground flex items-center gap-1 transition-colors"
+                  >
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
+                      <path d="M8 2a5 5 0 0 1 5 5v2l1.5 2.5H1.5L3 9V7a5 5 0 0 1 5-5z" />
+                      <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" />
+                    </svg>
+                    Notify
                   </button>
                 )}
+                {/* TTFT display */}
+                {ttftMs !== null && (
+                  <span className="text-[9px] font-mono text-cyan-400/80">TTFT {ttftMs}ms</span>
+                )}
+                <div className="flex items-center gap-3 ml-auto">
+                  {chatHistory.length > 0 && (
+                    <>
+                      <button onClick={exportChatMarkdown} className="text-[9px] text-muted-foreground/50 hover:text-foreground transition-colors">Export MD</button>
+                      {result && <button onClick={exportResultJSON} className="text-[9px] text-muted-foreground/50 hover:text-foreground transition-colors">Export JSON</button>}
+                      <button
+                        onClick={() => { setChatHistory([]); setResult(null); setStreamingText(""); setTtftMs(null) }}
+                        className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      >
+                        Clear chat
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��──────────────────────────────────����───��─ */}
+        {/* ── VISION TAB ────────────��─────���────────��───────────────────����───��─ */}
         {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             {/* Provider Header Bar */}
@@ -3548,7 +3367,7 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── OCR TAB ──────────────────────────────────────��───────────────── */}
+        {/* ── OCR TAB ──────────────────────��───────────────��───────────────── */}
         {activeTab === "unified" && unifiedSubTab === "ocr" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
@@ -3788,7 +3607,7 @@ export default function ManualKeyTester() {
 
               {/* Prompt input */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/65">Test Prompt</label>
+                <label className="text-[10px] font-medium text-muted-foreground/80">Test Prompt</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -3907,26 +3726,133 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── WORKING KEYS TAB ──────────────────────────────────────────────── */}
-        {activeTab === "working-keys" && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <WorkingKeysPanel
-              refreshTick={workingKeysTick}
-              onUseKey={(key) => {
-                // Pre-fill the API key field when user taps "Copy Key"
-                handleApiKeyChange(key)
-                setConfigOpen(true)
-              }}
-            />
+        {/* ── SAVED TAB (History + Collections merged) ──────────────────────── */}
+        {(activeTab === "saved" || activeTab === "history" || activeTab === "collections") && (() => {
+          const savedSub = activeTab === "collections" ? "collections" : "history"
+          return (
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              {/* Sub-tab row */}
+              <div className="flex items-center gap-0.5 px-3 h-8 border-b border-border/40 bg-sidebar/40 flex-shrink-0">
+                {([
+                  { id: "history",     label: "Recent" },
+                  { id: "collections", label: "Collections" },
+                ] as const).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    className={`px-2.5 h-6 rounded text-[10px] font-medium whitespace-nowrap transition-all ${
+                      savedSub === t.id
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              {savedSub === "history" && (
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <HistoryPanel
+                    onRestore={(entry) => {
+                      const preset = PRESETS.find((p) => p.id === entry.provider)
+                      if (preset) applyPreset(preset)
+                      setPrompt(entry.prompt)
+                      setActiveTab("unified")
+                      setUnifiedSubTab("chat")
+                    }}
+                  />
+                </div>
+              )}
+              {savedSub === "collections" && (
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <CollectionsPanel
+                    onLoad={(req: SavedRequest) => {
+                      const preset = PRESETS.find((p) => p.id === req.provider)
+                      if (preset) applyPreset(preset)
+                      if (req.endpoint) setEndpoint(req.endpoint)
+                      if (req.method) setMethod(req.method)
+                      if (req.body) setBodyTemplate(req.body)
+                      if (req.prompt) setPrompt(req.prompt)
+                      if (req.systemPrompt) { setSystemPrompt(req.systemPrompt); setShowSystemPrompt(true) }
+                      setActiveTab("unified")
+                      setUnifiedSubTab("chat")
+                    }}
+                    currentRequest={{
+                      name: prompt.slice(0, 40) || "Request",
+                      provider: selectedPreset.id,
+                      providerName: selectedPreset.name,
+                      endpoint,
+                      method,
+                      headers: Object.fromEntries(headerRows.filter((r) => r.key.trim()).map((r) => [r.key, r.value])),
+                      body: bodyTemplate || undefined,
+                      prompt: prompt || undefined,
+                      systemPrompt: systemPrompt || undefined,
+                      model: getCurrentModel() || undefined,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
+        {/* ── ENVIRONMENTS TAB ──────────────────────────────────────────────── */}
+        {activeTab === "environments" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <EnvSwitcher onEnvChange={(env) => setActiveEnv(env)} />
           </div>
         )}
+
+        {/* ── KEYS TAB (Saved keys + Screener merged) ──────────────────────── */}
+        {(activeTab === "working-keys" || activeTab === "screener") && (() => {
+          const keysSub = activeTab === "screener" ? "screener" : "keys"
+          return (
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              {/* Sub-tab row */}
+              <div className="flex items-center gap-0.5 px-3 h-8 border-b border-border/40 bg-sidebar/40 flex-shrink-0">
+                {([
+                  { id: "keys",     label: "Saved Keys" },
+                  { id: "screener", label: "Screener"   },
+                ] as const).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id === "keys" ? "working-keys" : "screener")}
+                    className={`px-2.5 h-6 rounded text-[10px] font-medium whitespace-nowrap transition-all ${
+                      keysSub === t.id
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              {keysSub === "keys" && (
+                <div className="flex-1 min-h-0 overflow-y-auto">
+                  <WorkingKeysPanel
+                    refreshTick={workingKeysTick}
+                    onUseKey={(key) => {
+                      handleApiKeyChange(key)
+                      setConfigOpen(true)
+                    }}
+                  />
+                </div>
+              )}
+              {keysSub === "screener" && (
+                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                  <ModelScreenerPanel />
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* ── INFO TAB ──────────────────────────────���──────────────────────── */}
         {activeTab === "info" && (
           <ProviderInfoPanel apiKey={apiKey || undefined} />
         )}
 
-        {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────── */}
+        {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────��─ */}
         {activeTab === "auto-detect" && (() => {
           // Full provider pattern table — mirrors detectProviderFromKey but with metadata
           type DetectPattern = {
@@ -3954,7 +3880,7 @@ export default function ManualKeyTester() {
             { prefix: "dk-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dk-abc…",              confidence: "high" },
             { prefix: "dc-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dc-abc…",              confidence: "high" },
             { prefix: "r8_",         providerId: "replicate",   providerName: "Replicate",               example: "r8_abc…",              confidence: "high" },
-            { prefix: "up_",         providerId: "upstage",     providerName: "Upstage Solar",           example: "up_abc…",              confidence: "high" },
+            { prefix: "up_",         providerId: "upstage",     providerName: "Upstage Solar",           example: "up_abc��",              confidence: "high" },
             { prefix: "sn-",         providerId: "sambanova",   providerName: "SambaNova",               example: "sn-abc…",              confidence: "high" },
             { prefix: "csk-",        providerId: "cerebras",    providerName: "Cerebras",                example: "csk-abc…",             confidence: "high" },
             { prefix: "cbrss_",      providerId: "cerebras",    providerName: "Cerebras",                example: "cbrss_abc…",           confidence: "high" },
@@ -4235,29 +4161,252 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── MULTI-KEY BATCH TAB ───────────────────────────────��───────────── */}
+        {/* ── MULTI-KEY BATCH TAB ────────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <MultiKeyBatch
-              onKeysSaved={() => {
-                setWorkingKeysTick((t) => t + 1)
-                setActiveTab("working-keys")
-              }}
-            />
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+
+            {/* Mobile segment toggle — hidden on md+ */}
+            <div className="flex md:hidden items-center gap-1 px-3 py-2 border-b border-border bg-sidebar/60 flex-shrink-0">
+              <div className="flex items-center gap-0.5 bg-secondary/60 rounded-lg p-0.5 w-full">
+                {(["run", "config"] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setBatchView(v)}
+                    className={`flex-1 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                      batchView === v
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {v === "run" ? "Multi-key Run" : "Config"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Body — side-by-side on desktop, single panel on mobile */}
+            <div className="flex-1 min-h-0 flex overflow-hidden">
+
+              {/* Config panel — always visible on md+, toggled on mobile */}
+              <div className={`
+                flex-shrink-0 border-r border-border flex flex-col overflow-hidden
+                md:w-72 md:flex
+                ${batchView === "config" ? "flex w-full" : "hidden md:flex"}
+              `}>
+                <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-5">
+
+                  {/* API Key */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-medium text-muted-foreground">API Key</label>
+                      <div className="flex items-center gap-1.5">
+                        {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
+                          <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1 py-0.5 rounded">detected</span>
+                        )}
+                        {apiKey && (
+                          <button
+                            onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
+                            className="text-[9px] text-muted-foreground/50 hover:text-destructive transition-colors"
+                          >
+                            clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showKey ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => handleApiKeyChange(e.target.value)}
+                        placeholder="Paste API key..."
+                        className="w-full rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                      />
+                      <button
+                        onClick={() => setShowKey((v) => !v)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+                        title={showKey ? "Hide" : "Show"}
+                      >
+                        <EyeIcon show={showKey} />
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <button
+                        role="switch"
+                        aria-checked={rememberKey}
+                        onClick={() => handleRememberToggle(!rememberKey)}
+                        className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                      >
+                        <span className={`relative w-6 h-3.5 rounded-full border transition-all flex-shrink-0 ${rememberKey ? "bg-primary/70 border-primary/50" : "bg-secondary border-border"}`}>
+                          <span className={`absolute top-[1px] w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-all ${rememberKey ? "left-[11px]" : "left-[1px]"}`} />
+                        </span>
+                        Remember
+                        {rememberKey && <span className="text-primary/60 font-medium ml-0.5">· saved</span>}
+                      </button>
+                      {selectedPreset.createKeyUrl && !apiKey && (
+                        <a
+                          href={selectedPreset.createKeyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] text-primary/60 hover:text-primary transition-colors"
+                        >
+                          Get key
+                          <svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Endpoint */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">Endpoint URL</label>
+                    <div className="flex gap-1.5">
+                      <select
+                        value={method}
+                        onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
+                        className="text-[11px] font-mono bg-background border border-border rounded px-1.5 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
+                      >
+                        {["POST", "GET", "PUT", "DELETE"].map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="url"
+                        value={endpoint}
+                        onChange={(e) => setEndpoint(e.target.value)}
+                        placeholder="https://api.example.com/v1/..."
+                        className="flex-1 min-w-0 rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                      />
+                    </div>
+                    {selectedPreset.docsUrl && (
+                      <a href={selectedPreset.docsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-primary/70 hover:text-primary transition-colors">
+                        API docs →
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Single-key batch test */}
+                  <div className="flex flex-col gap-1.5">
+                    <div>
+                      <label className="text-[11px] font-medium text-muted-foreground">Test all models — single key</label>
+                      <p className="text-[10px] text-muted-foreground/50 mt-0.5">Uses the API key above</p>
+                    </div>
+                    <ProviderBatchTest
+                      providerId={selectedPreset.id}
+                      providerName={selectedPreset.name}
+                      apiKey={apiKey}
+                      onSaved={() => setWorkingKeysTick((t) => t + 1)}
+                    />
+                  </div>
+
+                  {/* Headers */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">Headers</label>
+                    <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
+                    <p className="text-[10px] text-muted-foreground/50">
+                      <code className="text-primary/70">{"{{API_KEY}}"}</code> is replaced on send.
+                    </p>
+                  </div>
+
+                  {/* Model catalog */}
+                  {selectedPreset.models && selectedPreset.models.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-[11px] font-medium text-muted-foreground">
+                        Models <span className="text-muted-foreground/40">({selectedPreset.models.length})</span>
+                      </p>
+                      <div className="flex flex-col gap-px">
+                        {selectedPreset.models.map((m) => {
+                          const isActive = bodyTemplate.includes(`"${m.id}"`)
+                          return (
+                            <button
+                              key={m.id}
+                              onClick={() => {
+                                try {
+                                  const parsed = JSON.parse(bodyTemplate)
+                                  parsed.model = m.id
+                                  setBodyTemplate(JSON.stringify(parsed, null, 2))
+                                } catch {
+                                  setBodyTemplate(JSON.stringify({ model: m.id, max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2))
+                                }
+                              }}
+                              className={`text-left w-full px-2 py-1.5 rounded flex items-center justify-between gap-2 transition-colors ${
+                                isActive ? "bg-primary/10 border border-primary/20" : "hover:bg-secondary/50 border border-transparent"
+                              }`}
+                            >
+                              <span className={`text-[11px] truncate ${isActive ? "text-primary font-medium" : "text-foreground/70"}`}>{m.label}</span>
+                              <span className="text-[9px] text-muted-foreground/50 bg-muted/30 px-1 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Request Body */}
+                  <div className="flex flex-col gap-1.5">
+                    <button
+                      onClick={() => setShowBodyEditor((v) => !v)}
+                      className="flex items-center justify-between text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span>Request Body</span>
+                      <ChevronIcon open={showBodyEditor} />
+                    </button>
+                    {showBodyEditor && (
+                      <>
+                        <textarea
+                          value={bodyTemplate}
+                          onChange={(e) => setBodyTemplate(e.target.value)}
+                          rows={7}
+                          spellCheck={false}
+                          placeholder={"{\n  \"model\": \"...\"\n}"}
+                          className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 resize-y"
+                        />
+                        <p className="text-[9px] text-muted-foreground/40">
+                          <code className="text-primary/60">{"{{PROMPT}}"}</code> — injected message placeholder.
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Key info */}
+                  {apiKey.trim().length >= 8 && (
+                    <KeyInfoPanel
+                      provider={selectedPreset.id}
+                      apiKey={apiKey}
+                      responseHeaders={lastResponseHeaders}
+                      fetchTick={keyInfoTick}
+                    />
+                  )}
+
+                  {/* Clear */}
+                  <button
+                    onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
+                    className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground hover:bg-secondary/40 px-3 py-2 rounded border border-border/40 hover:border-border transition-colors text-center"
+                  >
+                    Clear history
+                  </button>
+
+                </div>
+              </div>
+
+              {/* Multi-key batch panel */}
+              <div className={`
+                flex-1 min-w-0 min-h-0 overflow-hidden
+                ${batchView === "run" ? "flex" : "hidden md:flex"}
+              `}>
+                <MultiKeyBatch
+                  onKeysSaved={() => {
+                    setWorkingKeysTick((t) => t + 1)
+                    setActiveTab("working-keys")
+                  }}
+                />
+              </div>
+
+            </div>
           </div>
         )}
 
       </div>
 
-      {/* Developer auth modal */}
-      <AuthModal
-        open={devModalOpen}
-        onClose={() => setDevModalOpen(false)}
-        onAuth={(state: AuthState) => {
-          setIsDev(state.isAuthenticated)
-          setDevUserName(state.name ?? state.email ?? "")
-        }}
-      />
     </div>
   )
 }
