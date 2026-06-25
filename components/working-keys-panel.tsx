@@ -384,13 +384,20 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
   const [running, setRunning]     = useState(false)
   const [runResult, setRunResult] = useState<{ tested: number; changed: number } | null>(null)
   const [open, setOpen]           = useState(true)
+  const [noToken, setNoToken]     = useState(false)
 
   const load = useCallback(async () => {
+    const token = getExportToken()
+    // Skip the fetch entirely if no token is configured — avoids a guaranteed 401
+    if (!token) {
+      setNoToken(true)
+      return
+    }
+    setNoToken(false)
     setLoading(true)
     try {
-      const token = getExportToken()
       const res = await fetch("/api/locked-keys/list", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
         const d = await res.json()
@@ -405,21 +412,23 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
 
   const handleUnlock = useCallback(async (id: string) => {
     const token = getExportToken()
+    if (!token) return
     await fetch(`/api/locked-keys/unlock?id=${id}`, {
       method: "DELETE",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { Authorization: `Bearer ${token}` },
     })
     setLocked((prev) => prev.filter((r) => r.id !== id))
   }, [])
 
   const handleRunNow = useCallback(async () => {
     const token = getExportToken()
+    if (!token) return
     setRunning(true)
     setRunResult(null)
     try {
       const res = await fetch("/api/locked-keys/refresh?force=true", {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
         const d = await res.json()
@@ -430,6 +439,15 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
       setRunning(false)
     }
   }, [load])
+
+  // No token configured — show a small hint rather than nothing
+  if (noToken) {
+    return (
+      <p className="text-[9px] text-muted-foreground/40 px-1 py-1">
+        Set your EXPORT_API_TOKEN in the Export panel to view locked keys.
+      </p>
+    )
+  }
 
   if (locked.length === 0 && !loading) return null
 
