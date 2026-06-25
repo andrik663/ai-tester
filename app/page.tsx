@@ -5,8 +5,10 @@ import ManualKeyTester from '@/components/manual-key-tester'
 export default async function Page() {
   const cookieStore = await cookies()
   const devSession = cookieStore.get('dev_session')?.value
+  const exportToken = process.env.EXPORT_API_TOKEN
 
-  if (!devSession) {
+  // Validate cookie matches the actual token
+  if (!exportToken || devSession !== exportToken) {
     redirect('/login')
   }
 

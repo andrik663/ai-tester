@@ -20,12 +20,24 @@ export function middleware(request: NextRequest) {
 
   // Dev login uses a simple session cookie set by /api/dev/login
   const devSession = request.cookies.get('dev_session')?.value
-  const exportToken = request.headers.get('x-export-token') // for API-to-API calls
+  const exportToken = process.env.EXPORT_API_TOKEN
+  const headerToken = request.headers.get('x-export-token') // for API-to-API calls
 
-  // Cookie must be non-empty (actual value check happens server-side in the route)
-  if (!devSession && !exportToken) {
+  // Validate cookie value matches the actual token (or header token matches)
+  const isAuthenticated =
+    (exportToken && devSession === exportToken) ||
+    (exportToken && headerToken === exportToken)
+
+  if (!isAuthenticated) {
+    // Only redirect page requests; for API routes return 401
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('callbackUrl', pathname)
+    // Only set callbackUrl for real page destinations, not API routes
+    if (!pathname.startsWith('/api/')) {
+      loginUrl.searchParams.set('callbackUrl', pathname)
+    }
     return NextResponse.redirect(loginUrl)
   }
 

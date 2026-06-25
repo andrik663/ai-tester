@@ -57,7 +57,9 @@ function SpinnerIcon() {
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/"
+  const rawCallback = searchParams.get("callbackUrl") ?? "/"
+  // Never redirect back to an API route — always fall back to "/"
+  const callbackUrl = rawCallback.startsWith("/api/") ? "/" : rawCallback
 
   const [password, setPassword] = useState("")
   const [showPw, setShowPw] = useState(false)
