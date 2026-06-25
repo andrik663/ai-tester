@@ -1920,7 +1920,32 @@ export default function ManualKeyTester() {
   const [visionModel, setVisionModel] = useState<string>("")
   const [imageGenModel, setImageGenModel] = useState<string>("")
   const [videoGenModel, setVideoGenModel] = useState<string>("")
-  
+
+  // Increment to force WorkingKeysPanel to re-load from localStorage
+  const [workingKeysTick, setWorkingKeysTick] = useState(0)
+  // Working models for the current provider — loaded from saved keys
+  const [workingModels, setWorkingModels] = useState<Array<{ modelId: string; apiKey: string; latencyMs: number }>>([])
+
+  useEffect(() => {
+    const records = loadWorkingKeys().filter((r) => r.providerId === selectedPreset.id)
+    const seen = new Set<string>()
+    const deduped = records.filter((r) => {
+      const k = `${r.apiKey}::${r.modelId}`
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    setWorkingModels(deduped.map((r) => ({ modelId: r.modelId, apiKey: r.apiKey, latencyMs: r.latencyMs })))
+    if (deduped.length > 0) {
+      setChatModel((prev) => prev || deduped[0].modelId)
+      setApiKey((prev) => prev.trim() ? prev : deduped[0].apiKey)
+    } else {
+      const firstStatic = selectedPreset.models?.[0]?.id ?? ""
+      setChatModel((prev) => prev || firstStatic)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPreset.id, workingKeysTick])
+
   // Get the current model based on active sub-tab
   const getCurrentModel = () => {
     switch (unifiedSubTab) {
@@ -2010,32 +2035,7 @@ export default function ManualKeyTester() {
   // Auto-detect tab state
   const [detectInput, setDetectInput]   = useState("")
   const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
-  // Increment to force WorkingKeysPanel to re-load from localStorage
-  const [workingKeysTick, setWorkingKeysTick] = useState(0)
 
-  // Working models for the current provider — loaded from saved keys
-  const [workingModels, setWorkingModels] = useState<Array<{ modelId: string; apiKey: string; latencyMs: number }>>([])
-
-  useEffect(() => {
-    const records = loadWorkingKeys().filter((r) => r.providerId === selectedPreset.id)
-    const seen = new Set<string>()
-    const deduped = records.filter((r) => {
-      const k = `${r.apiKey}::${r.modelId}`
-      if (seen.has(k)) return false
-      seen.add(k)
-      return true
-    })
-    setWorkingModels(deduped.map((r) => ({ modelId: r.modelId, apiKey: r.apiKey, latencyMs: r.latencyMs })))
-    // Auto-populate chatModel AND apiKey from first saved working model when switching providers
-    if (deduped.length > 0) {
-      setChatModel((prev) => prev || deduped[0].modelId)
-      // Always fill the key from the first working record if no key is currently set
-      setApiKey((prev) => prev.trim() ? prev : deduped[0].apiKey)
-    } else {
-      const firstStatic = selectedPreset.models?.[0]?.id ?? ""
-      setChatModel((prev) => prev || firstStatic)
-    }
-  }, [selectedPreset.id, workingKeysTick])
   // Increment to trigger a fresh KeyInfoPanel fetch (bumped after successful chat)
   const [keyInfoTick, setKeyInfoTick] = useState(0)
   // Last known response headers — passed to KeyInfoPanel for rate limit data
@@ -3050,32 +3050,7 @@ export default function ManualKeyTester() {
 
             {/* Chat input */}
             <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
-              {/* System prompt toggle */}
-              <div className="mb-2">
-                <button
-                  onClick={() => setShowSystemPrompt((v) => !v)}
-                  className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 hover:text-foreground transition-colors"
-                >
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
-                    <rect x="2" y="3" width="12" height="10" rx="1.5" />
-                    <path d="M5 7h6M5 10h3" />
-                  </svg>
-                  System prompt
-                  {systemPrompt && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 transition-transform ${showSystemPrompt ? "rotate-180" : ""}`} aria-hidden>
-                    <path d="M4 6l4 4 4-4" />
-                  </svg>
-                </button>
-                {showSystemPrompt && (
-                  <textarea
-                    value={systemPrompt}
-                    onChange={(e) => setSystemPrompt(e.target.value)}
-                    placeholder="You are a helpful assistant..."
-                    rows={2}
-                    className="mt-1.5 w-full rounded-lg border border-primary/30 bg-primary/5 text-foreground text-xs px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40 resize-none leading-relaxed"
-                  />
-                )}
-              </div>
+
               {/* Inline API key input — shown only when no key is set AND no working keys exist for this provider */}
               {!apiKey.trim() && workingModels.length === 0 && (
                 <div className="flex items-center gap-2 px-1 py-1 rounded-lg border border-primary/20 bg-primary/5">
