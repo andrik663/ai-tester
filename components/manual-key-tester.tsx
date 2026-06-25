@@ -14,8 +14,6 @@ import { copyToClipboard } from "@/lib/clipboard"
 import { explainApiError } from "@/lib/explain-api-error"
 import KeyInfoPanel from "@/components/key-info-panel"
 import ProviderInfoPanel from "@/components/provider-info-panel"
-import AuthModal, { type AuthState } from "@/components/auth-modal"
-import { authClient } from "@/lib/auth-client"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -1834,29 +1832,6 @@ export default function ManualKeyTester() {
   const [copiedShare, setCopiedShare] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
-  // ── Developer auth state ─────────────────────────────────────────────────
-  const [isDev, setIsDev]               = useState(false)
-  const [devModalOpen, setDevModalOpen] = useState(false)
-  const [devUserName, setDevUserName]   = useState("")
-
-  // On mount, check existing Better Auth session
-  useEffect(() => {
-    authClient.getSession()
-      .then((res) => {
-        if (res?.data?.user) {
-          setIsDev(true)
-          setDevUserName(res.data.user.name ?? res.data.user.email)
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  const handleDevLogout = useCallback(async () => {
-    await authClient.signOut()
-    setIsDev(false)
-    setDevUserName("")
-  }, [])
-
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info">("unified")
   // Onboarding banner — dismissed in localStorage
@@ -2979,33 +2954,7 @@ export default function ManualKeyTester() {
               </button>
             ))}
 
-            {/* ── Dev login button — right side of tab bar ── */}
-            <div className="ml-auto flex-shrink-0 pl-2">
-              {isDev ? (
-                <button
-                  onClick={handleDevLogout}
-                  title="Developer — click to logout"
-                  className="flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap transition-all bg-primary/10 border border-primary/25 text-primary hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive"
-                >
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-                    <path d="M8 1.5L2 4v4c0 3.31 2.52 5.74 6 6.5 3.48-.76 6-3.19 6-6.5V4L8 1.5z" fill="oklch(0.76 0.17 192 / 0.25)" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                    <path d="M5.5 8l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {devUserName ? devUserName.split(" ")[0] : "Dev"}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setDevModalOpen(true)}
-                  title="Login as Developer"
-                  className="flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap transition-all text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/40 border border-transparent hover:border-border/60"
-                >
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-                    <path d="M8 1.5L2 4v4c0 3.31 2.52 5.74 6 6.5 3.48-.76 6-3.19 6-6.5V4L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                  </svg>
-                  Dev
-                </button>
-              )}
-            </div>
+
           </div>
 
           {/* Sub-tab row — only shown inside Unified tab */}
@@ -4249,15 +4198,6 @@ export default function ManualKeyTester() {
 
       </div>
 
-      {/* Developer auth modal */}
-      <AuthModal
-        open={devModalOpen}
-        onClose={() => setDevModalOpen(false)}
-        onAuth={(state: AuthState) => {
-          setIsDev(state.isAuthenticated)
-          setDevUserName(state.name ?? state.email ?? "")
-        }}
-      />
     </div>
   )
 }
