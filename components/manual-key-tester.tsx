@@ -1603,7 +1603,7 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ─────────────────────������─������───────────────────────────────────────────
+// ── Icons ��────────────────────������─������───────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -2026,9 +2026,11 @@ export default function ManualKeyTester() {
       return true
     })
     setWorkingModels(deduped.map((r) => ({ modelId: r.modelId, apiKey: r.apiKey, latencyMs: r.latencyMs })))
-    // Auto-populate chatModel from first saved working model when switching providers
+    // Auto-populate chatModel AND apiKey from first saved working model when switching providers
     if (deduped.length > 0) {
       setChatModel((prev) => prev || deduped[0].modelId)
+      // Always fill the key from the first working record if no key is currently set
+      setApiKey((prev) => prev.trim() ? prev : deduped[0].apiKey)
     } else {
       const firstStatic = selectedPreset.models?.[0]?.id ?? ""
       setChatModel((prev) => prev || firstStatic)
@@ -2835,7 +2837,7 @@ export default function ManualKeyTester() {
                   <div>
                     <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {apiKey ? "Ready — send a message to test" : "Paste your API key below to start"}
+                      {apiKey ? "Ready — send a message to test" : workingModels.length > 0 ? "Loading saved key..." : "Paste your API key below to start"}
                     </p>
                   </div>
                   {apiKey && (
@@ -3072,8 +3074,8 @@ export default function ManualKeyTester() {
                   />
                 )}
               </div>
-              {/* Inline API key input — shown only when no key is set */}
-              {!apiKey.trim() && (
+              {/* Inline API key input — shown only when no key is set AND no working keys exist for this provider */}
+              {!apiKey.trim() && workingModels.length === 0 && (
                 <div className="flex items-center gap-2 px-1 py-1 rounded-lg border border-primary/20 bg-primary/5">
                   <div className="relative flex-1 min-w-0">
                     <input
