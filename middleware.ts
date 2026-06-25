@@ -1,11 +1,8 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-// Middleware runs on Node.js runtime (not Edge) to avoid pg/better-auth import conflicts
-export const runtime = 'nodejs'
-
 // Routes that are publicly accessible without authentication
-const PUBLIC_PATHS = ['/login', '/api/auth']
+const PUBLIC_PATHS = ['/login', '/api/dev/login', '/api/dev/logout', '/api/dev/me']
 
 // Static asset / internal Next.js path prefixes that bypass auth
 const BYPASS_PREFIXES = ['/_next', '/favicon', '/icon', '/apple-icon', '/robots']
@@ -21,14 +18,26 @@ export function middleware(request: NextRequest) {
 
   if (isPublic(pathname)) return NextResponse.next()
 
-  // Better Auth sets "better-auth.session_token" (dev) or "__Secure-better-auth.session_token" (prod)
-  const sessionCookie =
-    request.cookies.get('better-auth.session_token') ??
-    request.cookies.get('__Secure-better-auth.session_token')
+  // Dev login uses a simple session cookie set by /api/dev/login
+  const devSession = request.cookies.get('dev_session')?.value
+  const exportToken = process.env.EXPORT_API_TOKEN
+  const headerToken = request.headers.get('x-export-token') // for API-to-API calls
 
-  if (!sessionCookie?.value) {
+  // Validate cookie value matches the actual token (or header token matches)
+  const isAuthenticated =
+    (exportToken && devSession === exportToken) ||
+    (exportToken && headerToken === exportToken)
+
+  if (!isAuthenticated) {
+    // Only redirect page requests; for API routes return 401
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('callbackUrl', pathname)
+    // Only set callbackUrl for real page destinations, not API routes
+    if (!pathname.startsWith('/api/')) {
+      loginUrl.searchParams.set('callbackUrl', pathname)
+    }
     return NextResponse.redirect(loginUrl)
   }
 
