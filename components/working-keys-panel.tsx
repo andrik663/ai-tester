@@ -30,14 +30,12 @@ interface LockedKeyRecord {
   lastError: string | null
 }
 
-// Build a ready-to-run curl command for a working key record
+// Build a ready-to-run curl command — key is masked in the output
 function buildCurlCommand(record: WorkingKeyRecord): string {
   const endpoint = resolveProviderEndpoint(record.providerId, record.apiKey)
-  if (!endpoint) return `# endpoint requires extra config (account ID / resource name)\n# Provider: ${record.providerName}`
+  if (!endpoint) return `# endpoint requires extra config\n# Provider: ${record.providerName}`
 
   const headers = buildProviderHeaders(record.providerId, record.apiKey)
-
-  // Replace key placeholder in endpoint (e.g. Google's ?key=...)
   const url = endpoint.includes("{{MODEL}}")
     ? endpoint.replace("{{MODEL}}", record.modelId)
     : endpoint
@@ -50,10 +48,10 @@ function buildCurlCommand(record: WorkingKeyRecord): string {
 
   const headerFlags = Object.entries(headers)
     .map(([k, v]) => {
-      // Mask the actual key in the header value for display
-      const masked = typeof v === "string" && v.includes(record.apiKey)
-        ? v.replace(record.apiKey, record.apiKey.slice(0, 4) + "••••" + record.apiKey.slice(-4))
-        : v
+      const masked =
+        typeof v === "string" && v.includes(record.apiKey)
+          ? v.replace(record.apiKey, "YOUR_API_KEY")
+          : v
       return `  -H '${k}: ${masked}'`
     })
     .join(" \\\n")
@@ -67,15 +65,6 @@ function TrashIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
       <path d="M2 4h12M5 4V2.5A.5.5 0 015.5 2h5a.5.5 0 01.5.5V4M6 7v5M10 7v5M3 4l1 9.5A.5.5 0 004.5 14h7a.5.5 0 00.5-.5L13 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function CopyIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   )
 }
@@ -141,11 +130,15 @@ function DatabaseIcon() {
   )
 }
 
-// ── Masked key display ────────────────────────────────────────────────────────
-
-function maskKey(key: string): string {
-  if (key.length <= 8) return "••••••••"
-  return key.slice(0, 4) + "••••" + key.slice(-4)
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden
+      className={`transition-transform ${open ? "" : "-rotate-90"}`}
+    >
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
 // ── Shared: read EXPORT_API_TOKEN from same localStorage key as ExportApiPanel ─
@@ -189,31 +182,39 @@ async function lockKeyToDb(
   }
 }
 
-// ── Single record row ─────────────────────────────────────────────────────────
+// ── Grouped key card — one card per provider+key, models listed inside ────────
 
-function RecordRow({
-  record,
-  onDelete,
-  onCopyKey,
+interface GroupedRecord {
+  groupKey: string          // providerId + ":" + apiKey (for dedup)
+  providerId: string
+  providerName: string
+  apiKey: string
+  records: WorkingKeyRecord[]
+}
+
+function GroupedKeyCard({
+  group,
+  onDeleteRecord,
   onLocked,
 }: {
-  record: WorkingKeyRecord
-  onDelete: (id: string) => void
-  onCopyKey: (key: string) => void
+  group: GroupedRecord
+  onDeleteRecord: (id: string) => void
   onLocked?: () => void
 }) {
-  const [copiedKey, setCopiedKey]     = useState(false)
-  const [copiedModel, setCopiedModel] = useState(false)
-  const [copiedCurl, setCopiedCurl]   = useState(false)
-  const [confirmDel, setConfirmDel]   = useState(false)
-  const [locking, setLocking]         = useState(false)
-  const [lockStatus, setLockStatus]   = useState<"idle" | "ok" | "error">("idle")
-  const [lockError, setLockError]     = useState<string>("")
+  const [open, setOpen]             = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
+  const [copiedCurl, setCopiedCurl] = useState<string | null>(null)
+  const [locking, setLocking]       = useState(false)
+  const [lockStatus, setLockStatus] = useState<"idle" | "ok" | "error">("idle")
+  const [lockError, setLockError]   = useState("")
+
+  // Use the first/best record for lock/curl operations
+  const primary = group.records[0]
 
   const handleLock = useCallback(async () => {
     setLocking(true)
     setLockStatus("idle")
-    const result = await lockKeyToDb(record)
+    const result = await lockKeyToDb(primary)
     setLocking(false)
     if (result.success) {
       setLockStatus("ok")
@@ -224,155 +225,146 @@ function RecordRow({
       setLockError(result.error ?? "Unknown error")
       setTimeout(() => { setLockStatus("idle"); setLockError("") }, 4000)
     }
-  }, [record, onLocked])
+  }, [primary, onLocked])
 
-  const handleCopyKey = useCallback(() => {
-    copyToClipboard(record.apiKey).then(() => {
-      setCopiedKey(true)
-      setTimeout(() => setCopiedKey(false), 1500)
-      onCopyKey(record.apiKey)
-    }).catch(() => {})
-  }, [record.apiKey, onCopyKey])
-
-  const handleCopyModel = useCallback(() => {
-    copyToClipboard(record.modelId).then(() => {
-      setCopiedModel(true)
-      setTimeout(() => setCopiedModel(false), 1500)
-    }).catch(() => {})
-  }, [record.modelId])
-
-  const handleCopyCurl = useCallback(() => {
+  const handleCopyCurl = useCallback((record: WorkingKeyRecord) => {
     const cmd = buildCurlCommand(record)
     copyToClipboard(cmd).then(() => {
-      setCopiedCurl(true)
-      setTimeout(() => setCopiedCurl(false), 2000)
+      setCopiedCurl(record.id)
+      setTimeout(() => setCopiedCurl(null), 2000)
     }).catch(() => {})
-  }, [record])
+  }, [])
 
-  const handleDelete = useCallback(() => {
+  const handleDeleteGroup = useCallback(() => {
     if (!confirmDel) {
       setConfirmDel(true)
       setTimeout(() => setConfirmDel(false), 2500)
       return
     }
-    onDelete(record.id)
-  }, [confirmDel, record.id, onDelete])
+    group.records.forEach((r) => onDeleteRecord(r.id))
+  }, [confirmDel, group.records, onDeleteRecord])
 
-  const date = new Date(record.savedAt)
+  // Key fingerprint — just last 4 chars, not enough to reconstruct
+  const fingerprint = "••••" + primary.apiKey.slice(-4)
+
+  const earliest = group.records.reduce((a, b) => (a.savedAt < b.savedAt ? a : b))
+  const date = new Date(earliest.savedAt)
   const dateStr = date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
-  const timeStr = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+
+  const avgLatency = Math.round(group.records.reduce((s, r) => s + r.latencyMs, 0) / group.records.length)
 
   return (
-    <div className="border-b border-border last:border-0 px-3 py-3 flex flex-col gap-2 hover:bg-secondary/20 transition-colors">
-      {/* Top row: provider badge + model + latency */}
-      <div className="flex items-start gap-2">
-        {/* Green dot */}
-        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-400 mt-1.5" />
+    <div className="border-b border-border last:border-0 flex flex-col">
+      {/* Card header row */}
+      <div
+        className="px-3 py-2.5 flex items-center gap-2 cursor-pointer hover:bg-secondary/20 transition-colors select-none"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {/* Status dot */}
+        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-400" />
 
-        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-          {/* Provider */}
+        {/* Provider + summary */}
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[9px] uppercase tracking-widest font-semibold text-primary/70 bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">
-              {record.providerName}
+              {group.providerName}
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground/50">{dateStr} {timeStr}</span>
+            <span className="text-[10px] font-mono text-muted-foreground/40">{fingerprint}</span>
+            <span className="text-[9px] text-muted-foreground/30">{dateStr}</span>
           </div>
-          {/* Model */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-mono text-foreground break-all leading-snug">
-              {record.modelId}
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[11px] text-foreground/80 font-medium">
+              {group.records.length} model{group.records.length !== 1 ? "s" : ""}
             </span>
-            <button
-              onClick={handleCopyModel}
-              className="flex-shrink-0 text-muted-foreground/40 hover:text-primary transition-colors"
-              title="Copy model ID"
-            >
-              {copiedModel ? (
-                <span className="text-[8px] text-green-400">OK</span>
-              ) : (
-                <CopyIcon />
-              )}
-            </button>
-          </div>
-          {/* Stats */}
-          <div className="flex items-center gap-3 text-[9px] font-mono text-muted-foreground/50">
-            <span>{record.latencyMs}ms</span>
-            {record.tokenUsage?.total !== undefined && (
-              <span>{record.tokenUsage.total} tok</span>
-            )}
+            <span className="text-[9px] text-muted-foreground/40 font-mono">avg {avgLatency}ms</span>
           </div>
         </div>
 
-        {/* Lock button */}
-        <button
-          onClick={handleLock}
-          disabled={locking || lockStatus === "ok"}
-          className={`flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all disabled:opacity-60 ${
-            lockStatus === "ok"
-              ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
-              : lockStatus === "error"
-              ? "border-red-400/50 bg-red-400/10 text-red-400"
-              : "border-border text-muted-foreground/40 hover:border-cyan-400/30 hover:text-cyan-400 hover:bg-cyan-400/5"
-          }`}
-          title={lockStatus === "ok" ? "Locked to DB" : lockStatus === "error" ? lockError : "Lock key permanently to DB (auto-refreshes every 24h)"}
-        >
-          <LockIcon locked={lockStatus === "ok"} />
-          {locking ? <span>...</span> : lockStatus === "ok" ? <span>Locked</span> : lockStatus === "error" ? <span>Failed</span> : null}
-        </button>
-
-        {/* Delete button */}
-        <button
-          onClick={handleDelete}
-          className={`flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all ${
-            confirmDel
-              ? "border-red-400/50 bg-red-400/10 text-red-400"
-              : "border-border text-muted-foreground/40 hover:border-red-400/30 hover:text-red-400 hover:bg-red-400/5"
-          }`}
-          title={confirmDel ? "Tap again to confirm" : "Delete"}
-        >
-          <TrashIcon />
-          {confirmDel ? <span>Sure?</span> : null}
-        </button>
-      </div>
-
-      {/* API Key + cURL row */}
-      <div className="flex flex-col gap-1.5 pl-3.5">
-        <div className="flex items-center gap-2">
-          <KeyIcon />
-          <span className="text-[10px] font-mono text-muted-foreground/60 flex-1 truncate">
-            {maskKey(record.apiKey)}
-          </span>
+        {/* Actions */}
+        <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          {/* Lock to DB */}
           <button
-            onClick={handleCopyKey}
-            className="flex items-center gap-1 text-[9px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors flex-shrink-0"
-          >
-            <CopyIcon />
-            {copiedKey ? "Copied!" : "Copy Key"}
-          </button>
-        </div>
-
-        {/* cURL command row */}
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground/30">
-            <TerminalIcon />
-          </span>
-          <span className="text-[9px] font-mono text-muted-foreground/40 flex-1 truncate">
-            curl -X POST &apos;{resolveProviderEndpoint(record.providerId, record.apiKey) ?? "N/A"}&apos;
-          </span>
-          <button
-            onClick={handleCopyCurl}
-            className={`flex items-center gap-1 text-[9px] px-2 py-0.5 rounded border transition-colors flex-shrink-0 ${
-              copiedCurl
-                ? "border-green-500/40 bg-green-500/10 text-green-400"
-                : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
+            onClick={handleLock}
+            disabled={locking || lockStatus === "ok"}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all disabled:opacity-60 ${
+              lockStatus === "ok"
+                ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
+                : lockStatus === "error"
+                ? "border-red-400/50 bg-red-400/10 text-red-400"
+                : "border-border text-muted-foreground/40 hover:border-cyan-400/30 hover:text-cyan-400 hover:bg-cyan-400/5"
             }`}
-            title="Copy full cURL command"
+            title={lockStatus === "ok" ? "Locked" : lockStatus === "error" ? lockError : "Lock to DB"}
           >
-            <TerminalIcon />
-            {copiedCurl ? "Copied!" : "Copy cURL"}
+            <LockIcon locked={lockStatus === "ok"} />
+            {locking ? "..." : lockStatus === "ok" ? "Locked" : lockStatus === "error" ? "Failed" : null}
           </button>
+
+          {/* Delete group */}
+          <button
+            onClick={handleDeleteGroup}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all ${
+              confirmDel
+                ? "border-red-400/50 bg-red-400/10 text-red-400"
+                : "border-border text-muted-foreground/40 hover:border-red-400/30 hover:text-red-400 hover:bg-red-400/5"
+            }`}
+            title={confirmDel ? "Tap again to confirm" : "Delete all"}
+          >
+            <TrashIcon />
+            {confirmDel ? "Sure?" : null}
+          </button>
+
+          {/* Expand chevron */}
+          <span className="text-muted-foreground/40 px-1">
+            <ChevronIcon open={open} />
+          </span>
         </div>
       </div>
+
+      {/* Expanded model list */}
+      {open && (
+        <div className="border-t border-border/50 bg-secondary/10 flex flex-col">
+          {group.records.map((r) => (
+            <div
+              key={r.id}
+              className="flex items-center gap-2 px-4 py-2 border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors"
+            >
+              {/* Model ID */}
+              <div className="flex-1 min-w-0 flex flex-col">
+                <span className="text-[11px] font-mono text-foreground/80 truncate">{r.modelId}</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[9px] text-muted-foreground/40 font-mono">{r.latencyMs}ms</span>
+                  {r.tokenUsage?.total !== undefined && (
+                    <span className="text-[9px] text-muted-foreground/40 font-mono">{r.tokenUsage.total} tok</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Copy cURL */}
+              <button
+                onClick={() => handleCopyCurl(r)}
+                className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors flex-shrink-0 ${
+                  copiedCurl === r.id
+                    ? "border-green-500/40 bg-green-500/10 text-green-400"
+                    : "border-border text-muted-foreground/40 hover:text-foreground hover:border-primary/40"
+                }`}
+                title="Copy cURL (key is masked)"
+              >
+                <TerminalIcon />
+                {copiedCurl === r.id ? "Copied!" : "cURL"}
+              </button>
+
+              {/* Delete single */}
+              <button
+                onClick={() => onDeleteRecord(r.id)}
+                className="flex-shrink-0 text-muted-foreground/30 hover:text-red-400 transition-colors p-1"
+                title="Remove"
+              >
+                <TrashIcon />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -389,7 +381,6 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
 
   const load = useCallback(async () => {
     const token = getExportToken()
-    // Skip the fetch entirely if no token is configured — avoids a guaranteed 401
     if (!token) {
       setNoToken(true)
       return
@@ -441,7 +432,6 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
     }
   }, [load])
 
-  // No token configured — show a small hint rather than nothing
   if (noToken) {
     return (
       <p className="text-[9px] text-muted-foreground/40 px-1 py-1">
@@ -454,7 +444,6 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Header */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center justify-between w-full"
@@ -467,16 +456,12 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
             {locked.length} permanent
           </span>
-          <span className="text-[9px] text-muted-foreground/50">
-            · auto-refreshes every 24h
-          </span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); handleRunNow() }}
             disabled={running}
             className="flex items-center gap-1 text-[9px] px-2 py-1 rounded border border-border text-muted-foreground/50 hover:text-cyan-400 hover:border-cyan-400/40 transition-colors disabled:opacity-40"
-            title="Re-test all locked keys now"
           >
             <RefreshIcon />
             {running ? "Testing..." : "Run now"}
@@ -506,9 +491,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
               return (
                 <div key={row.id} className="border-b border-border last:border-0 px-3 py-2.5 flex flex-col gap-1.5 hover:bg-secondary/20 transition-colors">
                   <div className="flex items-start gap-2">
-                    <span
-                      className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${row.isWorking ? "bg-green-400" : "bg-red-400"}`}
-                    />
+                    <span className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${row.isWorking ? "bg-green-400" : "bg-red-400"}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[9px] uppercase tracking-widest font-semibold text-cyan-400/80 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded">
@@ -522,11 +505,8 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
                         )}
                       </div>
                       <div className="text-[10px] font-mono text-foreground/80 mt-0.5 truncate">{row.modelId}</div>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[9px] font-mono text-muted-foreground/40">{row.apiKeyMasked}</span>
-                        <span className="text-[8px] text-muted-foreground/30">
-                          Locked {lockedDate.toLocaleDateString()} · Next refresh {nextRefresh.toLocaleString()}
-                        </span>
+                      <div className="text-[8px] text-muted-foreground/30 mt-0.5">
+                        Locked {lockedDate.toLocaleDateString()} · Next refresh {nextRefresh.toLocaleString()}
                       </div>
                       {!row.isWorking && row.lastError && (
                         <div className="text-[8px] text-red-400/70 mt-0.5 truncate" title={row.lastError}>
@@ -537,7 +517,6 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
                     <button
                       onClick={() => handleUnlock(row.id)}
                       className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground/40 hover:border-red-400/30 hover:text-red-400 transition-colors"
-                      title="Remove lock (does not delete the key from localStorage)"
                     >
                       <LockIcon locked={false} />
                       Unlock
@@ -556,49 +535,37 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 interface Props {
-  /** Called when user copies a key — so parent can optionally paste it into the key field */
   onUseKey?: (key: string, providerId: string) => void
-  /** Refresh trigger from parent (increment to force re-load) */
   refreshTick?: number
 }
 
-export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
-  const [records, setRecords]         = useState<WorkingKeyRecord[]>([])
+export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick }: Props) {
+  const [records, setRecords]               = useState<WorkingKeyRecord[]>([])
   const [filterProvider, setFilterProvider] = useState<string>("all")
-  const [filterCap, setFilterCap]     = useState<CapabilityTag | "all">("all")
-  const [confirmClear, setConfirmClear] = useState(false)
-  const [lockedTick, setLockedTick]   = useState(0)
-  const [sessionToken, setSessionToken] = useState<string | null>(null)
+  const [filterCap, setFilterCap]           = useState<CapabilityTag | "all">("all")
+  const [confirmClear, setConfirmClear]     = useState(false)
+  const [lockedTick, setLockedTick]         = useState(0)
+  const [sessionToken, setSessionToken]     = useState<string | null>(null)
 
-  // Derive session-ready keys from current working key records
   const sessionKeys: WorkingKeyForSession[] = records.map((r) => ({
     providerId:   r.providerId,
     providerName: r.providerName,
     modelId:      r.modelId,
-    apiKeyMasked: r.apiKey.slice(0, 12) + "••••••",
+    apiKeyMasked: "••••" + r.apiKey.slice(-4),
     isWorking:    true,
     latencyMs:    r.latencyMs,
   }))
 
-  // Load from localStorage
   const reload = useCallback(() => {
     setRecords(loadWorkingKeys().sort((a, b) => b.savedAt - a.savedAt))
   }, [])
 
-  useEffect(() => {
-    reload()
-  }, [reload, refreshTick])
+  useEffect(() => { reload() }, [reload, refreshTick])
 
   const handleDelete = useCallback((id: string) => {
     const updated = deleteWorkingKey(id)
     setRecords(updated.sort((a, b) => b.savedAt - a.savedAt))
   }, [])
-
-  const handleCopyKey = useCallback((key: string) => {
-    // Find which provider this key belongs to for onUseKey
-    const record = records.find((r) => r.apiKey === key)
-    if (record && onUseKey) onUseKey(key, record.providerId)
-  }, [records, onUseKey])
 
   const handleClearAll = useCallback(() => {
     if (!confirmClear) {
@@ -611,7 +578,6 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
     setConfirmClear(false)
   }, [confirmClear])
 
-  // Unique providers for filter
   const providers = Array.from(new Set(records.map((r) => r.providerId))).sort()
 
   const filtered = records.filter((r) => {
@@ -622,6 +588,25 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
     }
     return true
   })
+
+  // Group filtered records by providerId + apiKey
+  const grouped: GroupedRecord[] = []
+  const groupMap = new Map<string, GroupedRecord>()
+  for (const r of filtered) {
+    const gk = r.providerId + ":" + r.apiKey
+    if (!groupMap.has(gk)) {
+      const g: GroupedRecord = {
+        groupKey: gk,
+        providerId: r.providerId,
+        providerName: r.providerName,
+        apiKey: r.apiKey,
+        records: [],
+      }
+      groupMap.set(gk, g)
+      grouped.push(g)
+    }
+    groupMap.get(gk)!.records.push(r)
+  }
 
   const okCount = records.length
 
@@ -653,8 +638,6 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
             {okCount} saved
           </span>
         </div>
-
-        {/* Clear all */}
         <button
           onClick={handleClearAll}
           className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-all ${
@@ -735,19 +718,18 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
         </div>
       )}
 
-      {/* Records list */}
+      {/* Grouped records list */}
       <div className="rounded-xl border border-border overflow-hidden">
-        {filtered.length === 0 ? (
+        {grouped.length === 0 ? (
           <p className="px-4 py-6 text-center text-[11px] text-muted-foreground">
-            No records for this provider.
+            No records for this filter.
           </p>
         ) : (
-          filtered.map((r) => (
-            <RecordRow
-              key={r.id}
-              record={r}
-              onDelete={handleDelete}
-              onCopyKey={handleCopyKey}
+          grouped.map((g) => (
+            <GroupedKeyCard
+              key={g.groupKey}
+              group={g}
+              onDeleteRecord={handleDelete}
               onLocked={() => setLockedTick((t) => t + 1)}
             />
           ))
@@ -755,19 +737,16 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
       </div>
 
       <p className="text-[9px] text-muted-foreground/40 text-center">
-        Stored locally in browser. Raw keys are never exposed via the API.
+        Stored locally in your browser. Keys are never sent to our servers.
       </p>
 
-      {/* Locked keys section — DB-backed, auto-refreshes every 24h (developer) */}
       <LockedKeysSection refreshTick={lockedTick} />
 
-      {/* User temporary session — public users, TTL-based access */}
       <UserSessionPanel
         pendingKeys={sessionToken ? sessionKeys : undefined}
         onSessionToken={setSessionToken}
       />
 
-      {/* Export API section */}
       <ExportApiPanel keys={records} />
     </div>
   )
