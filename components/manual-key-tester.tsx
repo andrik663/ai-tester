@@ -14,6 +14,12 @@ import { copyToClipboard } from "@/lib/clipboard"
 import { explainApiError } from "@/lib/explain-api-error"
 import KeyInfoPanel from "@/components/key-info-panel"
 import ProviderInfoPanel from "@/components/provider-info-panel"
+import HistoryPanel from "@/components/history-panel"
+import CollectionsPanel from "@/components/collections-panel"
+import EnvSwitcher from "@/components/env-switcher"
+import { pushHistory, type HistoryEntry } from "@/lib/history"
+import { getActiveEnvironment, interpolate, type Environment } from "@/lib/environments"
+import type { SavedRequest } from "@/lib/collections"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -1832,8 +1838,26 @@ export default function ManualKeyTester() {
   const [copiedShare, setCopiedShare] = useState(false)
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
+  // ── New feature state ────────────────────────────────────────────────────────
+  // System prompt
+  const [systemPrompt, setSystemPrompt]           = useState("")
+  const [showSystemPrompt, setShowSystemPrompt]   = useState(false)
+  // Streaming
+  const [streamingText, setStreamingText]         = useState("")
+  const [isStreaming, setIsStreaming]             = useState(false)
+  const [ttftMs, setTtftMs]                       = useState<number | null>(null)
+  const [useStreaming, setUseStreaming]            = useState(true)
+  // Active environment
+  const [activeEnv, setActiveEnv]                 = useState<Environment | null>(null)
+  // Notification permission
+  const [notifPerm, setNotifPerm]                 = useState<NotificationPermission>("default")
+  useEffect(() => {
+    if (typeof Notification !== "undefined") setNotifPerm(Notification.permission)
+    const env = getActiveEnvironment()
+    setActiveEnv(env)
+  }, [])
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info">("unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments">("unified")
   // Onboarding banner — dismissed in localStorage
   // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
@@ -2201,83 +2225,206 @@ export default function ManualKeyTester() {
   }
 
   async function runTest() {
-    if (!apiKey.trim() || !prompt.trim() || loading) return
+    if (!apiKey.trim() || !prompt.trim() || loading || isStreaming) return
 
-    const userMsg: ChatMessage = {
-      role: "user",
-      content: prompt,
-      ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-    }
-    setChatHistory((prev) => [...prev, userMsg])
+    const ts = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    const userMsg: ChatMessage = { role: "user", content: prompt, ts }
     const currentPrompt = prompt
+    // Build multi-turn history: all previous messages + new user message
+    const previousMessages = chatHistory.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+
+    setChatHistory((prev) => [...prev, userMsg])
     setPrompt("")
-    setLoading(true)
     setResult(null)
+    setTtftMs(null)
 
     const headers: Record<string, string> = {}
     for (const row of headerRows) {
-      if (row.key.trim()) headers[row.key.trim()] = row.value
+      if (row.key.trim()) {
+        const val = activeEnv ? interpolate(row.value, activeEnv) : row.value
+        headers[row.key.trim()] = val
+      }
     }
+    const resolvedBody = activeEnv && bodyTemplate ? interpolate(bodyTemplate, activeEnv) : (bodyTemplate || undefined)
 
-    try {
-      const res = await fetch("/api/manual-test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider: selectedPreset.id,
-          apiKey: apiKey.trim(),
-          endpoint,
-          method,
-          headers,
-          body: bodyTemplate || undefined,
-          prompt: currentPrompt,
-        }),
-      })
-      const data: ManualTestResult = await res.json()
-      setResult(data)
+    if (useStreaming) {
+      // ── Streaming path ────────────────────────────────────────────────────
+      setIsStreaming(true)
+      setStreamingText("")
 
-      // Capture response headers for KeyInfoPanel rate-limit enrichment
-      if (data.responseHeaders) {
-        setLastResponseHeaders(data.responseHeaders)
-      }
+      let accumulated = ""
+      let finalResult: ManualTestResult | null = null
 
-      // After a successful chat, bump key info so balance/rate-limit refreshes
-      if (data.ok) {
-        setKeyInfoTick((t) => t + 1)
-      }
+      try {
+        const res = await fetch("/api/manual-test/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: selectedPreset.id,
+            apiKey: apiKey.trim(),
+            endpoint,
+            headers,
+            messages: [...previousMessages, { role: "user", content: currentPrompt }],
+            systemPrompt: systemPrompt.trim() || undefined,
+            rawBody: resolvedBody,
+          }),
+        })
 
-      const reply = data.chatReply ?? (data.ok ? data.responseBody : null)
-      if (reply) {
-        const assistantMsg: ChatMessage = {
-          role: "assistant",
-          content: reply,
-          ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        const reader = res.body?.getReader()
+        if (!reader) throw new Error("No stream body")
+        const dec = new TextDecoder()
+        let buf = ""
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buf += dec.decode(value, { stream: true })
+          const lines = buf.split("\n")
+          buf = lines.pop() ?? ""
+
+          for (const rawLine of lines) {
+            const line = rawLine.trim()
+            if (!line || !line.startsWith("data: ")) continue
+            try {
+              const ev = rawLine.match(/^event: (\w+)/)
+              const dataStr = line.slice(6)
+              const evName = ev?.[1] ?? "token"
+              const parsed = JSON.parse(dataStr) as Record<string, unknown>
+
+              if (evName === "token") {
+                accumulated += (parsed.text as string) ?? ""
+                setStreamingText(accumulated)
+              } else if (evName === "ttft") {
+                setTtftMs(parsed.ms as number)
+              } else if (evName === "response_headers") {
+                setLastResponseHeaders(parsed as Record<string, string>)
+              } else if (evName === "done") {
+                finalResult = {
+                  ok: true,
+                  status: 200,
+                  statusText: "OK",
+                  responseBody: accumulated,
+                  chatReply: accumulated,
+                  logs: [],
+                  curlCommand: "",
+                  curlFull: "",
+                  requestBodySent: "",
+                  durationMs: parsed.durationMs as number,
+                  ttftMs: parsed.ttftMs as number | null,
+                  tokenUsage: parsed.tokenUsage as ManualTestResult["tokenUsage"],
+                  responseHeaders: parsed.responseHeaders as Record<string, string>,
+                } as ManualTestResult & { ttftMs?: number | null }
+                setResult(finalResult)
+                if (finalResult.responseHeaders) setLastResponseHeaders(finalResult.responseHeaders)
+                setKeyInfoTick((t) => t + 1)
+              } else if (evName === "error") {
+                const errContent = (parsed.body as string) || (parsed.message as string) || "Stream error"
+                const errMsg: ChatMessage = { role: "assistant", content: `Error: ${errContent}`, ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) }
+                setChatHistory((prev) => [...prev, errMsg])
+                reader.releaseLock()
+                return
+              }
+            } catch { /* skip malformed SSE line */ }
+          }
         }
+        reader.releaseLock()
+
+        const replyTs = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        const assistantMsg: ChatMessage = { role: "assistant", content: accumulated || "(empty response)", ts: replyTs }
         setChatHistory((prev) => [...prev, assistantMsg])
-      } else {
-        const errMsg: ChatMessage = {
-          role: "assistant",
-          content: `Error: HTTP ${data.status} ${data.statusText}`,
-          ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        setStreamingText("")
+
+        // Push to history
+        pushHistory({
+          provider: selectedPreset.id,
+          providerName: selectedPreset.name,
+          model: getCurrentModel() || undefined,
+          prompt: currentPrompt,
+          reply: accumulated,
+          ok: true,
+          status: 200,
+          durationMs: finalResult?.durationMs,
+          ttftMs: (finalResult as (ManualTestResult & { ttftMs?: number | null }) | null)?.ttftMs,
+          tokenUsage: finalResult?.tokenUsage,
+          responseHeaders: finalResult?.responseHeaders,
+        })
+
+        // Browser notification for long responses
+        if (Notification.permission === "granted" && document.hidden) {
+          new Notification(`${selectedPreset.name} replied`, { body: accumulated.slice(0, 80) + "…", silent: true })
         }
+      } catch (err) {
+        const errMsg: ChatMessage = { role: "assistant", content: err instanceof Error ? err.message : "Streaming failed", ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) }
         setChatHistory((prev) => [...prev, errMsg])
+        setStreamingText("")
+      } finally {
+        setIsStreaming(false)
       }
-    } catch (err) {
-      const errMsg: ChatMessage = {
-        role: "assistant",
-        content: err instanceof Error ? err.message : "Request failed",
-        ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+    } else {
+      // ── Non-streaming path ────────────────────────────────────────────────
+      setLoading(true)
+      try {
+        const res = await fetch("/api/manual-test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: selectedPreset.id,
+            apiKey: apiKey.trim(),
+            endpoint,
+            method,
+            headers,
+            body: resolvedBody,
+            prompt: currentPrompt,
+            messages: previousMessages,
+            systemPrompt: systemPrompt.trim() || undefined,
+            model: getCurrentModel() || undefined,
+          }),
+        })
+        const data: ManualTestResult = await res.json()
+        setResult(data)
+        if (data.responseHeaders) setLastResponseHeaders(data.responseHeaders)
+        if (data.ok) setKeyInfoTick((t) => t + 1)
+
+        const reply = data.chatReply ?? (data.ok ? data.responseBody : null)
+        const replyTs = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        if (reply) {
+          const assistantMsg: ChatMessage = { role: "assistant", content: reply, ts: replyTs }
+          setChatHistory((prev) => [...prev, assistantMsg])
+        } else {
+          const errMsg: ChatMessage = { role: "assistant", content: `Error: HTTP ${data.status} ${data.statusText}`, ts: replyTs }
+          setChatHistory((prev) => [...prev, errMsg])
+        }
+
+        pushHistory({
+          provider: selectedPreset.id,
+          providerName: selectedPreset.name,
+          model: getCurrentModel() || undefined,
+          prompt: currentPrompt,
+          reply: reply ?? undefined,
+          ok: data.ok,
+          status: data.status,
+          durationMs: data.durationMs,
+          tokenUsage: data.tokenUsage,
+          responseHeaders: data.responseHeaders,
+          curlFull: data.curlFull,
+        })
+
+        if (Notification.permission === "granted" && document.hidden && reply) {
+          new Notification(`${selectedPreset.name} replied`, { body: reply.slice(0, 80) + "…", silent: true })
+        }
+      } catch (err) {
+        const errMsg: ChatMessage = { role: "assistant", content: err instanceof Error ? err.message : "Request failed", ts: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) }
+        setChatHistory((prev) => [...prev, errMsg])
+      } finally {
+        setLoading(false)
       }
-      setChatHistory((prev) => [...prev, errMsg])
-    } finally {
-      setLoading(false)
     }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      runTest()
+      if (!loading && !isStreaming) runTest()
     }
   }
 
@@ -2295,6 +2442,37 @@ export default function ManualKeyTester() {
       setCopiedCurlFull(true)
       setTimeout(() => setCopiedCurlFull(false), 1500)
     }).catch(() => {})
+  }
+
+  async function requestNotifPermission() {
+    if (typeof Notification === "undefined") return
+    const perm = await Notification.requestPermission()
+    setNotifPerm(perm)
+  }
+
+  function exportResultJSON() {
+    if (!result) return
+    const blob = new Blob([JSON.stringify({ provider: selectedPreset.name, ...result }, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `api-test-${selectedPreset.id}-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function exportChatMarkdown() {
+    const lines = chatHistory.map((m) =>
+      `**${m.role === "user" ? "User" : selectedPreset.name}** (${m.ts})\n\n${m.content}`
+    )
+    const md = `# Chat Export — ${selectedPreset.name}\n\n${lines.join("\n\n---\n\n")}`
+    const blob = new Blob([md], { type: "text/markdown" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `chat-${selectedPreset.id}-${Date.now()}.md`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   function shareResult() {
@@ -2930,6 +3108,35 @@ export default function ManualKeyTester() {
                 ),
               },
               {
+                id: "history" as const,
+                label: "History",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3 2" />
+                  </svg>
+                ),
+              },
+              {
+                id: "collections" as const,
+                label: "Collections",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <path d="M2 6a1 1 0 0 1 1-1h5l2 3h11a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6z" />
+                  </svg>
+                ),
+              },
+              {
+                id: "environments" as const,
+                label: "Envs",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="M8 10h8M8 14h5" />
+                  </svg>
+                ),
+              },
+              {
                 id: "info" as const,
                 label: "Pricing",
                 icon: (
@@ -3132,12 +3339,30 @@ export default function ManualKeyTester() {
                 </div>
               ))}
 
-              {loading && (
+              {/* Streaming bubble — shows tokens as they arrive */}
+              {isStreaming && (
                 <div className="flex items-start gap-2">
-                  <div className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${selectedPreset.color}`}>
-                    <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4" />
+                  <div className="bg-card border border-primary/30 rounded-xl px-3.5 py-2.5 max-w-[85%] flex flex-col gap-1">
+                    {streamingText ? (
+                      <>
+                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">{streamingText}<span className="inline-block w-1.5 h-4 bg-primary/70 animate-pulse rounded-sm ml-0.5 align-middle" /></pre>
+                        {ttftMs !== null && (
+                          <span className="text-[9px] text-cyan-400/70 font-mono">TTFT: {ttftMs}ms</span>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <SpinnerIcon />
+                        <span className="text-[11px] text-muted-foreground">Connecting...</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-2">
+                </div>
+              )}
+
+              {loading && !isStreaming && (
+                <div className="flex items-start gap-2">
+                  <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-2">
                     <SpinnerIcon />
                     <span className="text-[11px] text-muted-foreground">Waiting for response...</span>
                   </div>
@@ -3291,35 +3516,97 @@ export default function ManualKeyTester() {
 
             {/* Chat input */}
             <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+              {/* System prompt toggle */}
+              <div className="mb-2">
+                <button
+                  onClick={() => setShowSystemPrompt((v) => !v)}
+                  className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 hover:text-foreground transition-colors"
+                >
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
+                    <rect x="2" y="3" width="12" height="10" rx="1.5" />
+                    <path d="M5 7h6M5 10h3" />
+                  </svg>
+                  System prompt
+                  {systemPrompt && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 transition-transform ${showSystemPrompt ? "rotate-180" : ""}`} aria-hidden>
+                    <path d="M4 6l4 4 4-4" />
+                  </svg>
+                </button>
+                {showSystemPrompt && (
+                  <textarea
+                    value={systemPrompt}
+                    onChange={(e) => setSystemPrompt(e.target.value)}
+                    placeholder="You are a helpful assistant..."
+                    rows={2}
+                    className="mt-1.5 w-full rounded-lg border border-primary/30 bg-primary/5 text-foreground text-xs px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40 resize-none leading-relaxed"
+                  />
+                )}
+              </div>
               <div className="flex gap-2 items-end">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key first..."}
-                  disabled={loading || !apiKey.trim()}
+                  disabled={(loading || isStreaming) || !apiKey.trim()}
                   rows={2}
                   className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runTest}
-                  disabled={!apiKey.trim() || !prompt.trim() || loading}
+                  disabled={!apiKey.trim() || !prompt.trim() || loading || isStreaming}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 min-w-[80px] h-[46px]"
                 >
-                  {loading ? <SpinnerIcon /> : <SendIcon />}
-                  {loading ? "..." : "Send"}
+                  {loading || isStreaming ? <SpinnerIcon /> : <SendIcon />}
+                  {loading || isStreaming ? "..." : "Send"}
                 </button>
               </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <p className="text-[9px] text-muted-foreground/40">Shift+Enter for newline</p>
-                {chatHistory.length > 0 && (
+              <div className="flex items-center justify-between mt-1.5 gap-2 flex-wrap">
+                {/* Streaming toggle */}
+                <label className="flex items-center gap-1.5 cursor-pointer select-none" htmlFor="streaming-toggle">
                   <button
-                    onClick={() => { setChatHistory([]); setResult(null) }}
-                    className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                    id="streaming-toggle"
+                    role="switch"
+                    aria-checked={useStreaming}
+                    onClick={() => setUseStreaming((v) => !v)}
+                    className={`relative w-7 h-4 rounded-full border transition-all flex-shrink-0 ${useStreaming ? "bg-primary/80 border-primary/60" : "bg-secondary border-border"}`}
                   >
-                    Clear chat
+                    <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${useStreaming ? "left-3.5" : "left-0.5"}`} />
+                  </button>
+                  <span className="text-[9px] text-muted-foreground">Stream</span>
+                </label>
+                {/* Notification bell */}
+                {notifPerm !== "granted" && (
+                  <button
+                    onClick={requestNotifPermission}
+                    title="Enable notifications when response arrives"
+                    className="text-[9px] text-muted-foreground/50 hover:text-foreground flex items-center gap-1 transition-colors"
+                  >
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
+                      <path d="M8 2a5 5 0 0 1 5 5v2l1.5 2.5H1.5L3 9V7a5 5 0 0 1 5-5z" />
+                      <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" />
+                    </svg>
+                    Notify
                   </button>
                 )}
+                {/* TTFT display */}
+                {ttftMs !== null && (
+                  <span className="text-[9px] font-mono text-cyan-400/80">TTFT {ttftMs}ms</span>
+                )}
+                <div className="flex items-center gap-3 ml-auto">
+                  {chatHistory.length > 0 && (
+                    <>
+                      <button onClick={exportChatMarkdown} className="text-[9px] text-muted-foreground/50 hover:text-foreground transition-colors">Export MD</button>
+                      {result && <button onClick={exportResultJSON} className="text-[9px] text-muted-foreground/50 hover:text-foreground transition-colors">Export JSON</button>}
+                      <button
+                        onClick={() => { setChatHistory([]); setResult(null); setStreamingText(""); setTtftMs(null) }}
+                        className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      >
+                        Clear chat
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -3856,6 +4143,59 @@ export default function ManualKeyTester() {
           </div>
         )}
 
+        {/* ── HISTORY TAB ───────────────────────────────────────────────────── */}
+        {activeTab === "history" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <HistoryPanel
+              onRestore={(entry) => {
+                const preset = PRESETS.find((p) => p.id === entry.provider)
+                if (preset) applyPreset(preset)
+                setPrompt(entry.prompt)
+                setActiveTab("unified")
+                setUnifiedSubTab("chat")
+              }}
+            />
+          </div>
+        )}
+
+        {/* ── COLLECTIONS TAB ───────────────────────────────────────────────── */}
+        {activeTab === "collections" && (
+          <div className="flex-1 min-h-0 overflow-hidden relative">
+            <CollectionsPanel
+              onLoad={(req: SavedRequest) => {
+                const preset = PRESETS.find((p) => p.id === req.provider)
+                if (preset) applyPreset(preset)
+                if (req.endpoint) setEndpoint(req.endpoint)
+                if (req.method) setMethod(req.method)
+                if (req.body) setBodyTemplate(req.body)
+                if (req.prompt) setPrompt(req.prompt)
+                if (req.systemPrompt) { setSystemPrompt(req.systemPrompt); setShowSystemPrompt(true) }
+                setActiveTab("unified")
+                setUnifiedSubTab("chat")
+              }}
+              currentRequest={{
+                name: prompt.slice(0, 40) || "Request",
+                provider: selectedPreset.id,
+                providerName: selectedPreset.name,
+                endpoint,
+                method,
+                headers: Object.fromEntries(headerRows.filter((r) => r.key.trim()).map((r) => [r.key, r.value])),
+                body: bodyTemplate || undefined,
+                prompt: prompt || undefined,
+                systemPrompt: systemPrompt || undefined,
+                model: getCurrentModel() || undefined,
+              }}
+            />
+          </div>
+        )}
+
+        {/* ── ENVIRONMENTS TAB ──────────────────────────────────────────────── */}
+        {activeTab === "environments" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <EnvSwitcher onEnvChange={(env) => setActiveEnv(env)} />
+          </div>
+        )}
+
         {/* ── WORKING KEYS TAB ──────────────────────────────────────────────── */}
         {activeTab === "working-keys" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -3875,7 +4215,7 @@ export default function ManualKeyTester() {
           <ProviderInfoPanel apiKey={apiKey || undefined} />
         )}
 
-        {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────── */}
+        {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────��─ */}
         {activeTab === "auto-detect" && (() => {
           // Full provider pattern table — mirrors detectProviderFromKey but with metadata
           type DetectPattern = {
