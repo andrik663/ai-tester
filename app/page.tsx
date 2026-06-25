@@ -1,8 +1,15 @@
-"use client"
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
+import ManualKeyTester from '@/components/manual-key-tester'
 
-import ManualKeyTester from "@/components/manual-key-tester"
+export default async function Page() {
+  const session = await auth.api.getSession({ headers: await headers() })
 
-export default function Page() {
+  if (!session?.user) {
+    redirect('/login')
+  }
+
   return (
     <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
       <ManualKeyTester />

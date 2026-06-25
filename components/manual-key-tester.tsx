@@ -14,7 +14,8 @@ import { copyToClipboard } from "@/lib/clipboard"
 import { explainApiError } from "@/lib/explain-api-error"
 import KeyInfoPanel from "@/components/key-info-panel"
 import ProviderInfoPanel from "@/components/provider-info-panel"
-import DevLoginModal from "@/components/dev-login-modal"
+import AuthModal, { type AuthState } from "@/components/auth-modal"
+import { authClient } from "@/lib/auth-client"
 
 // ── Provider presets ──────────────────────────────────────────────────────────
 
@@ -1836,18 +1837,24 @@ export default function ManualKeyTester() {
   // ── Developer auth state ─────────────────────────────────────────────────
   const [isDev, setIsDev]               = useState(false)
   const [devModalOpen, setDevModalOpen] = useState(false)
+  const [devUserName, setDevUserName]   = useState("")
 
-  // On mount, verify dev session cookie with server
+  // On mount, check existing Better Auth session
   useEffect(() => {
-    fetch("/api/dev/me")
-      .then((r) => r.json())
-      .then((d) => { if (d.isDev) setIsDev(true) })
+    authClient.getSession()
+      .then((res) => {
+        if (res?.data?.user) {
+          setIsDev(true)
+          setDevUserName(res.data.user.name ?? res.data.user.email)
+        }
+      })
       .catch(() => {})
   }, [])
 
   const handleDevLogout = useCallback(async () => {
-    await fetch("/api/dev/logout", { method: "POST" })
+    await authClient.signOut()
     setIsDev(false)
+    setDevUserName("")
   }, [])
 
   // Tab state
@@ -2984,7 +2991,7 @@ export default function ManualKeyTester() {
                     <path d="M8 1.5L2 4v4c0 3.31 2.52 5.74 6 6.5 3.48-.76 6-3.19 6-6.5V4L8 1.5z" fill="oklch(0.76 0.17 192 / 0.25)" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
                     <path d="M5.5 8l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  Dev
+                  {devUserName ? devUserName.split(" ")[0] : "Dev"}
                 </button>
               ) : (
                 <button
@@ -4242,11 +4249,14 @@ export default function ManualKeyTester() {
 
       </div>
 
-      {/* Developer login modal */}
-      <DevLoginModal
+      {/* Developer auth modal */}
+      <AuthModal
         open={devModalOpen}
         onClose={() => setDevModalOpen(false)}
-        onAuth={(dev) => setIsDev(dev)}
+        onAuth={(state: AuthState) => {
+          setIsDev(state.isAuthenticated)
+          setDevUserName(state.name ?? state.email ?? "")
+        }}
       />
     </div>
   )
