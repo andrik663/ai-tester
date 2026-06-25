@@ -20,13 +20,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (!body.password || body.password !== token) {
-    // Constant-time comparison would be better but token comparison via === is
-    // acceptable here since the risk of timing attacks on a dev tool is low.
     return NextResponse.json({ error: "Incorrect password." }, { status: 401 })
   }
 
+  // Use a fixed sentinel value — validation happens only at login time,
+  // not by comparing raw token in every middleware invocation.
   const res = NextResponse.json({ ok: true })
-  res.cookies.set(COOKIE_NAME, token, {
+  res.cookies.set(COOKIE_NAME, "dev_authenticated", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

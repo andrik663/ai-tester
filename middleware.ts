@@ -18,14 +18,15 @@ export function middleware(request: NextRequest) {
 
   if (isPublic(pathname)) return NextResponse.next()
 
-  // Dev login uses a simple session cookie set by /api/dev/login
+  // Dev login uses a simple session cookie set by /api/dev/login.
+  // The cookie holds a fixed sentinel ("dev_authenticated"); the actual
+  // EXPORT_API_TOKEN password is only checked at login time in /api/dev/login.
   const devSession = request.cookies.get('dev_session')?.value
-  const exportToken = process.env.EXPORT_API_TOKEN
   const headerToken = request.headers.get('x-export-token') // for API-to-API calls
+  const exportToken = process.env.EXPORT_API_TOKEN
 
-  // Validate cookie value matches the actual token (or header token matches)
   const isAuthenticated =
-    (exportToken && devSession === exportToken) ||
+    devSession === 'dev_authenticated' ||
     (exportToken && headerToken === exportToken)
 
   if (!isAuthenticated) {
