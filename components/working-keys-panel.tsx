@@ -11,6 +11,7 @@ import {
 import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
 import ExportApiPanel from "@/components/export-api-panel"
 import UserSessionPanel, { type WorkingKeyForSession } from "@/components/user-session-panel"
+import { inferCapabilities, type CapabilityTag } from "@/lib/model-screener"
 
 // ── Types for locked keys (DB-backed) ────────────────────────────────────────
 
@@ -564,6 +565,7 @@ interface Props {
 export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
   const [records, setRecords]         = useState<WorkingKeyRecord[]>([])
   const [filterProvider, setFilterProvider] = useState<string>("all")
+  const [filterCap, setFilterCap]     = useState<CapabilityTag | "all">("all")
   const [confirmClear, setConfirmClear] = useState(false)
   const [lockedTick, setLockedTick]   = useState(0)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
@@ -612,9 +614,14 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
   // Unique providers for filter
   const providers = Array.from(new Set(records.map((r) => r.providerId))).sort()
 
-  const filtered = filterProvider === "all"
-    ? records
-    : records.filter((r) => r.providerId === filterProvider)
+  const filtered = records.filter((r) => {
+    if (filterProvider !== "all" && r.providerId !== filterProvider) return false
+    if (filterCap !== "all") {
+      const caps = inferCapabilities(r.modelId)
+      if (!caps.includes(filterCap)) return false
+    }
+    return true
+  })
 
   const okCount = records.length
 
@@ -661,12 +668,43 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
         </button>
       </div>
 
+      {/* Capability filter chips */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-muted-foreground/40">
+          <FilterIcon />
+        </span>
+        {(["all", "flagship", "coding", "text", "image", "video"] as const).map((cap) => {
+          const CAP_COLORS: Record<string, string> = {
+            flagship: "border-primary/50 bg-primary/10 text-primary",
+            coding:   "border-violet-400/50 bg-violet-400/10 text-violet-400",
+            text:     "border-sky-400/50 bg-sky-400/10 text-sky-400",
+            image:    "border-amber-400/50 bg-amber-400/10 text-amber-400",
+            video:    "border-rose-400/50 bg-rose-400/10 text-rose-400",
+          }
+          const CAP_LABELS: Record<string, string> = {
+            all: "All", flagship: "Flagship", coding: "Coding", text: "Text", image: "Image", video: "Video",
+          }
+          const count = cap === "all" ? records.length : records.filter((r) => inferCapabilities(r.modelId).includes(cap as CapabilityTag)).length
+          if (cap !== "all" && count === 0) return null
+          return (
+            <button
+              key={cap}
+              onClick={() => setFilterCap(cap as CapabilityTag | "all")}
+              className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
+                filterCap === cap
+                  ? (CAP_COLORS[cap] ?? "border-primary/50 bg-primary/10 text-primary")
+                  : "border-border text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {CAP_LABELS[cap]} ({count})
+            </button>
+          )
+        })}
+      </div>
+
       {/* Provider filter chips */}
       {providers.length > 1 && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-muted-foreground/40">
-            <FilterIcon />
-          </span>
           <button
             onClick={() => setFilterProvider("all")}
             className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
@@ -675,7 +713,7 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
                 : "border-border text-muted-foreground hover:bg-secondary"
             }`}
           >
-            All ({records.length})
+            All providers ({records.length})
           </button>
           {providers.map((pid) => {
             const count = records.filter((r) => r.providerId === pid).length
@@ -686,7 +724,7 @@ export default function WorkingKeysPanel({ onUseKey, refreshTick }: Props) {
                 onClick={() => setFilterProvider(pid)}
                 className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
                   filterProvider === pid
-                    ? "border-primary/50 bg-primary/10 text-primary"
+                    ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
                     : "border-border text-muted-foreground hover:bg-secondary"
                 }`}
               >

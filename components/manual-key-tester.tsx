@@ -17,6 +17,7 @@ import ProviderInfoPanel from "@/components/provider-info-panel"
 import HistoryPanel from "@/components/history-panel"
 import CollectionsPanel from "@/components/collections-panel"
 import EnvSwitcher from "@/components/env-switcher"
+import ModelScreenerPanel from "@/components/model-screener-panel"
 import { pushHistory, type HistoryEntry } from "@/lib/history"
 import { getActiveEnvironment, interpolate, type Environment } from "@/lib/environments"
 import type { SavedRequest } from "@/lib/collections"
@@ -1857,7 +1858,7 @@ export default function ManualKeyTester() {
     setActiveEnv(env)
   }, [])
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments">("unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "screener" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments">("unified")
   // Onboarding banner — dismissed in localStorage
   // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
@@ -3108,6 +3109,18 @@ export default function ManualKeyTester() {
                 ),
               },
               {
+                id: "screener" as const,
+                label: "Screener",
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    <path d="M14 17.5h2M18.5 17.5H21M17.5 14v2M17.5 18.5V21" />
+                  </svg>
+                ),
+              },
+              {
                 id: "history" as const,
                 label: "History",
                 icon: (
@@ -3612,7 +3625,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��──────────────────────────────────����───��─ */}
+        {/* ── VISION TAB ────────────��─────���────────────────────────────����───��─ */}
         {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             {/* Provider Header Bar */}
@@ -4207,6 +4220,13 @@ export default function ManualKeyTester() {
                 setConfigOpen(true)
               }}
             />
+          </div>
+        )}
+
+        {/* ── SCREENER TAB ──────────────────────────────────── */}
+        {activeTab === "screener" && (
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <ModelScreenerPanel />
           </div>
         )}
 
