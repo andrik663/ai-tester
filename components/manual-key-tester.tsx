@@ -130,7 +130,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://labs.dahono.com/account/api-keys",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ─────────────────��─────────────────────────────
+  // ── Tier 1: Major providers ─────────────────���─────────────────────────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -1602,7 +1602,7 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ─────────────────────────���───────────────────────────────────────────
+// ── Icons ────────────────────────������───────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -2601,415 +2601,69 @@ export default function ManualKeyTester() {
               ))}
           </div>
 
-          {/* API Key + rest of sidebar settings */}
-          <div className="flex flex-col gap-5 px-4 py-4 border-t border-border mt-1">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-medium text-muted-foreground">
-                API Key
-              </label>
+        </div>{/* end scrollable body */}
+
+        {/* API key strip — compact bottom bar, always visible */}
+        <div className="flex-shrink-0 border-t border-border px-3 py-2.5 bg-sidebar flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground/70">API Key</span>
+            <div className="flex items-center gap-1.5">
+              {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
+                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1 py-0.5 rounded">detected</span>
+              )}
               {apiKey && (
                 <button
                   onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
-                  className="text-[9px] text-muted-foreground/60 hover:text-destructive transition-colors flex items-center gap-0.5"
-                  title="Clear API key"
+                  className="text-[9px] text-muted-foreground/50 hover:text-destructive transition-colors"
+                  title="Clear"
                 >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  Clear
+                  clear
                 </button>
               )}
             </div>
-            <div className="relative">
-              <input
-                type={showKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => handleApiKeyChange(e.target.value)}
-                placeholder="sk-ant-... / sk-... / AIza..."
-                className="w-full rounded-md border border-border bg-background text-foreground text-xs font-mono px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
-              />
-              <button
-                onClick={() => setShowKey((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                title={showKey ? "Hide key" : "Show key"}
-              >
-                <EyeIcon show={showKey} />
-              </button>
-            </div>
-
-            {/* Remember key toggle */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer select-none group" htmlFor="remember-key-toggle">
-                <button
-                  id="remember-key-toggle"
-                  role="switch"
-                  aria-checked={rememberKey}
-                  onClick={() => handleRememberToggle(!rememberKey)}
-                  className={`relative w-7 h-4 rounded-full border transition-all flex-shrink-0 ${
-                    rememberKey ? "bg-primary/80 border-primary/60" : "bg-secondary border-border"
-                  }`}
-                >
-                  <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${
-                    rememberKey ? "left-3.5" : "left-0.5"
-                  }`} />
-                </button>
-                <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
-                  Remember key for this provider
-                </span>
-              </label>
-              {rememberKey && (
-                <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
-                  saved
-                </span>
-              )}
-            </div>
-
-            {/* Create API key link */}
-            {selectedPreset.createKeyUrl && (
-              <a
-                href={selectedPreset.createKeyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[10px] text-primary/70 hover:text-primary transition-colors self-start"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M5 3v4M3 5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-                Get {selectedPreset.name} API key
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </a>
-            )}
-
-            {apiKey && result && (
-              <button
-                onClick={shareResult}
-                title="Copy test result to clipboard"
-                className="inline-flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-ring/60 transition-colors self-start"
-              >
-                {copiedShare ? (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span className="text-green-400">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                      <polyline points="16 6 12 2 8 6" />
-                      <line x1="12" y1="2" x2="12" y2="15" />
-                    </svg>
-                    Share result
-                  </>
-                )}
-              </button>
-            )}
           </div>
-
-          {/* Key Info Panel — enriched data after key is entered */}
-          {apiKey.trim().length >= 8 && (
-            <KeyInfoPanel
-              provider={selectedPreset.id}
-              apiKey={apiKey}
-              responseHeaders={lastResponseHeaders}
-              fetchTick={keyInfoTick}
+          <div className="relative">
+            <input
+              type={showKey ? "text" : "password"}
+              value={apiKey}
+              onChange={(e) => handleApiKeyChange(e.target.value)}
+              placeholder="Paste API key..."
+              className="w-full rounded border border-border bg-background/80 text-foreground text-[11px] font-mono px-2 py-1.5 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
             />
-          )}
-
-          {/* Endpoint */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-medium text-muted-foreground">
-              Endpoint URL
-            </label>
-            <div className="flex gap-1">
-              <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
-                className="text-xs font-mono bg-background border border-border rounded px-1.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
-              >
-                {["POST", "GET", "PUT", "DELETE"].map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-              <input
-                type="url"
-                value={endpoint}
-                onChange={(e) => setEndpoint(e.target.value)}
-                placeholder="https://api.example.com/v1/..."
-                className="flex-1 min-w-0 rounded-md border border-border bg-background text-foreground text-xs font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
-              />
-            </div>
-            {selectedPreset.docsUrl && (
-              <a
-                href={selectedPreset.docsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary/80 hover:text-primary transition-colors"
-              >
-                View API docs →
-              </a>
-            )}
-          </div>
-
-          {/* Dahono model picker — shown when provider is Dahono */}
-          {selectedPreset.id === "dahono" && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-medium text-muted-foreground">
-                Model
-                {dahonoModelsFetching && <span className="ml-1 font-normal normal-case text-muted-foreground/70">fetching...</span>}
-                {!dahonoModelsFetching && dahonoModels.length > 0 && (
-                  <span className="ml-1 font-normal normal-case text-muted-foreground/70">
-                    {dahonoModels.length} models from gateway
-                  </span>
-                )}
-              </label>
-              {dahonoModels.length > 0 ? (
-                <select
-                  value={selectedDahonoModel}
-                  onChange={(e) => {
-                    setSelectedDahonoModel(e.target.value)
-                    updateDahonoBodyModel(e.target.value)
-                  }}
-                  className="text-xs font-mono bg-background border border-border rounded px-2 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring w-full"
-                >
-                  {["free", "starter", "pro", "business"].map((tier) => {
-                    const tier_models = dahonoModels.filter((m) => m.tier === tier)
-                    if (tier_models.length === 0) return null
-                    return (
-                      <optgroup key={tier} label={`${tier.charAt(0).toUpperCase() + tier.slice(1)} (${tier_models.length})`}>
-                        {tier_models.map((m) => (
-                          <option key={m.id} value={m.id}>{m.id}</option>
-                        ))}
-                      </optgroup>
-                    )
-                  })}
-                </select>
-              ) : (
-                <p className="text-xs text-muted-foreground/75">
-                  Enter your Dahono API key above to auto-load all {dahonoModelsFetching ? "..." : "models"} from the gateway.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Batch Model Test — Run All Models (all providers) */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-medium text-muted-foreground">
-              Batch Model Test
-            </label>
-            <ProviderBatchTest
-              providerId={selectedPreset.id}
-              providerName={selectedPreset.name}
-              apiKey={apiKey}
-              onSaved={() => setWorkingKeysTick((t) => t + 1)}
-            />
-          </div>
-
-          {/* Headers */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-medium text-muted-foreground">
-              Headers
-            </label>
-            <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
-            <p className="text-xs text-muted-foreground/75">
-              Use <code className="text-primary/80">{"{{API_KEY}}"}</code> as placeholder — replaced with your key on send.
-            </p>
-          </div>
-
-          {/* Compact model catalog (providers with rich model list) */}
-          {selectedPreset.models && selectedPreset.models.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-[11px] font-medium text-muted-foreground">
-                Models ({selectedPreset.models.length})
-                <span className="ml-1 normal-case font-normal text-muted-foreground/70">— click to use</span>
-              </p>
-              <div className="max-h-64 overflow-y-auto flex flex-col gap-0.5 pr-0.5">
-                {selectedPreset.models.map((m) => {
-                  // Check if this model is currently in the body template
-                  const isActive = bodyTemplate.includes(`"${m.id}"`)
-                  return (
-                    <button
-                      key={m.id}
-                      onClick={() => {
-                        try {
-                          const parsed = JSON.parse(bodyTemplate)
-                          parsed.model = m.id
-                          setBodyTemplate(JSON.stringify(parsed, null, 2))
-                        } catch {
-                          // fallback: just inject the model id into a new template
-                          setBodyTemplate(JSON.stringify({
-                            model: m.id,
-                            max_tokens: 1024,
-                            messages: [{ role: "user", content: "{{PROMPT}}" }],
-                          }, null, 2))
-                        }
-                      }}
-                      className={`text-left w-full px-2 py-1.5 rounded transition-colors flex flex-col gap-0.5 group ${
-                        isActive
-                          ? "bg-primary/10 border border-primary/20"
-                          : "hover:bg-secondary/50 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={`text-xs font-medium truncate ${isActive ? "text-primary" : "text-foreground group-hover:text-foreground"}`}>
-                          {m.label}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground/70 bg-muted/40 px-1.5 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span className="text-[11px] text-muted-foreground/80">In: <span className="text-emerald-400">{m.in}</span></span>
-                        <span className="text-[11px] text-muted-foreground/80">Out: <span className="text-amber-400">{m.out}</span></span>
-                        {m.cache && <span className="text-[11px] text-muted-foreground/80">Cache: <span className="text-sky-400">{m.cache}</span></span>}
-                        <span className="text-[11px] text-muted-foreground/60">{m.ctx}</span>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Request body */}
-          <div className="flex flex-col gap-1.5">
             <button
-              onClick={() => setShowBodyEditor((v) => !v)}
-              className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setShowKey((v) => !v)}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+              title={showKey ? "Hide" : "Show"}
             >
-              <span>Request Body Template</span>
-              <ChevronIcon open={showBodyEditor} />
+              <EyeIcon show={showKey} />
             </button>
-            {showBodyEditor && (
-              <>
-                <textarea
-                  value={bodyTemplate}
-                  onChange={(e) => setBodyTemplate(e.target.value)}
-                  rows={8}
-                  spellCheck={false}
-                  placeholder={`{\n  "model": "...",\n  "messages": [{"role": "user", "content": "{{PROMPT}}"}]\n}`}
-                  className="w-full rounded-md border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40 resize-y"
-                />
-                <p className="text-[9px] text-muted-foreground/50">
-                  Use <code className="text-primary/70">{"{{PROMPT}}"}</code> where you want the message injected.
-                </p>
-              </>
-            )}
           </div>
-
-          {/* ── Image Gen config — provider-aware ── */}
-          {activeTab === "unified" && unifiedSubTab === "image-gen" && (() => {
-            const imageModels = getImageCapabilities(selectedPreset.id)
-            const isImageSupported = imageModels.length > 0
-            return (
-              <div className="flex flex-col gap-3 pt-1 border-t border-border">
-                <p className="text-[11px] font-medium text-muted-foreground">Image Gen Config</p>
-
-                {!isImageSupported ? (
-                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
-                    {selectedPreset.name} does not support image generation. Switch to Gemini, OpenAI, Together AI, Fireworks, or Replicate.
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-medium text-muted-foreground/80">Model</label>
-                      {imageModels.map((m) => (
-                        <button key={m.id} onClick={() => setImageModel(m.id)}
-                          className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
-                            imageModel === m.id ? "border-primary/60 bg-primary/10" : "border-border hover:bg-secondary/40"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[11px] font-semibold text-foreground">{m.label}</span>
-                            <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-primary/20 text-primary">{m.tag}</span>
-                          </div>
-                          <p className="text-[9px] text-muted-foreground leading-snug">{m.description}</p>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-medium text-muted-foreground/80">Aspect Ratio</label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {IMAGE_ASPECT_RATIOS.map((r) => (
-                          <button key={r} onClick={() => setImageAspectRatio(r)}
-                            className={`py-1.5 rounded-md text-[11px] font-mono font-medium border transition-colors ${
-                              imageAspectRatio === r
-                                ? "bg-primary/20 border-primary/60 text-primary"
-                                : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                            }`}
-                          >
-                            {r}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })()}
-
-          {/* ── Video Gen config — provider-aware ── */}
-          {activeTab === "unified" && unifiedSubTab === "video-gen" && (() => {
-            const { models: videoModels, aspectRatios: videoAspects } = getVideoCapabilities(selectedPreset.id)
-            const isVideoSupported = videoModels.length > 0
-            return (
-              <div className="flex flex-col gap-3 pt-1 border-t border-border">
-                <p className="text-[11px] font-medium text-muted-foreground">Video Gen Config</p>
-
-                {!isVideoSupported ? (
-                  <p className="text-[10px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 rounded-lg leading-relaxed">
-                    {selectedPreset.name} does not support video generation. Switch to Gemini (Google) for Veo 3.1 or MiniMax (Hailuo) for Hailuo Video.
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-medium text-muted-foreground/80">Model</label>
-                      <select
-                        value={videoModel}
-                        onChange={(e) => setVideoModel(e.target.value)}
-                        className="w-full appearance-none rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                      >
-                        {videoModels.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-medium text-muted-foreground/80">Aspect Ratio</label>
-                      <div className="flex gap-2">
-                        {videoAspects.map((r) => (
-                          <button key={r} onClick={() => setVideoAspectRatio(r)}
-                            className={`flex-1 py-1.5 rounded-md border text-[11px] font-mono transition-colors ${
-                              videoAspectRatio === r
-                                ? "border-primary text-primary bg-primary/10"
-                                : "border-border text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            {r}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })()}
-
-          {/* Reset */}
+          {/* Remember toggle */}
           <button
-            onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
-            className="text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary px-3 py-2 rounded transition-colors border border-border/50 hover:border-border w-full text-left"
+            role="switch"
+            aria-checked={rememberKey}
+            onClick={() => handleRememberToggle(!rememberKey)}
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
           >
-            Clear All History
+            <span className={`relative w-6 h-3.5 rounded-full border transition-all flex-shrink-0 ${rememberKey ? "bg-primary/70 border-primary/50" : "bg-secondary border-border"}`}>
+              <span className={`absolute top-[1px] w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-all ${rememberKey ? "left-[11px]" : "left-[1px]"}`} />
+            </span>
+            Remember
+            {rememberKey && <span className="text-primary/70 font-medium">· saved</span>}
           </button>
-
-          </div>{/* end gap-5 section */}
-        </div>{/* end scrollable body */}
+          {selectedPreset.createKeyUrl && !apiKey && (
+            <a
+              href={selectedPreset.createKeyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[10px] text-primary/60 hover:text-primary transition-colors"
+            >
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2"/><path d="M5 3v4M3 5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              Get {selectedPreset.name} key
+              <svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </a>
+          )}
+        </div>
       </aside>
 
       {/* ── RIGHT: Tabbed panel ──────────────────────────────���─────────────── */}
@@ -4466,15 +4120,191 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── MULTI-KEY BATCH TAB ───────────────────────────────��───────────── */}
+        {/* ── MULTI-KEY BATCH TAB ────────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <MultiKeyBatch
-              onKeysSaved={() => {
-                setWorkingKeysTick((t) => t + 1)
-                setActiveTab("working-keys")
-              }}
-            />
+          <div className="flex-1 min-h-0 flex overflow-hidden">
+
+            {/* Left: Config panel */}
+            <div className="w-72 flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+
+                {/* Endpoint */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-medium text-muted-foreground">Endpoint URL</label>
+                  <div className="flex gap-1">
+                    <select
+                      value={method}
+                      onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
+                      className="text-[11px] font-mono bg-background border border-border rounded px-1.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring flex-shrink-0"
+                    >
+                      {["POST", "GET", "PUT", "DELETE"].map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="url"
+                      value={endpoint}
+                      onChange={(e) => setEndpoint(e.target.value)}
+                      placeholder="https://api.example.com/v1/..."
+                      className="flex-1 min-w-0 rounded border border-border bg-background text-foreground text-[11px] font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                    />
+                  </div>
+                  {selectedPreset.docsUrl && (
+                    <a href={selectedPreset.docsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-primary/70 hover:text-primary transition-colors">
+                      View API docs →
+                    </a>
+                  )}
+                </div>
+
+                {/* Dahono model picker */}
+                {selectedPreset.id === "dahono" && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">
+                      Model{dahonoModelsFetching && <span className="ml-1 font-normal text-muted-foreground/60"> fetching...</span>}
+                    </label>
+                    {dahonoModels.length > 0 ? (
+                      <select
+                        value={selectedDahonoModel}
+                        onChange={(e) => { setSelectedDahonoModel(e.target.value); updateDahonoBodyModel(e.target.value) }}
+                        className="text-[11px] font-mono bg-background border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring w-full"
+                      >
+                        {["free", "starter", "pro", "business"].map((tier) => {
+                          const tm = dahonoModels.filter((m) => m.tier === tier)
+                          if (tm.length === 0) return null
+                          return (
+                            <optgroup key={tier} label={`${tier.charAt(0).toUpperCase() + tier.slice(1)} (${tm.length})`}>
+                              {tm.map((m) => <option key={m.id} value={m.id}>{m.id}</option>)}
+                            </optgroup>
+                          )
+                        })}
+                      </select>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground/60">Enter API key to load models.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Single-key Batch Model Test */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-medium text-muted-foreground">Single-key Batch Test</label>
+                  <ProviderBatchTest
+                    providerId={selectedPreset.id}
+                    providerName={selectedPreset.name}
+                    apiKey={apiKey}
+                    onSaved={() => setWorkingKeysTick((t) => t + 1)}
+                  />
+                </div>
+
+                {/* Headers */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-medium text-muted-foreground">Headers</label>
+                  <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Use <code className="text-primary/70">{"{{API_KEY}}"}</code> as placeholder.
+                  </p>
+                </div>
+
+                {/* Model catalog */}
+                {selectedPreset.models && selectedPreset.models.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      Models <span className="text-muted-foreground/50">({selectedPreset.models.length}) — tap to select</span>
+                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      {selectedPreset.models.map((m) => {
+                        const isActive = bodyTemplate.includes(`"${m.id}"`)
+                        return (
+                          <button
+                            key={m.id}
+                            onClick={() => {
+                              try {
+                                const parsed = JSON.parse(bodyTemplate)
+                                parsed.model = m.id
+                                setBodyTemplate(JSON.stringify(parsed, null, 2))
+                              } catch {
+                                setBodyTemplate(JSON.stringify({ model: m.id, max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2))
+                              }
+                            }}
+                            className={`text-left w-full px-2 py-1.5 rounded transition-colors flex items-center justify-between gap-2 group ${
+                              isActive ? "bg-primary/10 border border-primary/20" : "hover:bg-secondary/50 border border-transparent"
+                            }`}
+                          >
+                            <span className={`text-[11px] font-medium truncate ${isActive ? "text-primary" : "text-foreground/80"}`}>{m.label}</span>
+                            <span className="text-[9px] text-muted-foreground/60 bg-muted/40 px-1 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Request Body Template */}
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    onClick={() => setShowBodyEditor((v) => !v)}
+                    className="flex items-center justify-between text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <span>Request Body</span>
+                    <ChevronIcon open={showBodyEditor} />
+                  </button>
+                  {showBodyEditor && (
+                    <>
+                      <textarea
+                        value={bodyTemplate}
+                        onChange={(e) => setBodyTemplate(e.target.value)}
+                        rows={8}
+                        spellCheck={false}
+                        placeholder={"{\n  \"model\": \"...\"\n}"}
+                        className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40 resize-y"
+                      />
+                      <p className="text-[9px] text-muted-foreground/50">
+                        Use <code className="text-primary/70">{"{{PROMPT}}"}</code> where message is injected.
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Key info */}
+                {apiKey.trim().length >= 8 && (
+                  <KeyInfoPanel
+                    provider={selectedPreset.id}
+                    apiKey={apiKey}
+                    responseHeaders={lastResponseHeaders}
+                    fetchTick={keyInfoTick}
+                  />
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  {apiKey && result && (
+                    <button
+                      onClick={shareResult}
+                      className="flex-1 inline-flex items-center justify-center gap-1 text-[10px] font-medium px-2 py-1.5 rounded border border-border bg-secondary/40 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copiedShare ? <span className="text-green-400">Copied</span> : "Share result"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setChatHistory([]); setVisionHistory([]); setOcrResult(null); setResult(null); setVisionResult(null); setShowLog(false) }}
+                    className="flex-1 text-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary px-2 py-1.5 rounded transition-colors border border-border/50 hover:border-border text-center"
+                  >
+                    Clear history
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Right: Multi-key batch */}
+            <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
+              <MultiKeyBatch
+                onKeysSaved={() => {
+                  setWorkingKeysTick((t) => t + 1)
+                  setActiveTab("working-keys")
+                }}
+              />
+            </div>
+
           </div>
         )}
 
