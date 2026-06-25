@@ -1602,7 +1602,7 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ────────────────────────������───────────────────────────────────────────
+// ── Icons ──────────────────────���─������───────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -3840,7 +3840,7 @@ export default function ManualKeyTester() {
             { prefix: "dk-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dk-abc…",              confidence: "high" },
             { prefix: "dc-",         providerId: "dahono",      providerName: "Dahono Labs Gateway",     example: "dc-abc…",              confidence: "high" },
             { prefix: "r8_",         providerId: "replicate",   providerName: "Replicate",               example: "r8_abc…",              confidence: "high" },
-            { prefix: "up_",         providerId: "upstage",     providerName: "Upstage Solar",           example: "up_abc…",              confidence: "high" },
+            { prefix: "up_",         providerId: "upstage",     providerName: "Upstage Solar",           example: "up_abc��",              confidence: "high" },
             { prefix: "sn-",         providerId: "sambanova",   providerName: "SambaNova",               example: "sn-abc…",              confidence: "high" },
             { prefix: "csk-",        providerId: "cerebras",    providerName: "Cerebras",                example: "csk-abc…",             confidence: "high" },
             { prefix: "cbrss_",      providerId: "cerebras",    providerName: "Cerebras",                example: "cbrss_abc…",           confidence: "high" },
@@ -4185,7 +4185,10 @@ export default function ManualKeyTester() {
 
                   {/* Single-key batch test */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-medium text-muted-foreground">Single-key Test</label>
+                    <div>
+                      <label className="text-[11px] font-medium text-muted-foreground">Test all models — single key</label>
+                      <p className="text-[10px] text-muted-foreground/50 mt-0.5">Uses the API key from the sidebar</p>
+                    </div>
                     <ProviderBatchTest
                       providerId={selectedPreset.id}
                       providerName={selectedPreset.name}

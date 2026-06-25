@@ -246,7 +246,7 @@ function ModelCell({ provider, result }: { provider: string; result: MultiKeyRes
   )
 }
 
-// ── Spinner ───────────────────────────────────────────────────────────────────
+// ── Spinner ──────────────────────��────────────────────────────────────────────
 
 function Spinner({ size = 12 }: { size?: number }) {
   return (
@@ -1056,14 +1056,11 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 border-b border-border px-3 sm:px-4 py-2.5">
-        <div className="flex items-start sm:items-center justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground tracking-tight">Multi-Key Batch Test</p>
-            <p className="text-[10px] text-muted-foreground leading-snug">
-              Import a .txt file — all providers tested simultaneously
-            </p>
-          </div>
+      <div className="flex-shrink-0 border-b border-border px-3 sm:px-4 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-muted-foreground/70">
+            Multi-key — one prompt, all providers at once
+          </span>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {results.length > 0 && (
               <button
@@ -1089,85 +1086,60 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
         {/* ── Drop zone ──────────────────────────────────────────────────────── */}
         {entries.length === 0 && (
-          <div className="flex flex-col gap-3">
-            {/* How it works — 3 steps */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { step: "1", title: "Load keys", desc: "Drop a .txt file or paste keys below" },
-                { step: "2", title: "Enter a prompt", desc: "One short prompt sent to all providers" },
-                { step: "3", title: "See results", desc: "Status, latency and tokens per key" },
-              ].map((s) => (
-                <div key={s.step} className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl border border-border bg-card/40">
-                  <span className="text-[10px] font-bold text-primary/70 font-mono">Step {s.step}</span>
-                  <p className="text-xs font-semibold text-foreground">{s.title}</p>
-                  <p className="text-[10px] text-muted-foreground leading-snug">{s.desc}</p>
-                </div>
-              ))}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => fileRef.current?.click()}
+            className={`flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-8 px-4 text-center select-none ${
+              dragOver
+                ? "border-primary/60 bg-primary/5"
+                : "border-border/60 hover:border-primary/40 hover:bg-secondary/20"
+            }`}
+          >
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/30" aria-hidden>
+              <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10 10h12M10 14h12M10 18h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-foreground">Drop .txt or tap to browse</p>
+              <p className="text-[11px] text-muted-foreground/60 mt-0.5">One API key per line</p>
             </div>
-
-            {/* Drop zone */}
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
-              className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-7 px-4 text-center select-none ${
-                dragOver
-                  ? "border-primary/60 bg-primary/5"
-                  : "border-border hover:border-border/80 hover:bg-secondary/30"
-              }`}
-            >
-              <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/40" aria-hidden>
-                <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M10 10h12M10 14h12M10 18h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              <div>
-                <p className="text-sm font-medium text-foreground">Drop a .txt file or tap to browse</p>
-                <p className="text-xs text-muted-foreground mt-0.5">One API key per line — formats accepted:</p>
-                <div className="mt-2 text-left inline-block bg-secondary/50 rounded px-3 py-2 text-[10px] font-mono text-muted-foreground space-y-0.5">
-                  <p className="text-muted-foreground/60"># with prefix (explicit)</p>
-                  <p>anthropic:sk-ant-...</p>
-                  <p>openai:sk-proj-...</p>
-                  <p className="text-muted-foreground/60 mt-1"># without prefix (auto-detect)</p>
-                  <p>sk-or-v1-...</p>
-                </div>
-              </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".txt,text/plain"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-              />
-            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".txt,text/plain"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+            />
           </div>
         )}
 
-        {/* ── Manual input ─────────────────────────────────────────────────── */}
+        {/* ── Manual paste ─────────────────────────────────────────────────── */}
         {entries.length === 0 && (
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setShowManual((v) => !v)}
-              className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1.5 self-start transition-colors"
+              className="text-[11px] text-muted-foreground/70 hover:text-foreground flex items-center gap-1.5 self-start transition-colors"
             >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform ${showManual ? "rotate-90" : ""}`} aria-hidden>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform flex-shrink-0 ${showManual ? "rotate-90" : ""}`} aria-hidden>
                 <path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Or paste keys manually
+              Paste keys manually
             </button>
             {showManual && (
               <div className="flex flex-col gap-2">
                 <textarea
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
-                  rows={6}
+                  rows={5}
                   placeholder={"anthropic:sk-ant-...\nopenai:sk-...\nsk-or-v1-..."}
-                  className="w-full rounded-md border border-border bg-background text-foreground text-[11px] font-mono px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40 resize-none"
+                  className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 resize-none"
                 />
                 <button
                   onClick={handleManualApply}
                   disabled={!manualInput.trim()}
-                  className="self-start text-[11px] font-semibold bg-primary text-primary-foreground rounded px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  className="self-start text-[11px] font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
                 >
                   Load keys
                 </button>
