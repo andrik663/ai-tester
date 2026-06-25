@@ -243,15 +243,20 @@ export async function POST(req: NextRequest) {
     messages: Array<{ role: string; content: string }>
     systemPrompt?: string
     rawBody?: string
+    model?: string
   }
 
-  const { provider, apiKey, endpoint, headers, messages, systemPrompt, rawBody } = body
+  const { provider, apiKey, endpoint, headers, messages, systemPrompt, rawBody, model } = body
 
   const cfg = PROVIDER_CONFIGS[provider]
   const authHeaders = cfg ? cfg.authHeader(apiKey) : { Authorization: `Bearer ${apiKey}` }
   const extraHeaders = cfg?.extraHeaders ?? { "Content-Type": "application/json" }
 
-  const { body: streamBody } = buildStreamBody(provider, messages, systemPrompt, rawBody)
+  const { body: streamBodyRaw } = buildStreamBody(provider, messages, systemPrompt, rawBody)
+  // Override model if caller specified one explicitly
+  const streamBody = model
+    ? { ...(streamBodyRaw as Record<string, unknown>), model }
+    : streamBodyRaw
 
   const streamEndpoint = buildStreamEndpoint(provider, apiKey, endpoint)
 

@@ -8,6 +8,7 @@ import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
+import { loadWorkingKeys } from "@/lib/working-keys-store"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
@@ -1602,7 +1603,7 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ──────────────────────���─������───────────────────────────────────────────
+// ── Icons ─────────────────────������─������───────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -2011,6 +2012,28 @@ export default function ManualKeyTester() {
   const [detectResult, setDetectResult] = useState<{ providerId: string | null; providerName: string | null; confidence: "high" | "low" | "unknown" | "none"; prefix: string; reason: string } | null>(null)
   // Increment to force WorkingKeysPanel to re-load from localStorage
   const [workingKeysTick, setWorkingKeysTick] = useState(0)
+
+  // Working models for the current provider — loaded from saved keys
+  const [workingModels, setWorkingModels] = useState<Array<{ modelId: string; apiKey: string; latencyMs: number }>>([])
+
+  useEffect(() => {
+    const records = loadWorkingKeys().filter((r) => r.providerId === selectedPreset.id)
+    const seen = new Set<string>()
+    const deduped = records.filter((r) => {
+      const k = `${r.apiKey}::${r.modelId}`
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    setWorkingModels(deduped.map((r) => ({ modelId: r.modelId, apiKey: r.apiKey, latencyMs: r.latencyMs })))
+    // Auto-populate chatModel from first saved working model when switching providers
+    if (deduped.length > 0) {
+      setChatModel((prev) => prev || deduped[0].modelId)
+    } else {
+      const firstStatic = selectedPreset.models?.[0]?.id ?? ""
+      setChatModel((prev) => prev || firstStatic)
+    }
+  }, [selectedPreset.id, workingKeysTick])
   // Increment to trigger a fresh KeyInfoPanel fetch (bumped after successful chat)
   const [keyInfoTick, setKeyInfoTick] = useState(0)
   // Last known response headers — passed to KeyInfoPanel for rate limit data
@@ -2219,6 +2242,8 @@ export default function ManualKeyTester() {
     setBodyTemplate(preset.bodyTemplate)
     setResult(null)
     setShowLog(false)
+    // Reset chat model so the useEffect auto-populates from new provider's saved keys
+    setChatModel("")
     // Reset image/video model to first supported for the new provider
     const imgModels = getImageCapabilities(preset.id)
     if (imgModels.length > 0) setImageModel(imgModels[0].id)
@@ -2269,6 +2294,7 @@ export default function ManualKeyTester() {
             messages: [...previousMessages, { role: "user", content: currentPrompt }],
             systemPrompt: systemPrompt.trim() || undefined,
             rawBody: resolvedBody,
+            model: chatModel.trim() || undefined,
           }),
         })
 
@@ -2760,19 +2786,42 @@ export default function ManualKeyTester() {
         {activeTab === "unified" && unifiedSubTab === "chat" && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-            {/* Model selector bar — only shown when provider has model list */}
-            {selectedPreset.models && selectedPreset.models.length > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 bg-sidebar/30 flex-shrink-0">
-                <span className="text-[10px] text-muted-foreground flex-shrink-0">Model</span>
+            {/* Model selector bar — working keys models + static preset models */}
+            {(workingModels.length > 0 || (selectedPreset.models && selectedPreset.models.length > 0)) && (
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/50 bg-sidebar/30 flex-shrink-0">
+                <span className="text-[10px] text-muted-foreground/70 flex-shrink-0">Model</span>
                 <select
                   value={chatModel}
-                  onChange={(e) => setChatModel(e.target.value)}
-                  className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer flex-1 min-w-0"
+                  onChange={(e) => {
+                    setChatModel(e.target.value)
+                    // Auto-fill API key from working key if available
+                    const wm = workingModels.find((m) => m.modelId === e.target.value)
+                    if (wm && !apiKey.trim()) handleApiKeyChange(wm.apiKey)
+                  }}
+                  className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer flex-1 min-w-0 truncate"
                 >
-                  {selectedPreset.models.map((m) => (
-                    <option key={m.id} value={m.id}>{m.label}</option>
-                  ))}
+                  {workingModels.length > 0 && (
+                    <optgroup label={`Saved working (${workingModels.length})`}>
+                      {workingModels.map((m) => (
+                        <option key={m.modelId} value={m.modelId}>
+                          {m.modelId} · {m.latencyMs}ms
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {selectedPreset.models && selectedPreset.models.length > 0 && (
+                    <optgroup label="All models">
+                      {selectedPreset.models.map((m) => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
+                {workingModels.length > 0 && (
+                  <span className="text-[9px] text-primary/60 border border-primary/20 bg-primary/8 rounded px-1 py-0.5 flex-shrink-0 whitespace-nowrap">
+                    {workingModels.length} saved
+                  </span>
+                )}
               </div>
             )}
 
@@ -3295,7 +3344,7 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── OCR TAB ──────────────────────────────────────��───────────────── */}
+        {/* ── OCR TAB ──────────────────────��───────────────��───────────────── */}
         {activeTab === "unified" && unifiedSubTab === "ocr" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
