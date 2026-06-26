@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [password, setPassword] = useState("")
@@ -9,7 +8,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
@@ -28,8 +26,10 @@ export default function LoginPage() {
         body: JSON.stringify({ password }),
       })
       if (res.ok) {
-        router.replace("/")
-        router.refresh()
+        // Hard navigation so the browser sends the new cookie on the next request
+        const params = new URLSearchParams(window.location.search)
+        const from = params.get("from") ?? "/"
+        window.location.href = from
       } else {
         const data = await res.json()
         setError(data.error ?? "Invalid password")
