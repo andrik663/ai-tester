@@ -19,7 +19,7 @@ function isPublic(pathname: string): boolean {
   return false
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Always allow public paths
@@ -29,7 +29,7 @@ export function middleware(request: NextRequest) {
   if (!process.env.DEV_PASSWORD) return NextResponse.next()
 
   const sessionCookie = request.cookies.get(COOKIE_NAME)?.value
-  const authenticated = verifySession(sessionCookie)
+  const authenticated = await verifySession(sessionCookie)
 
   if (!authenticated) {
     // API requests get a 401 JSON response
