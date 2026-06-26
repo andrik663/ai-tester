@@ -2759,6 +2759,22 @@ export default function ManualKeyTester() {
                   <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
               </button>
+
+              {/* Logout — only shown when DEV_PASSWORD gate is active */}
+              <button
+                title="Sign out"
+                onClick={async () => {
+                  await fetch("/api/auth/logout", { method: "POST" })
+                  window.location.href = "/login"
+                }}
+                className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
             </div>
 
             {/* Response status chip */}
