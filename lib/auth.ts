@@ -1,7 +1,10 @@
 // Edge-compatible auth helpers — uses only Web Crypto (crypto.subtle) and
-// btoa/atob, NO Node.js-only APIs (no Buffer, no require('crypto')).
+// btoa/atob. No Node.js-only APIs (no Buffer, no require('crypto')).
+// DO NOT add "use server" — this file exports constants and async functions
+// used by both middleware (Edge Runtime) and API routes (Node.js).
 
 export const COOKIE_NAME = "dev_session"
+const TTL_MS = 1000 * 60 * 60 * 24 // 24 hours
 
 // ── internal helpers ──────────────────────────────────────────────────────────
 
@@ -19,7 +22,6 @@ function bytesToHex(bytes: Uint8Array): string {
     .join("")
 }
 
-/** base64url encode without Buffer */
 function toBase64url(str: string): string {
   return btoa(unescape(encodeURIComponent(str)))
     .replace(/\+/g, "-")
@@ -27,7 +29,6 @@ function toBase64url(str: string): string {
     .replace(/=+$/, "")
 }
 
-/** base64url decode without Buffer */
 function fromBase64url(b64: string): string {
   const padded = b64.replace(/-/g, "+").replace(/_/g, "/")
   const pad = (4 - (padded.length % 4)) % 4
@@ -40,29 +41,21 @@ async function importKey(secret: string): Promise<CryptoKey> {
     new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign", "verify"]
+    ["sign", "verify"],
   )
-}
-
-async function signPayload(payload: string, secret: string): Promise<string> {
-  const key = await importKey(secret)
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload))
-  return bytesToHex(new Uint8Array(sig))
 }
 
 // ── public API ────────────────────────────────────────────────────────────────
 
-/** Build a signed session token — call from Node.js login route. */
+/** Build a signed session token. */
 export async function makeToken(secret: string): Promise<string> {
   const payload = `dev:${Date.now()}`
-  const sig = await signPayload(payload, secret)
-  return toBase64url(`${payload}.${sig}`)
+  const key = await importKey(secret)
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload))
+  return toBase64url(`${payload}.${bytesToHex(new Uint8Array(sig))}`)
 }
 
-/**
- * Verify a dev_session cookie.
- * Works in Edge Runtime and Node.js (uses crypto.subtle only).
- */
+/** Verify a dev_session cookie value. Works in Edge Runtime and Node.js. */
 export async function verifySession(cookieValue: string | undefined): Promise<boolean> {
   const secret = process.env.DEV_PASSWORD
   if (!secret || !cookieValue) return false
@@ -76,20 +69,16 @@ export async function verifySession(cookieValue: string | undefined): Promise<bo
     const sigHex = raw.slice(lastDot + 1)
 
     const key = await importKey(secret)
-    const sigBytes = hexToBytes(sigHex)
     const valid = await crypto.subtle.verify(
       "HMAC",
       key,
-      sigBytes,
-      new TextEncoder().encode(payload)
+      hexToBytes(sigHex),
+      new TextEncoder().encode(payload),
     )
     if (!valid) return false
 
-    // Verify age (24h)
     const ts = parseInt(payload.split(":")[1] ?? "0", 10)
-    if (Date.now() - ts > 1000 * 60 * 60 * 24) return false
-
-    return true
+    return Date.now() - ts <= TTL_MS
   } catch {
     return false
   }
