@@ -44,14 +44,14 @@ interface ChatRequest {
  * Find which provider owns the requested model.
  * First checks the gateway cache (working keys), then falls back to PROVIDER_CONFIGS.
  */
-function resolveProvider(token: string, modelId: string): GatewayKey | null {
+async function resolveProvider(token: string, modelId: string): Promise<GatewayKey | null> {
   // 1. Try to find a key that has this exact model confirmed working
-  const byModel = pickAnyKey(token, modelId)
+  const byModel = await pickAnyKey(token, modelId)
   if (byModel) return byModel
 
   // 2. Infer provider from model ID prefix (e.g. "gpt-4o" → openai, "claude" → anthropic)
   // Then pick the fastest key for that provider
-  const store = getGatewayStore(token)
+  const store = await getGatewayStore(token)
   if (!store) return null
 
   const lower = modelId.toLowerCase()
@@ -101,7 +101,7 @@ function resolveProvider(token: string, modelId: string): GatewayKey | null {
 
   for (const [providerId, prefixes] of providerHints) {
     if (prefixes.some((p) => lower.startsWith(p) || lower.includes(p))) {
-      const key = pickKey(token, providerId)
+      const key = await pickKey(token, providerId)
       if (key) return key
     }
   }
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Key selection: build ordered candidate list with fallback ─────────────────
-  const primaryKey = resolveProvider(token, body.model)
+  const primaryKey = await resolveProvider(token, body.model)
   if (!primaryKey) {
     return NextResponse.json(
       {
@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Build candidate list: primary key first, then all other keys (for fallback)
-  const store = getGatewayStore(token)
+  const store = await getGatewayStore(token)
   const otherKeys: GatewayKey[] = store
     ? store.keys.filter((k) => k.apiKey !== primaryKey.apiKey && k.providerId !== primaryKey.providerId)
     : []

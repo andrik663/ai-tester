@@ -1,29 +1,25 @@
 /**
  * lib/gateway-cache.ts
  *
- * Server-side in-memory store for the Miuclaw Gateway.
- * Holds RAW (unmasked) provider API keys pushed from the browser.
- * Keys are NEVER logged, never returned to external callers, and are
- * only read by the /api/v1/chat/completions proxy route.
+ * Persistent gateway key store backed by Neon (PostgreSQL).
+ * An in-process memory cache is layered on top to avoid hitting the DB
+ * on every request — cache TTL is 30 seconds.
  *
  * Security model:
- *   - Gate-kept by EXPORT_API_TOKEN (same token as the export API)
- *   - Raw keys live only in serverless function memory — they are NOT
- *     written to disk, logs, or any external store
- *   - Every request to the gateway requires the same bearer token
+ *   - Raw API keys are stored encrypted-at-rest by Neon's managed infra.
+ *   - Keys are NEVER logged, NEVER returned to external callers.
+ *   - Only /api/v1/chat/completions reads the raw keys server-side.
  */
 
+import { pool } from "@/lib/db"
+
 export interface GatewayKey {
-  /** Provider ID matching PROVIDER_CONFIGS key (e.g. "groq", "mistral") */
   providerId: string
   providerName: string
-  /** Raw (unmasked) API key — only stored server-side, never returned to clients */
+  /** Raw (unmasked) API key — server-side only, never returned to clients */
   apiKey: string
-  /** Model IDs confirmed working for this key */
   modelIds: string[]
-  /** Average latency in ms across tested models */
   avgLatencyMs: number
-  /** Unix ms timestamp when key was pushed */
   pushedAt: number
 }
 
@@ -33,21 +29,15 @@ export interface GatewayStore {
   pushCount: number
 }
 
-// Module-level map: tokenHash → store
-const gatewayCache = new Map<string, GatewayStore>()
+// ── In-memory cache layer (avoids DB round-trip on every chat request) ────────
+let memCache: GatewayStore | null = null
+let memCacheAt = 0
+const MEM_TTL_MS = 30_000 // 30 seconds
 
 // Round-robin index per providerId for key rotation
 const rrIndex = new Map<string, number>()
 
-// Constant-time string compare
-function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  }
-  return diff === 0
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function stripQuotes(s: string): string {
   const t = s.trim()
@@ -57,91 +47,150 @@ function stripQuotes(s: string): string {
   return t
 }
 
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
 export function validateGatewayToken(token: string): boolean {
   const raw = process.env.EXPORT_API_TOKEN
   if (!raw) return false
-  const expected = stripQuotes(raw)
-  return safeCompare(token.trim(), expected)
+  return safeCompare(token.trim(), stripQuotes(raw))
 }
 
-/**
- * Returns the server-side internal token derived from EXPORT_API_TOKEN env var.
- * Used as the cache key for gateway operations that don't require the client
- * to supply a token (e.g. the push route called from the browser).
- */
 export function getInternalToken(): string | null {
   const raw = process.env.EXPORT_API_TOKEN
   if (!raw) return null
   return stripQuotes(raw)
 }
 
-/** Upsert all keys for a given token */
-export function setGatewayKeys(token: string, keys: GatewayKey[]): void {
-  const existing = gatewayCache.get(token)
-  gatewayCache.set(token, {
+// ── DB helpers ────────────────────────────────────────────────────────────────
+
+async function dbLoadKeys(): Promise<GatewayKey[]> {
+  try {
+    const result = await pool.query<{
+      provider_id: string
+      provider_name: string
+      api_key: string
+      model_ids: string[]
+      avg_latency_ms: number
+      pushed_at: string
+    }>(`SELECT provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at
+        FROM gateway_keys
+        ORDER BY avg_latency_ms ASC`)
+    return result.rows.map((r) => ({
+      providerId: r.provider_id,
+      providerName: r.provider_name,
+      apiKey: r.api_key,
+      modelIds: r.model_ids ?? [],
+      avgLatencyMs: r.avg_latency_ms,
+      pushedAt: Number(r.pushed_at),
+    }))
+  } catch {
+    return []
+  }
+}
+
+async function dbSaveKeys(keys: GatewayKey[]): Promise<void> {
+  const client = await pool.connect()
+  try {
+    await client.query("BEGIN")
+    // Replace all keys atomically
+    await client.query("DELETE FROM gateway_keys")
+    for (const k of keys) {
+      await client.query(
+        `INSERT INTO gateway_keys
+           (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+        [k.providerId, k.providerName, k.apiKey, k.modelIds, k.avgLatencyMs, k.pushedAt],
+      )
+    }
+    await client.query("COMMIT")
+  } catch (err) {
+    await client.query("ROLLBACK")
+    throw err
+  } finally {
+    client.release()
+  }
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/** Load keys — from memory cache if fresh, otherwise from DB */
+async function getStore(): Promise<GatewayStore> {
+  const now = Date.now()
+  if (memCache && now - memCacheAt < MEM_TTL_MS) {
+    return memCache
+  }
+  const keys = await dbLoadKeys()
+  const store: GatewayStore = {
+    keys,
+    lastPushedAt: keys.length > 0 ? Math.max(...keys.map((k) => k.pushedAt)) : 0,
+    pushCount: 0,
+  }
+  memCache = store
+  memCacheAt = now
+  return store
+}
+
+/** Upsert all keys — writes to DB and updates memory cache immediately */
+export async function setGatewayKeys(_token: string, keys: GatewayKey[]): Promise<void> {
+  await dbSaveKeys(keys)
+  memCache = {
     keys,
     lastPushedAt: Date.now(),
-    pushCount: (existing?.pushCount ?? 0) + 1,
-  })
-  // Reset round-robin indices on new push
+    pushCount: (memCache?.pushCount ?? 0) + 1,
+  }
+  memCacheAt = Date.now()
   rrIndex.clear()
 }
 
-/** Get all keys for a token */
-export function getGatewayStore(token: string): GatewayStore | null {
-  return gatewayCache.get(token) ?? null
+/** Synchronous wrapper used by routes that already have keys loaded */
+export function setGatewayKeysSync(_token: string, keys: GatewayKey[]): void {
+  // Fire-and-forget DB write; update memory immediately
+  dbSaveKeys(keys).catch(() => {/* ignore — mem cache is still updated */})
+  memCache = {
+    keys,
+    lastPushedAt: Date.now(),
+    pushCount: (memCache?.pushCount ?? 0) + 1,
+  }
+  memCacheAt = Date.now()
+  rrIndex.clear()
 }
 
-/**
- * Pick the best key for a given provider using round-robin rotation.
- * Prefers the key with the lowest average latency on first pick.
- * Returns null if no key available for that provider.
- */
-export function pickKey(token: string, providerId: string): GatewayKey | null {
-  const store = gatewayCache.get(token)
-  if (!store) return null
+export async function getGatewayStore(_token: string): Promise<GatewayStore | null> {
+  const store = await getStore()
+  return store.keys.length > 0 ? store : null
+}
 
+export async function pickKey(_token: string, providerId: string): Promise<GatewayKey | null> {
+  const store = await getStore()
   const candidates = store.keys.filter((k) => k.providerId === providerId)
   if (candidates.length === 0) return null
-
-  // Sort by latency for initial selection, then rotate
   candidates.sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
-
   const idx = rrIndex.get(providerId) ?? 0
   const key = candidates[idx % candidates.length]
   rrIndex.set(providerId, idx + 1)
   return key
 }
 
-/**
- * Pick ANY available key across all providers.
- * Skips providers where all keys might be rate-limited.
- * Used when the requested model is not provider-specific.
- */
-export function pickAnyKey(token: string, modelId: string): GatewayKey | null {
-  const store = gatewayCache.get(token)
-  if (!store) return null
-
-  // Find keys that have this model confirmed working
+export async function pickAnyKey(_token: string, modelId: string): Promise<GatewayKey | null> {
+  const store = await getStore()
   const candidates = store.keys.filter((k) => k.modelIds.includes(modelId))
   if (candidates.length === 0) return null
-
-  // Sort by latency
   candidates.sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
   return candidates[0]
 }
 
-/** Get all unique model IDs across all working keys */
-export function getAllModels(token: string): Array<{ id: string; providerId: string; providerName: string }> {
-  const store = gatewayCache.get(token)
-  if (!store) return []
-
+export async function getAllModels(_token: string): Promise<Array<{ id: string; providerId: string; providerName: string }>> {
+  const store = await getStore()
   const seen = new Set<string>()
   const result: Array<{ id: string; providerId: string; providerName: string }> = []
-
-  // Sort by latency — fastest providers' models listed first
   const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
-
   for (const key of sorted) {
     for (const modelId of key.modelIds) {
       if (!seen.has(modelId)) {
@@ -150,14 +199,12 @@ export function getAllModels(token: string): Array<{ id: string; providerId: str
       }
     }
   }
-
   return result
 }
 
-/** Stats for diagnostics */
-export function getGatewayStats(token: string) {
-  const store = gatewayCache.get(token)
-  if (!store) return null
+export async function getGatewayStats(_token: string) {
+  const store = await getStore()
+  if (store.keys.length === 0) return null
   const providerCounts = new Map<string, number>()
   let totalModels = 0
   for (const key of store.keys) {
