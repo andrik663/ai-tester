@@ -67,6 +67,8 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "nebius",       label: "Nebius AI",              country: "EU", flag: "🇪🇺", example: "nebius:YOUR_KEY",         keyHint: "API key" },
   { id: "featherless",  label: "Featherless AI",         country: "US", flag: "🇺🇸", example: "featherless:YOUR_KEY",    keyHint: "API key" },
   { id: "friendli",     label: "Friendli AI",            country: "KR", flag: "🇰🇷", example: "friendli:YOUR_KEY",       keyHint: "API key" },
+  { id: "marketku",    label: "Marketku Router",        country: "ID", flag: "🇮🇩", example: "marketku:YOUR_KEY",       keyHint: "API key" },
+  { id: "openmodel",   label: "OpenModel",              country: "US", flag: "🇺🇸", example: "openmodel:YOUR_KEY",      keyHint: "API key" },
 ]
 
 const KNOWN_PROVIDERS = PROVIDER_FORMATS.map((p) => p.id)
@@ -246,7 +248,7 @@ function ModelCell({ provider, result }: { provider: string; result: MultiKeyRes
   )
 }
 
-// ── Spinner ──────────────────────��────────────────────────────────────────────
+// ── Spinner ──────────────────────���────────────────────────────────────────────
 
 function Spinner({ size = 12 }: { size?: number }) {
   return (

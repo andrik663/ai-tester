@@ -67,6 +67,7 @@ const PROVIDER_DOMAIN_MAP: Record<string, string> = {
   liquid:"liquid.ai", morph:"morphllm.com", poolside:"poolside.ai",
   relace:"relace.ai", venice:"venice.ai", baseten:"baseten.co",
   wandb:"wandb.ai", featherless:"featherless.ai", friendli:"friendli.ai",
+  marketku:"router.marketku.id", openmodel:"openmodel.ai",
   nebius:"nebius.com", crusoe:"crusoe.ai", clarifai:"clarifai.com",
   digitalocean:"digitalocean.com", gmicloud:"gmicloud.ai", chutes:"chutes.ai",
   phala:"phala.network", switchpoint:"switchpoint.ai", inceptron:"inceptron.se",
