@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import type { MultiKeyResult, MultiKeyTestResponse, TokenUsage } from "@/app/api/multi-key-test/route"
 import { PROVIDER_MODELS, maskApiKey } from "@/app/api/multi-key-test/route"
-import type { KeyAllModelsResult, MultiKeyAllResponse, ModelTestResult } from "@/app/api/multi-key-batch-all/route"
+import type { KeyAllModelsResult, ModelTestResult } from "@/app/api/multi-key-batch-all/route"
 import { PROVIDERS_WITH_LIVE_MODELS } from "@/lib/providers"
 import { copyToClipboard } from "@/lib/clipboard"
 import { appendWorkingResults } from "@/lib/working-keys-store"
@@ -966,6 +966,8 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
     }
   }, [entries, prompt, running, onKeysSaved])
 
+  // ── All-models: run per-key sequentially, streaming results as each key finishes ──
+  // Uses the same /api/batch-test endpoint as single-key batch — no timeout issues.
   const runAllModels = useCallback(async () => {
     const valid = entries.filter((e) => !e.unknown && e.provider !== "?")
     if (!valid.length || running) return
@@ -975,58 +977,98 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
     setAllModelsSummary(null)
     setError(null)
 
-    try {
-      const res = await fetch("/api/multi-key-batch-all", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: prompt.trim() || "halo",
-          entries: valid.map((e) => ({ provider: e.provider, apiKey: e.apiKey })),
-        }),
-      })
-      if (!res.ok) {
-        const errText = await res.text().catch(() => `HTTP ${res.status}`)
-        let errMsg: string
-        try { errMsg = (JSON.parse(errText) as { error?: string })?.error ?? errText }
-        catch { errMsg = errText.slice(0, 200) }
-        throw new Error(errMsg)
-      }
-      const data: MultiKeyAllResponse = await res.json()
-      setAllModelsResults(data.results)
-      setAllModelsSummary({
-        totalPassed: data.totalPassed,
-        totalFailed: data.totalFailed,
-        totalModels: data.totalModels,
-        totalMs: data.totalMs,
-      })
+    const overallStart = Date.now()
+    let totalPassed = 0
+    let totalFailed = 0
+    let totalModels = 0
+    const pf = PROVIDER_FORMATS
 
-      // Save successful keys to the Keys dashboard
-      const passingProviders = data.results.filter((kr) => kr.passed > 0)
-      if (passingProviders.length > 0) {
-        const pf = PROVIDER_FORMATS
-        passingProviders.forEach((kr) => {
-          // Recover raw key from entries
-          const entry = entries.find(
-            (e) => e.provider === kr.provider && maskApiKey(e.apiKey) === kr.apiKeyMasked,
-          )
-          if (!entry) return
-          const label = pf.find((p) => p.id === kr.provider)?.label ?? kr.provider
-          const passingModels = kr.models
-            .filter((m) => m.ok)
-            .map((m) => ({
-              modelId: m.modelId,
-              latencyMs: m.latencyMs,
-              tokenUsage: m.tokenUsage
-                ? {
-                    prompt: m.tokenUsage.prompt,
-                    completion: m.tokenUsage.completion,
-                    total: m.tokenUsage.total,
-                  }
-                : undefined,
-            }))
-          appendWorkingResults(kr.provider, label, entry.apiKey, passingModels)
+    try {
+      for (const entry of valid) {
+        // Call the same endpoint as single-key batch — one key at a time
+        let keyResult: KeyAllModelsResult
+        try {
+          const res = await fetch("/api/batch-test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              providerId: entry.provider,
+              apiKey: entry.apiKey,
+              prompt: prompt.trim() || "halo",
+            }),
+          })
+
+          if (!res.ok) {
+            const errText = await res.text().catch(() => `HTTP ${res.status}`)
+            let errMsg: string
+            try { errMsg = (JSON.parse(errText) as { error?: string })?.error ?? errText }
+            catch { errMsg = errText.slice(0, 200) }
+            keyResult = {
+              provider: entry.provider,
+              apiKeyMasked: maskApiKey(entry.apiKey),
+              label: pf.find((p) => p.id === entry.provider)?.label ?? entry.provider,
+              total: 0, passed: 0, failed: 0, durationMs: 0,
+              modelSource: "static",
+              models: [],
+              fetchError: errMsg,
+            }
+          } else {
+            const data = await res.json() as {
+              provider: string; total: number; passed: number; failed: number;
+              results: ModelTestResult[]; durationMs: number; modelSource?: "live" | "static"
+            }
+            keyResult = {
+              provider: entry.provider,
+              apiKeyMasked: maskApiKey(entry.apiKey),
+              label: pf.find((p) => p.id === entry.provider)?.label ?? entry.provider,
+              total: data.total,
+              passed: data.passed,
+              failed: data.failed,
+              durationMs: data.durationMs,
+              modelSource: data.modelSource ?? "static",
+              models: data.results,
+            }
+
+            // Save passing models to Keys dashboard immediately
+            if (data.passed > 0) {
+              const label = pf.find((p) => p.id === entry.provider)?.label ?? entry.provider
+              appendWorkingResults(
+                entry.provider, label, entry.apiKey,
+                data.results.filter((m) => m.ok).map((m) => ({
+                  modelId: m.modelId,
+                  latencyMs: m.latencyMs,
+                  tokenUsage: m.tokenUsage
+                    ? { prompt: m.tokenUsage.prompt, completion: m.tokenUsage.completion, total: m.tokenUsage.total }
+                    : undefined,
+                })),
+              )
+              onKeysSaved?.()
+            }
+          }
+        } catch (err) {
+          keyResult = {
+            provider: entry.provider,
+            apiKeyMasked: maskApiKey(entry.apiKey),
+            label: pf.find((p) => p.id === entry.provider)?.label ?? entry.provider,
+            total: 0, passed: 0, failed: 0, durationMs: 0,
+            modelSource: "static",
+            models: [],
+            fetchError: err instanceof Error ? err.message : "Network error",
+          }
+        }
+
+        totalPassed += keyResult.passed
+        totalFailed += keyResult.failed
+        totalModels += keyResult.total
+
+        // Stream: append result immediately so user sees progress
+        setAllModelsResults((prev) => [...prev, keyResult])
+        setAllModelsSummary({
+          totalPassed,
+          totalFailed,
+          totalModels,
+          totalMs: Date.now() - overallStart,
         })
-        onKeysSaved?.()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed")
@@ -1072,7 +1114,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* ── Header ───��─────────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 border-b border-border px-3 sm:px-4 py-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] text-muted-foreground/70">
