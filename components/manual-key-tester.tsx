@@ -1470,6 +1470,32 @@ const PRESETS: ProviderPreset[] = [
     color: "text-blue-300 bg-blue-300/10 border-blue-300/30",
   },
 
+  // ── Miuclaw Gateway ───────────────────────────────────────────────────────
+  // Self-hosted gateway at miuclaw.my.id — routes to all synced working keys.
+  // Use EXPORT_API_TOKEN as the API key. Sync keys first via Keys → Export API.
+  {
+    id: "miuclaw",
+    name: "Miuclaw Gateway",
+    country: "ID",
+    endpoint: "https://www.miuclaw.my.id/api/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "miuclaw/auto",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "miuclaw/auto", label: "Auto (fastest key)", tag: "Gateway", ctx: "varies", in: "varies", out: "varies", cache: "" },
+    ],
+    docsUrl: "https://www.miuclaw.my.id/api/v1/models",
+    createKeyUrl: "https://www.miuclaw.my.id",
+    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+  },
+
   // ── Avian ─────────────────────────────────────────────────────────────────
   {
     id: "avian",
@@ -1735,6 +1761,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   telnyx:         "telnyx.com",
   targon:         "targon.com",
   sakana:         "sakana.ai",
+  miuclaw:        "www.miuclaw.my.id",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */

@@ -73,7 +73,8 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "parasail",  label: "Parasail",               country: "US", flag: "🇺🇸", example: "parasail:YOUR_KEY",       keyHint: "API key" },
   { id: "telnyx",    label: "Telnyx AI",              country: "US", flag: "🇺🇸", example: "telnyx:YOUR_KEY",         keyHint: "API key" },
   { id: "targon",    label: "Targon (Bittensor)",     country: "US", flag: "🇺🇸", example: "targon:YOUR_KEY",         keyHint: "API key" },
-  { id: "sakana",    label: "Sakana AI (Fugu)",       country: "JP", flag: "🇯🇵", example: "sakana:YOUR_KEY",         keyHint: "API key" },
+  { id: "sakana",    label: "Sakana AI (Fugu)",       country: "JP", flag: "🇯🇵", example: "sakana:YOUR_KEY",          keyHint: "API key" },
+  { id: "miuclaw",   label: "Miuclaw Gateway",        country: "ID", flag: "🇮🇩", example: "miuclaw:EXPORT_API_TOKEN",  keyHint: "EXPORT_API_TOKEN" },
 ]
 
 const KNOWN_PROVIDERS = PROVIDER_FORMATS.map((p) => p.id)
@@ -1532,7 +1533,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               </div>
             )}
 
-            {/* ── Quick mode tables ─────────────────────────────────────────── */}
+            {/* ── Quick mode tables ────────────────��────────────────────────── */}
             {testMode === "quick" && (
             <>
 

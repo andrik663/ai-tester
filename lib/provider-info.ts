@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ───────────────────�����������─────────────────────────────────────
+  // ── Google Gemini ───────────────────�������������─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ──────────────────────���─����─��─���───────────────────────────────
+      // ── Qwen3.x ─────────────────��────���─����─��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -894,7 +894,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Deep Infra ────────────────────────────────────────────────────────────
+  // ── Deep Infra ─────────────────────────────────────────────────────────��──
   deepinfra: {
     id: "deepinfra",
     name: "Deep Infra",
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ─────────────────────────────────────────────��────��──��───��──
+      // ── Llama 3 ─────────────────────────────────────────��───��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1187,7 +1187,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Cerebras ────────────────���─────���───���────��───��─────────────────────────────
+  // ── Cerebras ───────────���────���─────���───���────��───��─────────────────────────────
   // Already exists — overriding with extended info if missing
   // ── Chutes ───────────────────────────────────────────────────────────────────
   chutes: {
@@ -1648,6 +1648,24 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
+  // ── Miuclaw Gateway ───────────────────────────────────────────────────────────
+  miuclaw: {
+    id: "miuclaw",
+    name: "Miuclaw Gateway",
+    website: "https://www.miuclaw.my.id",
+    pricingUrl: "https://www.miuclaw.my.id",
+    docsUrl: "https://www.miuclaw.my.id/api/v1/models",
+    description: "Self-hosted AI gateway at miuclaw.my.id — aggregates all synced working keys from every provider into one OpenAI-compatible endpoint. Automatic key rotation, fastest-first selection, and zero extra cost. Requires EXPORT_API_TOKEN.",
+    hq: "ID",
+    tier: "gateway",
+    hasFreeTier: true,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("miuclaw/auto", null, null, 0, { promo: true, promoLabel: "Auto-route", promoLink: "https://www.miuclaw.my.id" }),
+    ],
+  },
+
   // ── Avian ─────────────────────────────────────────────────────────────────────
   avian: {
     id: "avian",
@@ -1746,7 +1764,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Sakana AI — Fugu ──────────────────────────────────────────────────────────
+  // ── Sakana AI — Fugu ───────────��──────────────────────────────────────────────
   sakana: {
     id: "sakana",
     name: "Sakana AI (Fugu)",
