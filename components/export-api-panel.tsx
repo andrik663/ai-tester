@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { type WorkingKeyRecord } from "@/lib/working-keys-store"
 
 interface Props {
@@ -53,6 +53,23 @@ interface SyncResult {
 export default function ExportApiPanel({ keys, onSynced }: Props) {
   const [syncing, setSyncing] = useState(false)
   const [result, setResult] = useState<SyncResult | null>(null)
+  const [gatewayStats, setGatewayStats] = useState<{ keys: number; providers: number } | null>(null)
+
+  // Fetch current gateway stats from /api/v1/models on mount and after sync
+  const refreshGatewayStats = useCallback(async () => {
+    try {
+      const res = await fetch("/api/v1/models")
+      if (!res.ok) return
+      const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
+      const models = (data.data ?? []).filter((m) => m.id !== "miuclaw/auto")
+      const providerSet = new Set(models.map((m) => m.owned_by ?? "unknown"))
+      setGatewayStats({ keys: models.length, providers: providerSet.size })
+    } catch {
+      // silently ignore
+    }
+  }, [])
+
+  useEffect(() => { refreshGatewayStats() }, [refreshGatewayStats])
 
   const handleSync = useCallback(async () => {
     if (syncing) return
@@ -132,6 +149,8 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
         setResult({ ok: true, synced: data.synced, providers: data.providers, models: data.models })
         // Notify parent so it can refresh gateway-dependent UI (e.g. Miuclaw model dropdown)
         onSynced?.()
+        // Refresh our own gateway stats display
+        await refreshGatewayStats()
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -141,7 +160,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
     } finally {
       setSyncing(false)
     }
-  }, [keys, syncing, onSynced])
+  }, [keys, syncing, onSynced, refreshGatewayStats])
 
   const origin = typeof window !== "undefined" ? window.location.origin : ""
   const endpoint = `${origin}/api/v1/chat/completions`
@@ -182,35 +201,39 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
       </button>
 
       {/* Result */}
-      {result && (
-        <div className={`flex items-start gap-2 px-3 py-2.5 rounded-lg border text-[10px] leading-relaxed ${
-          result.ok
-            ? "border-green-500/25 bg-green-500/8 text-green-400"
-            : "border-red-500/25 bg-red-500/8 text-red-400"
-        }`}>
-          {result.ok ? <CheckIcon /> : <XIcon />}
-          <span>
-            {result.ok
-              ? `Gateway ready — ${result.models} model${(result.models ?? 0) !== 1 ? "s" : ""} across ${result.providers} provider${(result.providers ?? 0) !== 1 ? "s" : ""} (${result.synced} keys)`
-              : result.error}
-          </span>
-        </div>
-      )}
+      {result && (() => {
+        const isEmptySync = result.ok && (result.synced ?? 0) === 0
+        const colorClass = result.ok && !isEmptySync
+          ? "border-green-500/25 bg-green-500/8 text-green-400"
+          : isEmptySync
+          ? "border-yellow-500/25 bg-yellow-500/8 text-yellow-400"
+          : "border-red-500/25 bg-red-500/8 text-red-400"
+        const icon = result.ok && !isEmptySync ? <CheckIcon /> : <XIcon />
+        const message = isEmptySync
+          ? "No local keys to sync — run a batch test first, then sync."
+          : result.ok
+          ? `Gateway ready — ${result.models} model${(result.models ?? 0) !== 1 ? "s" : ""} across ${result.providers} provider${(result.providers ?? 0) !== 1 ? "s" : ""} (${result.synced} keys)`
+          : result.error
+        return (
+          <div className={`flex items-start gap-2 px-3 py-2.5 rounded-lg border text-[10px] leading-relaxed ${colorClass}`}>
+            {icon}
+            <span>{message}</span>
+          </div>
+        )
+      })()}
 
-      {/* Stats */}
-      {keys.length > 0 && (
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            ["Keys", String(keys.length)],
-            ["Providers", String(new Set(keys.map((k) => k.providerId)).size)],
-          ].map(([label, value]) => (
-            <div key={label} className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-md border border-border/40 bg-secondary/20">
-              <span className="text-[14px] font-bold text-foreground">{value}</span>
-              <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">{label}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Stats: local keys ready to sync + gateway DB state */}
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          ["Local Keys", String(keys.length)],
+          ["In Gateway", gatewayStats ? String(gatewayStats.keys) : "—"],
+        ].map(([label, value]) => (
+          <div key={label} className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-md border border-border/40 bg-secondary/20">
+            <span className="text-[14px] font-bold text-foreground">{value}</span>
+            <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">{label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
