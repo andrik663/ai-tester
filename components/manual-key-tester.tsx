@@ -1428,6 +1428,48 @@ const PRESETS: ProviderPreset[] = [
     color: "text-orange-500 bg-orange-500/10 border-orange-500/20",
   },
 
+  // ── Marketku Router ───────────────────────────────────────────────────────
+  {
+    id: "marketku",
+    name: "Marketku Router",
+    country: "ID",
+    endpoint: "https://router.marketku.id/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "mk/auto",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://router.marketku.id",
+    createKeyUrl: "https://router.marketku.id",
+    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+  },
+
+  // ── OpenModel ─────────────────────────────────────────────────────────────
+  {
+    id: "openmodel",
+    name: "OpenModel",
+    country: "US",
+    endpoint: "https://api.openmodel.app/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "deepseek-v4-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.openmodel.ai",
+    createKeyUrl: "https://openmodel.ai",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/30",
+  },
+
   // ── Custom ────────────────────────────────────────────────────────────────
   {
     id: "custom",
@@ -2646,7 +2688,12 @@ export default function ManualKeyTester() {
           <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2 flex flex-col gap-px">
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
-              const filtered = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
+              const matched = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
+              // Dahono pinned first, Custom pinned last, rest sorted A→Z
+              const pinFirst = matched.filter((p) => p.id === "dahono")
+              const pinLast  = matched.filter((p) => p.id === "custom")
+              const middle   = matched.filter((p) => p.id !== "dahono" && p.id !== "custom").sort((a, b) => a.name.localeCompare(b.name))
+              const filtered = [...pinFirst, ...middle, ...pinLast]
               if (filtered.length === 0) return (
                 <div className="text-center py-8 text-[11px] text-muted-foreground/50">
                   No providers match &ldquo;{sidebarSearch}&rdquo;
