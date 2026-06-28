@@ -2184,13 +2184,18 @@ export default function ManualKeyTester() {
 
   // ── Miuclaw Gateway: fetch available models from /api/v1/models ─────────────
   // No auth header required — gateway uses server-side EXPORT_API_TOKEN.
-  // Reset models on provider change to prevent stale models from bleeding in.
+  // We track the last providerId we cleared for, so we only clear on actual
+  // provider switch — not on workingKeysTick increments (post-sync refreshes).
+  const miuclawLastProvider = useRef<string>("")
   useEffect(() => {
     if (selectedPreset.id !== "miuclaw") return
 
-    // Immediately clear any stale model from a previous provider
-    setWorkingModels([])
-    setChatModel("")
+    // Only clear stale models when switching TO miuclaw from a different provider
+    if (miuclawLastProvider.current !== "miuclaw") {
+      miuclawLastProvider.current = "miuclaw"
+      setWorkingModels([])
+      setChatModel("")
+    }
 
     let cancelled = false
     const fetchModels = async () => {
@@ -2202,7 +2207,7 @@ export default function ManualKeyTester() {
         const models = (data.data ?? []).filter((m) => m.id !== "miuclaw/auto")
         if (models.length === 0) return // no keys synced yet — leave empty, show hint
         setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: "", latencyMs: -1 })))
-        setChatModel(models[0].id)
+        setChatModel((prev) => prev || models[0].id) // keep existing selection if any
       } catch {
         // Network error — leave empty
       }
@@ -2234,7 +2239,9 @@ export default function ManualKeyTester() {
   }
   
   // Set default model when provider changes
+  // Skip for Miuclaw — it fetches real model list from /api/v1/models asynchronously
   useEffect(() => {
+    if (selectedPreset.id === "miuclaw") return
     if (selectedPreset.models && selectedPreset.models.length > 0) {
       const defaultModel = selectedPreset.models[0].id
       setChatModel(defaultModel)
@@ -2521,7 +2528,8 @@ export default function ManualKeyTester() {
   }
 
   async function runTest() {
-    if (!apiKey.trim() || !prompt.trim() || loading || isStreaming) return
+    const isMiuclaw = selectedPreset.id === "miuclaw"
+    if ((!isMiuclaw && !apiKey.trim()) || !prompt.trim() || loading || isStreaming) return
 
     const ts = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
     const userMsg: ChatMessage = { role: "user", content: prompt, ts }
@@ -3145,7 +3153,7 @@ export default function ManualKeyTester() {
                         </option>
                       ))
                     ) : (
-                      <option value="" disabled>Sync keys first (Keys → Export API)</option>
+                      <option value="" disabled>Sync keys first (Keys → Gateway)</option>
                     )
                   ) : (
                     <>
@@ -3442,14 +3450,14 @@ export default function ManualKeyTester() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={apiKey.trim() ? "Type a message... (Enter to send)" : "Enter API key above first..."}
-                  disabled={(loading || isStreaming) || !apiKey.trim()}
+                  placeholder={(selectedPreset.id === "miuclaw" || apiKey.trim()) ? "Type a message... (Enter to send)" : "Enter API key above first..."}
+                  disabled={(loading || isStreaming) || (selectedPreset.id !== "miuclaw" && !apiKey.trim())}
                   rows={2}
                   className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runTest}
-                  disabled={!apiKey.trim() || !prompt.trim() || loading || isStreaming}
+                  disabled={(selectedPreset.id !== "miuclaw" && !apiKey.trim()) || !prompt.trim() || loading || isStreaming}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 min-w-[80px] h-[46px]"
                 >
                   {loading || isStreaming ? <SpinnerIcon /> : <SendIcon />}
@@ -4147,6 +4155,7 @@ export default function ManualKeyTester() {
                       handleApiKeyChange(key)
                       setConfigOpen(true)
                     }}
+                    onGatewaySync={() => setWorkingKeysTick((t) => t + 1)}
                   />
                 </div>
               )}
