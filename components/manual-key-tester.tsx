@@ -2370,14 +2370,26 @@ export default function ManualKeyTester() {
           const lines = buf.split("\n")
           buf = lines.pop() ?? ""
 
+          // SSE format:  "event: <name>\ndata: <json>\n\n"
+          // Track the current event name across lines in this chunk.
+          let currentEvent = "token"
           for (const rawLine of lines) {
             const line = rawLine.trim()
-            if (!line || !line.startsWith("data: ")) continue
+            if (!line) { currentEvent = "token"; continue } // blank line = event boundary reset
+
+            // Parse event name line
+            if (line.startsWith("event:")) {
+              currentEvent = line.slice(6).trim()
+              continue
+            }
+
+            if (!line.startsWith("data:")) continue
+            const dataStr = line.slice(5).trim()
+            if (!dataStr || dataStr === "[DONE]") continue
+
             try {
-              const ev = rawLine.match(/^event: (\w+)/)
-              const dataStr = line.slice(6)
-              const evName = ev?.[1] ?? "token"
               const parsed = JSON.parse(dataStr) as Record<string, unknown>
+              const evName = currentEvent
 
               if (evName === "token") {
                 accumulated += (parsed.text as string) ?? ""
@@ -3975,7 +3987,7 @@ export default function ManualKeyTester() {
             { prefix: "—",           providerId: "moonshot",    providerName: "Moonshot AI (Kimi)",      example: "random string",        confidence: "none", note: "Moonshot keys have no fixed prefix" },
             { prefix: "—",           providerId: "baidu",       providerName: "Baidu ERNIE (Qianfan)",   example: "random string",        confidence: "none", note: "Baidu Qianfan keys have no fixed prefix" },
             { prefix: "—",           providerId: "yi",          providerName: "01.AI (Yi)",              example: "random string",        confidence: "none", note: "Yi keys have no fixed prefix" },
-            { prefix: "—",           providerId: "stepfun",     providerName: "Stepfun",                 example: "random string",        confidence: "none", note: "Stepfun keys have no fixed prefix" },
+            { prefix: "���",           providerId: "stepfun",     providerName: "Stepfun",                 example: "random string",        confidence: "none", note: "Stepfun keys have no fixed prefix" },
             { prefix: "—",           providerId: "hunyuan",     providerName: "Tencent Hunyuan",         example: "random string",        confidence: "none", note: "Hunyuan keys have no fixed prefix" },
             { prefix: "—",           providerId: "cloudflare",  providerName: "Cloudflare Workers AI",   example: "accountId|apiToken",   confidence: "none", note: "Cloudflare keys use accountId|apiToken composite format" },
             { prefix: "—",           providerId: "azure",       providerName: "Azure OpenAI",            example: "32-char hex",          confidence: "none", note: "Azure keys are 32-char hex — indistinguishable from other hex keys" },
