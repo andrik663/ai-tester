@@ -18,6 +18,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { validateGatewayToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey } from "@/lib/gateway-cache"
 import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from "@/lib/providers"
 
+// Status codes that should trigger fallback to another key
+const FALLBACK_STATUS_CODES = new Set([401, 403, 429, 500, 502, 503, 504])
+
 export const runtime = "nodejs"
 export const maxDuration = 60
 
@@ -171,9 +174,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "messages array is required" }, { status: 400 })
   }
 
-  // ── Key selection ───────────────────────────────────────────────────────────
-  const key = resolveProvider(token, body.model)
-  if (!key) {
+  // ── Key selection: build ordered candidate list with fallback ─────────────────
+  const primaryKey = resolveProvider(token, body.model)
+  if (!primaryKey) {
     return NextResponse.json(
       {
         error: "No working key available for this model. Sync working keys first via POST /api/v1/gateway/push.",
@@ -183,27 +186,100 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // ── Build forward request ───────────────────────────────────────────────────
-  const endpoint = buildEndpoint(key.providerId, body.model, key.apiKey)
-  if (!endpoint) {
-    return NextResponse.json(
-      { error: `Provider '${key.providerId}' requires extra config (account ID etc.) not supported by gateway` },
-      { status: 422 },
-    )
+  // Build candidate list: primary key first, then all other keys (for fallback)
+  const store = getGatewayStore(token)
+  const otherKeys: GatewayKey[] = store
+    ? store.keys.filter((k) => k.apiKey !== primaryKey.apiKey && k.providerId !== primaryKey.providerId)
+    : []
+  const candidates = [primaryKey, ...otherKeys]
+
+  // ── Try each candidate key in order ──────────────────────────────────────────
+  let lastError = ""
+  let lastStatus = 502
+  let lastProvider = primaryKey.providerId
+
+  for (const key of candidates) {
+    const endpoint = buildEndpoint(key.providerId, body.model, key.apiKey)
+    if (!endpoint) continue // skip providers needing extra config
+
+    const headers = buildProviderHeaders(key.providerId, key.apiKey)
+    const forwardBody = buildForwardBody(key.providerId, body)
+
+    let upstreamRes: Response
+    try {
+      upstreamRes = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(forwardBody),
+        signal: AbortSignal.timeout(55_000),
+      })
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : "Upstream request failed"
+      lastProvider = key.providerId
+      lastStatus = 502
+      continue // network error — try next key
+    }
+
+    if (!upstreamRes.ok && FALLBACK_STATUS_CODES.has(upstreamRes.status)) {
+      // Retriable error — record and try next key
+      const errText = await upstreamRes.text().catch(() => `HTTP ${upstreamRes.status}`)
+      lastError = `Provider '${key.providerId}' returned ${upstreamRes.status}: ${errText.slice(0, 200)}`
+      lastProvider = key.providerId
+      lastStatus = upstreamRes.status
+      continue
+    }
+
+    if (!upstreamRes.ok) {
+      // Non-retriable error (e.g. 400 bad request) — return immediately
+      const errText = await upstreamRes.text().catch(() => `HTTP ${upstreamRes.status}`)
+      return NextResponse.json(
+        {
+          error: `Provider '${key.providerId}' returned ${upstreamRes.status}`,
+          upstream_error: errText.slice(0, 500),
+          model: body.model,
+          provider: key.providerId,
+        },
+        { status: upstreamRes.status },
+      )
+    }
+
+    // ── Success: stream or JSON passthrough ─────────────────────────────────
+    const contentType = upstreamRes.headers.get("content-type") ?? "application/json"
+
+    if (body.stream && upstreamRes.body) {
+      return new NextResponse(upstreamRes.body, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+          "X-Miuclaw-Provider": key.providerId,
+          "X-Miuclaw-Model": body.model,
+        },
+      })
+    }
+
+    const data = await upstreamRes.json().catch(() => ({}))
+    return NextResponse.json(data, {
+      status: 200,
+      headers: {
+        "X-Miuclaw-Provider": key.providerId,
+        "X-Miuclaw-Model": body.model,
+        "Content-Type": contentType,
+      },
+    })
   }
 
-  const headers = buildProviderHeaders(key.providerId, key.apiKey)
-  const forwardBody = buildForwardBody(key.providerId, body)
-
-  // ── Forward request ─────────────────────────────────────────────────────────
-  let upstreamRes: Response
-  try {
-    upstreamRes = await fetch(endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(forwardBody),
-      signal: AbortSignal.timeout(55_000),
-    })
+  // ── All candidates failed ──────────────────────────────────────────────────
+  return NextResponse.json(
+    {
+      error: `All available keys failed. Last error from '${lastProvider}': ${lastError}`,
+      model: body.model,
+      provider: lastProvider,
+      hint: "Sync fresh working keys via the Keys tab → Export to Miuclaw Gateway.",
+    },
+    { status: lastStatus },
+  )
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Upstream request failed"
     return NextResponse.json({ error: msg, provider: key.providerId }, { status: 502 })

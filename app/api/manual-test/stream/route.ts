@@ -283,7 +283,11 @@ export async function POST(req: NextRequest) {
     model?: string
   }
 
-  const { provider, apiKey, endpoint, headers, messages, systemPrompt, rawBody, model } = body
+  const { provider, apiKey, headers, messages, systemPrompt, rawBody, model } = body
+  // Miuclaw Gateway: always route to same-origin /api/v1/chat/completions
+  const endpoint = provider === "miuclaw"
+    ? `${req.nextUrl.origin}/api/v1/chat/completions`
+    : body.endpoint
 
   const cfg = PROVIDER_CONFIGS[provider]
   const authHeaders = cfg ? cfg.authHeader(apiKey) : { Authorization: `Bearer ${apiKey}` }

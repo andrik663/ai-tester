@@ -589,8 +589,18 @@ export async function POST(req: NextRequest) {
   const providerKey = provider.toLowerCase()
   const isVisionMode = (testMode === "vision" || testMode === "ocr") && !!imageData
 
+  // ── Miuclaw Gateway: always route to the same-origin /api/v1/* endpoint ──────
+  // This ensures both dev (localhost) and production (miuclaw.my.id) hit the
+  // correct local gateway — no cross-origin issues, no stale production URLs.
+  let resolvedEndpoint = endpoint
+  if (providerKey === "miuclaw") {
+    const origin = req.nextUrl.origin
+    resolvedEndpoint = `${origin}/api/v1/chat/completions`
+    log("info", `Miuclaw Gateway: rewriting endpoint to ${resolvedEndpoint}`)
+  }
+
   log("info", `Provider: ${provider}`)
-  log("info", `Method:   ${method} ${endpoint}`)
+  log("info", `Method:   ${method} ${resolvedEndpoint}`)
   if (isVisionMode) log("info", `Mode: vision (image: ${imageData?.mimeType}, ${Math.round((imageData?.base64.length ?? 0) * 0.75 / 1024)}KB)`)
 
   // ── Build request body ────────────────────────────────────────────────────
@@ -678,10 +688,10 @@ export async function POST(req: NextRequest) {
 
   // ── Build cURL ────────────────────────────────────────────────────────────
 
-  const curlCommand = buildCurl(method, endpoint, finalHeaders, finalBody, true)  // masked
-  const curlFull    = buildCurl(method, endpoint, finalHeaders, finalBody, false) // full key
+  const curlCommand = buildCurl(method, resolvedEndpoint, finalHeaders, finalBody, true)  // masked
+  const curlFull    = buildCurl(method, resolvedEndpoint, finalHeaders, finalBody, false) // full key
   log("curl", curlCommand)
-  log("req", `Sending ${method} → ${endpoint}`)
+  log("req", `Sending ${method} → ${resolvedEndpoint}`)
   if (finalBody) {
     log("req", `Body: ${finalBody.length > 200 ? finalBody.slice(0, 200) + "…" : finalBody}`)
   }
@@ -690,7 +700,7 @@ export async function POST(req: NextRequest) {
 
   let res: Response
   try {
-    res = await fetch(endpoint, {
+    res = await fetch(resolvedEndpoint, {
       method,
       headers: finalHeaders,
       body: finalBody,

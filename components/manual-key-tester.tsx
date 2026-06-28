@@ -1491,8 +1491,8 @@ const PRESETS: ProviderPreset[] = [
     models: [
       { id: "miuclaw/auto", label: "Auto (fastest key)", tag: "Gateway", ctx: "varies", in: "varies", out: "varies", cache: "" },
     ],
-    docsUrl: "https://www.miuclaw.my.id/api/v1/models",
-    createKeyUrl: "https://www.miuclaw.my.id",
+    docsUrl: "/api/v1/models",
+    createKeyUrl: "/keys",
     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
   },
 
@@ -2159,6 +2159,7 @@ export default function ManualKeyTester() {
   // Reload working models whenever the provider or workingKeysTick changes,
   // and auto-fill chatModel + apiKey from the first saved record.
   useEffect(() => {
+    if (selectedPreset.id === "miuclaw") return // handled below
     const records = loadWorkingKeys().filter((r) => r.providerId === selectedPreset.id)
     const seen = new Set<string>()
     const deduped = records.filter((r) => {
@@ -2180,6 +2181,54 @@ export default function ManualKeyTester() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPreset.id, workingKeysTick])
+
+  // ── Miuclaw Gateway: fetch available models from /api/v1/models ─────────────
+  // When miuclaw is selected and a token is present, poll the gateway for all
+  // synced models and populate the model dropdown dynamically.
+  useEffect(() => {
+    if (selectedPreset.id !== "miuclaw") return
+    const token = apiKey.trim()
+    if (!token) {
+      // No token yet — show only the static "Auto" option
+      setWorkingModels([{ modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }])
+      setChatModel("miuclaw/auto")
+      return
+    }
+
+    let cancelled = false
+    const fetchModels = async () => {
+      try {
+        const res = await fetch("/api/v1/models", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok || cancelled) return
+        const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
+        if (cancelled) return
+        const models = data.data ?? []
+        if (models.length === 0) {
+          // Gateway empty — show auto only
+          setWorkingModels([{ modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }])
+          setChatModel((prev) => prev || "miuclaw/auto")
+          return
+        }
+        // Always keep "miuclaw/auto" as first option, then add all gateway models
+        const autoEntry = { modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }
+        const gatewayModels = models
+          .filter((m) => m.id !== "miuclaw/auto")
+          .map((m) => ({ modelId: m.id, apiKey: token, latencyMs: 0 }))
+        setWorkingModels([autoEntry, ...gatewayModels])
+        setChatModel((prev) => prev || "miuclaw/auto")
+      } catch {
+        // Network error — keep auto
+        setWorkingModels([{ modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }])
+        setChatModel((prev) => prev || "miuclaw/auto")
+      }
+    }
+
+    fetchModels()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPreset.id, apiKey, workingKeysTick])
 
   // Get the current model based on active sub-tab
   const getCurrentModel = () => {
@@ -2640,7 +2689,7 @@ export default function ManualKeyTester() {
         setIsStreaming(false)
       }
     } else {
-      // ── Non-streaming path ────────────────────────────────────────────────
+      // ── Non-streaming path ──────────────────────────���─────────────────────
       setLoading(true)
       try {
         const res = await fetch("/api/manual-test", {
@@ -3139,7 +3188,7 @@ export default function ManualKeyTester() {
                   <div>
                     <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {apiKey ? "Ready — send a message to test" : workingModels.length > 0 ? "Loading saved key..." : "Paste your API key below to start"}
+                      {apiKey ? "Ready — send a message to test" : (workingModels.length > 0 && selectedPreset.id !== "miuclaw") ? "Loading saved key..." : "Paste your API key below to start"}
                     </p>
                   </div>
                   {apiKey && (
@@ -3351,8 +3400,8 @@ export default function ManualKeyTester() {
             {/* Chat input */}
             <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
 
-              {/* Inline API key input — shown only when no key is set AND no working keys exist for this provider */}
-              {!apiKey.trim() && workingModels.length === 0 && (
+              {/* Inline API key input — shown when no key is set AND (no working keys exist OR it's miuclaw which needs explicit token) */}
+              {!apiKey.trim() && (workingModels.length === 0 || selectedPreset.id === "miuclaw") && (
                 <div className="flex items-center gap-2 px-1 py-1 rounded-lg border border-primary/20 bg-primary/5">
                   <div className="relative flex-1 min-w-0">
                     <input
