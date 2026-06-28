@@ -833,7 +833,8 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
   const [showGuide, setShowGuide]     = useState(false)
   const [copiedId, setCopiedId]       = useState<string | null>(null)
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set())
-  const fileRef = useRef<HTMLInputElement>(null)
+  const fileRef  = useRef<HTMLInputElement>(null)
+  const abortRef = useRef(false) // set to true to cancel the running loop
 
   // All-models mode
   const [testMode, setTestMode]             = useState<"quick" | "all">("quick")
@@ -902,62 +903,93 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
     })
   }
 
+  // ── Quick mode: test 1 model per key, client-side per-key loop ───────────
+  // Calls /api/multi-key-test with a single entry so each request finishes
+  // fast and there is no risk of serverless timeout regardless of key count.
   const runAll = useCallback(async () => {
     const valid = entries.filter((e) => !e.unknown && e.provider !== "?")
     if (!valid.length || running) return
 
+    abortRef.current = false
     setRunning(true)
     setResults([])
     setSummary(null)
     setError(null)
 
-    try {
-      const res = await fetch("/api/multi-key-test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: prompt.trim() || "halo",
-          entries: valid.map((e) => ({ provider: e.provider, apiKey: e.apiKey })),
-        }),
-      })
-      if (!res.ok) {
-        const errText = await res.text().catch(() => `HTTP ${res.status}`)
-        // Try to parse as JSON error first, fall back to raw text
-        let errMsg: string
-        try { errMsg = (JSON.parse(errText) as { error?: string })?.error ?? errText }
-        catch { errMsg = errText.slice(0, 200) }
-        throw new Error(errMsg)
-      }
-      const data: MultiKeyTestResponse = await res.json()
-      setResults(data.results)
-      setSummary({ passed: data.passed, failed: data.failed, totalMs: data.totalMs })
+    const overallStart = Date.now()
+    let passed = 0
+    let failed = 0
+    const pf = PROVIDER_FORMATS
 
-      // Save successful keys to the Keys dashboard
-      const passing = data.results.filter((r) => r.ok)
-      if (passing.length > 0) {
-        const pf = PROVIDER_FORMATS
-        passing.forEach((r) => {
-          // Recover the raw key from entries by matching provider + masked key
-          const entry = entries.find(
-            (e) => e.provider === r.provider && maskApiKey(e.apiKey) === r.apiKeyMasked,
-          )
-          if (!entry) return
-          const label = pf.find((p) => p.id === r.provider)?.label ?? r.provider
-          appendWorkingResults(r.provider, label, entry.apiKey, [
-            {
-              modelId: r.modelUsed ?? "unknown",
-              latencyMs: r.durationMs,
-              tokenUsage: r.tokenUsage
-                ? {
-                    prompt: r.tokenUsage.promptTokens ?? undefined,
-                    completion: r.tokenUsage.completionTokens ?? undefined,
-                    total: r.tokenUsage.totalTokens ?? undefined,
-                  }
-                : undefined,
-            },
-          ])
-        })
-        onKeysSaved?.()
+    try {
+      for (const entry of valid) {
+        if (abortRef.current) break
+
+        let result: MultiKeyResult
+        try {
+          const res = await fetch("/api/multi-key-test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: prompt.trim() || "halo",
+              entries: [{ provider: entry.provider, apiKey: entry.apiKey }],
+            }),
+          })
+          if (!res.ok) {
+            const errText = await res.text().catch(() => `HTTP ${res.status}`)
+            let errMsg: string
+            try { errMsg = (JSON.parse(errText) as { error?: string })?.error ?? errText }
+            catch { errMsg = errText.slice(0, 200) }
+            result = {
+              provider: entry.provider,
+              apiKeyMasked: maskApiKey(entry.apiKey),
+              label: pf.find((p) => p.id === entry.provider)?.label ?? entry.provider,
+              ok: false, status: 0, statusText: "Error",
+              durationMs: 0, error: errMsg,
+            }
+          } else {
+            const data: MultiKeyTestResponse = await res.json()
+            result = data.results[0] ?? {
+              provider: entry.provider,
+              apiKeyMasked: maskApiKey(entry.apiKey),
+              label: pf.find((p) => p.id === entry.provider)?.label ?? entry.provider,
+              ok: false, status: 0, statusText: "No result",
+              durationMs: 0,
+            }
+          }
+        } catch (err) {
+          result = {
+            provider: entry.provider,
+            apiKeyMasked: maskApiKey(entry.apiKey),
+            label: pf.find((p) => p.id === entry.provider)?.label ?? entry.provider,
+            ok: false, status: 0, statusText: "Error",
+            durationMs: 0,
+            error: err instanceof Error ? err.message : "Network error",
+          }
+        }
+
+        if (result.ok) {
+          passed++
+          const label = pf.find((p) => p.id === entry.provider)?.label ?? entry.provider
+          appendWorkingResults(entry.provider, label, entry.apiKey, [{
+            modelId: result.modelUsed ?? "unknown",
+            latencyMs: result.durationMs,
+            tokenUsage: result.tokenUsage
+              ? {
+                  prompt: result.tokenUsage.promptTokens ?? undefined,
+                  completion: result.tokenUsage.completionTokens ?? undefined,
+                  total: result.tokenUsage.totalTokens ?? undefined,
+                }
+              : undefined,
+          }])
+          onKeysSaved?.()
+        } else {
+          failed++
+        }
+
+        // Stream result immediately
+        setResults((prev) => [...prev, result])
+        setSummary({ passed, failed, totalMs: Date.now() - overallStart })
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed")
@@ -968,10 +1000,12 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
   // ── All-models: run per-key sequentially, streaming results as each key finishes ──
   // Uses the same /api/batch-test endpoint as single-key batch — no timeout issues.
+  // /api/batch-test returns BatchModelResult (curlFull only); we adapt to ModelTestResult.
   const runAllModels = useCallback(async () => {
     const valid = entries.filter((e) => !e.unknown && e.provider !== "?")
     if (!valid.length || running) return
 
+    abortRef.current = false
     setRunning(true)
     setAllModelsResults([])
     setAllModelsSummary(null)
@@ -985,7 +1019,8 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
     try {
       for (const entry of valid) {
-        // Call the same endpoint as single-key batch — one key at a time
+        if (abortRef.current) break
+
         let keyResult: KeyAllModelsResult
         try {
           const res = await fetch("/api/batch-test", {
@@ -1013,10 +1048,29 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               fetchError: errMsg,
             }
           } else {
+            // /api/batch-test returns BatchModelResult — adapt to ModelTestResult shape
             const data = await res.json() as {
               provider: string; total: number; passed: number; failed: number;
-              results: ModelTestResult[]; durationMs: number; modelSource?: "live" | "static"
+              results: Array<{
+                modelId: string; ok: boolean; status: number; latencyMs: number;
+                reply?: string; errorMsg?: string; curlFull?: string;
+                tokenUsage?: { prompt?: number; completion?: number; total?: number }
+              }>; durationMs: number; modelSource?: "live" | "static"
             }
+
+            // Adapt BatchModelResult → ModelTestResult (add curlPreview from curlFull)
+            const adaptedModels: ModelTestResult[] = data.results.map((r) => ({
+              modelId: r.modelId,
+              ok: r.ok,
+              status: r.status,
+              latencyMs: r.latencyMs,
+              reply: r.reply,
+              errorMsg: r.errorMsg,
+              curlPreview: r.curlFull ? r.curlFull.slice(0, 120) + (r.curlFull.length > 120 ? "…" : "") : "",
+              curlFull: r.curlFull ?? "",
+              tokenUsage: r.tokenUsage,
+            }))
+
             keyResult = {
               provider: entry.provider,
               apiKeyMasked: maskApiKey(entry.apiKey),
@@ -1025,8 +1079,8 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               passed: data.passed,
               failed: data.failed,
               durationMs: data.durationMs,
-              modelSource: data.modelSource ?? "static",
-              models: data.results,
+              modelSource: (data.modelSource as "live" | "static") ?? "static",
+              models: adaptedModels,
             }
 
             // Save passing models to Keys dashboard immediately
@@ -1034,7 +1088,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               const label = pf.find((p) => p.id === entry.provider)?.label ?? entry.provider
               appendWorkingResults(
                 entry.provider, label, entry.apiKey,
-                data.results.filter((m) => m.ok).map((m) => ({
+                adaptedModels.filter((m) => m.ok).map((m) => ({
                   modelId: m.modelId,
                   latencyMs: m.latencyMs,
                   tokenUsage: m.tokenUsage
@@ -1363,13 +1417,23 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                     className="w-full rounded-lg border border-border bg-background text-foreground text-[12px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
                   />
                 </div>
-                <button
-                  onClick={testMode === "all" ? runAllModels : runAll}
-                  disabled={running || validCount === 0}
-                  className="flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
-                >
-                  {running ? <Spinner size={12} /> : (
-                    testMode === "all"
+                {running ? (
+                  <button
+                    onClick={() => { abortRef.current = true }}
+                    className="flex items-center justify-center gap-2 text-sm font-semibold bg-destructive/90 text-destructive-foreground rounded-lg px-4 py-2 hover:opacity-90 transition-opacity whitespace-nowrap"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+                      <rect x="1.5" y="1.5" width="7" height="7" rx="0.5" fill="currentColor" />
+                    </svg>
+                    Stop
+                  </button>
+                ) : (
+                  <button
+                    onClick={testMode === "all" ? runAllModels : runAll}
+                    disabled={validCount === 0}
+                    className="flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
+                  >
+                    {testMode === "all"
                       ? (
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
                           <rect x="1" y="1" width="4" height="4" rx="0.7" fill="currentColor" opacity=".7" />
@@ -1383,14 +1447,13 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                           <path d="M2 2l8 4-8 4V2z" fill="currentColor" />
                         </svg>
                       )
-                  )}
-                  {running
-                    ? "Testing…"
-                    : testMode === "all"
+                    }
+                    {testMode === "all"
                       ? `Run All Models (${validCount} keys)`
                       : `Run All (${validCount})`
-                  }
-                </button>
+                    }
+                  </button>
+                )}
               </div>
             </div>
 
