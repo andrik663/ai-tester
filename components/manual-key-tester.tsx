@@ -1539,6 +1539,8 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   rekaai:         "reka.ai",
   "aion-labs":    "aionlabs.net",
   mistral:        "mistral.ai",
+  marketku:       "router.marketku.id",
+  openmodel:      "openmodel.ai",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
@@ -1603,7 +1605,7 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ���────────────────────������─������───────────────────────────────────────────
+// ── Icons ����────────────────────������─������───────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -2975,7 +2977,7 @@ export default function ManualKeyTester() {
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${result.ok ? "bg-green-400" : "bg-red-400"}`} />
                       <span className={`text-sm font-bold ${result.ok ? "text-green-400" : "text-red-400"}`}>
-                        HTTP {result.status} — {result.ok ? "Success" : "Failed"}
+                        HTTP {result.status} �� {result.ok ? "Success" : "Failed"}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
