@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { validateGatewayToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey } from "@/lib/gateway-cache"
+import { getInternalToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey } from "@/lib/gateway-cache"
 import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from "@/lib/providers"
 
 // Status codes that should trigger fallback to another key
@@ -40,11 +40,6 @@ interface ChatRequest {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getToken(req: NextRequest): string {
-  const auth = req.headers.get("authorization") ?? ""
-  return auth.startsWith("Bearer ") ? auth.slice(7).trim() : ""
-}
-
 /**
  * Find which provider owns the requested model.
  * First checks the gateway cache (working keys), then falls back to PROVIDER_CONFIGS.
@@ -61,18 +56,47 @@ function resolveProvider(token: string, modelId: string): GatewayKey | null {
 
   const lower = modelId.toLowerCase()
   const providerHints: [string, string[]][] = [
-    ["openai",    ["gpt-", "o1", "o3", "o4"]],
-    ["anthropic", ["claude"]],
-    ["google",    ["gemini"]],
-    ["groq",      ["llama", "mixtral", "gemma", "whisper"]],
-    ["mistral",   ["mistral", "codestral", "pixtral"]],
-    ["cohere",    ["command"]],
-    ["fireworks", ["firefunction", "fw-"]],
-    ["xai",       ["grok"]],
-    ["deepseek",  ["deepseek"]],
-    ["cerebras",  ["cerebras"]],
-    ["dahono",    ["dahono/"]],
-    ["sakana",    ["fugu"]],
+    // Major western providers
+    ["openai",      ["gpt-", "o1", "o3", "o4", "chatgpt"]],
+    ["anthropic",   ["claude"]],
+    ["google",      ["gemini", "palm"]],
+    ["groq",        ["llama", "mixtral", "gemma", "whisper", "guard"]],
+    ["mistral",     ["mistral", "codestral", "pixtral", "magistral", "devstral"]],
+    ["cohere",      ["command", "embed-", "rerank"]],
+    ["fireworks",   ["firefunction", "fw-", "accounts/fireworks"]],
+    ["xai",         ["grok"]],
+    ["deepseek",    ["deepseek"]],
+    ["cerebras",    ["cerebras", "zai-glm", "zai-"]],
+    ["together",    ["togethercomputer", "zai-org/", "meta-llama", "mistralai/", "togetherapi"]],
+    // Chinese providers
+    ["zhipu",       ["glm-", "cogview", "cogvideo", "embedding-"]],
+    ["qwen",        ["qwen", "qwq", "qvq"]],
+    ["moonshot",    ["moonshot", "kimi"]],
+    ["baidu",       ["ernie", "wenxin", "baidu"]],
+    ["yi",          ["yi-", "01-ai"]],
+    ["minimax",     ["minimax", "abab"]],
+    ["stepfun",     ["step-"]],
+    ["hunyuan",     ["hunyuan"]],
+    // Infrastructure / routing providers
+    ["openrouter",  ["openrouter/", "anthropic/", "x-ai/", "nousresearch/", "nvidia/"]],
+    ["siliconflow", ["siliconflow", "pro/", "free/"]],
+    ["novita",      ["novita", "meta/llama", "microsoft/phi"]],
+    ["nebius",      ["nebius"]],
+    ["hyperbolic",  ["hyperbolic", "meta-llama/", "Qwen/"]],
+    ["sambanova",   ["sambanova", "samba"]],
+    ["nvidia",      ["nvidia/", "nv-"]],
+    ["perplexity",  ["pplx-", "sonar", "llama-3.1-sonar"]],
+    ["deepinfra",   ["deepinfra", "Phind/", "lizpreciatior/"]],
+    ["featherless", ["featherless"]],
+    ["lepton",      ["lepton"]],
+    ["friendli",    ["friendli"]],
+    // Other / self-hosted
+    ["dahono",      ["dahono/"]],
+    ["sakana",      ["fugu"]],
+    ["telnyx",      ["telnyx"]],
+    ["parasail",    ["parasail"]],
+    ["marketku",    ["marketku"]],
+    ["openmodel",   ["openmodel"]],
   ]
 
   for (const [providerId, prefixes] of providerHints) {
@@ -82,7 +106,15 @@ function resolveProvider(token: string, modelId: string): GatewayKey | null {
     }
   }
 
-  // 3. No matching provider found — return null so the caller can give a clear error
+  // 3. Last resort: if the model has no provider/ prefix and no hint matched,
+  //    try picking from any key (lowest latency). This handles new/unknown models
+  //    that may just work on a general-purpose provider.
+  const hasProviderPrefix = lower.includes("/")
+  if (!hasProviderPrefix && store.keys.length > 0) {
+    const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
+    return sorted[0]
+  }
+
   return null
 }
 
@@ -157,13 +189,13 @@ function buildEndpoint(providerId: string, modelId: string, apiKey: string): str
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // ── Auth ────────────────────────────────────────────────────────────────────
-  const token = getToken(req)
+  // ── Resolve internal gateway token from server env ──────────────────────────
+  const token = getInternalToken()
   if (!token) {
-    return NextResponse.json({ error: "Missing Authorization header. Use: Authorization: Bearer <EXPORT_API_TOKEN>" }, { status: 401 })
-  }
-  if (!validateGatewayToken(token)) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    return NextResponse.json(
+      { error: "Server misconfiguration: EXPORT_API_TOKEN env var not set" },
+      { status: 503 },
+    )
   }
 
   // ── Parse request ───────────────────────────────────────────────────────────

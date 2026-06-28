@@ -64,6 +64,17 @@ export function validateGatewayToken(token: string): boolean {
   return safeCompare(token.trim(), expected)
 }
 
+/**
+ * Returns the server-side internal token derived from EXPORT_API_TOKEN env var.
+ * Used as the cache key for gateway operations that don't require the client
+ * to supply a token (e.g. the push route called from the browser).
+ */
+export function getInternalToken(): string | null {
+  const raw = process.env.EXPORT_API_TOKEN
+  if (!raw) return null
+  return stripQuotes(raw)
+}
+
 /** Upsert all keys for a given token */
 export function setGatewayKeys(token: string, keys: GatewayKey[]): void {
   const existing = gatewayCache.get(token)

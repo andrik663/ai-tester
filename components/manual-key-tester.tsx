@@ -2183,9 +2183,8 @@ export default function ManualKeyTester() {
   }, [selectedPreset.id, workingKeysTick])
 
   // ── Miuclaw Gateway: fetch available models from /api/v1/models ─────────────
-  // When miuclaw is selected, always reset models/chatModel first to prevent
-  // stale models from other providers bleeding into the dropdown, then fetch
-  // the live model list from the gateway.
+  // No auth header required — gateway uses server-side EXPORT_API_TOKEN.
+  // Reset models on provider change to prevent stale models from bleeding in.
   useEffect(() => {
     if (selectedPreset.id !== "miuclaw") return
 
@@ -2193,21 +2192,16 @@ export default function ManualKeyTester() {
     setWorkingModels([])
     setChatModel("")
 
-    const token = apiKey.trim()
-    if (!token) return
-
     let cancelled = false
     const fetchModels = async () => {
       try {
-        const res = await fetch("/api/v1/models", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await fetch("/api/v1/models")
         if (!res.ok || cancelled) return
         const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
         if (cancelled) return
         const models = (data.data ?? []).filter((m) => m.id !== "miuclaw/auto")
         if (models.length === 0) return // no keys synced yet — leave empty, show hint
-        setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: token, latencyMs: -1 })))
+        setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: "", latencyMs: -1 })))
         setChatModel(models[0].id)
       } catch {
         // Network error — leave empty
@@ -2217,7 +2211,7 @@ export default function ManualKeyTester() {
     fetchModels()
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPreset.id, apiKey, workingKeysTick])
+  }, [selectedPreset.id, workingKeysTick])
 
   // Get the current model based on active sub-tab
   const getCurrentModel = () => {
@@ -3193,11 +3187,9 @@ export default function ManualKeyTester() {
                     <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {selectedPreset.id === "miuclaw"
-                        ? apiKey && workingModels.length > 0
+                        ? workingModels.length > 0
                           ? "Ready — send a message to test"
-                          : apiKey
-                            ? "No models synced — go to Keys → Export API → Sync to Miuclaw Gateway"
-                            : "Paste your EXPORT_API_TOKEN to start"
+                          : "No models synced — go to Keys → Sync to Miuclaw Gateway"
                         : apiKey
                           ? "Ready — send a message to test"
                           : workingModels.length > 0
@@ -3415,8 +3407,8 @@ export default function ManualKeyTester() {
             {/* Chat input */}
             <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
 
-              {/* Inline API key input — shown when no key is set AND (no working keys exist OR it's miuclaw which needs explicit token) */}
-              {!apiKey.trim() && (workingModels.length === 0 || selectedPreset.id === "miuclaw") && (
+              {/* Inline API key input — hidden for Miuclaw (no client key needed), shown for others when no saved key exists */}
+              {selectedPreset.id !== "miuclaw" && !apiKey.trim() && workingModels.length === 0 && (
                 <div className="flex items-center gap-2 px-1 py-1 rounded-lg border border-primary/20 bg-primary/5">
                   <div className="relative flex-1 min-w-0">
                     <input
@@ -3515,7 +3507,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ────────────��─────���────────��───────────────────����───��─ */}
+        {/* ── VISION TAB ───────────�����─────���────────��───────────────────����───��─ */}
         {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             {/* Provider Header Bar */}

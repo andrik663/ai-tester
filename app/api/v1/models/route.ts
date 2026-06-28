@@ -8,22 +8,15 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { validateGatewayToken, getAllModels, getGatewayStats } from "@/lib/gateway-cache"
+import { getInternalToken, getAllModels, getGatewayStats } from "@/lib/gateway-cache"
 
 export const runtime = "nodejs"
 
-export async function GET(req: NextRequest) {
-  // ── Auth ────────────────────────────────────────────────────────────────────
-  const authHeader = req.headers.get("authorization") ?? ""
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : (req.nextUrl.searchParams.get("token") ?? "")
-
+export async function GET(_req: NextRequest) {
+  // ── Resolve internal token ──────────────────────────────────────────────────
+  const token = getInternalToken()
   if (!token) {
-    return NextResponse.json({ error: "Missing Authorization header" }, { status: 401 })
-  }
-  if (!validateGatewayToken(token)) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    return NextResponse.json({ error: "Server misconfiguration: EXPORT_API_TOKEN not set" }, { status: 503 })
   }
 
   // ── Build response ──────────────────────────────────────────────────────────
