@@ -1,18 +1,19 @@
 /**
  * POST /api/v1/gateway/push
  *
- * Called by the browser (WorkingKeysPanel) to sync raw working keys into the
- * Miuclaw Gateway cache so /api/v1/chat/completions can forward requests.
+ * Called by the browser (WorkingKeysPanel → ExportApiPanel) to sync raw working
+ * keys into the Miuclaw Gateway in-memory cache so /api/v1/chat/completions can
+ * forward requests to the correct provider automatically.
  *
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
- * Body: { keys: GatewayKeyInput[] }
+ * Auth: none required from the browser — keys are stored under the server-side
+ *       EXPORT_API_TOKEN so /api/v1/chat/completions can look them up.
  *
  * SECURITY: Raw API keys are stored in server-side memory only.
  * They are NEVER returned to any external client and NEVER logged.
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { validateGatewayToken, setGatewayKeys, GatewayKey } from "@/lib/gateway-cache"
+import { getInternalToken, setGatewayKeys, GatewayKey } from "@/lib/gateway-cache"
 
 export const runtime = "nodejs"
 
@@ -26,15 +27,13 @@ interface GatewayKeyInput {
 }
 
 export async function POST(req: NextRequest) {
-  // ── Auth ────────────────────────────────────────────────────────────────────
-  const authHeader = req.headers.get("authorization") ?? ""
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : ""
-
-  if (!token) {
-    return NextResponse.json({ error: "Missing Authorization header" }, { status: 401 })
-  }
-  if (!validateGatewayToken(token)) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+  // ── Resolve the internal cache key from env ─────────────────────────────────
+  const internalToken = getInternalToken()
+  if (!internalToken) {
+    return NextResponse.json(
+      { error: "Server misconfiguration: EXPORT_API_TOKEN env var not set" },
+      { status: 503 },
+    )
   }
 
   // ── Parse body ──────────────────────────────────────────────────────────────
@@ -67,7 +66,8 @@ export async function POST(req: NextRequest) {
     }))
     .filter((k) => k.providerId && k.apiKey && k.modelIds.length > 0)
 
-  setGatewayKeys(token, sanitized)
+  // Store under the internal server token — no client token needed
+  setGatewayKeys(internalToken, sanitized)
 
   const providerCount = new Set(sanitized.map((k) => k.providerId)).size
   const modelCount = sanitized.reduce((acc, k) => acc + k.modelIds.length, 0)
