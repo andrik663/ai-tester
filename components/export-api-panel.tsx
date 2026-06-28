@@ -59,8 +59,16 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
     setSyncing(true)
     setResult(null)
 
+    // ── Phase 1: group + deduplicate keys (client-side, no network) ──────────
+    let gatewayKeys: Array<{
+      providerId: string
+      providerName: string
+      apiKey: string
+      modelIds: string[]
+      avgLatencyMs: number
+      pushedAt: number
+    }>
     try {
-      // Group WorkingKeyRecord list by (providerId + apiKey) to deduplicate
       const grouped = new Map<string, {
         providerId: string
         providerName: string
@@ -88,7 +96,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
         }
       }
 
-      const gatewayKeys = Array.from(grouped.values()).map((g) => ({
+      gatewayKeys = Array.from(grouped.values()).map((g) => ({
         providerId: g.providerId,
         providerName: g.providerName,
         apiKey: g.apiKey,
@@ -96,14 +104,27 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
         avgLatencyMs: g.latencies.reduce((a, b) => a + b, 0) / g.latencies.length,
         pushedAt: Date.now(),
       }))
+    } catch (err) {
+      setResult({ ok: false, error: `Failed to prepare keys: ${err instanceof Error ? err.message : String(err)}` })
+      setSyncing(false)
+      return
+    }
 
+    // ── Phase 2: POST to gateway ─────────────────────────────────────────────
+    try {
       const res = await fetch("/api/v1/gateway/push", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keys: gatewayKeys }),
       })
 
-      const data = await res.json() as { ok?: boolean; synced?: number; providers?: number; models?: number; error?: string }
+      let data: { ok?: boolean; synced?: number; providers?: number; models?: number; error?: string }
+      try {
+        data = await res.json()
+      } catch {
+        setResult({ ok: false, error: `Server returned non-JSON response (status ${res.status})` })
+        return
+      }
 
       if (!res.ok) {
         setResult({ ok: false, error: data.error ?? `Server error ${res.status}` })
@@ -112,8 +133,11 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
         // Notify parent so it can refresh gateway-dependent UI (e.g. Miuclaw model dropdown)
         onSynced?.()
       }
-    } catch {
-      setResult({ ok: false, error: "Network error — check your connection" })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      // Distinguish fetch/network failure from other runtime errors
+      const isNetworkErr = msg.includes("fetch") || msg.includes("network") || msg.includes("Failed to fetch")
+      setResult({ ok: false, error: isNetworkErr ? `Network error — ${msg}` : `Unexpected error — ${msg}` })
     } finally {
       setSyncing(false)
     }
