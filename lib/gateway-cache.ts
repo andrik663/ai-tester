@@ -11,7 +11,8 @@
  *   - Only /api/v1/chat/completions reads the raw keys server-side.
  */
 
-import { pool } from "@/lib/db"
+import { pool, db } from "@/lib/db"
+import { gatewayKeys as gatewayKeysTable } from "@/lib/db/gateway-schema"
 
 export interface GatewayKey {
   providerId: string
@@ -72,23 +73,24 @@ export function getInternalToken(): string | null {
 
 async function dbLoadKeys(): Promise<GatewayKey[]> {
   try {
-    const result = await pool.query<{
-      provider_id: string
-      provider_name: string
-      api_key: string
-      model_ids: string[]
-      avg_latency_ms: number
-      pushed_at: string
-    }>(`SELECT provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at
-        FROM gateway_keys
-        ORDER BY avg_latency_ms ASC`)
-    return result.rows.map((r) => ({
-      providerId: r.provider_id,
-      providerName: r.provider_name,
-      apiKey: r.api_key,
-      modelIds: r.model_ids ?? [],
-      avgLatencyMs: r.avg_latency_ms,
-      pushedAt: Number(r.pushed_at),
+    const rows = await db
+      .select({
+        providerId: gatewayKeysTable.providerId,
+        providerName: gatewayKeysTable.providerName,
+        apiKey: gatewayKeysTable.apiKey,
+        modelIds: gatewayKeysTable.modelIds,
+        avgLatencyMs: gatewayKeysTable.avgLatencyMs,
+        pushedAt: gatewayKeysTable.pushedAt,
+      })
+      .from(gatewayKeysTable)
+      .orderBy(gatewayKeysTable.avgLatencyMs)
+    return rows.map((r) => ({
+      providerId: r.providerId,
+      providerName: r.providerName,
+      apiKey: r.apiKey,
+      modelIds: r.modelIds ?? [],
+      avgLatencyMs: r.avgLatencyMs,
+      pushedAt: Number(r.pushedAt),
     }))
   } catch {
     return []
@@ -96,19 +98,12 @@ async function dbLoadKeys(): Promise<GatewayKey[]> {
 }
 
 async function dbSaveKeys(keys: GatewayKey[]): Promise<void> {
+  // Use a raw client transaction for the DELETE, then Drizzle for INSERT so
+  // that text[] arrays are serialised correctly by drizzle-orm/pg-core.
   const client = await pool.connect()
   try {
     await client.query("BEGIN")
-    // Replace all keys atomically
     await client.query("DELETE FROM gateway_keys")
-    for (const k of keys) {
-      await client.query(
-        `INSERT INTO gateway_keys
-           (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-        [k.providerId, k.providerName, k.apiKey, k.modelIds, k.avgLatencyMs, k.pushedAt],
-      )
-    }
     await client.query("COMMIT")
   } catch (err) {
     await client.query("ROLLBACK")
@@ -116,6 +111,22 @@ async function dbSaveKeys(keys: GatewayKey[]): Promise<void> {
   } finally {
     client.release()
   }
+
+  if (keys.length === 0) return
+
+  // Drizzle handles text[] serialisation properly — avoids the pg driver bug
+  // where passing a JS array as a positional parameter inserts a plain string
+  // instead of a properly-typed PostgreSQL array.
+  await db.insert(gatewayKeysTable).values(
+    keys.map((k) => ({
+      providerId: k.providerId,
+      providerName: k.providerName,
+      apiKey: k.apiKey,
+      modelIds: k.modelIds,
+      avgLatencyMs: k.avgLatencyMs,
+      pushedAt: k.pushedAt,
+    })),
+  )
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
