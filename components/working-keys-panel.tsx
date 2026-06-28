@@ -612,16 +612,19 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick }: P
 
   if (records.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-        <span className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground/40">
-          <KeyIcon />
-        </span>
-        <div>
-          <p className="text-sm font-medium text-foreground">No saved keys yet</p>
-          <p className="text-[11px] text-muted-foreground mt-1 max-w-xs">
-            Run a batch test on any provider. Working models are automatically saved here.
-          </p>
+      <div className="flex flex-col gap-3 px-3 sm:px-4 py-3">
+        <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+          <span className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground/40">
+            <KeyIcon />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-foreground">No saved keys yet</p>
+            <p className="text-[11px] text-muted-foreground mt-1 max-w-xs">
+              Run a batch test on any provider. Working models are automatically saved here.
+            </p>
+          </div>
         </div>
+        <ExportApiPanel keys={[]} />
       </div>
     )
   }
