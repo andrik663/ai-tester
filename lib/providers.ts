@@ -1104,34 +1104,102 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
 
   // ── Marketku Router ───────────────────────────────────────────────────────
+  // Static list = full 69-model catalog as of 2026-06-28.
+  // Live fetch via modelsEndpoint (requires API key) always takes priority.
   marketku: {
     id: "marketku",
-    // Static fallback — overridden at runtime via modelsEndpoint
     models: [
+      // ── Featured / auto ──────────────────────────────────────────────────
       "mk/auto",
+      "mk/auto-thinking",
+      // ── Claude (Anthropic via Marketku) ──────────────────────────────────
       "mk/sonnet-4.5",
       "mk/sonnet-4.5-thinking",
+      "mk/sonnet-4.5-thinking-agentic",
+      // ── DeepSeek ─────────────────────────────────────────────────────────
       "mk/deepseek-3.2",
       "mk/deepseek-3.2-thinking",
+      "mk/deepseek-3.2-agentic",
+      "mk/deepseek-3.2-thinking-agentic",
+      "mk/deepseek-v3.2",
+      "mk/deepseek-v4-flash",
+      "mk/deepseek-v4-pro",
+      // ── GLM (Zhipu) ───────────────────────────────────────────────────────
       "mk/glm-5",
+      "mk/glm-5-thinking",
+      "mk/glm-5-agentic",
+      "mk/glm-5-thinking-agentic",
+      "mk/glm-5.1",
+      "mk/glm-5.2",
+      // ── MiniMax ───────────────────────────────────────────────────────────
+      "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
-      "mk/qwen3-235b-a22b",
-      "mk/qwen3-32b",
+      "mk/minimax-m2.5-thinking-agentic",
+      // ── Kimi ──────────────────────────────────────────────────────────────
+      "mk/kimi-k2.7-code",
+      // ── Qwen3-coder ───────────────────────────────────────────────────────
+      "mk/qwen3-coder-next",
+      "mk/qwen3-coder-next-thinking",
+      "mk/qwen3-coder-next-agentic",
+      "mk/qwen3-coder-next-thinking-agentic",
       "mk/qwen3-coder-plus",
       "mk/qwen3-coder-flash",
-      "mk/qwen3-max",
+      "mk/qwen3-coder-480b-a35b-instruct",
+      // ── Qwen3 ─────────────────────────────────────────────────────────────
+      "mk/qwen3-235b-a22b",
+      "mk/qwen3-235b-a22b-instruct-2507",
+      "mk/qwen3-235b-a22b-thinking-2507",
+      "mk/qwen3-next-80b-a3b-instruct",
+      "mk/qwen3-next-80b-a3b-thinking",
+      "mk/qwen3-32b",
+      "mk/qwen3-30b-a3b",
+      "mk/qwen3-30b-a3b-instruct-2507",
+      "mk/qwen3-30b-a3b-thinking-2507",
       "mk/qwen3-14b",
-      "mk/deepseek-v3.2",
+      "mk/qwen3-8b",
+      "mk/qwen3-max",
+      // ── Qwen3.5 ───────────────────────────────────────────────────────────
       "mk/qwen3.5-flash",
+      "mk/qwen3.5-27b",
+      "mk/qwen3.5-35b-a3b",
+      "mk/qwen3.5-122b-a10b",
+      "mk/qwen3.5-397b-a17b",
+      "mk/qwen3.5-plus",
+      // ── Qwen3.6 ───────────────────────────────────────────────────────────
       "mk/qwen3.6-flash",
-      "mk/qwen-plus",
-      "mk/qwen-turbo",
+      "mk/qwen3.6-27b",
+      "mk/qwen3.6-35b-a3b",
+      "mk/qwen3.6-plus",
+      // ── Qwen3.7 ───────────────────────────────────────────────────────────
+      "mk/qwen3.7-max",
+      "mk/qwen3.7-plus",
+      // ── Qwen legacy ───────────────────────────────────────────────────────
       "mk/qwen-max",
+      "mk/qwen-plus",
+      "mk/qwen-plus-latest",
+      "mk/qwen-turbo",
+      "mk/qwen-flash",
+      "mk/qwen-plus-character",
+      "mk/qwen-flash-character",
+      "mk/qwen-coder-plus",
+      "mk/qwq-plus",
+      "mk/qvq-max",
+      "mk/qwen2-7b-instruct",
+      // ── Qwen MT ───────────────────────────────────────────────────────────
+      "mk/qwen-mt-lite",
+      "mk/qwen-mt-flash",
+      "mk/qwen-mt-turbo",
+      "mk/qwen-mt-plus",
+      // ── CCAI ──────────────────────────────────────────────────────────────
+      "mk/ccai-pro",
     ],
     modelsEndpoint: "https://router.marketku.id/v1/models",
     endpoint: "https://router.marketku.id/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
+    // Run 4 models at a time — Marketku is a gateway and can handle concurrency
+    // but keep it modest to avoid rate-limit responses on large batches.
+    concurrencyLimit: 4,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
@@ -1139,24 +1207,50 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
 
   // ── OpenModel ─────────────────────────────────────────────────────────────
+  // Base URL: https://api.openmodel.app/v1  (OpenAI-compatible)
+  // API key prefix: om_*
+  // Static list used when /v1/models fetch fails (auth required).
   openmodel: {
     id: "openmodel",
     models: [
-      "deepseek-v4-flash",
-      "claude-haiku-4-5-20251001",
-      "claude-opus-4-6",
-      "kimi-k2.5",
-      "gpt-5.3-codex",
-      "glm-4.7",
+      // OpenAI
       "gpt-4o",
       "gpt-4o-mini",
+      "gpt-4.1",
+      "gpt-4.1-mini",
+      "gpt-4.1-nano",
+      "o4-mini",
+      "o3",
+      "o3-mini",
+      // Anthropic
+      "claude-opus-4-6",
+      "claude-sonnet-4-5-20251001",
+      "claude-haiku-4-5-20251001",
       "claude-3-5-sonnet-20241022",
+      "claude-3-5-haiku-20241022",
+      // Google
+      "gemini-2.5-pro",
       "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      // DeepSeek
+      "deepseek-v4-flash",
+      "deepseek-v3",
+      "deepseek-r1",
+      // Kimi / Moonshot
+      "kimi-k2.5",
+      "moonshot-v1-8k",
+      // GLM / Zhipu
+      "glm-4.7",
+      "glm-z1-flash",
+      // Qwen (via OpenModel routing)
+      "qwen-plus",
+      "qwen-turbo",
     ],
     modelsEndpoint: "https://api.openmodel.app/v1/models",
     endpoint: "https://api.openmodel.app/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 5,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
@@ -1316,8 +1410,12 @@ export async function fetchLiveModels(
       ids = cfg.parseModels(data)
     } else {
       // Default: OpenAI-style { data: [{ id }] }
-      const d = data as { data?: { id: string }[] }
-      ids = (d?.data ?? []).map((m) => m.id).filter(Boolean)
+      // Also handle { object: "list", data: [...] } and { models: [...] }
+      const d = data as { data?: { id?: string; object?: string }[]; models?: { id?: string }[] }
+      const entries = d?.data ?? d?.models ?? []
+      ids = entries
+        .map((m) => m.id)
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0 && id !== "unknown")
     }
 
     // For Dahono, also preserve free/tier metadata
