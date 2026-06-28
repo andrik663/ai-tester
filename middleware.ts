@@ -10,7 +10,9 @@ const PUBLIC_PREFIXES = [
   '/apple-icon',
   '/robots',
   '/login',
-  '/api/auth',   // /api/auth/login and /api/auth/logout
+  '/api/auth',    // /api/auth/login and /api/auth/logout
+  '/api/export',  // /api/export/working-keys + /api/export/push — own Bearer token auth
+  '/api/v1',      // Miuclaw Gateway: /api/v1/chat/completions, /api/v1/models, /api/v1/gateway — own Bearer token auth
 ]
 
 function isPublic(pathname: string): boolean {

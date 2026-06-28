@@ -49,10 +49,19 @@ function safeCompare(a: string, b: string): boolean {
   return diff === 0
 }
 
+function stripQuotes(s: string): string {
+  const t = s.trim()
+  if ((t.startsWith("'") && t.endsWith("'")) || (t.startsWith('"') && t.endsWith('"'))) {
+    return t.slice(1, -1)
+  }
+  return t
+}
+
 export function validateGatewayToken(token: string): boolean {
-  const expected = process.env.EXPORT_API_TOKEN
-  if (!expected) return false
-  return safeCompare(token.trim(), expected.trim())
+  const raw = process.env.EXPORT_API_TOKEN
+  if (!raw) return false
+  const expected = stripQuotes(raw)
+  return safeCompare(token.trim(), expected)
 }
 
 /** Upsert all keys for a given token */
