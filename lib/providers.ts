@@ -1102,6 +1102,66 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     }),
     extractReply: openaiReply,
   },
+
+  // ── Marketku Router ───────────────────────────────────────────────────────
+  marketku: {
+    id: "marketku",
+    // Static fallback — overridden at runtime via modelsEndpoint
+    models: [
+      "mk/auto",
+      "mk/sonnet-4.5",
+      "mk/sonnet-4.5-thinking",
+      "mk/deepseek-3.2",
+      "mk/deepseek-3.2-thinking",
+      "mk/glm-5",
+      "mk/minimax-m2.5",
+      "mk/qwen3-235b-a22b",
+      "mk/qwen3-32b",
+      "mk/qwen3-coder-plus",
+      "mk/qwen3-coder-flash",
+      "mk/qwen3-max",
+      "mk/qwen3-14b",
+      "mk/deepseek-v3.2",
+      "mk/qwen3.5-flash",
+      "mk/qwen3.6-flash",
+      "mk/qwen-plus",
+      "mk/qwen-turbo",
+      "mk/qwen-max",
+    ],
+    modelsEndpoint: "https://router.marketku.id/v1/models",
+    endpoint: "https://router.marketku.id/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── OpenModel ─────────────────────────────────────────────────────────────
+  openmodel: {
+    id: "openmodel",
+    models: [
+      "deepseek-v4-flash",
+      "claude-haiku-4-5-20251001",
+      "claude-opus-4-6",
+      "kimi-k2.5",
+      "gpt-5.3-codex",
+      "glm-4.7",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "claude-3-5-sonnet-20241022",
+      "gemini-2.5-flash",
+    ],
+    modelsEndpoint: "https://api.openmodel.app/v1/models",
+    endpoint: "https://api.openmodel.app/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
 }
 
 // ── PROVIDER_MODELS — derived from PROVIDER_CONFIGS (single source) ───────────
