@@ -1,21 +1,30 @@
 /**
  * POST /api/v1/gateway/push
  *
- * Called by the browser (WorkingKeysPanel → ExportApiPanel) to sync raw working
- * keys into the Miuclaw Gateway in-memory cache so /api/v1/chat/completions can
- * forward requests to the correct provider automatically.
+ * Supports two modes:
  *
- * Auth: none required from the browser — keys are stored under the server-side
- *       EXPORT_API_TOKEN so /api/v1/chat/completions can look them up.
+ * 1. Single-shot (legacy): send all keys at once. Works fine for ≤ 10 keys.
+ *    Body: { keys: GatewayKeyInput[] }
  *
- * SECURITY: Raw API keys are persisted in Neon (server-side only).
+ * 2. Chunked (recommended for many keys): send in small batches.
+ *    Body: {
+ *      keys: GatewayKeyInput[],      // this chunk
+ *      chunkIndex: number,           // 0-based index of this chunk
+ *      totalChunks: number,          // total number of chunks
+ *      allApiKeys?: string[],        // full list of api_keys in the sync (sent on last chunk)
+ *    }
+ *    On the final chunk (chunkIndex === totalChunks - 1), the server prunes
+ *    any gateway_keys row whose api_key is NOT in allApiKeys.
+ *
+ * SECURITY: Raw API keys are persisted server-side in Neon only.
  * They are NEVER returned to any external client and NEVER logged.
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getInternalToken, setGatewayKeys, GatewayKey } from "@/lib/gateway-cache"
+import { getInternalToken, upsertGatewayKeyChunk, pruneStaleGatewayKeys, GatewayKey, dbLoadKeyCount } from "@/lib/gateway-cache"
 
 export const runtime = "nodejs"
+export const maxDuration = 60
 
 interface GatewayKeyInput {
   providerId: string
@@ -26,30 +35,15 @@ interface GatewayKeyInput {
   pushedAt?: number
 }
 
-export async function POST(req: NextRequest) {
-  // ── Resolve the internal cache key from env ─────────────────────────────────
-  const internalToken = getInternalToken()
-  if (!internalToken) {
-    return NextResponse.json(
-      { error: "Server misconfiguration: EXPORT_API_TOKEN env var not set" },
-      { status: 503 },
-    )
-  }
+interface PushBody {
+  keys?: unknown[]
+  chunkIndex?: number
+  totalChunks?: number
+  allApiKeys?: string[]
+}
 
-  // ── Parse body ──────────────────────────────────────────────────────────────
-  let body: { keys?: unknown[] }
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
-  }
-
-  if (!Array.isArray(body.keys)) {
-    return NextResponse.json({ error: "keys must be an array" }, { status: 400 })
-  }
-
-  // ── Sanitize ────────────────────────────────────────────────────────────────
-  const sanitized: GatewayKey[] = (body.keys as unknown[])
+function sanitize(raw: unknown[]): GatewayKey[] {
+  return (raw as unknown[])
     .filter((k): k is GatewayKeyInput =>
       typeof k === "object" && k !== null &&
       typeof (k as GatewayKeyInput).providerId === "string" &&
@@ -65,17 +59,65 @@ export async function POST(req: NextRequest) {
       pushedAt: Number(k.pushedAt ?? Date.now()),
     }))
     .filter((k) => k.providerId && k.apiKey && k.modelIds.length > 0)
+}
 
-  // Store under the internal server token — no client token needed
-  await setGatewayKeys(internalToken, sanitized)
+export async function POST(req: NextRequest) {
+  // ── Guard: env check ────────────────────────────────────────────────────────
+  const internalToken = getInternalToken()
+  if (!internalToken) {
+    return NextResponse.json(
+      { error: "Server misconfiguration: EXPORT_API_TOKEN env var not set" },
+      { status: 503 },
+    )
+  }
 
+  // ── Parse body ──────────────────────────────────────────────────────────────
+  let body: PushBody
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+
+  if (!Array.isArray(body.keys)) {
+    return NextResponse.json({ error: "keys must be an array" }, { status: 400 })
+  }
+
+  const sanitized = sanitize(body.keys)
+
+  // ── Determine mode ──────────────────────────────────────────────────────────
+  const chunkIndex  = typeof body.chunkIndex  === "number" ? body.chunkIndex  : 0
+  const totalChunks = typeof body.totalChunks === "number" ? body.totalChunks : 1
+  const isLastChunk = chunkIndex === totalChunks - 1
+  const isChunked   = totalChunks > 1
+
+  // ── UPSERT this chunk ───────────────────────────────────────────────────────
+  await upsertGatewayKeyChunk(sanitized)
+
+  let pruned = 0
+
+  // ── On final chunk: prune stale keys ────────────────────────────────────────
+  if (isLastChunk) {
+    const allApiKeys = Array.isArray(body.allApiKeys)
+      ? body.allApiKeys.filter((k) => typeof k === "string" && k.trim().length > 0)
+      : sanitized.map((k) => k.apiKey)          // single-shot: keep only what was sent
+    pruned = await pruneStaleGatewayKeys(allApiKeys)
+  }
+
+  // ── Build response ──────────────────────────────────────────────────────────
   const providerCount = new Set(sanitized.map((k) => k.providerId)).size
-  const modelCount = sanitized.reduce((acc, k) => acc + k.modelIds.length, 0)
+  const modelCount    = sanitized.reduce((acc, k) => acc + k.modelIds.length, 0)
+  const totalInDb     = isLastChunk ? await dbLoadKeyCount() : null
 
   return NextResponse.json({
     ok: true,
-    synced: sanitized.length,
+    chunkIndex,
+    totalChunks,
+    synced:    sanitized.length,
     providers: providerCount,
-    models: modelCount,
+    models:    modelCount,
+    pruned,
+    ...(totalInDb !== null ? { totalInDb } : {}),
+    ...(isChunked ? { isLastChunk } : {}),
   })
 }
