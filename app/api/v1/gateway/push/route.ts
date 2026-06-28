@@ -43,7 +43,7 @@ interface PushBody {
 }
 
 function sanitize(raw: unknown[]): GatewayKey[] {
-  return (raw as unknown[])
+  const cleaned = (raw as unknown[])
     .filter((k): k is GatewayKeyInput =>
       typeof k === "object" && k !== null &&
       typeof (k as GatewayKeyInput).providerId === "string" &&
@@ -59,6 +59,24 @@ function sanitize(raw: unknown[]): GatewayKey[] {
       pushedAt: Number(k.pushedAt ?? Date.now()),
     }))
     .filter((k) => k.providerId && k.apiKey && k.modelIds.length > 0)
+
+  // Dedupe by (providerId, apiKey) WITHIN this chunk — merging modelIds.
+  // Postgres' ON CONFLICT DO UPDATE cannot touch the same row twice in one
+  // INSERT, so duplicate pairs in a single chunk would otherwise cause a 500.
+  const merged = new Map<string, GatewayKey>()
+  for (const k of cleaned) {
+    const mapKey = `${k.providerId}::${k.apiKey}`
+    const existing = merged.get(mapKey)
+    if (existing) {
+      const modelSet = new Set([...existing.modelIds, ...k.modelIds])
+      existing.modelIds = Array.from(modelSet)
+      existing.avgLatencyMs = Math.round((existing.avgLatencyMs + k.avgLatencyMs) / 2)
+      existing.pushedAt = Math.max(existing.pushedAt, k.pushedAt)
+    } else {
+      merged.set(mapKey, { ...k })
+    }
+  }
+  return Array.from(merged.values())
 }
 
 export async function POST(req: NextRequest) {
@@ -91,33 +109,44 @@ export async function POST(req: NextRequest) {
   const isLastChunk = chunkIndex === totalChunks - 1
   const isChunked   = totalChunks > 1
 
-  // ── UPSERT this chunk ───────────────────────────────────────────────────────
-  await upsertGatewayKeyChunk(sanitized)
+  // ── DB writes — wrapped so ANY failure returns JSON (never an HTML 500) ──────
+  try {
+    // UPSERT this chunk
+    await upsertGatewayKeyChunk(sanitized)
 
-  let pruned = 0
+    let pruned = 0
 
-  // ── On final chunk: prune stale keys ────────────────────────────────────────
-  if (isLastChunk) {
-    const allApiKeys = Array.isArray(body.allApiKeys)
-      ? body.allApiKeys.filter((k) => typeof k === "string" && k.trim().length > 0)
-      : sanitized.map((k) => k.apiKey)          // single-shot: keep only what was sent
-    pruned = await pruneStaleGatewayKeys(allApiKeys)
+    // On final chunk: prune stale keys
+    if (isLastChunk) {
+      const allApiKeys = Array.isArray(body.allApiKeys)
+        ? body.allApiKeys.filter((k) => typeof k === "string" && k.trim().length > 0)
+        : sanitized.map((k) => k.apiKey)        // single-shot: keep only what was sent
+      pruned = await pruneStaleGatewayKeys(allApiKeys)
+    }
+
+    // Build response
+    const providerCount = new Set(sanitized.map((k) => k.providerId)).size
+    const modelCount    = sanitized.reduce((acc, k) => acc + k.modelIds.length, 0)
+    const totalInDb     = isLastChunk ? await dbLoadKeyCount() : null
+
+    return NextResponse.json({
+      ok: true,
+      chunkIndex,
+      totalChunks,
+      synced:    sanitized.length,
+      providers: providerCount,
+      models:    modelCount,
+      pruned,
+      ...(totalInDb !== null ? { totalInDb } : {}),
+      ...(isChunked ? { isLastChunk } : {}),
+    })
+  } catch (err) {
+    // Surface the real DB error as JSON so the client shows a useful message
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("[v0] gateway push DB error:", message)
+    return NextResponse.json(
+      { error: `Database error while saving keys: ${message}`, chunkIndex, totalChunks },
+      { status: 500 },
+    )
   }
-
-  // ── Build response ──────────────────────────────────────────────────────────
-  const providerCount = new Set(sanitized.map((k) => k.providerId)).size
-  const modelCount    = sanitized.reduce((acc, k) => acc + k.modelIds.length, 0)
-  const totalInDb     = isLastChunk ? await dbLoadKeyCount() : null
-
-  return NextResponse.json({
-    ok: true,
-    chunkIndex,
-    totalChunks,
-    synced:    sanitized.length,
-    providers: providerCount,
-    models:    modelCount,
-    pruned,
-    ...(totalInDb !== null ? { totalInDb } : {}),
-    ...(isChunked ? { isLastChunk } : {}),
-  })
 }
