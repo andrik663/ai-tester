@@ -2205,7 +2205,12 @@ export default function ManualKeyTester() {
         const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
         if (cancelled) return
         const models = (data.data ?? []).filter((m) => m.id !== "miuclaw/auto")
-        if (models.length === 0) return // no keys synced yet — leave empty, show hint
+        if (models.length === 0) {
+          // Gateway has no keys synced — clear any stale models from previous session
+          setWorkingModels([])
+          setChatModel("")
+          return
+        }
         setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: "", latencyMs: -1 })))
         setChatModel((prev) => prev || models[0].id) // keep existing selection if any
       } catch {
