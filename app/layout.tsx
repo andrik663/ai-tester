@@ -20,23 +20,12 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'API Key Tester — Validate Any AI Key Instantly',
   description: 'Free developer tool to test and validate API keys for 40+ AI providers. Get instant status, latency, quota, rate limits, model list, and cURL inspector. Keys never stored.',
-  generator: 'v0.app',
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/icon.png', type: 'image/png' },
     ],
     apple: '/apple-icon.png',
+    shortcut: '/icon.png',
   },
 }
 
