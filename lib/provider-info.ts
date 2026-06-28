@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ─────────────────────────────────────────────────────────
+  // ── Google Gemini ───────────────────���─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ────────────────────────────��───────────────────────────────
+      // ── Qwen3.x ────────────────────────────���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -1187,7 +1187,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Cerebras ─────────────────────────────────────────────────────────────────
+  // ── Cerebras ───────────────────────────────────��─────────────────────────────
   // Already exists — overriding with extended info if missing
   // ── Chutes ───────────────────────────────────────────────────────────────────
   chutes: {
@@ -1549,6 +1549,62 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     description: "Xiaomi's AI research arm. MiMo series of reasoning models trained on math and code.",
     hq: "CN", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
     models: [ m("mimo-7b", null, null, 128, { promo: true, promoLabel: "Reasoning" }) ],
+  },
+
+  // ── Marketku Router ───────────────────────────────────────────────────────────
+  marketku: {
+    id: "marketku",
+    name: "Marketku Router",
+    website: "https://router.marketku.id",
+    pricingUrl: "https://router.marketku.id",
+    docsUrl: "https://router.marketku.id",
+    description: "Indonesian AI gateway. 69+ models via the mk/ namespace — Claude, DeepSeek, Qwen, GLM, MiniMax, and more. OpenAI-compatible endpoint.",
+    hq: "ID",
+    tier: "gateway",
+    hasFreeTier: true,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("mk/auto",                   null, null, null, { promo: true, promoLabel: "Auto-route", promoLink: "https://router.marketku.id/models" }),
+      m("mk/sonnet-4.5-thinking",    null, null, null, { promo: true, promoLabel: "Best coding" }),
+      m("mk/sonnet-4.5",             null, null, null, { promo: true, promoLabel: "Claude" }),
+      m("mk/deepseek-3.2",           null, null, null, { promo: true, promoLabel: "DeepSeek" }),
+      m("mk/deepseek-3.2-thinking",  null, null, null),
+      m("mk/glm-5",                  null, null, null, { promo: true, promoLabel: "GLM" }),
+      m("mk/minimax-m2.5",           null, null, null, { promo: true, promoLabel: "MiniMax" }),
+      m("mk/qwen3-235b-a22b",        null, null, null),
+      m("mk/qwen3-coder-plus",       null, null, null, { promo: true, promoLabel: "Coder" }),
+      m("mk/qwen3-max",              null, null, null),
+      m("mk/qwen3.5-flash",          null, null, null),
+      m("mk/qwen-plus",              null, null, null),
+    ],
+  },
+
+  // ── OpenModel ─────────────────────────────────────────────────────────────────
+  openmodel: {
+    id: "openmodel",
+    name: "OpenModel",
+    website: "https://openmodel.ai",
+    pricingUrl: "https://openmodel.ai/pricing",
+    docsUrl: "https://docs.openmodel.ai",
+    description: "Multi-model LLM gateway and ops console. One API key, access all major providers — OpenAI, Anthropic, Google, DeepSeek — at official pass-through rates.",
+    hq: "US",
+    tier: "gateway",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("deepseek-v4-flash",              0.00, 0.00, 1000, { promo: true, promoLabel: "Free now!", promoLink: "https://openmodel.ai" }),
+      m("claude-haiku-4-5-20251001",      0.95, 4.75,  200, { promo: true, promoLabel: "Popular" }),
+      m("claude-opus-4-6",                4.75,23.75, 1000),
+      m("kimi-k2.5",                      0.48, 2.40, null),
+      m("gpt-5.3-codex",                  1.23, 9.80, 1000, { promo: true, promoLabel: "GPT-5" }),
+      m("glm-4.7",                        0.57, 2.09,  128),
+      m("gpt-4o",                         2.50,10.00,  128),
+      m("gpt-4o-mini",                    0.15, 0.60,  128),
+      m("claude-3-5-sonnet-20241022",     3.00,15.00,  200),
+      m("gemini-2.5-flash",               0.30, 2.50, 1000),
+    ],
   },
 
   // ── Z.AI ──────────────────────────────────────────────────────────────────────
