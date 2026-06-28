@@ -998,9 +998,10 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
     }
   }, [entries, prompt, running, onKeysSaved])
 
-  // ── All-models: run per-key sequentially, streaming results as each key finishes ──
-  // Uses the same /api/batch-test endpoint as single-key batch — no timeout issues.
-  // /api/batch-test returns BatchModelResult (curlFull only); we adapt to ModelTestResult.
+  // ── All-models: test every model for each key, streaming one key at a time ──
+  // Sends 1 key per request to /api/multi-key-batch-all so the server runs all
+  // models concurrently for that key (fast), while the client loops over keys
+  // sequentially (no serverless timeout regardless of key count).
   const runAllModels = useCallback(async () => {
     const valid = entries.filter((e) => !e.unknown && e.provider !== "?")
     if (!valid.length || running) return
@@ -1023,13 +1024,13 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
         let keyResult: KeyAllModelsResult
         try {
-          const res = await fetch("/api/batch-test", {
+          const res = await fetch("/api/multi-key-batch-all", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              providerId: entry.provider,
-              apiKey: entry.apiKey,
               prompt: prompt.trim() || "halo",
+              // Send only this single entry — server tests all its models concurrently
+              entries: [{ provider: entry.provider, apiKey: entry.apiKey }],
             }),
           })
 
@@ -1048,47 +1049,23 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               fetchError: errMsg,
             }
           } else {
-            // /api/batch-test returns BatchModelResult — adapt to ModelTestResult shape
-            const data = await res.json() as {
-              provider: string; total: number; passed: number; failed: number;
-              results: Array<{
-                modelId: string; ok: boolean; status: number; latencyMs: number;
-                reply?: string; errorMsg?: string; curlFull?: string;
-                tokenUsage?: { prompt?: number; completion?: number; total?: number }
-              }>; durationMs: number; modelSource?: "live" | "static"
-            }
-
-            // Adapt BatchModelResult → ModelTestResult (add curlPreview from curlFull)
-            const adaptedModels: ModelTestResult[] = data.results.map((r) => ({
-              modelId: r.modelId,
-              ok: r.ok,
-              status: r.status,
-              latencyMs: r.latencyMs,
-              reply: r.reply,
-              errorMsg: r.errorMsg,
-              curlPreview: r.curlFull ? r.curlFull.slice(0, 120) + (r.curlFull.length > 120 ? "…" : "") : "",
-              curlFull: r.curlFull ?? "",
-              tokenUsage: r.tokenUsage,
-            }))
-
-            keyResult = {
+            const data = await res.json() as import("@/app/api/multi-key-batch-all/route").MultiKeyAllResponse
+            // Response contains results[0] for our single entry
+            keyResult = data.results[0] ?? {
               provider: entry.provider,
               apiKeyMasked: maskApiKey(entry.apiKey),
               label: pf.find((p) => p.id === entry.provider)?.label ?? entry.provider,
-              total: data.total,
-              passed: data.passed,
-              failed: data.failed,
-              durationMs: data.durationMs,
-              modelSource: (data.modelSource as "live" | "static") ?? "static",
-              models: adaptedModels,
+              total: 0, passed: 0, failed: 0, durationMs: 0,
+              modelSource: "static", models: [],
+              fetchError: "No result returned",
             }
 
             // Save passing models to Keys dashboard immediately
-            if (data.passed > 0) {
+            if (keyResult.passed > 0) {
               const label = pf.find((p) => p.id === entry.provider)?.label ?? entry.provider
               appendWorkingResults(
                 entry.provider, label, entry.apiKey,
-                adaptedModels.filter((m) => m.ok).map((m) => ({
+                keyResult.models.filter((m) => m.ok).map((m) => ({
                   modelId: m.modelId,
                   latencyMs: m.latencyMs,
                   tokenUsage: m.tokenUsage
