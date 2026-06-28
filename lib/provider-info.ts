@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ───────────────────�������─────────────────────────────────────
+  // ── Google Gemini ───────────────────���������─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -314,7 +314,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("command-a-translate-08-2025",     null,  null,   8, { promo: true, promoLabel: "Translate",  promoLink: "https://docs.cohere.com/v2/docs/models" }),
       m("command-r-plus-08-2024",          2.50, 10.00, 128),
       m("command-r7b-12-2024",             0.04,  0.15, 128, { promo: true, promoLabel: "Cheapest",   promoLink: "https://cohere.com/pricing", promoOriginalInputPer1M: 0.15, promoOriginalOutputPer1M: 0.60 }),
-      // ── Aya multilingual ───────────────────────────────────────────────────
+      // ── Aya multilingual ───────────────��───────────────────────────────────
       m("c4ai-aya-expanse-32b",            null,  null, 128, { promo: true, promoLabel: "23 langs",   promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
       m("c4ai-aya-vision-32b",             null,  null,  16, { promo: true, promoLabel: "Multimodal", promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
       m("tiny-aya-global",                 null,  null,   8, { promo: true, promoLabel: "70 langs" }),
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ────────────────────────��─��─���───────────────────────────────
+      // ── Qwen3.x ────────────────────────����─��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ─────────────────────────────────────────────────────��───��──
+      // ── Llama 3 ──────────────────────────────────────────────────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1187,7 +1187,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Cerebras ──────────────────────────���────��───��─────────────────────────────
+  // ── Cerebras ──────────────────────���───���────��───��─────────────────────────────
   // Already exists — overriding with extended info if missing
   // ── Chutes ───────────────────────────────────────────────────────────────────
   chutes: {
@@ -1645,6 +1645,25 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("glm-z1-flash",               0.10, 0.40,  128),
       m("qwen-plus",                  0.50, 2.00, null),
       m("qwen-turbo",                 0.05, 0.20, null),
+    ],
+  },
+
+  // ── Sakana AI — Fugu ──────────────────────────────────────────────────────────
+  sakana: {
+    id: "sakana",
+    name: "Sakana AI (Fugu)",
+    website: "https://sakana.ai/fugu/",
+    pricingUrl: "https://sakana.ai/fugu/#pricing",
+    docsUrl: "https://api.fugu.sakana.ai/docs",
+    description: "Multi-agent system delivered as one OpenAI-compatible API. Fugu dynamically orchestrates frontier models for complex coding, reasoning, and agentic tasks. Frontier-level performance without single-vendor dependency.",
+    hq: "JP",
+    tier: "frontier",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("fugu-20260615",       null, null, 128, { promo: true, promoLabel: "Multi-agent", promoLink: "https://sakana.ai/fugu/" }),
+      m("fugu-ultra-20260615",  5.00, 30.00, 272, { promo: true, promoLabel: "Max quality" }),
     ],
   },
 

@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ───────────────────────────────────────────────────────────
+      // ── MiniMax ��──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1251,6 +1251,27 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     concurrencyLimit: 5,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Sakana AI — Fugu ──────────────────────────────────────────────────────
+  // OpenAI-compatible. Base URL: https://api.fugu.sakana.ai/v1
+  // Two models: fugu-20260615 (balanced) and fugu-ultra-20260615 (max quality).
+  // fugu-ultra pricing: $5/$30 per 1M tokens input/output.
+  sakana: {
+    id: "sakana",
+    models: [
+      "fugu-20260615",
+      "fugu-ultra-20260615",
+    ],
+    modelsEndpoint: "https://api.fugu.sakana.ai/v1/models",
+    endpoint: "https://api.fugu.sakana.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 2,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
