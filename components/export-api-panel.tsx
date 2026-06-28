@@ -71,6 +71,16 @@ export default function ExportApiPanel({ keys }: Props) {
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedToken, setCopiedToken] = useState(false)
 
+  // ── Miuclaw Gateway push state ─────────────────────────────────────────────
+  const [gatewaySyncing, setGatewaySyncing] = useState(false)
+  const [gatewaySyncResult, setGatewaySyncResult] = useState<{
+    ok: boolean
+    synced?: number
+    providers?: number
+    models?: number
+    error?: string
+  } | null>(null)
+
   const handleTokenChange = useCallback((val: string) => {
     setToken(val)
     saveToken(val)
@@ -99,6 +109,66 @@ export default function ExportApiPanel({ keys }: Props) {
       setSyncing(false)
     }
   }, [token, keys, syncing])
+
+  // ── Miuclaw Gateway sync handler ───────────────────────────────────────────
+  const handleGatewaySync = useCallback(async () => {
+    if (!token.trim() || gatewaySyncing || keys.length === 0) return
+    setGatewaySyncing(true)
+    setGatewaySyncResult(null)
+    try {
+      // Group WorkingKeyRecord list by (providerId + apiKey) — each group = 1 GatewayKey
+      const grouped = new Map<string, {
+        providerId: string; providerName: string; apiKey: string;
+        modelIds: string[]; latencies: number[]
+      }>()
+      for (const rec of keys) {
+        const mapKey = `${rec.providerId}::${rec.apiKey}`
+        const existing = grouped.get(mapKey)
+        if (existing) {
+          if (!existing.modelIds.includes(rec.modelId)) {
+            existing.modelIds.push(rec.modelId)
+            existing.latencies.push(rec.latencyMs)
+          }
+        } else {
+          grouped.set(mapKey, {
+            providerId: rec.providerId,
+            providerName: rec.providerName,
+            apiKey: rec.apiKey,
+            modelIds: [rec.modelId],
+            latencies: [rec.latencyMs],
+          })
+        }
+      }
+
+      const gatewayKeys = Array.from(grouped.values()).map((g) => ({
+        providerId: g.providerId,
+        providerName: g.providerName,
+        apiKey: g.apiKey,
+        modelIds: g.modelIds,
+        avgLatencyMs: g.latencies.reduce((a, b) => a + b, 0) / g.latencies.length,
+        pushedAt: Date.now(),
+      }))
+
+      const res = await fetch("/api/v1/gateway/push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token.trim()}`,
+        },
+        body: JSON.stringify({ keys: gatewayKeys }),
+      })
+      const data = await res.json() as { ok?: boolean; synced?: number; providers?: number; models?: number; error?: string }
+      if (!res.ok) {
+        setGatewaySyncResult({ ok: false, error: data.error ?? `Server error ${res.status}` })
+      } else {
+        setGatewaySyncResult({ ok: true, synced: data.synced, providers: data.providers, models: data.models })
+      }
+    } catch {
+      setGatewaySyncResult({ ok: false, error: "Network error — check connection" })
+    } finally {
+      setGatewaySyncing(false)
+    }
+  }, [token, keys, gatewaySyncing])
 
   // Build the cURL example for the SBG side
   const origin = typeof window !== "undefined" ? window.location.origin : "https://your-app.vercel.app"
@@ -228,6 +298,55 @@ export default function ExportApiPanel({ keys }: Props) {
         <pre className="text-[9px] font-mono bg-card/60 border border-border/60 rounded-md p-2.5 text-muted-foreground overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
           {curlExample}
         </pre>
+      </div>
+
+      {/* Miuclaw Gateway Sync */}
+      <div className="flex flex-col gap-3 pt-3 border-t border-border/40">
+        <div className="flex flex-col gap-0.5">
+          <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+            Miuclaw Gateway
+          </h3>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Push raw working keys into the gateway so <span className="font-mono text-primary/80">/api/v1/chat/completions</span> can route requests to all providers automatically.
+          </p>
+        </div>
+
+        <button
+          onClick={handleGatewaySync}
+          disabled={!token.trim() || gatewaySyncing || keys.length === 0}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/18 hover:border-emerald-500/40 text-[11px] font-semibold text-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        >
+          <SyncIcon spinning={gatewaySyncing} />
+          {gatewaySyncing
+            ? "Syncing to gateway..."
+            : `Sync ${keys.length} key${keys.length !== 1 ? "s" : ""} to Miuclaw Gateway`}
+        </button>
+
+        {gatewaySyncResult && (
+          <div className={`flex items-start gap-2 px-3 py-2.5 rounded-lg border text-[10px] ${
+            gatewaySyncResult.ok
+              ? "border-emerald-500/25 bg-emerald-500/8 text-emerald-400"
+              : "border-red-500/25 bg-red-500/8 text-red-400"
+          }`}>
+            {gatewaySyncResult.ok ? <CheckIcon /> : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 flex-shrink-0 mt-0.5" aria-hidden>
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            )}
+            <span>
+              {gatewaySyncResult.ok
+                ? `Gateway ready: ${gatewaySyncResult.synced} keys, ${gatewaySyncResult.providers} providers, ${gatewaySyncResult.models} models available via /api/v1/chat/completions`
+                : gatewaySyncResult.error}
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 px-2.5 py-2 rounded-md border border-border/40 bg-secondary/20">
+          <span className="text-[9px] font-mono text-primary/70 flex-shrink-0">POST</span>
+          <span className="text-[9px] font-mono text-muted-foreground truncate">
+            {typeof window !== "undefined" ? window.location.origin : ""}/api/v1/chat/completions
+          </span>
+        </div>
       </div>
 
       {/* Filter docs */}

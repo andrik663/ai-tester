@@ -41,14 +41,24 @@ export function maskKey(key: string): string {
   return key.slice(0, 4) + "••••" + key.slice(-4)
 }
 
+/** Strip surrounding single or double quotes from env var values */
+function stripQuotes(s: string): string {
+  const t = s.trim()
+  if ((t.startsWith("'") && t.endsWith("'")) || (t.startsWith('"') && t.endsWith('"'))) {
+    return t.slice(1, -1)
+  }
+  return t
+}
+
 /**
  * Validate the bearer token against EXPORT_API_TOKEN env var.
  * Returns true if valid.
  */
 export function validateToken(token: string): boolean {
-  const expected = process.env.EXPORT_API_TOKEN
-  if (!expected) return false
-  return safeCompare(token.trim(), expected.trim())
+  const raw = process.env.EXPORT_API_TOKEN
+  if (!raw) return false
+  const expected = stripQuotes(raw)
+  return safeCompare(token.trim(), expected)
 }
 
 /** Upsert the cache for a given token (stores masked keys only) */

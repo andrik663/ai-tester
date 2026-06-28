@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ���──────────────────────────────────────────────────────────
+      // ── MiniMax ����──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1354,6 +1354,27 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     concurrencyLimit: 3,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Miuclaw Gateway ───────────────────────────────────────────────────────
+  // Self-hosted gateway at https://www.miuclaw.my.id — routes requests to all
+  // synced working keys with automatic key rotation.
+  // Auth: EXPORT_API_TOKEN (same token as the export API).
+  // Models: dynamically fetched from /api/v1/models (reflects synced keys).
+  miuclaw: {
+    id: "miuclaw",
+    models: [
+      "miuclaw/auto",
+    ],
+    modelsEndpoint: "https://www.miuclaw.my.id/api/v1/models",
+    endpoint: "https://www.miuclaw.my.id/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 10,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
