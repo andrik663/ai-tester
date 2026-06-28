@@ -256,6 +256,16 @@ export async function POST(req: NextRequest) {
   const authHeaders = cfg ? cfg.authHeader(apiKey) : { Authorization: `Bearer ${apiKey}` }
   const extraHeaders = cfg?.extraHeaders ?? { "Content-Type": "application/json" }
 
+  // Interpolate any {{API_KEY}} / {{ENDPOINT}} placeholders that come from the
+  // component's raw headerRows before merging — otherwise they override the real
+  // auth headers that were already built above.
+  const interpolatedHeaders: Record<string, string> = {}
+  for (const [k, v] of Object.entries(headers)) {
+    interpolatedHeaders[k] = v
+      .replace(/\{\{API_KEY\}\}/gi, apiKey)
+      .replace(/\{\{ENDPOINT\}\}/gi, endpoint)
+  }
+
   const { body: streamBodyRaw } = buildStreamBody(provider, messages, systemPrompt, rawBody)
   // Override model if caller specified one explicitly
   const streamBody = model
@@ -267,7 +277,7 @@ export async function POST(req: NextRequest) {
   const reqHeaders: Record<string, string> = {
     ...extraHeaders,
     ...authHeaders,
-    ...headers,
+    ...interpolatedHeaders,
     "Content-Type": "application/json",
     Accept: "text/event-stream",
   }
