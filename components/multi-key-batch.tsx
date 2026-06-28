@@ -920,6 +920,14 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
           entries: valid.map((e) => ({ provider: e.provider, apiKey: e.apiKey })),
         }),
       })
+      if (!res.ok) {
+        const errText = await res.text().catch(() => `HTTP ${res.status}`)
+        // Try to parse as JSON error first, fall back to raw text
+        let errMsg: string
+        try { errMsg = (JSON.parse(errText) as { error?: string })?.error ?? errText }
+        catch { errMsg = errText.slice(0, 200) }
+        throw new Error(errMsg)
+      }
       const data: MultiKeyTestResponse = await res.json()
       setResults(data.results)
       setSummary({ passed: data.passed, failed: data.failed, totalMs: data.totalMs })
@@ -976,6 +984,13 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
           entries: valid.map((e) => ({ provider: e.provider, apiKey: e.apiKey })),
         }),
       })
+      if (!res.ok) {
+        const errText = await res.text().catch(() => `HTTP ${res.status}`)
+        let errMsg: string
+        try { errMsg = (JSON.parse(errText) as { error?: string })?.error ?? errText }
+        catch { errMsg = errText.slice(0, 200) }
+        throw new Error(errMsg)
+      }
       const data: MultiKeyAllResponse = await res.json()
       setAllModelsResults(data.results)
       setAllModelsSummary({
@@ -1260,7 +1275,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               {/* Mode selector */}
               <div className="flex items-center gap-1 p-0.5 rounded-lg border border-border bg-secondary/30 self-start">
                 <button
-                  onClick={() => setTestMode("quick")}
+                  onClick={() => { setTestMode("quick"); setError(null) }}
                   className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
                     testMode === "quick"
                       ? "bg-background text-foreground shadow-sm border border-border"
@@ -1270,7 +1285,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                   Quick (1 model)
                 </button>
                 <button
-                  onClick={() => setTestMode("all")}
+                  onClick={() => { setTestMode("all"); setError(null) }}
                   className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 ${
                     testMode === "all"
                       ? "bg-background text-foreground shadow-sm border border-border"
