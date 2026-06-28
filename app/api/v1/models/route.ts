@@ -20,8 +20,8 @@ export async function GET(_req: NextRequest) {
   }
 
   // ── Build response ──────────────────────────────────────────────────────────
-  const models = getAllModels(token)
-  const stats = getGatewayStats(token)
+  const models = await getAllModels(token)
+  const stats = await getGatewayStats(token)
 
   const now = Math.floor(Date.now() / 1000)
 

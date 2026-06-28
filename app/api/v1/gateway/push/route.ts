@@ -8,7 +8,7 @@
  * Auth: none required from the browser — keys are stored under the server-side
  *       EXPORT_API_TOKEN so /api/v1/chat/completions can look them up.
  *
- * SECURITY: Raw API keys are stored in server-side memory only.
+ * SECURITY: Raw API keys are persisted in Neon (server-side only).
  * They are NEVER returned to any external client and NEVER logged.
  */
 
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     .filter((k) => k.providerId && k.apiKey && k.modelIds.length > 0)
 
   // Store under the internal server token — no client token needed
-  setGatewayKeys(internalToken, sanitized)
+  await setGatewayKeys(internalToken, sanitized)
 
   const providerCount = new Set(sanitized.map((k) => k.providerId)).size
   const modelCount = sanitized.reduce((acc, k) => acc + k.modelIds.length, 0)
