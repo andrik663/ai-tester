@@ -1316,8 +1316,12 @@ export async function fetchLiveModels(
       ids = cfg.parseModels(data)
     } else {
       // Default: OpenAI-style { data: [{ id }] }
-      const d = data as { data?: { id: string }[] }
-      ids = (d?.data ?? []).map((m) => m.id).filter(Boolean)
+      // Also handle { object: "list", data: [...] } and { models: [...] }
+      const d = data as { data?: { id?: string; object?: string }[]; models?: { id?: string }[] }
+      const entries = d?.data ?? d?.models ?? []
+      ids = entries
+        .map((m) => m.id)
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0 && id !== "unknown")
     }
 
     // For Dahono, also preserve free/tier metadata

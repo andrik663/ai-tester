@@ -45,7 +45,7 @@ async function probeModel(probe: Probe): Promise<{
       method: "POST",
       headers,
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(12_000),
+      signal: AbortSignal.timeout(20_000),
     })
     const latencyMs = Date.now() - start
 
@@ -81,8 +81,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ results: [] })
   }
 
+  // Filter out probes with invalid/placeholder model IDs that were saved before
+  // live model resolution was working correctly (e.g. "unknown").
+  const validProbes = probes.filter(
+    (p) => p.modelId && p.modelId.trim().length > 0 && p.modelId !== "unknown",
+  )
+
   // Cap at 50 probes per call to avoid extreme parallelism
-  const capped = probes.slice(0, 50)
+  const capped = validProbes.slice(0, 50)
 
   const results = await Promise.all(capped.map(probeModel))
   return NextResponse.json({ results })
