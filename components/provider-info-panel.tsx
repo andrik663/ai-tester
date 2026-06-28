@@ -144,7 +144,7 @@ function HQFlag({ code }: { code: string }) {
   return <span className="text-sm" aria-label={code}>{flags[code] ?? code}</span>
 }
 
-// ── Promo badge ───────────────────────────────────────────────────────────────
+// ── Promo badge ───────────────────────────────────��───────────────────────────
 const PROMO_COLOR: Record<string, string> = {
   "New":           "text-sky-400 bg-sky-400/10 border-sky-400/20",
   "Free":          "text-green-400 bg-green-400/10 border-green-400/20",
@@ -275,11 +275,17 @@ function LiveModelBadge({ providerId, apiKey }: { providerId: string; apiKey?: s
       {data.fallback && (
         <span className="text-[8px] text-yellow-400/60 bg-yellow-400/8 px-1 rounded">static</span>
       )}
-      <button onClick={refresh} disabled={loading}
-        className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-        aria-label="Refresh model count">
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={(e) => { e.stopPropagation(); refresh() }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); refresh() } }}
+        aria-label="Refresh model count"
+        aria-disabled={loading}
+        className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
+      >
         <RefreshIcon spinning={loading} />
-      </button>
+      </span>
     </div>
   )
 }

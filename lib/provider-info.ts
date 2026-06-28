@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ───────────────────���─────────────────────────────────────
+  // ── Google Gemini ───────────────────�����─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ────────────────────────────���───────────────────────────────
+      // ── Qwen3.x ──────────────────────────��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -909,7 +909,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: false,
     lastUpdated: "2026-06-23",
     models: [
-      // ── DeepSeek ───────────────────────────────────────────────────────────
+      // ��─ DeepSeek ───────────────────────────────────────────────────────────
       m("deepseek-ai/DeepSeek-V4-Pro",                      1.30, 2.60, 1024, { promo: true, promoLabel: "Flagship",  promoLink: "https://deepinfra.com/pricing" }),
       m("deepseek-ai/DeepSeek-V4-Flash",                    0.10, 0.20, 1024, { promo: true, promoLabel: "Cheapest",  promoLink: "https://deepinfra.com/pricing", promoOriginalInputPer1M: 0.27, promoOriginalOutputPer1M: 1.10 }),
       m("deepseek-ai/DeepSeek-V3.2",                        0.26, 0.38,  160),
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ────────────────────────────────────────────────────────────
+      // ── Llama 3 ─────────────────────────────────────────────────────────��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1134,7 +1134,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     website: "https://akash.network", pricingUrl: "https://console.akash.network",
     docsUrl: "https://docs.akash.network",
     description: "Decentralised cloud GPU marketplace. Runs open-source models on permissionless compute.",
-    hq: "US", tier: "budget", hasFreeTier: true, liveModels: true, lastUpdated: "2026-06-24",
+    hq: "US", tier: "budget", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
     models: [ m("meta-llama/llama-3.3-70b-instruct", 0.10, 0.20, 128, { promo: true, promoLabel: "Decentralised" }) ],
   },
 
@@ -1187,7 +1187,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Cerebras ───────────────────────────────────��─────────────────────────────
+  // ── Cerebras ───────────────────────────────��───��─────────────────────────────
   // Already exists — overriding with extended info if missing
   // ── Chutes ───────────────────────────────────────────────────────────────────
   chutes: {
@@ -1366,7 +1366,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     website: "https://moonshot.ai", pricingUrl: "https://platform.moonshot.ai/pricing",
     docsUrl: "https://platform.moonshot.ai/docs",
     description: "Chinese AI lab, makers of Kimi. Kimi K2 and K1.5 with 1M context and coding focus.",
-    hq: "CN", tier: "mid", hasFreeTier: false, liveModels: true, lastUpdated: "2026-06-24",
+    hq: "CN", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
     models: [
       m("kimi-k2.7-code", null, null, 128, { promo: true, promoLabel: "Coding" }),
       m("kimi-k2.6",      null, null, 1000, { promo: true, promoLabel: "1M ctx" }),
@@ -1613,7 +1613,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     website: "https://z.ai", pricingUrl: "https://open.bigmodel.cn/pricing",
     docsUrl: "https://open.bigmodel.cn/dev/api",
     description: "Zhipu AI's global brand. GLM-5.x family with vision, code, and long-context capabilities.",
-    hq: "CN", tier: "mid", hasFreeTier: true, liveModels: true, lastUpdated: "2026-06-24",
+    hq: "CN", tier: "mid", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
     models: [
       m("glm-5.2",       null, null, 128, { promo: true, promoLabel: "Newest" }),
       m("glm-5.1",       null, null, 128, { promo: true, promoLabel: "Flagship" }),
