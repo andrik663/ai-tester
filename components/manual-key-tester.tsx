@@ -1470,6 +1470,153 @@ const PRESETS: ProviderPreset[] = [
     color: "text-blue-300 bg-blue-300/10 border-blue-300/30",
   },
 
+  // ── Avian ─────────────────────────────────────────────────────────────────
+  {
+    id: "avian",
+    name: "Avian",
+    country: "EU",
+    endpoint: "https://api.avian.io/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "moonshotai/kimi-k2.5",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "deepseek/deepseek-v4-flash",   label: "DeepSeek V4 Flash",  tag: "DeepSeek",   ctx: "1M ctx",   in: "$0.105/Mt", out: "$0.21/Mt",  cache: "" },
+      { id: "deepseek/deepseek-v4-pro",     label: "DeepSeek V4 Pro",    tag: "DeepSeek",   ctx: "1M ctx",   in: "$1.305/Mt", out: "$2.61/Mt",  cache: "" },
+      { id: "deepseek/deepseek-v3.2",       label: "DeepSeek V3.2",      tag: "DeepSeek",   ctx: "163K ctx", in: "$0.23/Mt",  out: "$0.33/Mt",  cache: "" },
+      { id: "minimax/minimax-m2.5",         label: "MiniMax M2.5",       tag: "MiniMax",    ctx: "196K ctx", in: "$0.27/Mt",  out: "$1.08/Mt",  cache: "" },
+      { id: "z-ai/glm-5",                   label: "GLM-5",              tag: "Z-AI",       ctx: "200K ctx", in: "$0.95/Mt",  out: "$2.55/Mt",  cache: "" },
+      { id: "z-ai/glm-5.1",                 label: "GLM-5.1",            tag: "Z-AI",       ctx: "202K ctx", in: "$1.00/Mt",  out: "$3.20/Mt",  cache: "" },
+      { id: "moonshotai/kimi-k2.5",         label: "Kimi K2.5",          tag: "MoonshotAI", ctx: "262K ctx", in: "$0.45/Mt",  out: "$2.20/Mt",  cache: "" },
+      { id: "moonshotai/kimi-k2.6",         label: "Kimi K2.6",          tag: "MoonshotAI", ctx: "262K ctx", in: "$0.95/Mt",  out: "$4.00/Mt",  cache: "" },
+    ],
+    docsUrl: "https://docs.avian.io",
+    createKeyUrl: "https://avian.io",
+    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+  },
+
+  // ── Parasail ──────────────────────────────────────────────────────────────
+  {
+    id: "parasail",
+    name: "Parasail",
+    country: "US",
+    endpoint: "https://api.parasail.io/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Meta-Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "meta-llama/Meta-Llama-3.3-70B-Instruct",  label: "Llama 3.3 70B",         tag: "Meta",      ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "meta-llama/Meta-Llama-3.1-405B-Instruct", label: "Llama 3.1 405B",         tag: "Meta",      ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "meta-llama/Meta-Llama-3.1-70B-Instruct",  label: "Llama 3.1 70B",          tag: "Meta",      ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "meta-llama/Meta-Llama-3.1-8B-Instruct",   label: "Llama 3.1 8B",           tag: "Meta",      ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "Qwen/Qwen2.5-72B-Instruct",               label: "Qwen2.5 72B",            tag: "Qwen",      ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "deepseek-ai/DeepSeek-R1",                 label: "DeepSeek R1",            tag: "DeepSeek",  ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "deepseek-ai/DeepSeek-V3",                 label: "DeepSeek V3",            tag: "DeepSeek",  ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "mistralai/Mistral-7B-Instruct-v0.3",      label: "Mistral 7B v0.3",        tag: "Mistral",   ctx: "32K ctx",  in: "",         out: "",          cache: "" },
+      { id: "google/gemma-3-27b-it",                   label: "Gemma 3 27B",            tag: "Google",    ctx: "128K ctx", in: "",         out: "",          cache: "" },
+    ],
+    docsUrl: "https://docs.parasail.io",
+    createKeyUrl: "https://parasail.io",
+    color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
+  },
+
+  // ── Telnyx AI ─────────────────────────────────────────────────────────────
+  {
+    id: "telnyx",
+    name: "Telnyx AI",
+    country: "US",
+    endpoint: "https://api.telnyx.com/v2/ai/openai/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "moonshotai/Kimi-K2.6",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "moonshotai/Kimi-K2.6",                    label: "Kimi K2.6",              tag: "MoonshotAI", ctx: "262K ctx", in: "",         out: "",          cache: "" },
+      { id: "moonshotai/Kimi-K2.5",                    label: "Kimi K2.5",              tag: "MoonshotAI", ctx: "262K ctx", in: "",         out: "",          cache: "" },
+      { id: "zai-org/GLM-5.1-FP8",                     label: "GLM-5.1 FP8",            tag: "Z-AI",       ctx: "200K ctx", in: "",         out: "",          cache: "" },
+      { id: "MiniMaxAI/MiniMax-M2.7",                  label: "MiniMax M2.7",           tag: "MiniMax",    ctx: "196K ctx", in: "",         out: "",          cache: "" },
+      { id: "MiniMaxAI/MiniMax-M2.5",                  label: "MiniMax M2.5",           tag: "MiniMax",    ctx: "196K ctx", in: "",         out: "",          cache: "" },
+      { id: "meta-llama/Meta-Llama-3.1-70B-Instruct",  label: "Llama 3.1 70B",          tag: "Meta",       ctx: "128K ctx", in: "",         out: "",          cache: "" },
+      { id: "meta-llama/Meta-Llama-3.1-8B-Instruct",   label: "Llama 3.1 8B",           tag: "Meta",       ctx: "128K ctx", in: "",         out: "",          cache: "" },
+    ],
+    docsUrl: "https://developers.telnyx.com/docs/inference",
+    createKeyUrl: "https://portal.telnyx.com/#/app/api-keys",
+    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
+  },
+
+  // ── Targon (Bittensor) ────────────────────────────────────────────────────
+  {
+    id: "targon",
+    name: "Targon (Bittensor)",
+    country: "US",
+    endpoint: "https://api.targon.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "NousResearch/Hermes-3-Llama-3.1-70B",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "NousResearch/Hermes-3-Llama-3.1-70B",    label: "Hermes 3 Llama 3.1 70B", tag: "NousResearch", ctx: "128K ctx", in: "",        out: "",          cache: "" },
+      { id: "NousResearch/Meta-Llama-3.1-8B-Instruct", label: "Llama 3.1 8B Instruct",  tag: "NousResearch", ctx: "128K ctx", in: "",        out: "",          cache: "" },
+      { id: "meta-llama/Llama-3.3-70B-Instruct",       label: "Llama 3.3 70B",          tag: "Meta",         ctx: "128K ctx", in: "",        out: "",          cache: "" },
+      { id: "deepseek-ai/DeepSeek-R1",                 label: "DeepSeek R1",            tag: "DeepSeek",     ctx: "128K ctx", in: "",        out: "",          cache: "" },
+      { id: "Qwen/Qwen2.5-72B-Instruct",               label: "Qwen2.5 72B",            tag: "Qwen",         ctx: "128K ctx", in: "",        out: "",          cache: "" },
+      { id: "mistralai/Mistral-7B-Instruct-v0.3",      label: "Mistral 7B v0.3",        tag: "Mistral",      ctx: "32K ctx",  in: "",        out: "",          cache: "" },
+    ],
+    docsUrl: "https://docs.targon.com",
+    createKeyUrl: "https://app.targon.com",
+    color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
+  },
+
+  // ── Sakana AI (Fugu) ──────────────────────────────────────────────────────
+  {
+    id: "sakana",
+    name: "Sakana AI (Fugu)",
+    country: "JP",
+    endpoint: "https://api.fugu.sakana.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "fugu-20260615",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "fugu-20260615",       label: "Fugu (Balanced)",    tag: "Multi-agent", ctx: "128K ctx", in: "",       out: "",        cache: "" },
+      { id: "fugu-ultra-20260615", label: "Fugu Ultra (Max)",   tag: "Multi-agent", ctx: "272K ctx", in: "$5/Mt",  out: "$30/Mt",  cache: "" },
+    ],
+    docsUrl: "https://api.fugu.sakana.ai/docs",
+    createKeyUrl: "https://sakana.ai/fugu/",
+    color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
+  },
+
   // ── Custom ────────────────────────────────────────────────────────────────
   {
     id: "custom",
@@ -1583,6 +1730,11 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   mistral:        "mistral.ai",
   marketku:       "router.marketku.id",
   openmodel:      "openmodel.ai",
+  avian:          "avian.io",
+  parasail:       "parasail.io",
+  telnyx:         "telnyx.com",
+  targon:         "targon.com",
+  sakana:         "sakana.ai",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
