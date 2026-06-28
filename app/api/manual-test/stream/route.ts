@@ -51,6 +51,22 @@ function buildStreamBody(
   const isAnthropic = providerKey === "anthropic"
   const isGemini    = providerKey === "google"
   const isXAI       = providerKey === "xai"
+  const isCohere    = providerKey === "cohere"
+
+  if (isCohere) {
+    // Cohere v2 /chat — same body shape, just add stream: true
+    const chatMessages = systemPrompt
+      ? [{ role: "system", content: systemPrompt }, ...messages]
+      : messages
+    return {
+      body: {
+        model: base.model ?? cfg.models[0],
+        messages: chatMessages,
+        stream: true,
+      },
+      isStreamingSupported: true,
+    }
+  }
 
   if (isAnthropic) {
     const bodyMsgs = systemPrompt
@@ -126,6 +142,23 @@ function extractDeltaToken(
   const isAnthropic = providerKey === "anthropic"
   const isGemini    = providerKey === "google"
   const isXAI       = providerKey === "xai"
+  const isCohere    = providerKey === "cohere"
+
+  if (isCohere) {
+    // Cohere v2 streaming: { "type": "content-delta", "index": 0, "delta": { "type": "text_delta", "text": "hello" } }
+    // OR: { "event_type": "text-generation", "text": "hello" }   (v1 fallback)
+    try {
+      if (parsed.type === "content-delta") {
+        const delta = parsed.delta as Record<string, unknown> | undefined
+        return (delta?.text as string) ?? null
+      }
+      // v1 compatible streaming
+      if (parsed.event_type === "text-generation") {
+        return (parsed.text as string) ?? null
+      }
+    } catch { return null }
+    return null
+  }
 
   if (isAnthropic) {
     const delta = parsed.delta as Record<string, unknown> | undefined

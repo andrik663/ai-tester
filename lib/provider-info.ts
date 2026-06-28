@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ───────────────────�������─────────────────────────────────────
+  // ── Google Gemini ───────────────────�����������─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -314,7 +314,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("command-a-translate-08-2025",     null,  null,   8, { promo: true, promoLabel: "Translate",  promoLink: "https://docs.cohere.com/v2/docs/models" }),
       m("command-r-plus-08-2024",          2.50, 10.00, 128),
       m("command-r7b-12-2024",             0.04,  0.15, 128, { promo: true, promoLabel: "Cheapest",   promoLink: "https://cohere.com/pricing", promoOriginalInputPer1M: 0.15, promoOriginalOutputPer1M: 0.60 }),
-      // ── Aya multilingual ───────────────────────────────────────────────────
+      // ── Aya multilingual ───────────────��───────────────────────────────────
       m("c4ai-aya-expanse-32b",            null,  null, 128, { promo: true, promoLabel: "23 langs",   promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
       m("c4ai-aya-vision-32b",             null,  null,  16, { promo: true, promoLabel: "Multimodal", promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
       m("tiny-aya-global",                 null,  null,   8, { promo: true, promoLabel: "70 langs" }),
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ────────────────────────��─��─���───────────────────────────────
+      // ── Qwen3.x ──────────────────────���─����─��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ─────────────────────────────────────────────────────��───��──
+      // ── Llama 3 ─────────────────────────────────────────────��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1187,7 +1187,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Cerebras ──────────────────────────���────��───��─────────────────────────────
+  // ── Cerebras ────────────────���─────���───���────��───��─────────────────────────────
   // Already exists — overriding with extended info if missing
   // ── Chutes ───────────────────────────────────────────────────────────────────
   chutes: {
@@ -1648,7 +1648,124 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Z.AI ──────────────────────────────────────────────────────────────────────
+  // ── Avian ─────────────────────────────────────────────────────────────────────
+  avian: {
+    id: "avian",
+    name: "Avian",
+    website: "https://avian.io",
+    pricingUrl: "https://avian.io/pricing",
+    docsUrl: "https://docs.avian.io",
+    description: "Inference API aggregator with live pricing. Focuses on the latest frontier open-source models — DeepSeek V4, Kimi K2, GLM-5, MiniMax M2 — at competitive rates with a single API key.",
+    hq: "EU",
+    tier: "gateway",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("deepseek/deepseek-v4-flash",  0.105, 0.21,  1000, { promo: true, promoLabel: "Cheapest" }),
+      m("deepseek/deepseek-v4-pro",    1.305, 2.61,  1000),
+      m("deepseek/deepseek-v3.2",      0.23,  0.33,  163),
+      m("minimax/minimax-m2.5",        0.27,  1.08,  196),
+      m("z-ai/glm-5",                  0.95,  2.55,  200),
+      m("z-ai/glm-5.1",                1.00,  3.20,  202),
+      m("moonshotai/kimi-k2.5",        0.45,  2.20,  262, { promo: true, promoLabel: "Popular" }),
+      m("moonshotai/kimi-k2.6",        0.95,  4.00,  262),
+    ],
+  },
+
+  // ── Parasail ──────────────────────────────────────────────────────────────────
+  parasail: {
+    id: "parasail",
+    name: "Parasail",
+    website: "https://parasail.io",
+    pricingUrl: "https://parasail.io/pricing",
+    docsUrl: "https://docs.parasail.io",
+    description: "Cost-effective cloud GPU inference aggregator. Aggregates top AI hardware providers under one OpenAI-compatible API — on-demand serverless, dedicated, and batch jobs for Llama, Qwen, DeepSeek, and more.",
+    hq: "US",
+    tier: "budget",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("meta-llama/Meta-Llama-3.3-70B-Instruct",  null, null, 128, { promo: true, promoLabel: "Popular" }),
+      m("meta-llama/Meta-Llama-3.1-405B-Instruct",  null, null, 128),
+      m("meta-llama/Meta-Llama-3.1-70B-Instruct",   null, null, 128),
+      m("meta-llama/Meta-Llama-3.1-8B-Instruct",    null, null, 128),
+      m("Qwen/Qwen2.5-72B-Instruct",                null, null, 128),
+      m("deepseek-ai/DeepSeek-R1",                  null, null, 128, { promo: true, promoLabel: "Reasoning" }),
+      m("deepseek-ai/DeepSeek-V3",                  null, null, 128),
+      m("mistralai/Mistral-7B-Instruct-v0.3",       null, null, 32),
+      m("google/gemma-3-27b-it",                    null, null, 128),
+    ],
+  },
+
+  // ── Telnyx AI ─────────────────────────────────────────────────────────────────
+  telnyx: {
+    id: "telnyx",
+    name: "Telnyx AI",
+    website: "https://telnyx.com/ai",
+    pricingUrl: "https://telnyx.com/pricing/inference",
+    docsUrl: "https://developers.telnyx.com/docs/inference",
+    description: "Telecom-grade AI inference from Telnyx. OpenAI-compatible endpoint powered by a private fiber network for low latency. Supports latest frontier open models including Kimi K2, GLM-5, MiniMax M2, and Llama.",
+    hq: "US",
+    tier: "mid",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("moonshotai/Kimi-K2.6",                 null, null, 262, { promo: true, promoLabel: "Newest Kimi" }),
+      m("moonshotai/Kimi-K2.5",                 null, null, 262),
+      m("zai-org/GLM-5.1-FP8",                  null, null, 200, { promo: true, promoLabel: "GLM-5.1" }),
+      m("MiniMaxAI/MiniMax-M2.7",               null, null, 196, { promo: true, promoLabel: "MiniMax" }),
+      m("MiniMaxAI/MiniMax-M2.5",               null, null, 196),
+      m("meta-llama/Meta-Llama-3.1-70B-Instruct", null, null, 128),
+      m("meta-llama/Meta-Llama-3.1-8B-Instruct",  null, null, 128),
+    ],
+  },
+
+  // ── Targon ────────────────────────────────────────────────────────────────────
+  targon: {
+    id: "targon",
+    name: "Targon (Bittensor)",
+    website: "https://targon.com",
+    pricingUrl: "https://targon.com/models",
+    docsUrl: "https://docs.targon.com",
+    description: "Decentralized confidential AI inference marketplace on Bittensor Subnet 4. 500+ open-source models running inside Intel TDX & NVIDIA Hopper TEEs — neither the host nor provider can see your prompts.",
+    hq: "US",
+    tier: "budget",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("NousResearch/Hermes-3-Llama-3.1-70B",           null, null, 128, { promo: true, promoLabel: "Top rated" }),
+      m("NousResearch/Meta-Llama-3.1-8B-Instruct",        null, null, 128),
+      m("meta-llama/Llama-3.3-70B-Instruct",              null, null, 128),
+      m("deepseek-ai/DeepSeek-R1",                        null, null, 128, { promo: true, promoLabel: "Reasoning" }),
+      m("Qwen/Qwen2.5-72B-Instruct",                      null, null, 128),
+      m("mistralai/Mistral-7B-Instruct-v0.3",             null, null, 32),
+    ],
+  },
+
+  // ── Sakana AI — Fugu ──────────────────────────────────────────────────────────
+  sakana: {
+    id: "sakana",
+    name: "Sakana AI (Fugu)",
+    website: "https://sakana.ai/fugu/",
+    pricingUrl: "https://sakana.ai/fugu/#pricing",
+    docsUrl: "https://api.fugu.sakana.ai/docs",
+    description: "Multi-agent system delivered as one OpenAI-compatible API. Fugu dynamically orchestrates frontier models for complex coding, reasoning, and agentic tasks. Frontier-level performance without single-vendor dependency.",
+    hq: "JP",
+    tier: "frontier",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("fugu-20260615",       null, null, 128, { promo: true, promoLabel: "Multi-agent", promoLink: "https://sakana.ai/fugu/" }),
+      m("fugu-ultra-20260615",  5.00, 30.00, 272, { promo: true, promoLabel: "Max quality" }),
+    ],
+  },
+
+  // ── Z.AI ───────────────────────────────────────────────────���──────────────────
   "z-ai": {
     id: "z-ai", name: "Z.AI (Zhipu)",
     website: "https://z.ai", pricingUrl: "https://open.bigmodel.cn/pricing",

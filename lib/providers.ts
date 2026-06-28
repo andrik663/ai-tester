@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ───────────────────────────────────────────────────────────
+      // ── MiniMax ���──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1251,6 +1251,130 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     concurrencyLimit: 5,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Avian ─────────────────────────────────────────────────────────────────
+  // OpenAI-compatible. Base URL: https://api.avian.io/v1
+  // Live /v1/models returns pricing + context length. No auth needed for list.
+  avian: {
+    id: "avian",
+    models: [
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro",
+      "deepseek/deepseek-v3.2",
+      "minimax/minimax-m2.5",
+      "z-ai/glm-5",
+      "z-ai/glm-5.1",
+      "moonshotai/kimi-k2.5",
+      "moonshotai/kimi-k2.6",
+    ],
+    modelsEndpoint: "https://api.avian.io/v1/models",
+    endpoint: "https://api.avian.io/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 4,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Parasail ──────────────────────────────────────────────────────────────
+  // OpenAI-compatible serverless inference. Base URL: https://api.parasail.io/v1
+  // Aggregates GPU providers; supports Llama, Qwen, Mixtral, Gemma, etc.
+  parasail: {
+    id: "parasail",
+    models: [
+      "meta-llama/Meta-Llama-3.3-70B-Instruct",
+      "meta-llama/Meta-Llama-3.1-405B-Instruct",
+      "meta-llama/Meta-Llama-3.1-70B-Instruct",
+      "meta-llama/Meta-Llama-3.1-8B-Instruct",
+      "Qwen/Qwen2.5-72B-Instruct",
+      "Qwen/Qwen2.5-7B-Instruct",
+      "deepseek-ai/DeepSeek-R1",
+      "deepseek-ai/DeepSeek-V3",
+      "mistralai/Mistral-7B-Instruct-v0.3",
+      "google/gemma-3-27b-it",
+    ],
+    modelsEndpoint: "https://api.parasail.io/v1/models",
+    endpoint: "https://api.parasail.io/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 4,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Telnyx AI ─────────────────────────────────────────────────────────────
+  // OpenAI-compatible. Base URL: https://api.telnyx.com/v2/ai/openai
+  // Focused on open-source frontier models (Kimi, GLM, MiniMax, Llama).
+  telnyx: {
+    id: "telnyx",
+    models: [
+      "moonshotai/Kimi-K2.6",
+      "moonshotai/Kimi-K2.5",
+      "zai-org/GLM-5.1-FP8",
+      "MiniMaxAI/MiniMax-M2.7",
+      "MiniMaxAI/MiniMax-M2.5",
+      "meta-llama/Meta-Llama-3.1-70B-Instruct",
+      "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    ],
+    modelsEndpoint: "https://api.telnyx.com/v2/ai/openai/models",
+    endpoint: "https://api.telnyx.com/v2/ai/openai/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 4,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Targon (Bittensor Subnet 4) ───────────────────────────────────────────
+  // Decentralized confidential inference marketplace. 500+ models.
+  // OpenAI-compatible. Base URL: https://api.targon.com/v1
+  targon: {
+    id: "targon",
+    models: [
+      "NousResearch/Meta-Llama-3.1-8B-Instruct",
+      "NousResearch/Hermes-3-Llama-3.1-70B",
+      "meta-llama/Llama-3.3-70B-Instruct",
+      "deepseek-ai/DeepSeek-R1",
+      "Qwen/Qwen2.5-72B-Instruct",
+      "mistralai/Mistral-7B-Instruct-v0.3",
+    ],
+    modelsEndpoint: "https://api.targon.com/v1/models",
+    endpoint: "https://api.targon.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 3,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Sakana AI — Fugu ──────────────────────────────────────────────────────
+  // OpenAI-compatible. Base URL: https://api.fugu.sakana.ai/v1
+  // Two models: fugu-20260615 (balanced) and fugu-ultra-20260615 (max quality).
+  // fugu-ultra pricing: $5/$30 per 1M tokens input/output.
+  sakana: {
+    id: "sakana",
+    models: [
+      "fugu-20260615",
+      "fugu-ultra-20260615",
+    ],
+    modelsEndpoint: "https://api.fugu.sakana.ai/v1/models",
+    endpoint: "https://api.fugu.sakana.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 2,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
