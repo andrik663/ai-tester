@@ -2184,13 +2184,18 @@ export default function ManualKeyTester() {
 
   // ── Miuclaw Gateway: fetch available models from /api/v1/models ─────────────
   // No auth header required — gateway uses server-side EXPORT_API_TOKEN.
-  // Reset models on provider change to prevent stale models from bleeding in.
+  // We track the last providerId we cleared for, so we only clear on actual
+  // provider switch — not on workingKeysTick increments (post-sync refreshes).
+  const miuclawLastProvider = useRef<string>("")
   useEffect(() => {
     if (selectedPreset.id !== "miuclaw") return
 
-    // Immediately clear any stale model from a previous provider
-    setWorkingModels([])
-    setChatModel("")
+    // Only clear stale models when switching TO miuclaw from a different provider
+    if (miuclawLastProvider.current !== "miuclaw") {
+      miuclawLastProvider.current = "miuclaw"
+      setWorkingModels([])
+      setChatModel("")
+    }
 
     let cancelled = false
     const fetchModels = async () => {
@@ -2202,7 +2207,7 @@ export default function ManualKeyTester() {
         const models = (data.data ?? []).filter((m) => m.id !== "miuclaw/auto")
         if (models.length === 0) return // no keys synced yet — leave empty, show hint
         setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: "", latencyMs: -1 })))
-        setChatModel(models[0].id)
+        setChatModel((prev) => prev || models[0].id) // keep existing selection if any
       } catch {
         // Network error — leave empty
       }
@@ -3145,7 +3150,7 @@ export default function ManualKeyTester() {
                         </option>
                       ))
                     ) : (
-                      <option value="" disabled>Sync keys first (Keys → Export API)</option>
+                      <option value="" disabled>Sync keys first (Keys → Gateway)</option>
                     )
                   ) : (
                     <>
@@ -4147,6 +4152,7 @@ export default function ManualKeyTester() {
                       handleApiKeyChange(key)
                       setConfigOpen(true)
                     }}
+                    onGatewaySync={() => setWorkingKeysTick((t) => t + 1)}
                   />
                 </div>
               )}

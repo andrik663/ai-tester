@@ -5,6 +5,8 @@ import { type WorkingKeyRecord } from "@/lib/working-keys-store"
 
 interface Props {
   keys: WorkingKeyRecord[]
+  /** Called after a successful sync so the parent can refresh gateway-dependent state */
+  onSynced?: () => void
 }
 
 function SyncIcon({ spinning }: { spinning?: boolean }) {
@@ -48,12 +50,12 @@ interface SyncResult {
   error?: string
 }
 
-export default function ExportApiPanel({ keys }: Props) {
+export default function ExportApiPanel({ keys, onSynced }: Props) {
   const [syncing, setSyncing] = useState(false)
   const [result, setResult] = useState<SyncResult | null>(null)
 
   const handleSync = useCallback(async () => {
-    if (syncing || keys.length === 0) return
+    if (syncing) return
     setSyncing(true)
     setResult(null)
 
@@ -107,13 +109,15 @@ export default function ExportApiPanel({ keys }: Props) {
         setResult({ ok: false, error: data.error ?? `Server error ${res.status}` })
       } else {
         setResult({ ok: true, synced: data.synced, providers: data.providers, models: data.models })
+        // Notify parent so it can refresh gateway-dependent UI (e.g. Miuclaw model dropdown)
+        onSynced?.()
       }
     } catch {
       setResult({ ok: false, error: "Network error — check your connection" })
     } finally {
       setSyncing(false)
     }
-  }, [keys, syncing])
+  }, [keys, syncing, onSynced])
 
   const origin = typeof window !== "undefined" ? window.location.origin : ""
   const endpoint = `${origin}/api/v1/chat/completions`
@@ -142,15 +146,15 @@ export default function ExportApiPanel({ keys }: Props) {
       {/* Sync button */}
       <button
         onClick={handleSync}
-        disabled={syncing || keys.length === 0}
+        disabled={syncing}
         className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-md bg-primary/10 border border-primary/25 hover:bg-primary/18 hover:border-primary/40 text-[11px] font-semibold text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
       >
         <SyncIcon spinning={syncing} />
         {syncing
           ? "Syncing..."
-          : keys.length === 0
-            ? "No saved keys to sync"
-            : `Sync ${keys.length} key${keys.length !== 1 ? "s" : ""} to Gateway`}
+          : keys.length > 0
+            ? `Sync ${keys.length} key${keys.length !== 1 ? "s" : ""} to Gateway`
+            : "Sync to Gateway"}
       </button>
 
       {/* Result */}

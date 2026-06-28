@@ -537,9 +537,11 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
 interface Props {
   onUseKey?: (key: string, providerId: string) => void
   refreshTick?: number
+  /** Called after a successful gateway sync so the parent can refresh Miuclaw model list */
+  onGatewaySync?: () => void
 }
 
-export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick }: Props) {
+export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onGatewaySync }: Props) {
   const [records, setRecords]               = useState<WorkingKeyRecord[]>([])
   const [filterProvider, setFilterProvider] = useState<string>("all")
   const [filterCap, setFilterCap]           = useState<CapabilityTag | "all">("all")
@@ -624,7 +626,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick }: P
             </p>
           </div>
         </div>
-        <ExportApiPanel keys={[]} />
+        <ExportApiPanel keys={[]} onSynced={onGatewaySync} />
       </div>
     )
   }
@@ -750,7 +752,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick }: P
         onSessionToken={setSessionToken}
       />
 
-      <ExportApiPanel keys={records} />
+      <ExportApiPanel keys={records} onSynced={onGatewaySync} />
     </div>
   )
 }
