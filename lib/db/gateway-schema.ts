@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, bigint, timestamp } from "drizzle-orm/pg-core"
+import { pgTable, serial, text, integer, bigint, timestamp, unique } from "drizzle-orm/pg-core"
 
 export const gatewayKeys = pgTable("gateway_keys", {
   id: serial("id").primaryKey(),
@@ -10,4 +10,6 @@ export const gatewayKeys = pgTable("gateway_keys", {
   pushedAt: bigint("pushed_at", { mode: "number" }).notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-})
+}, (t) => ({
+  providerKeyUniq: unique("gateway_keys_provider_key_unique").on(t.providerId, t.apiKey),
+}))

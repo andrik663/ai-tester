@@ -11,8 +11,9 @@
  *   - Only /api/v1/chat/completions reads the raw keys server-side.
  */
 
-import { pool, db } from "@/lib/db"
+import { db } from "@/lib/db"
 import { gatewayKeys as gatewayKeysTable } from "@/lib/db/gateway-schema"
+import { sql, notInArray } from "drizzle-orm"
 
 export interface GatewayKey {
   providerId: string
@@ -71,6 +72,15 @@ export function getInternalToken(): string | null {
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
+export async function dbLoadKeyCount(): Promise<number> {
+  try {
+    const rows = await db.select({ id: gatewayKeysTable.id }).from(gatewayKeysTable)
+    return rows.length
+  } catch {
+    return 0
+  }
+}
+
 async function dbLoadKeys(): Promise<GatewayKey[]> {
   try {
     const rows = await db
@@ -97,36 +107,59 @@ async function dbLoadKeys(): Promise<GatewayKey[]> {
   }
 }
 
-async function dbSaveKeys(keys: GatewayKey[]): Promise<void> {
-  // Use a raw client transaction for the DELETE, then Drizzle for INSERT so
-  // that text[] arrays are serialised correctly by drizzle-orm/pg-core.
-  const client = await pool.connect()
-  try {
-    await client.query("BEGIN")
-    await client.query("DELETE FROM gateway_keys")
-    await client.query("COMMIT")
-  } catch (err) {
-    await client.query("ROLLBACK")
-    throw err
-  } finally {
-    client.release()
-  }
-
+/**
+ * UPSERT a chunk of keys using ON CONFLICT (provider_id, api_key) DO UPDATE.
+ * Safe to call in parallel chunks — no DELETE, no transaction needed per chunk.
+ * Drizzle handles text[] serialization correctly.
+ */
+export async function upsertGatewayKeyChunk(keys: GatewayKey[]): Promise<void> {
   if (keys.length === 0) return
+  await db
+    .insert(gatewayKeysTable)
+    .values(
+      keys.map((k) => ({
+        providerId: k.providerId,
+        providerName: k.providerName,
+        apiKey: k.apiKey,
+        modelIds: k.modelIds,
+        avgLatencyMs: k.avgLatencyMs,
+        pushedAt: k.pushedAt,
+      })),
+    )
+    .onConflictDoUpdate({
+      target: [gatewayKeysTable.providerId, gatewayKeysTable.apiKey],
+      set: {
+        providerName: sql`excluded.provider_name`,
+        modelIds: sql`excluded.model_ids`,
+        avgLatencyMs: sql`excluded.avg_latency_ms`,
+        pushedAt: sql`excluded.pushed_at`,
+        updatedAt: sql`now()`,
+      },
+    })
+  // Bust in-memory cache so next read picks up fresh DB state
+  memCache = null
+  memCacheAt = 0
+}
 
-  // Drizzle handles text[] serialisation properly — avoids the pg driver bug
-  // where passing a JS array as a positional parameter inserts a plain string
-  // instead of a properly-typed PostgreSQL array.
-  await db.insert(gatewayKeysTable).values(
-    keys.map((k) => ({
-      providerId: k.providerId,
-      providerName: k.providerName,
-      apiKey: k.apiKey,
-      modelIds: k.modelIds,
-      avgLatencyMs: k.avgLatencyMs,
-      pushedAt: k.pushedAt,
-    })),
-  )
+/**
+ * After all chunks are sent, delete rows whose api_key is NOT in the
+ * current full set — this removes keys that were revoked or re-tested away.
+ */
+export async function pruneStaleGatewayKeys(currentApiKeys: string[]): Promise<number> {
+  if (currentApiKeys.length === 0) {
+    // Nothing to keep — wipe everything
+    const deleted = await db.delete(gatewayKeysTable).returning({ id: gatewayKeysTable.id })
+    memCache = null
+    memCacheAt = 0
+    return deleted.length
+  }
+  const deleted = await db
+    .delete(gatewayKeysTable)
+    .where(notInArray(gatewayKeysTable.apiKey, currentApiKeys))
+    .returning({ id: gatewayKeysTable.id })
+  memCache = null
+  memCacheAt = 0
+  return deleted.length
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -148,28 +181,25 @@ async function getStore(): Promise<GatewayStore> {
   return store
 }
 
-/** Upsert all keys — writes to DB and updates memory cache immediately */
+/**
+ * Replace all keys atomically (single-call path, used by legacy callers).
+ * For large key sets prefer the chunked path: upsertGatewayKeyChunk + pruneStaleGatewayKeys.
+ */
 export async function setGatewayKeys(_token: string, keys: GatewayKey[]): Promise<void> {
-  await dbSaveKeys(keys)
-  memCache = {
-    keys,
-    lastPushedAt: Date.now(),
-    pushCount: (memCache?.pushCount ?? 0) + 1,
-  }
-  memCacheAt = Date.now()
+  await upsertGatewayKeyChunk(keys)
+  const currentApiKeys = keys.map((k) => k.apiKey)
+  await pruneStaleGatewayKeys(currentApiKeys)
   rrIndex.clear()
 }
 
 /** Synchronous wrapper used by routes that already have keys loaded */
 export function setGatewayKeysSync(_token: string, keys: GatewayKey[]): void {
-  // Fire-and-forget DB write; update memory immediately
-  dbSaveKeys(keys).catch(() => {/* ignore — mem cache is still updated */})
-  memCache = {
-    keys,
-    lastPushedAt: Date.now(),
-    pushCount: (memCache?.pushCount ?? 0) + 1,
-  }
-  memCacheAt = Date.now()
+  // Fire-and-forget; bust cache immediately
+  upsertGatewayKeyChunk(keys)
+    .then(() => pruneStaleGatewayKeys(keys.map((k) => k.apiKey)))
+    .catch(() => { /* ignore — cache already busted */ })
+  memCache = null
+  memCacheAt = 0
   rrIndex.clear()
 }
 
