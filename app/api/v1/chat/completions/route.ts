@@ -82,12 +82,7 @@ function resolveProvider(token: string, modelId: string): GatewayKey | null {
     }
   }
 
-  // 3. Last resort: pick any key with lowest latency
-  if (store.keys.length > 0) {
-    const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
-    return sorted[0]
-  }
-
+  // 3. No matching provider found — return null so the caller can give a clear error
   return null
 }
 
@@ -97,13 +92,25 @@ function resolveProvider(token: string, modelId: string): GatewayKey | null {
  * For Anthropic: reformat to Anthropic Messages API format.
  * For Google: reformat to Gemini generateContent format.
  */
+/**
+ * Strip provider-prefix from model ID if present (e.g. "dahono/deepseek-v3.2" → "deepseek-v3.2").
+ * Some providers store model IDs with their own prefix which must be removed when forwarding.
+ */
+function stripProviderPrefix(modelId: string, providerId: string): string {
+  const prefix = `${providerId}/`
+  return modelId.startsWith(prefix) ? modelId.slice(prefix.length) : modelId
+}
+
 function buildForwardBody(
   providerId: string,
   body: ChatRequest,
 ): Record<string, unknown> {
+  // Strip provider prefix from model before forwarding (e.g. "dahono/deepseek-v3.2" → "deepseek-v3.2")
+  const model = stripProviderPrefix(body.model, providerId)
+
   if (providerId === "anthropic") {
     return {
-      model: body.model,
+      model,
       max_tokens: body.max_tokens ?? 1024,
       messages: body.messages,
       stream: body.stream ?? false,
@@ -125,7 +132,7 @@ function buildForwardBody(
 
   // OpenAI-compatible (default for all other providers)
   return {
-    model: body.model,
+    model,
     messages: body.messages,
     max_tokens: body.max_tokens ?? 1024,
     temperature: body.temperature,

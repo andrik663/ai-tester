@@ -2183,17 +2183,18 @@ export default function ManualKeyTester() {
   }, [selectedPreset.id, workingKeysTick])
 
   // ── Miuclaw Gateway: fetch available models from /api/v1/models ─────────────
-  // When miuclaw is selected and a token is present, poll the gateway for all
-  // synced models and populate the model dropdown dynamically.
+  // When miuclaw is selected, always reset models/chatModel first to prevent
+  // stale models from other providers bleeding into the dropdown, then fetch
+  // the live model list from the gateway.
   useEffect(() => {
     if (selectedPreset.id !== "miuclaw") return
+
+    // Immediately clear any stale model from a previous provider
+    setWorkingModels([])
+    setChatModel("")
+
     const token = apiKey.trim()
-    if (!token) {
-      // No token yet — show only the static "Auto" option
-      setWorkingModels([{ modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }])
-      setChatModel("miuclaw/auto")
-      return
-    }
+    if (!token) return
 
     let cancelled = false
     const fetchModels = async () => {
@@ -2204,24 +2205,12 @@ export default function ManualKeyTester() {
         if (!res.ok || cancelled) return
         const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
         if (cancelled) return
-        const models = data.data ?? []
-        if (models.length === 0) {
-          // Gateway empty — show auto only
-          setWorkingModels([{ modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }])
-          setChatModel((prev) => prev || "miuclaw/auto")
-          return
-        }
-        // Always keep "miuclaw/auto" as first option, then add all gateway models
-        const autoEntry = { modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }
-        const gatewayModels = models
-          .filter((m) => m.id !== "miuclaw/auto")
-          .map((m) => ({ modelId: m.id, apiKey: token, latencyMs: 0 }))
-        setWorkingModels([autoEntry, ...gatewayModels])
-        setChatModel((prev) => prev || "miuclaw/auto")
+        const models = (data.data ?? []).filter((m) => m.id !== "miuclaw/auto")
+        if (models.length === 0) return // no keys synced yet — leave empty, show hint
+        setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: token, latencyMs: -1 })))
+        setChatModel(models[0].id)
       } catch {
-        // Network error — keep auto
-        setWorkingModels([{ modelId: "miuclaw/auto", apiKey: token, latencyMs: 0 }])
-        setChatModel((prev) => prev || "miuclaw/auto")
+        // Network error — leave empty
       }
     }
 
@@ -3153,26 +3142,41 @@ export default function ManualKeyTester() {
                   }}
                   className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer flex-1 min-w-0 truncate"
                 >
-                  {workingModels.length > 0 && (
-                    <optgroup label={`Saved working (${workingModels.length})`}>
-                      {workingModels.map((m) => (
+                  {selectedPreset.id === "miuclaw" ? (
+                    // Miuclaw: show gateway models with clean names — no latency suffix
+                    workingModels.length > 0 ? (
+                      workingModels.map((m) => (
                         <option key={m.modelId} value={m.modelId}>
-                          {m.modelId} · {m.latencyMs}ms
+                          {m.modelId}
                         </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {selectedPreset.models && selectedPreset.models.length > 0 && (
-                    <optgroup label="All models">
-                      {selectedPreset.models.map((m) => (
-                        <option key={m.id} value={m.id}>{m.label}</option>
-                      ))}
-                    </optgroup>
+                      ))
+                    ) : (
+                      <option value="" disabled>Sync keys first (Keys → Export API)</option>
+                    )
+                  ) : (
+                    <>
+                      {workingModels.length > 0 && (
+                        <optgroup label={`Saved working (${workingModels.length})`}>
+                          {workingModels.map((m) => (
+                            <option key={m.modelId} value={m.modelId}>
+                              {m.modelId} · {m.latencyMs}ms
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {selectedPreset.models && selectedPreset.models.length > 0 && (
+                        <optgroup label="All models">
+                          {selectedPreset.models.map((m) => (
+                            <option key={m.id} value={m.id}>{m.label}</option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </>
                   )}
                 </select>
                 {workingModels.length > 0 && (
                   <span className="text-[9px] text-primary/60 border border-primary/20 bg-primary/8 rounded px-1 py-0.5 flex-shrink-0 whitespace-nowrap">
-                    {workingModels.length} saved
+                    {workingModels.length} {selectedPreset.id === "miuclaw" ? "models" : "saved"}
                   </span>
                 )}
               </div>
@@ -3188,7 +3192,18 @@ export default function ManualKeyTester() {
                   <div>
                     <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {apiKey ? "Ready — send a message to test" : (workingModels.length > 0 && selectedPreset.id !== "miuclaw") ? "Loading saved key..." : "Paste your API key below to start"}
+                      {selectedPreset.id === "miuclaw"
+                        ? apiKey && workingModels.length > 0
+                          ? "Ready — send a message to test"
+                          : apiKey
+                            ? "No models synced — go to Keys → Export API → Sync to Miuclaw Gateway"
+                            : "Paste your EXPORT_API_TOKEN to start"
+                        : apiKey
+                          ? "Ready — send a message to test"
+                          : workingModels.length > 0
+                            ? "Loading saved key..."
+                            : "Paste your API key below to start"
+                      }
                     </p>
                   </div>
                   {apiKey && (
