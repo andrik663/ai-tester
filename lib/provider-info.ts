@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ───────────────────�����─────────────────────────────────────
+  // ── Google Gemini ───────────────────�������─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ──────────────────────────��─���───────────────────────────────
+      // ── Qwen3.x ────────────────────────��─��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ─────────────────────────────────────────────────────────��──
+      // ── Llama 3 ─────────────────────────────────────────────────────��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1187,7 +1187,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Cerebras ───────────────────────────────��───��─────────────────────────────
+  // ── Cerebras ──────────────────────────���────��───��─────────────────────────────
   // Already exists — overriding with extended info if missing
   // ── Chutes ───────────────────────────────────────────────────────────────────
   chutes: {
@@ -1565,18 +1565,46 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-28",
     models: [
-      m("mk/auto",                   null, null, null, { promo: true, promoLabel: "Auto-route", promoLink: "https://router.marketku.id/models" }),
-      m("mk/sonnet-4.5-thinking",    null, null, null, { promo: true, promoLabel: "Best coding" }),
-      m("mk/sonnet-4.5",             null, null, null, { promo: true, promoLabel: "Claude" }),
-      m("mk/deepseek-3.2",           null, null, null, { promo: true, promoLabel: "DeepSeek" }),
-      m("mk/deepseek-3.2-thinking",  null, null, null),
-      m("mk/glm-5",                  null, null, null, { promo: true, promoLabel: "GLM" }),
-      m("mk/minimax-m2.5",           null, null, null, { promo: true, promoLabel: "MiniMax" }),
-      m("mk/qwen3-235b-a22b",        null, null, null),
-      m("mk/qwen3-coder-plus",       null, null, null, { promo: true, promoLabel: "Coder" }),
-      m("mk/qwen3-max",              null, null, null),
-      m("mk/qwen3.5-flash",          null, null, null),
-      m("mk/qwen-plus",              null, null, null),
+      m("mk/auto",                         null, null, null, { promo: true, promoLabel: "Auto-route", promoLink: "https://router.marketku.id/models" }),
+      m("mk/auto-thinking",                null, null, null),
+      m("mk/sonnet-4.5-thinking",          null, null, null, { promo: true, promoLabel: "Best coding" }),
+      m("mk/sonnet-4.5",                   null, null, null, { promo: true, promoLabel: "Claude" }),
+      m("mk/sonnet-4.5-thinking-agentic",  null, null, null),
+      m("mk/deepseek-3.2",                 null, null, null, { promo: true, promoLabel: "DeepSeek" }),
+      m("mk/deepseek-3.2-thinking",        null, null, null),
+      m("mk/deepseek-3.2-agentic",         null, null, null),
+      m("mk/deepseek-3.2-thinking-agentic",null, null, null),
+      m("mk/deepseek-v3.2",                null, null, null),
+      m("mk/deepseek-v4-flash",            null, null, null),
+      m("mk/deepseek-v4-pro",              null, null, null),
+      m("mk/glm-5",                        null, null, null, { promo: true, promoLabel: "GLM" }),
+      m("mk/glm-5-thinking",               null, null, null),
+      m("mk/glm-5-agentic",                null, null, null),
+      m("mk/glm-5-thinking-agentic",       null, null, null),
+      m("mk/glm-5.1",                      null, null, null),
+      m("mk/glm-5.2",                      null, null, null),
+      m("mk/minimax-m2.5",                 null, null, null, { promo: true, promoLabel: "MiniMax" }),
+      m("mk/minimax-m2.1-agentic",         null, null, null),
+      m("mk/minimax-m2.5-thinking-agentic",null, null, null),
+      m("mk/kimi-k2.7-code",               null, null, null),
+      m("mk/qwen3-coder-next",             null, null, null, { promo: true, promoLabel: "Coder" }),
+      m("mk/qwen3-coder-next-thinking",    null, null, null),
+      m("mk/qwen3-coder-plus",             null, null, null),
+      m("mk/qwen3-coder-flash",            null, null, null),
+      m("mk/qwen3-235b-a22b",              null, null, null),
+      m("mk/qwen3-max",                    null, null, null),
+      m("mk/qwen3-32b",                    null, null, null),
+      m("mk/qwen3-14b",                    null, null, null),
+      m("mk/qwen3.5-flash",                null, null, null),
+      m("mk/qwen3.6-flash",                null, null, null),
+      m("mk/qwen3.6-plus",                 null, null, null),
+      m("mk/qwen3.7-max",                  null, null, null),
+      m("mk/qwen-max",                     null, null, null),
+      m("mk/qwen-plus",                    null, null, null),
+      m("mk/qwen-turbo",                   null, null, null),
+      m("mk/qwen-flash",                   null, null, null),
+      m("mk/qwq-plus",                     null, null, null),
+      m("mk/ccai-pro",                     null, null, null),
     ],
   },
 
@@ -1594,16 +1622,29 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-28",
     models: [
-      m("deepseek-v4-flash",              0.00, 0.00, 1000, { promo: true, promoLabel: "Free now!", promoLink: "https://openmodel.ai" }),
-      m("claude-haiku-4-5-20251001",      0.95, 4.75,  200, { promo: true, promoLabel: "Popular" }),
-      m("claude-opus-4-6",                4.75,23.75, 1000),
-      m("kimi-k2.5",                      0.48, 2.40, null),
-      m("gpt-5.3-codex",                  1.23, 9.80, 1000, { promo: true, promoLabel: "GPT-5" }),
-      m("glm-4.7",                        0.57, 2.09,  128),
-      m("gpt-4o",                         2.50,10.00,  128),
-      m("gpt-4o-mini",                    0.15, 0.60,  128),
-      m("claude-3-5-sonnet-20241022",     3.00,15.00,  200),
-      m("gemini-2.5-flash",               0.30, 2.50, 1000),
+      m("deepseek-v4-flash",          0.00, 0.00, 1000, { promo: true, promoLabel: "Free now!", promoLink: "https://openmodel.ai" }),
+      m("gpt-4o",                     2.50,10.00,  128),
+      m("gpt-4o-mini",                0.15, 0.60,  128),
+      m("gpt-4.1",                    2.00, 8.00,  128, { promo: true, promoLabel: "GPT-4.1" }),
+      m("gpt-4.1-mini",               0.40, 1.60,  128),
+      m("gpt-4.1-nano",               0.10, 0.40,  128),
+      m("o4-mini",                    1.10, 4.40,  128),
+      m("o3",                        10.00,40.00,  128),
+      m("claude-opus-4-6",            4.75,23.75, 1000),
+      m("claude-sonnet-4-5-20251001", 3.00,15.00,  200, { promo: true, promoLabel: "Popular" }),
+      m("claude-haiku-4-5-20251001",  0.95, 4.75,  200),
+      m("claude-3-5-sonnet-20241022", 3.00,15.00,  200),
+      m("claude-3-5-haiku-20241022",  0.80, 4.00,  200),
+      m("gemini-2.5-pro",             1.25,10.00, 1000),
+      m("gemini-2.5-flash",           0.30, 2.50, 1000),
+      m("gemini-2.0-flash",           0.10, 0.40, 1000),
+      m("deepseek-v3",                0.27, 1.10, null),
+      m("deepseek-r1",                0.55, 2.19, null),
+      m("kimi-k2.5",                  0.48, 2.40, null),
+      m("glm-4.7",                    0.57, 2.09,  128),
+      m("glm-z1-flash",               0.10, 0.40,  128),
+      m("qwen-plus",                  0.50, 2.00, null),
+      m("qwen-turbo",                 0.05, 0.20, null),
     ],
   },
 
