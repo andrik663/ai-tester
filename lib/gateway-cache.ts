@@ -147,8 +147,8 @@ export async function upsertGatewayKeyChunk(keys: GatewayKey[]): Promise<void> {
           k.providerId,
           k.providerName,
           k.apiKey,
-          toPgArray(k.modelIds),   // single string param, pg casts to text[]
-          k.avgLatencyMs,
+          toPgArray(k.modelIds),        // single string param, pg casts to text[]
+          Math.round(k.avgLatencyMs),  // column is INTEGER — round float averages
           k.pushedAt,
         ],
       )
