@@ -75,6 +75,8 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "targon",    label: "Targon (Bittensor)",     country: "US", flag: "🇺🇸", example: "targon:YOUR_KEY",         keyHint: "API key" },
   { id: "sakana",    label: "Sakana AI (Fugu)",       country: "JP", flag: "🇯🇵", example: "sakana:YOUR_KEY",          keyHint: "API key" },
   { id: "miuclaw",   label: "Miuclaw Gateway",        country: "ID", flag: "🇮🇩", example: "miuclaw:EXPORT_API_TOKEN",  keyHint: "EXPORT_API_TOKEN" },
+  { id: "conduit",   label: "Conduit",                country: "US", flag: "🇺🇸", example: "conduit:YOUR_KEY",          keyHint: "API key" },
+  { id: "zenmux",    label: "ZenMux",                 country: "US", flag: "🇺🇸", example: "zenmux:YOUR_KEY",           keyHint: "API key" },
 ]
 
 const KNOWN_PROVIDERS = PROVIDER_FORMATS.map((p) => p.id)

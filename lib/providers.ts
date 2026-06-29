@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ����──────────────────────────────────────────────────────────
+      // ── MiniMax ������──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1375,6 +1375,81 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     concurrencyLimit: 10,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Conduit Gateway ───────────────────────────────────────────────────────
+  // "One key, every model" — flat $20/mo unlimited plan. OpenAI-compatible.
+  // Base URL: https://conduit.ozdoev.net/v1  Auth: Bearer token.
+  // Live /v1/models returns full catalogue. Auth via Telegram, no password.
+  conduit: {
+    id: "conduit",
+    models: [
+      "gpt-5",
+      "gpt-5-mini",
+      "gpt-4o",
+      "gpt-4.1",
+      "o4",
+      "claude-opus-4-8",
+      "claude-sonnet-4-6",
+      "claude-haiku-4-5",
+      "gemini-3-pro",
+      "gemini-2.5-pro",
+      "gemini-2.5-flash",
+      "grok-4",
+      "grok-3",
+      "grok-3-mini",
+      "deepseek-v4-flash",
+      "deepseek-v3.2",
+      "deepseek-r1",
+      "llama-4-maverick",
+      "llama-4-scout",
+      "llama-3.3-70b",
+      "qwen3-coder",
+      "mistral-large-3",
+      "codestral",
+    ],
+    modelsEndpoint: "https://conduit.ozdoev.net/v1/models",
+    endpoint: "https://conduit.ozdoev.net/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 5,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── ZenMux Gateway ────────────────────────────────────────────────────────
+  // Unified API aggregator — 200+ LLM models with intelligent routing and
+  // AI Model Insurance. OpenAI-compatible. Base URL: https://zenmux.ai/api/v1
+  // Auth: Bearer token. Live /v1/models endpoint returns full model catalog.
+  zenmux: {
+    id: "zenmux",
+    models: [
+      "anthropic/claude-opus-4-5",
+      "anthropic/claude-sonnet-4-5",
+      "anthropic/claude-haiku-4-5",
+      "openai/gpt-4o",
+      "openai/gpt-4o-mini",
+      "openai/o3",
+      "openai/o4-mini",
+      "google/gemini-2.5-pro",
+      "google/gemini-2.5-flash",
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro",
+      "meta/llama-3.3-70b-instruct",
+      "qwen/qwen3-235b-a22b",
+      "mistral/mistral-large-latest",
+    ],
+    modelsEndpoint: "https://zenmux.ai/api/v1/models",
+    endpoint: "https://zenmux.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 5,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
