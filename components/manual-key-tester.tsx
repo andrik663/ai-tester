@@ -3030,6 +3030,23 @@ export default function ManualKeyTester() {
                   <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
               </button>
+              {/* API Docs */}
+              <a
+                href="/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="API Documentation"
+                className="w-7 h-7 flex items-center justify-center rounded transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </a>
+
               {/* Pricing */}
               <button
                 onClick={() => setActiveTab("info")}
@@ -4178,7 +4195,7 @@ export default function ManualKeyTester() {
           <ProviderInfoPanel apiKey={apiKey || undefined} />
         )}
 
-        {/* ── AUTO-DETECT TAB ──────────────────────────────────────────────��─ */}
+        {/* ── AUTO-DETECT TAB ───────────────────���──────────────────────────��─ */}
         {activeTab === "auto-detect" && (() => {
           // Full provider pattern table — mirrors detectProviderFromKey but with metadata
           type DetectPattern = {
