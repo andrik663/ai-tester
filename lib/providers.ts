@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ����──────────────────────────────────────────────────────────
+      // ── MiniMax �����──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1375,6 +1375,39 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     concurrencyLimit: 10,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── ZenMux Gateway ────────────────────────────────────────────────────────
+  // Unified API aggregator — 200+ LLM models with intelligent routing and
+  // AI Model Insurance. OpenAI-compatible. Base URL: https://zenmux.ai/api/v1
+  // Auth: Bearer token. Live /v1/models endpoint returns full model catalog.
+  zenmux: {
+    id: "zenmux",
+    models: [
+      "anthropic/claude-opus-4-5",
+      "anthropic/claude-sonnet-4-5",
+      "anthropic/claude-haiku-4-5",
+      "openai/gpt-4o",
+      "openai/gpt-4o-mini",
+      "openai/o3",
+      "openai/o4-mini",
+      "google/gemini-2.5-pro",
+      "google/gemini-2.5-flash",
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro",
+      "meta/llama-3.3-70b-instruct",
+      "qwen/qwen3-235b-a22b",
+      "mistral/mistral-large-latest",
+    ],
+    modelsEndpoint: "https://zenmux.ai/api/v1/models",
+    endpoint: "https://zenmux.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 5,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
