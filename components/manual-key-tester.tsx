@@ -1706,6 +1706,27 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     models: [
+      // New models (requested additions)
+      { id: "moonshotai/kimi-k2.7-code",      label: "Kimi K2.7 Code",         tag: "moonshot",   ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "qwen/qwen3.7-plus",              label: "Qwen 3.7 Plus",           tag: "qwen",       ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "minimax/minimax-m3",             label: "MiniMax M3",              tag: "minimax",    ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "stepfun/step-3.7-flash",         label: "Step 3.7 Flash",          tag: "stepfun",    ctx: "256K ctx", in: "",  out: "",  cache: "" },
+      { id: "stepfun/step-3.7-flash-free",    label: "Step 3.7 Flash Free",     tag: "free",       ctx: "256K ctx", in: "",  out: "",  cache: "" },
+      { id: "inclusionai/ring-2.6-1t",        label: "Ring 2.6 1T",             tag: "inclusionai",ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "deepseek/deepseek-v4-flash",     label: "DeepSeek V4 Flash",       tag: "deepseek",   ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "deepseek/deepseek-v4-pro",       label: "DeepSeek V4 Pro",         tag: "deepseek",   ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "inclusionai/ling-2.6-1t",        label: "Ling 2.6 1T",             tag: "inclusionai",ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "google/gemini-3.1-pro-preview",  label: "Gemini 3.1 Pro Preview",  tag: "google",     ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "stepfun/step-3.5-flash",         label: "Step 3.5 Flash",          tag: "stepfun",    ctx: "256K ctx", in: "",  out: "",  cache: "" },
+      { id: "z-ai/glm-4.7-flash-free",        label: "GLM-4.7 Flash Free",      tag: "free",       ctx: "128K ctx", in: "",  out: "",  cache: "" },
+      { id: "z-ai/glm-4.7",                   label: "GLM-4.7",                 tag: "z-ai",       ctx: "128K ctx", in: "",  out: "",  cache: "" },
+      { id: "minimax/minimax-m2.1",           label: "MiniMax M2.1",            tag: "minimax",    ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "z-ai/glm-4.6v-flash-free",       label: "GLM-4.6V Flash Free",     tag: "free",       ctx: "128K ctx", in: "",  out: "",  cache: "" },
+      { id: "z-ai/glm-4.6v-flash",            label: "GLM-4.6V Flash",          tag: "z-ai",       ctx: "128K ctx", in: "",  out: "",  cache: "" },
+      { id: "deepseek/deepseek-chat",          label: "DeepSeek Chat",           tag: "deepseek",   ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "deepseek/deepseek-reasoner",      label: "DeepSeek Reasoner",       tag: "reasoning",  ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "stepfun/step-3",                  label: "Step 3",                  tag: "stepfun",    ctx: "256K ctx", in: "",  out: "",  cache: "" },
+      // Existing models
       { id: "anthropic/claude-opus-4-5",    label: "Claude Opus 4.5",       tag: "flagship",   ctx: "200K ctx", in: "",  out: "",  cache: "" },
       { id: "anthropic/claude-sonnet-4-5",  label: "Claude Sonnet 4.5",     tag: "popular",    ctx: "200K ctx", in: "",  out: "",  cache: "" },
       { id: "openai/gpt-4o",                label: "GPT-4o",                tag: "openai",     ctx: "128K ctx", in: "",  out: "",  cache: "" },
@@ -1714,8 +1735,6 @@ const PRESETS: ProviderPreset[] = [
       { id: "openai/o4-mini",               label: "o4-mini",               tag: "reasoning",  ctx: "200K ctx", in: "",  out: "",  cache: "" },
       { id: "google/gemini-2.5-pro",        label: "Gemini 2.5 Pro",        tag: "google",     ctx: "1M ctx",   in: "",  out: "",  cache: "" },
       { id: "google/gemini-2.5-flash",      label: "Gemini 2.5 Flash",      tag: "fast",       ctx: "1M ctx",   in: "",  out: "",  cache: "" },
-      { id: "deepseek/deepseek-v4-flash",   label: "DeepSeek V4 Flash",     tag: "deepseek",   ctx: "1M ctx",   in: "",  out: "",  cache: "" },
-      { id: "deepseek/deepseek-v4-pro",     label: "DeepSeek V4 Pro",       tag: "deepseek",   ctx: "1M ctx",   in: "",  out: "",  cache: "" },
       { id: "meta/llama-3.3-70b-instruct",  label: "Llama 3.3 70B",         tag: "open",       ctx: "131K ctx", in: "",  out: "",  cache: "" },
       { id: "qwen/qwen3-235b-a22b",         label: "Qwen3 235B A22B",       tag: "open",       ctx: "131K ctx", in: "",  out: "",  cache: "" },
       { id: "mistral/mistral-large-latest", label: "Mistral Large",         tag: "mistral",    ctx: "128K ctx", in: "",  out: "",  cache: "" },
@@ -4325,7 +4344,7 @@ export default function ManualKeyTester() {
             { prefix: "���",           providerId: "ibm",         providerName: "IBM Granite (WatsonX)",   example: "IAM API key",          confidence: "none", note: "IBM WatsonX keys are IAM tokens — not prefix-detectable" },
             { prefix: "—",           providerId: "novita",      providerName: "Novita AI",               example: "random UUID",          confidence: "none", note: "Novita keys are UUIDs — not prefix-detectable" },
             { prefix: "—",           providerId: "inception",   providerName: "Inception (Mercury)",     example: "random string",        confidence: "none", note: "Inception keys have no fixed prefix" },
-            { prefix: "—",           providerId: "deepinfra",   providerName: "Deep Infra (non-di_)",    example: "random string",        confidence: "none", note: "Some Deep Infra keys lack the di_ prefix — use di_ keys for auto-detection" },
+            { prefix: "—",           providerId: "deepinfra",   providerName: "Deep Infra (non-di_)",    example: "random string",        confidence: "none", note: "Some Deep Infra keys lack the di_ prefix �� use di_ keys for auto-detection" },
           ]
 
           function runDetect(raw: string): typeof detectResult {

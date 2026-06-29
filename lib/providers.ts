@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ������──────────────────────────────────────────────────────────
+      // ── MiniMax �������──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1430,6 +1430,27 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   zenmux: {
     id: "zenmux",
     models: [
+      // New models (requested additions)
+      "moonshotai/kimi-k2.7-code",
+      "qwen/qwen3.7-plus",
+      "minimax/minimax-m3",
+      "stepfun/step-3.7-flash",
+      "stepfun/step-3.7-flash-free",
+      "inclusionai/ring-2.6-1t",
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro",
+      "inclusionai/ling-2.6-1t",
+      "google/gemini-3.1-pro-preview",
+      "stepfun/step-3.5-flash",
+      "z-ai/glm-4.7-flash-free",
+      "z-ai/glm-4.7",
+      "minimax/minimax-m2.1",
+      "z-ai/glm-4.6v-flash-free",
+      "z-ai/glm-4.6v-flash",
+      "deepseek/deepseek-chat",
+      "deepseek/deepseek-reasoner",
+      "stepfun/step-3",
+      // Existing models
       "anthropic/claude-opus-4-5",
       "anthropic/claude-sonnet-4-5",
       "anthropic/claude-haiku-4-5",
@@ -1439,8 +1460,6 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "openai/o4-mini",
       "google/gemini-2.5-pro",
       "google/gemini-2.5-flash",
-      "deepseek/deepseek-v4-flash",
-      "deepseek/deepseek-v4-pro",
       "meta/llama-3.3-70b-instruct",
       "qwen/qwen3-235b-a22b",
       "mistral/mistral-large-latest",
