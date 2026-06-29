@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ───────────────────�������������─────────────────────────────────────
+  // ── Google Gemini ───────────────────���������������─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ───────────────��─��────���─����─��─���───────────────────────────────
+      // ── Qwen3.x ───────────────���─��────���─����─��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -894,7 +894,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Deep Infra ──────────────────────────────────────────────────────��──��──
+  // ── Deep Infra ─────────────────────────────────────────────────────����──��──
   deepinfra: {
     id: "deepinfra",
     name: "Deep Infra",
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ─────────────────────────────────────��───��───��────��──��───��──
+      // ── Llama 3 ───────────────────────────────────��─��───��───��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1780,6 +1780,46 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [
       m("fugu-20260615",       null, null, 128, { promo: true, promoLabel: "Multi-agent", promoLink: "https://sakana.ai/fugu/" }),
       m("fugu-ultra-20260615",  5.00, 30.00, 272, { promo: true, promoLabel: "Max quality" }),
+    ],
+  },
+
+  // ── Conduit Gateway ──────────────────────────────────────────────────────
+  conduit: {
+    id: "conduit",
+    name: "Conduit",
+    website: "https://conduit.ozdoev.net",
+    pricingUrl: "https://conduit.ozdoev.net/#pricing",
+    docsUrl: "https://conduit.ozdoev.net",
+    description: "\"One key, every model\" — flat $20/mo unlimited gateway. OpenAI-compatible endpoint covering GPT-5, Claude, Gemini, Grok, DeepSeek, Llama, and more. Auth via Telegram, no password.",
+    hq: "US",
+    tier: "gateway",
+    hasFreeTier: true,
+    liveModels: true,
+    lastUpdated: "2026-06-29",
+    models: [
+      m("gpt-5",            null, null, 128,  { promo: true, promoLabel: "OpenAI" }),
+      m("gpt-5-mini",       null, null, 128),
+      m("gpt-4o",           null, null, 128),
+      m("gpt-4.1",          null, null, 128),
+      m("o4",               null, null, 200,  { promo: true, promoLabel: "Reasoning" }),
+      m("claude-opus-4-8",  null, null, 200,  { promo: true, promoLabel: "Claude" }),
+      m("claude-sonnet-4-6",null, null, 200,  { promo: true, promoLabel: "Popular" }),
+      m("claude-haiku-4-5", null, null, 200),
+      m("gemini-3-pro",     null, null, 1000, { promo: true, promoLabel: "Gemini" }),
+      m("gemini-2.5-pro",   null, null, 1000),
+      m("gemini-2.5-flash", null, null, 1000),
+      m("grok-4",           null, null, 256,  { promo: true, promoLabel: "xAI" }),
+      m("grok-3",           null, null, 131),
+      m("grok-3-mini",      null, null, 131),
+      m("deepseek-v4-flash",null, null, 1000, { promo: true, promoLabel: "DeepSeek" }),
+      m("deepseek-v3.2",    null, null, 1000),
+      m("deepseek-r1",      null, null, 1000),
+      m("llama-4-maverick", null, null, 1000, { promo: true, promoLabel: "Meta" }),
+      m("llama-4-scout",    null, null, 1000),
+      m("llama-3.3-70b",    null, null, 128),
+      m("qwen3-coder",      null, null, 131),
+      m("mistral-large-3",  null, null, 131),
+      m("codestral",        null, null, 256),
     ],
   },
 
