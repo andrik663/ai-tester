@@ -130,7 +130,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Google Gemini ───────────────────���������������─────────────────────────────────────
+  // ── Google Gemini ───────────────────�����������������─────────────────────────────────────
   google: {
     id: "google",
     name: "Google Gemini",
@@ -894,7 +894,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Deep Infra ─────────────────────────────────────────────────────����──��──
+  // ── Deep Infra ──────────────────────────────────────────────────��──����──��──
   deepinfra: {
     id: "deepinfra",
     name: "Deep Infra",
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ───────────────────────────────────��─��───��───��────��──��───��──
+      // ── Llama 3 ───────────────────────────────��───��─��───��───��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1837,6 +1837,27 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-29",
     models: [
+      // New models (requested additions)
+      m("moonshotai/kimi-k2.7-code",      null, null, 131,  { promo: true, promoLabel: "Kimi" }),
+      m("qwen/qwen3.7-plus",              null, null, 131),
+      m("minimax/minimax-m3",             null, null, 131,  { promo: true, promoLabel: "MiniMax" }),
+      m("stepfun/step-3.7-flash",         null, null, 256),
+      m("stepfun/step-3.7-flash-free",    null, null, 256,  { promo: true, promoLabel: "Free" }),
+      m("inclusionai/ring-2.6-1t",        null, null, 131),
+      m("deepseek/deepseek-v4-flash",     null, null, 1000, { promo: true, promoLabel: "DeepSeek" }),
+      m("deepseek/deepseek-v4-pro",       null, null, 1000),
+      m("inclusionai/ling-2.6-1t",        null, null, 131),
+      m("google/gemini-3.1-pro-preview",  null, null, 1000, { promo: true, promoLabel: "Gemini" }),
+      m("stepfun/step-3.5-flash",         null, null, 256),
+      m("z-ai/glm-4.7-flash-free",        null, null, 128,  { promo: true, promoLabel: "Free" }),
+      m("z-ai/glm-4.7",                   null, null, 128),
+      m("minimax/minimax-m2.1",           null, null, 131),
+      m("z-ai/glm-4.6v-flash-free",       null, null, 128),
+      m("z-ai/glm-4.6v-flash",            null, null, 128),
+      m("deepseek/deepseek-chat",         null, null, 1000),
+      m("deepseek/deepseek-reasoner",     null, null, 1000, { promo: true, promoLabel: "Reasoning" }),
+      m("stepfun/step-3",                 null, null, 256),
+      // Existing models
       m("anthropic/claude-opus-4-5",     null, null, 200, { promo: true, promoLabel: "Claude",   promoLink: "https://zenmux.ai/models" }),
       m("anthropic/claude-sonnet-4-5",   null, null, 200, { promo: true, promoLabel: "Popular" }),
       m("anthropic/claude-haiku-4-5",    null, null, 200),
@@ -1844,9 +1865,9 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("openai/gpt-4o-mini",            null, null, 128),
       m("openai/o3",                     null, null, 200, { promo: true, promoLabel: "Reasoning" }),
       m("openai/o4-mini",                null, null, 200),
-      m("google/gemini-2.5-pro",         null, null, 1000, { promo: true, promoLabel: "Gemini" }),
+      m("google/gemini-2.5-pro",         null, null, 1000),
       m("google/gemini-2.5-flash",       null, null, 1000),
-      m("deepseek/deepseek-v4-flash",    null, null, 1000, { promo: true, promoLabel: "DeepSeek" }),
+      m("deepseek/deepseek-v4-flash",    null, null, 1000),
       m("deepseek/deepseek-v4-pro",      null, null, 1000),
       m("meta/llama-3.3-70b-instruct",   null, null, 131),
       m("qwen/qwen3-235b-a22b",          null, null, 131),
