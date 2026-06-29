@@ -1643,6 +1643,42 @@ const PRESETS: ProviderPreset[] = [
     color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
   },
 
+  // ── ZenMux Gateway ───────────────────────────────────────────────────────
+  {
+    id: "zenmux",
+    name: "ZenMux",
+    country: "US",
+    endpoint: "https://zenmux.ai/api/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "openai/gpt-4o-mini",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "anthropic/claude-opus-4-5",    label: "Claude Opus 4.5",       tag: "flagship",   ctx: "200K ctx", in: "",  out: "",  cache: "" },
+      { id: "anthropic/claude-sonnet-4-5",  label: "Claude Sonnet 4.5",     tag: "popular",    ctx: "200K ctx", in: "",  out: "",  cache: "" },
+      { id: "openai/gpt-4o",                label: "GPT-4o",                tag: "openai",     ctx: "128K ctx", in: "",  out: "",  cache: "" },
+      { id: "openai/gpt-4o-mini",           label: "GPT-4o Mini",           tag: "fast",       ctx: "128K ctx", in: "",  out: "",  cache: "" },
+      { id: "openai/o3",                    label: "o3",                    tag: "reasoning",  ctx: "200K ctx", in: "",  out: "",  cache: "" },
+      { id: "openai/o4-mini",               label: "o4-mini",               tag: "reasoning",  ctx: "200K ctx", in: "",  out: "",  cache: "" },
+      { id: "google/gemini-2.5-pro",        label: "Gemini 2.5 Pro",        tag: "google",     ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "google/gemini-2.5-flash",      label: "Gemini 2.5 Flash",      tag: "fast",       ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "deepseek/deepseek-v4-flash",   label: "DeepSeek V4 Flash",     tag: "deepseek",   ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "deepseek/deepseek-v4-pro",     label: "DeepSeek V4 Pro",       tag: "deepseek",   ctx: "1M ctx",   in: "",  out: "",  cache: "" },
+      { id: "meta/llama-3.3-70b-instruct",  label: "Llama 3.3 70B",         tag: "open",       ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "qwen/qwen3-235b-a22b",         label: "Qwen3 235B A22B",       tag: "open",       ctx: "131K ctx", in: "",  out: "",  cache: "" },
+      { id: "mistral/mistral-large-latest", label: "Mistral Large",         tag: "mistral",    ctx: "128K ctx", in: "",  out: "",  cache: "" },
+    ],
+    docsUrl: "https://docs.zenmux.ai",
+    createKeyUrl: "https://zenmux.ai",
+    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+  },
+
   // ── Custom ────────────────────────────────────────────────────────────────
   {
     id: "custom",
@@ -1762,6 +1798,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   targon:         "targon.com",
   sakana:         "sakana.ai",
   miuclaw:        "www.miuclaw.my.id",
+  zenmux:         "zenmux.ai",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
@@ -4323,7 +4360,7 @@ export default function ManualKeyTester() {
                   type="password"
                   value={detectInput}
                   onChange={(e) => setDetectInput(e.target.value)}
-                  placeholder="sk-ant-api03-… or AIzaSy… or gsk_…"
+                  placeholder="sk-ant-api03-… or AIzaSy… or gsk_��"
                   className="w-full bg-secondary/40 border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                   autoComplete="off"
                   spellCheck={false}
