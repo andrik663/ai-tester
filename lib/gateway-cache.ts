@@ -108,34 +108,44 @@ async function dbLoadKeys(): Promise<GatewayKey[]> {
 }
 
 /**
- * UPSERT a chunk of keys using ON CONFLICT (provider_id, api_key) DO UPDATE.
- * Safe to call in parallel chunks — no DELETE, no transaction needed per chunk.
- * Drizzle handles text[] serialization correctly.
+ * UPSERT one key at a time using raw SQL so model_ids is always a single
+ * literal ARRAY[...] expression — never expanded into individual $N params.
+ *
+ * Drizzle's bulk .values([...]) expands every text[] element as its own
+ * positional parameter. With providers like Mistral (53 models) across 7+
+ * keys this generates hundreds of params and Postgres rejects the query.
+ * Running one INSERT per key keeps each statement to ≤ 6 scalar params
+ * regardless of model count.
  */
 export async function upsertGatewayKeyChunk(keys: GatewayKey[]): Promise<void> {
   if (keys.length === 0) return
-  await db
-    .insert(gatewayKeysTable)
-    .values(
-      keys.map((k) => ({
-        providerId: k.providerId,
-        providerName: k.providerName,
-        apiKey: k.apiKey,
-        modelIds: k.modelIds,
-        avgLatencyMs: k.avgLatencyMs,
-        pushedAt: k.pushedAt,
-      })),
-    )
-    .onConflictDoUpdate({
-      target: [gatewayKeysTable.providerId, gatewayKeysTable.apiKey],
-      set: {
-        providerName: sql`excluded.provider_name`,
-        modelIds: sql`excluded.model_ids`,
-        avgLatencyMs: sql`excluded.avg_latency_ms`,
-        pushedAt: sql`excluded.pushed_at`,
-        updatedAt: sql`now()`,
-      },
-    })
+
+  for (const k of keys) {
+    // Escape single quotes inside model ids to prevent SQL injection
+    const modelLiteral = k.modelIds.length > 0
+      ? `ARRAY[${k.modelIds.map((m) => `'${m.replace(/'/g, "''")}'`).join(",")}]::text[]`
+      : "ARRAY[]::text[]"
+
+    await db.execute(sql`
+      INSERT INTO gateway_keys
+        (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at)
+      VALUES (
+        ${k.providerId},
+        ${k.providerName},
+        ${k.apiKey},
+        ${sql.raw(modelLiteral)},
+        ${k.avgLatencyMs},
+        ${k.pushedAt}
+      )
+      ON CONFLICT (provider_id, api_key) DO UPDATE SET
+        provider_name  = EXCLUDED.provider_name,
+        model_ids      = EXCLUDED.model_ids,
+        avg_latency_ms = EXCLUDED.avg_latency_ms,
+        pushed_at      = EXCLUDED.pushed_at,
+        updated_at     = now()
+    `)
+  }
+
   // Bust in-memory cache so next read picks up fresh DB state
   memCache = null
   memCacheAt = 0
