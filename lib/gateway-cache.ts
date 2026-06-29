@@ -11,9 +11,10 @@
  *   - Only /api/v1/chat/completions reads the raw keys server-side.
  */
 
-import { db } from "@/lib/db"
+import { pool, db } from "@/lib/db"
 import { gatewayKeys as gatewayKeysTable } from "@/lib/db/gateway-schema"
-import { sql, notInArray } from "drizzle-orm"
+import { notInArray } from "drizzle-orm"
+
 
 export interface GatewayKey {
   providerId: string
@@ -108,42 +109,52 @@ async function dbLoadKeys(): Promise<GatewayKey[]> {
 }
 
 /**
- * UPSERT one key at a time using raw SQL so model_ids is always a single
- * literal ARRAY[...] expression — never expanded into individual $N params.
- *
- * Drizzle's bulk .values([...]) expands every text[] element as its own
- * positional parameter. With providers like Mistral (53 models) across 7+
- * keys this generates hundreds of params and Postgres rejects the query.
- * Running one INSERT per key keeps each statement to ≤ 6 scalar params
- * regardless of model count.
+ * Convert a JS string[] to the PostgreSQL wire format for text[]:
+ *   ["a","b"] → '{"a","b"}'
+ * The pg driver accepts this string for a text[] column parameter ($N)
+ * without needing ARRAY[...]::text[] literals or sql.raw(), which fail
+ * when mixed with positional params on the Neon serverless driver.
+ */
+function toPgArray(arr: string[]): string {
+  const escaped = arr.map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`)
+  return `{${escaped.join(",")}}`
+}
+
+/**
+ * UPSERT one key at a time using pool.query() with native pg parameter
+ * binding. model_ids is passed as a single $4 parameter in pg-array wire
+ * format ("{m1,m2,...}") — no ARRAY[] literals, no sql.raw(), no Drizzle
+ * template expansion. This is the only approach that works reliably on both
+ * local pg and the Neon serverless driver.
  */
 export async function upsertGatewayKeyChunk(keys: GatewayKey[]): Promise<void> {
   if (keys.length === 0) return
 
-  for (const k of keys) {
-    // Escape single quotes inside model ids to prevent SQL injection
-    const modelLiteral = k.modelIds.length > 0
-      ? `ARRAY[${k.modelIds.map((m) => `'${m.replace(/'/g, "''")}'`).join(",")}]::text[]`
-      : "ARRAY[]::text[]"
-
-    await db.execute(sql`
-      INSERT INTO gateway_keys
-        (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at)
-      VALUES (
-        ${k.providerId},
-        ${k.providerName},
-        ${k.apiKey},
-        ${sql.raw(modelLiteral)},
-        ${k.avgLatencyMs},
-        ${k.pushedAt}
+  const client = await pool.connect()
+  try {
+    for (const k of keys) {
+      await client.query(
+        `INSERT INTO gateway_keys
+           (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (provider_id, api_key) DO UPDATE SET
+           provider_name  = EXCLUDED.provider_name,
+           model_ids      = EXCLUDED.model_ids,
+           avg_latency_ms = EXCLUDED.avg_latency_ms,
+           pushed_at      = EXCLUDED.pushed_at,
+           updated_at     = now()`,
+        [
+          k.providerId,
+          k.providerName,
+          k.apiKey,
+          toPgArray(k.modelIds),   // single string param, pg casts to text[]
+          k.avgLatencyMs,
+          k.pushedAt,
+        ],
       )
-      ON CONFLICT (provider_id, api_key) DO UPDATE SET
-        provider_name  = EXCLUDED.provider_name,
-        model_ids      = EXCLUDED.model_ids,
-        avg_latency_ms = EXCLUDED.avg_latency_ms,
-        pushed_at      = EXCLUDED.pushed_at,
-        updated_at     = now()
-    `)
+    }
+  } finally {
+    client.release()
   }
 
   // Bust in-memory cache so next read picks up fresh DB state
