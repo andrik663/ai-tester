@@ -55,7 +55,7 @@ function sanitize(raw: unknown[]): GatewayKey[] {
       providerName: k.providerName?.trim() ?? k.providerId,
       apiKey: k.apiKey.trim(),
       modelIds: k.modelIds.filter((m) => typeof m === "string" && m.trim().length > 0),
-      avgLatencyMs: Number(k.avgLatencyMs ?? 0),
+      avgLatencyMs: Math.round(Number(k.avgLatencyMs ?? 0)),
       pushedAt: Number(k.pushedAt ?? Date.now()),
     }))
     .filter((k) => k.providerId && k.apiKey && k.modelIds.length > 0)
