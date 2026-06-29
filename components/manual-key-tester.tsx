@@ -2430,28 +2430,6 @@ export default function ManualKeyTester() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       setDebouncedApiKey(val)
-      // Auto-detect: if the current preset is "custom" or the key prefix clearly matches a different provider, switch
-      const detectedId = detectProviderFromKey(val)
-      if (detectedId) {
-        setSelectedPreset((current) => {
-          if (current.id === detectedId) return current  // already correct
-          // Only auto-switch when the user hasn't explicitly customized the endpoint
-          const detected = PRESETS.find((p) => p.id === detectedId)
-          if (detected) {
-            // Apply full preset (endpoint, headers, body) — mirrors applyPreset but without setResult
-            setEndpoint(detected.endpoint)
-            setMethod(detected.method)
-            setHeaderRows(Object.entries(detected.headers).map(([k, v], i) => ({ key: k, value: v, id: i })))
-            setBodyTemplate(detected.bodyTemplate)
-            const imgModels = getImageCapabilities(detected.id)
-            if (imgModels.length > 0) setImageModel(imgModels[0].id)
-            const { models: vidModels } = getVideoCapabilities(detected.id)
-            if (vidModels.length > 0) setVideoModel(vidModels[0].id)
-            return detected
-          }
-          return current
-        })
-      }
     }, 400)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -2997,11 +2975,7 @@ export default function ManualKeyTester() {
                 </button>
               )}
             </div>
-            {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
-              <span className="mt-1.5 inline-flex text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1.5 py-0.5 rounded font-medium">
-                auto-detected
-              </span>
-            )}
+
           </div>
 
           {/* Provider list — fills available space */}
@@ -4627,9 +4601,6 @@ export default function ManualKeyTester() {
                     <div className="flex items-center justify-between">
                       <label className="text-[11px] font-medium text-muted-foreground">API Key</label>
                       <div className="flex items-center gap-1.5">
-                        {apiKey && detectProviderFromKey(apiKey) === selectedPreset.id && (
-                          <span className="text-[9px] text-primary/70 bg-primary/8 border border-primary/20 px-1 py-0.5 rounded">detected</span>
-                        )}
                         {apiKey && (
                           <button
                             onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
