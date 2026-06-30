@@ -414,20 +414,16 @@ export async function GET(req: Request) {
       data?: Array<{ url?: string }>
       message?: string
     }
-    // Still queued / processing
+    // Still queued / processing (success:false and not failed)
     if (!data.success && data.status !== "failed") return Response.json({ done: false })
     // Failed
     if (data.status === "failed") {
       return Response.json({ done: true, error: data.message ?? "Generation failed" })
     }
-    // Succeeded — download video and return as base64
+    // Succeeded — return the CDN URL directly; client <video> plays it without a server download
     const videoUrl = data.data?.[0]?.url
     if (!videoUrl) return Response.json({ done: true, error: "No video URL in response" })
-    const videoRes = await fetch(videoUrl)
-    if (!videoRes.ok) return Response.json({ done: true, error: "Failed to download video" })
-    const buf = await videoRes.arrayBuffer()
-    const base64 = Buffer.from(buf).toString("base64")
-    return Response.json({ done: true, videoBase64: base64, mimeType: "video/mp4" })
+    return Response.json({ done: true, videoUrl, mimeType: "video/mp4" })
   }
 
   // ── Google Veo polling ─────────────────────────────────────────────────────
