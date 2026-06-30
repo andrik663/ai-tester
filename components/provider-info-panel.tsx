@@ -75,6 +75,17 @@ const PROVIDER_DOMAIN_MAP: Record<string, string> = {
   akashml:"akash.network", "atlas-cloud":"atlascloud.ai", "io-net":"io.net",
   nousresearch:"nousresearch.com", reka:"reka.ai", rekaai:"reka.ai",
   "aion-labs":"aionlabs.net", mistral:"mistral.ai",
+  bfl:"blackforestlabs.ai", bytedance:"volcengine.com", recraft:"recraft.ai",
+  ideogram:"ideogram.ai", luma:"lumalabs.ai", stability:"stability.ai",
+  stabilityai:"stability.ai", runway:"runwayml.com", pika:"pika.art",
+  fal:"fal.ai", amazon:"aws.amazon.com", jempol:"jempol.in",
+  "arcee-ai":"arcee.ai", kling:"klingai.com", leonardoai:"leonardo.ai",
+  vidu:"vidu.io", pixverse:"pixverse.ai", meta:"ai.meta.com",
+  microsoft:"microsoft.com", hidream:"hidreamai.com",
+  "anthracite-org":"openrouter.ai", "cognitivecomputations":"openrouter.ai",
+  deepcogito:"deepcogito.com", primeintellect:"primeintellect.ai",
+  tngtech:"tngtech.com", opengvlab:"openrouter.ai", rekaai:"reka.ai",
+  wanai:"openrouter.ai", rundiffusion:"rundiffusion.com",
 }
 
 function providerBgColor(name: string): string {
@@ -90,17 +101,19 @@ function ProviderLogo({ id, name, className = "w-8 h-8" }: { id: string; name: s
   const initials = name.replace(/[^A-Za-z0-9]/g, " ").trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()??"").join("") || "?"
   if (!domain || stage === "initials") {
     return (
-      <span aria-hidden className={`${className} flex-shrink-0 rounded-xl flex items-center justify-center text-white font-bold leading-none`}
+      <span aria-hidden className={`${className} flex-shrink-0 rounded-lg flex items-center justify-center text-white font-bold leading-none`}
         style={{ background: providerBgColor(name), fontSize: "35%" }}>
         {initials}
       </span>
     )
   }
   const src = stage === "primary"
-    ? `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=64`
+    ? `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=32`
     : `https://icons.duckduckgo.com/ip3/${domain}.ico`
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt="" aria-hidden className={`${className} object-contain rounded-xl flex-shrink-0`}
+  return <img src={src} alt="" aria-hidden width={32} height={32}
+    className={`${className} object-contain rounded-lg flex-shrink-0 overflow-hidden`}
+    style={{ maxWidth: "100%", maxHeight: "100%" }}
     onError={() => setStage(s => s === "primary" ? "fallback" : "initials")} />
 }
 

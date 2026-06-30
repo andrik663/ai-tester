@@ -314,7 +314,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("command-a-translate-08-2025",     null,  null,   8, { promo: true, promoLabel: "Translate",  promoLink: "https://docs.cohere.com/v2/docs/models" }),
       m("command-r-plus-08-2024",          2.50, 10.00, 128),
       m("command-r7b-12-2024",             0.04,  0.15, 128, { promo: true, promoLabel: "Cheapest",   promoLink: "https://cohere.com/pricing", promoOriginalInputPer1M: 0.15, promoOriginalOutputPer1M: 0.60 }),
-      // ── Aya multilingual ───────────────��───────────────────────────────────
+      // ── Aya multilingual ─────��─────────��───────────────────────────────────
       m("c4ai-aya-expanse-32b",            null,  null, 128, { promo: true, promoLabel: "23 langs",   promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
       m("c4ai-aya-vision-32b",             null,  null,  16, { promo: true, promoLabel: "Multimodal", promoLink: "https://docs.cohere.com/v2/docs/models#aya" }),
       m("tiny-aya-global",                 null,  null,   8, { promo: true, promoLabel: "70 langs" }),
@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ───────────��───���─��────���─����─��─���───────────────────────────────
+      // ── Qwen3.x ───────────��─���─���─��────���─����─��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -894,7 +894,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Deep Infra ──────────────────────────────────────────────────����──����──��──
+  // ── Deep Infra ───────────────────────────────────────────────��──����──����──��──
   deepinfra: {
     id: "deepinfra",
     name: "Deep Infra",
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ────────────────────────────��──��───��─��───��───��────��──��───��──
+      // ── Llama 3 ─────────────────────────��──��──��───��─��───��───��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1873,7 +1873,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Z.AI ───────────────────────────────────────────────────���──────────────────
+  // ── Z.AI ──────────────────────────────────────────────────────────────────────
   "z-ai": {
     id: "z-ai", name: "Z.AI (Zhipu)",
     website: "https://z.ai", pricingUrl: "https://open.bigmodel.cn/pricing",
@@ -1885,6 +1885,499 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("glm-5.1",       null, null, 128, { promo: true, promoLabel: "Flagship" }),
       m("glm-z1-flash",  null, null, 64,  { promo: true, promoLabel: "Free" }),
     ],
+  },
+
+  // ── Direct-API image / video / specialised providers ──────────────────────
+
+  bfl: {
+    id: "bfl", name: "Black Forest Labs (FLUX)",
+    website: "https://blackforestlabs.ai", pricingUrl: "https://api.bfl.ai/pricing",
+    docsUrl: "https://api.bfl.ai/docs",
+    description: "FLUX image-generation models (FLUX.1 Pro, Dev, Schnell). State-of-the-art text-to-image from German AI lab.",
+    hq: "DE", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("flux-pro-1.1-ultra", 0.06,  null, null, { promo: true, promoLabel: "Flagship" }),
+      m("flux-pro-1.1",       0.04,  null, null),
+      m("flux-dev",           0.025, null, null),
+      m("flux-schnell",       0.003, null, null, { promo: true, promoLabel: "Cheapest" }),
+    ],
+  },
+
+  bytedance: {
+    id: "bytedance", name: "Bytedance (SeedDream)",
+    website: "https://www.volcengine.com", pricingUrl: "https://www.volcengine.com/pricing",
+    docsUrl: "https://www.volcengine.com/docs/82379",
+    description: "ByteDance Ark platform — SeedDream image generation and Doubao LLM family via Ark API.",
+    hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("seeddream-3-t2i", null, null, null, { promo: true, promoLabel: "New" }),
+      m("doubao-pro-32k",  null, null, 32),
+    ],
+  },
+
+  recraft: {
+    id: "recraft", name: "Recraft AI",
+    website: "https://www.recraft.ai", pricingUrl: "https://www.recraft.ai/pricing",
+    docsUrl: "https://www.recraft.ai/docs",
+    description: "Recraft V3 — professional-grade vector and raster image generation with brand style control.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("recraftv3",            0.04, null, null, { promo: true, promoLabel: "Flagship" }),
+      m("recraft20b",           0.02, null, null),
+    ],
+  },
+
+  ideogram: {
+    id: "ideogram", name: "Ideogram AI",
+    website: "https://ideogram.ai", pricingUrl: "https://ideogram.ai/pricing",
+    docsUrl: "https://developer.ideogram.ai",
+    description: "Ideogram 3.0 — text-rendering image generation with best-in-class typography accuracy.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("V_3",     0.08, null, null, { promo: true, promoLabel: "Flagship" }),
+      m("V_2_TURBO", 0.05, null, null, { promo: true, promoLabel: "Fast" }),
+    ],
+  },
+
+  luma: {
+    id: "luma", name: "Luma AI (Photon)",
+    website: "https://lumalabs.ai", pricingUrl: "https://lumalabs.ai/api/pricing",
+    docsUrl: "https://docs.lumalabs.ai",
+    description: "Photon and Dream Machine models for image and video generation from Luma AI.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("photon-1",         0.08,  null, null, { promo: true, promoLabel: "Flagship" }),
+      m("photon-flash-1",   0.04,  null, null, { promo: true, promoLabel: "Fast" }),
+    ],
+  },
+
+  stability: {
+    id: "stability", name: "Stability AI",
+    website: "https://stability.ai", pricingUrl: "https://platform.stability.ai/pricing",
+    docsUrl: "https://platform.stability.ai/docs",
+    description: "Stable Diffusion 3.5 and Stable Image Ultra — open-weight and API image generation.",
+    hq: "GB", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("stable-image-ultra",  0.14, null, null, { promo: true, promoLabel: "Best value" }),
+      m("sd3.5-large",         0.065, null, null),
+      m("sd3.5-large-turbo",   0.04,  null, null, { promo: true, promoLabel: "Fast" }),
+    ],
+  },
+
+  runway: {
+    id: "runway", name: "Runway",
+    website: "https://runwayml.com", pricingUrl: "https://runwayml.com/pricing",
+    docsUrl: "https://docs.runwayml.com",
+    description: "Gen-4 video and image generation for creatives — industry-leading video AI.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("gen4_turbo",  null, null, null, { promo: true, promoLabel: "Flagship" }),
+      m("gen4_image",  null, null, null),
+    ],
+  },
+
+  pika: {
+    id: "pika", name: "Pika Labs",
+    website: "https://pika.art", pricingUrl: "https://pika.art/pricing",
+    docsUrl: "https://pika.art/api",
+    description: "Pika 2.2 — video generation with lip-sync, scene and object manipulation.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("pika-2.2", null, null, null, { promo: true, promoLabel: "New" }),
+      m("pika-2.1", null, null, null),
+    ],
+  },
+
+  fal: {
+    id: "fal", name: "Fal.ai",
+    website: "https://fal.ai", pricingUrl: "https://fal.ai/pricing",
+    docsUrl: "https://docs.fal.ai",
+    description: "Serverless GPU inference for image, video, audio and LLM models. Host for FLUX, AniPortrait, and more.",
+    hq: "US", tier: "gateway", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("fal-ai/flux-pro/v1.1-ultra", 0.06, null, null, { promo: true, promoLabel: "Flagship" }),
+      m("fal-ai/flux/dev",            0.025, null, null),
+      m("fal-ai/flux/schnell",        0.003, null, null, { promo: true, promoLabel: "Cheapest" }),
+    ],
+  },
+
+  amazon: {
+    id: "amazon", name: "Amazon Nova (Bedrock)",
+    website: "https://aws.amazon.com/bedrock", pricingUrl: "https://aws.amazon.com/bedrock/pricing",
+    docsUrl: "https://docs.aws.amazon.com/bedrock",
+    description: "Amazon Nova Pro, Lite and Micro LLMs on AWS Bedrock — low-latency multimodal models.",
+    hq: "US", tier: "frontier", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("amazon.nova-pro-v1:0",   0.8,   3.2,  300, { promo: true, promoLabel: "Flagship" }),
+      m("amazon.nova-lite-v1:0",  0.06,  0.24, 300, { promo: true, promoLabel: "Best value" }),
+      m("amazon.nova-micro-v1:0", 0.035, 0.14, 128, { promo: true, promoLabel: "Cheapest" }),
+    ],
+  },
+
+  jempol: {
+    id: "jempol", name: "Jempol.in",
+    website: "https://jempol.in", pricingUrl: "https://jempol.in/pricing",
+    description: "Indonesian AI gateway providing access to multiple frontier models with local pricing.",
+    hq: "ID", tier: "gateway", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("gpt-4o",         null, null, 128),
+      m("claude-3-5-sonnet", null, null, 200),
+    ],
+  },
+
+  // ── OpenRouter-routed community / fine-tune providers ─────────────────────
+
+  alfredpros: {
+    id: "alfredpros", name: "AlfredPros",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=alfredpros",
+    description: "Codette-3 coding-focused model via OpenRouter.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("alfredpros/codette-3-7b-instruct", null, null, 32) ],
+  },
+
+  allenai: {
+    id: "allenai", name: "Allen AI",
+    website: "https://allenai.org", pricingUrl: "https://openrouter.ai/models?q=allenai",
+    docsUrl: "https://openrouter.ai/docs",
+    description: "OLMo open-source LLMs from the Allen Institute for AI, available via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("allenai/olmo-2-0325-32b-instruct", 0.1, 0.1, 4, { promo: true, promoLabel: "Free" }),
+    ],
+  },
+
+  alpindale: {
+    id: "alpindale", name: "Alpindale",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=alpindale",
+    description: "WizardLM-2 8x22B and Goliath-120B fine-tunes via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("alpindale/goliath-120b",     null, null, 6),
+      m("alpindale/magnum-72b",       null, null, 4),
+    ],
+  },
+
+  "anthracite-org": {
+    id: "anthracite-org", name: "Anthracite",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=anthracite-org",
+    description: "Magnum creative writing models fine-tuned on curated literary data via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("anthracite-org/magnum-v4-72b", null, null, 128) ],
+  },
+
+  "arcee-ai": {
+    id: "arcee-ai", name: "Arcee AI",
+    website: "https://arcee.ai", pricingUrl: "https://arcee.ai/pricing",
+    docsUrl: "https://docs.arcee.ai",
+    description: "Arcee Maestro and Virtuoso — small, efficient models specialised for enterprise tasks.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("arcee-ai/maestro-reasoning", null, null, 128, { promo: true, promoLabel: "Reasoning" }),
+      m("arcee-ai/virtuoso-large",    null, null, 128),
+    ],
+  },
+
+  arizeai: {
+    id: "arizeai", name: "Arize AI",
+    website: "https://arize.com", pricingUrl: "https://openrouter.ai/models?q=arizeai",
+    description: "OpenInference and observability-optimised models for ML monitoring via OpenRouter.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("arizeai/openinference-llama-3-70b", null, null, 8) ],
+  },
+
+  cognitivecomputations: {
+    id: "cognitivecomputations", name: "Cognitive Computations",
+    website: "https://huggingface.co/cognitivecomputations", pricingUrl: "https://openrouter.ai/models?q=cognitivecomputations",
+    description: "Dolphin uncensored fine-tunes of Llama and Mistral, via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("cognitivecomputations/dolphin3.0-r1-mistral-24b", null, null, 32),
+      m("cognitivecomputations/dolphin-mixtral-8x22b",     null, null, 64),
+    ],
+  },
+
+  deepcogito: {
+    id: "deepcogito", name: "Deep Cogito",
+    website: "https://deepcogito.com", pricingUrl: "https://openrouter.ai/models?q=deepcogito",
+    description: "Cogito-v1 hybrid-reasoning models on OpenRouter — fast chain-of-thought inference.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("deepcogito/cogito-v1-preview-llama-70b", null, null, 128, { promo: true, promoLabel: "Reasoning" }),
+    ],
+  },
+
+  eleutherai: {
+    id: "eleutherai", name: "EleutherAI",
+    website: "https://www.eleuther.ai", pricingUrl: "https://openrouter.ai/models?q=eleutherai",
+    description: "Open-source LLMs including Llemma math and GPT-NeoX family via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("eleutherai/llemma_7b", null, null, 4) ],
+  },
+
+  essentialai: {
+    id: "essentialai", name: "Essential AI",
+    website: "https://essential.ai", pricingUrl: "https://openrouter.ai/models?q=essentialai",
+    description: "Mistral-based enterprise fine-tunes optimised for instruction following.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("essentialai/mistral-large-2-moe", null, null, 32) ],
+  },
+
+  gryphe: {
+    id: "gryphe", name: "Gryphe",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=gryphe",
+    description: "MythoMax and MythoMist creative roleplay fine-tunes via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("gryphe/mythomax-l2-13b",  null, null, 4),
+      m("gryphe/mythistral-7b",    null, null, 8),
+    ],
+  },
+
+  hidream: {
+    id: "hidream", name: "HiDream",
+    website: "https://hidreamai.com", pricingUrl: "https://openrouter.ai/models?q=hidream",
+    description: "HiDream-I1 full and fast — 17B parameter text-to-image model from China.",
+    hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("hidream-ai/hidream-i1-full",  null, null, null, { promo: true, promoLabel: "New" }),
+      m("hidream-ai/hidream-i1-fast",  null, null, null, { promo: true, promoLabel: "Fast" }),
+    ],
+  },
+
+  inclusionai: {
+    id: "inclusionai", name: "Inclusion AI",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=inclusion",
+    description: "Aya-Vision multilingual multimodal models from Cohere for AI, via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("inclusion/aya-vision-32b", null, null, 16) ],
+  },
+
+  kling: {
+    id: "kling", name: "Kling AI (Kuaishou)",
+    website: "https://klingai.com", pricingUrl: "https://klingai.com/pricing",
+    docsUrl: "https://docs.klingai.com",
+    description: "Kling 1.6 Pro video and image generation from Kuaishou — top-tier Chinese video AI.",
+    hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("kling-v1-6-pro",    null, null, null, { promo: true, promoLabel: "Flagship" }),
+      m("kling-v1-6-standard", null, null, null),
+    ],
+  },
+
+  kwaipilot: {
+    id: "kwaipilot", name: "Kwaipilot",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=kwaipilot",
+    description: "Kwai-produced Kwaipilot coding and instruction models via OpenRouter.",
+    hq: "CN", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("kwaipilot/oasis-code-7b-instruct", null, null, 8) ],
+  },
+
+  leonardoai: {
+    id: "leonardoai", name: "Leonardo.Ai",
+    website: "https://leonardo.ai", pricingUrl: "https://leonardo.ai/pricing",
+    docsUrl: "https://docs.leonardo.ai",
+    description: "Phoenix and Kino-XL image generation models from Leonardo.Ai — built for game assets.",
+    hq: "AU", tier: "specialised", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("phoenix",         null, null, null, { promo: true, promoLabel: "Flagship" }),
+      m("kino-xl",         null, null, null),
+      m("lightning-xl",    null, null, null, { promo: true, promoLabel: "Fast" }),
+    ],
+  },
+
+  lykon: {
+    id: "lykon", name: "Lykon",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=lykon",
+    description: "DarkIdol and NeverSleep fine-tunes for creative writing via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("lykon/darkidol-l2-13b", null, null, 4) ],
+  },
+
+  meituan: {
+    id: "meituan", name: "Meituan",
+    website: "https://www.meituan.com", pricingUrl: "https://openrouter.ai/models?q=meituan",
+    description: "Meituan's Codestral-based finance and e-commerce instruction models via OpenRouter.",
+    hq: "CN", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("meituan/meituan-llm-7b", null, null, 8) ],
+  },
+
+  meta: {
+    id: "meta", name: "Meta AI",
+    website: "https://ai.meta.com", pricingUrl: "https://openrouter.ai/models?q=meta-llama",
+    docsUrl: "https://llama.meta.com",
+    description: "Meta Llama 4 Scout, Maverick and Llama 3.x family — leading open-weight models.",
+    hq: "US", tier: "frontier", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("meta-llama/llama-4-maverick",     0.2,   0.6,  1000, { promo: true, promoLabel: "Flagship" }),
+      m("meta-llama/llama-4-scout",        0.1,   0.3,  512,  { promo: true, promoLabel: "Fast" }),
+      m("meta-llama/llama-3.3-70b-instruct", 0.12, 0.3, 128),
+      m("meta-llama/llama-3.1-405b-instruct",0.8,  0.8, 128),
+    ],
+  },
+
+  microsoft: {
+    id: "microsoft", name: "Microsoft Phi",
+    website: "https://azure.microsoft.com/en-us/products/phi", pricingUrl: "https://github.com/marketplace/models",
+    docsUrl: "https://github.com/marketplace/models",
+    description: "Phi-4 family of small language models — efficient, open-weight SLMs from Microsoft.",
+    hq: "US", tier: "mid", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("microsoft/phi-4",              0.07, 0.14, 16, { promo: true, promoLabel: "Flagship" }),
+      m("microsoft/phi-4-mini",         0.025, 0.05, 16, { promo: true, promoLabel: "Cheapest" }),
+      m("microsoft/phi-3.5-moe-instruct",0.1,  0.1, 128),
+    ],
+  },
+
+  neversleep: {
+    id: "neversleep", name: "NeverSleep",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=neversleep",
+    description: "Noromaid and Lumi creative fiction fine-tunes via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("neversleep/llama-3.1-lumimaid-70b", null, null, 128),
+      m("neversleep/noromaid-20b",           null, null, 4),
+    ],
+  },
+
+  "nex-agi": {
+    id: "nex-agi", name: "Nex AGI",
+    website: "https://nexagi.com", pricingUrl: "https://openrouter.ai/models?q=nex-agi",
+    description: "Nex AGI Research models for advanced reasoning tasks via OpenRouter.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("nex-agi/research-r1", null, null, 128, { promo: true, promoLabel: "Reasoning" }) ],
+  },
+
+  opengvlab: {
+    id: "opengvlab", name: "OpenGVLab",
+    website: "https://github.com/OpenGVLab", pricingUrl: "https://openrouter.ai/models?q=opengvlab",
+    description: "InternVL-3 multimodal vision-language models from Shanghai AI Lab via OpenRouter.",
+    hq: "CN", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("opengvlab/internvl3-14b",  null, null, 8),
+      m("opengvlab/internvl2-40b",  null, null, 8),
+    ],
+  },
+
+  pearlresearch: {
+    id: "pearlresearch", name: "Pearl Research Labs",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=pearl",
+    description: "Experimental research LLMs from Pearl Research Labs via OpenRouter.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("pearl-research-labs/rodin-l3.3-70b-hanzo", null, null, 128) ],
+  },
+
+  pixverse: {
+    id: "pixverse", name: "PixVerse",
+    website: "https://pixverse.ai", pricingUrl: "https://pixverse.ai/pricing",
+    docsUrl: "https://docs.pixverse.ai",
+    description: "PixVerse v4 — high-quality video generation from text or image prompts.",
+    hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("pixverse-v4", null, null, null, { promo: true, promoLabel: "New" }) ],
+  },
+
+  primeintellect: {
+    id: "primeintellect", name: "Prime Intellect",
+    website: "https://primeintellect.ai", pricingUrl: "https://openrouter.ai/models?q=primeintellect",
+    description: "INTELLECT-2 decentralised training model via OpenRouter.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("primeintellect/intellect-2", null, null, 32, { promo: true, promoLabel: "New" }) ],
+  },
+
+  raifle: {
+    id: "raifle", name: "Raifle",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=raifle",
+    description: "Sorcererlm roleplay fine-tunes via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("raifle/sorcererlm-8x22b", null, null, 64) ],
+  },
+
+  rekaai: {
+    id: "rekaai", name: "Reka AI",
+    website: "https://reka.ai", pricingUrl: "https://reka.ai/pricing",
+    docsUrl: "https://docs.reka.ai",
+    description: "Reka Core and Flash — multimodal models with video, image, and audio understanding.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("reka-core-20240904",  0.1,  0.4,  128, { promo: true, promoLabel: "Flagship" }),
+      m("reka-flash-20240226", 0.02, 0.08, 128),
+    ],
+  },
+
+  rundiffusion: {
+    id: "rundiffusion", name: "RunDiffusion",
+    website: "https://rundiffusion.com", pricingUrl: "https://openrouter.ai/models?q=rundiffusion",
+    description: "RunDiffusion Photo and FX models for photorealistic image generation via OpenRouter.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("rundiffusion/juggernaut-flux-v2", null, null, null) ],
+  },
+
+  sao10k: {
+    id: "sao10k", name: "Sao10k",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=sao10k",
+    description: "L3 Euryale and Soliloquy creative writing fine-tunes via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("sao10k/l3-euryale-70b",   null, null, 128),
+      m("sao10k/l3.1-euryale-70b", null, null, 128),
+    ],
+  },
+
+  stabilityai: {
+    id: "stabilityai", name: "Stability AI (StableLM)",
+    website: "https://stability.ai", pricingUrl: "https://openrouter.ai/models?q=stabilityai",
+    description: "StableLM open-weight language models from Stability AI via OpenRouter.",
+    hq: "GB", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("stabilityai/stablelm-2-1_6b", null, null, 4) ],
+  },
+
+  thedrummer: {
+    id: "thedrummer", name: "The Drummer",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=thedrummer",
+    description: "Rocinante and UnslopNemo fine-tunes for creative narrative writing via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("thedrummer/rocinante-12b",   null, null, 32),
+      m("thedrummer/unslopnemo-12b",  null, null, 32),
+    ],
+  },
+
+  tngtech: {
+    id: "tngtech", name: "TNG Technology",
+    website: "https://www.tngtech.com", pricingUrl: "https://openrouter.ai/models?q=tngtech",
+    description: "DeepSeek-R1T experimental distilled reasoning model from TNG Tech via OpenRouter.",
+    hq: "DE", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("tngtech/deepseek-r1t-chimera", null, null, 128, { promo: true, promoLabel: "Reasoning" }) ],
+  },
+
+  undi95: {
+    id: "undi95", name: "Undi95",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=undi95",
+    description: "Toppy and MXLewd creative roleplay fine-tunes via OpenRouter.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("undi95/toppy-m-7b",    null, null, 4),
+      m("undi95/remm-slerp-l2", null, null, 4),
+    ],
+  },
+
+  vidu: {
+    id: "vidu", name: "Vidu AI",
+    website: "https://www.vidu.io", pricingUrl: "https://www.vidu.io/pricing",
+    docsUrl: "https://docs.vidu.io",
+    description: "Vidu Q1 and S2 video generation models — high-fidelity cinematic video from China.",
+    hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [
+      m("vidu-q1",  null, null, null, { promo: true, promoLabel: "New" }),
+      m("vidu-s2",  null, null, null),
+    ],
+  },
+
+  wanai: {
+    id: "wanai", name: "Wan AI",
+    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=wan",
+    description: "Wan 2.1-I2V video generation model via OpenRouter.",
+    hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
+    models: [ m("wan-ai/wan2.1-i2v-720p", null, null, null, { promo: true, promoLabel: "New" }) ],
   },
 }
 
