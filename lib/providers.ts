@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax �������──────────────────────────────────────────────────────────
+      // ── MiniMax ��������──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1490,6 +1490,316 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     concurrencyLimit: 2,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Providers routed via OpenRouter ──────────────────────────────────────
+  // All entries below share the same OpenRouter endpoint/auth/body shape.
+  // Keys match the `id` field used in manual-key-tester.tsx PRESETS.
+
+  alfredpros: {
+    id: "alfredpros",
+    models: ["alfredpros/codellama-7b-instruct-solidity"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  alpindale: {
+    id: "alpindale",
+    models: ["alpindale/goliath-120b"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  arizeai: {
+    id: "arizeai",
+    models: ["arize-ai/qwen-2-1.5b-instruct"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  "bytedance-seed": {
+    id: "bytedance-seed",
+    models: [
+      "bytedance-seed/seed-2.0-lite",
+      "bytedance-seed/seed-2.0-mini",
+      "bytedance-seed/seed-1.6",
+      "bytedance-seed/seed-1.6-flash",
+      "bytedance-seed/seedream-4.0",
+      "bytedance-seed/seedream-3.0",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  eleutherai: {
+    id: "eleutherai",
+    models: ["eleutherai/llemma_7b"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  essentialai: {
+    id: "essentialai",
+    models: ["essentialai/rnj-1-instruct"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  hidream: {
+    id: "hidream",
+    models: [
+      "hidream-ai/hidream-i1-full",
+      "hidream-ai/hidream-i1-dev",
+      "hidream-ai/hidream-i1-fast",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  kling: {
+    id: "kling",
+    models: [
+      "kwaivgi/kling-2.1-master",
+      "kwaivgi/kling-2.1-pro",
+      "kwaivgi/kling-2.1-standard",
+      "kwaivgi/kling-2.0-master",
+      "kwaivgi/kling-1.6-pro",
+      "kwaivgi/kling-1.6-standard",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  leonardoai: {
+    id: "leonardoai",
+    models: [
+      "leonardoai/phoenix-1.0",
+      "leonardoai/lucid-origin",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  lykon: {
+    id: "lykon",
+    models: ["lykon/dreamshaper"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  meituan: {
+    id: "meituan",
+    models: ["meituan/longcat-flash-chat"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  neversleep: {
+    id: "neversleep",
+    models: [
+      "neversleep/llama-3.1-lumimaid-8b",
+      "neversleep/noromaid-20b",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  opengvlab: {
+    id: "opengvlab",
+    models: ["opengvlab/internvl3-78b"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  pearlresearch: {
+    id: "pearlresearch",
+    models: ["pearl-ai/gemma-4-31b-it"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  pixverse: {
+    id: "pixverse",
+    models: ["pixverse/pixverse-v5"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  primeintellect: {
+    id: "primeintellect",
+    models: ["prime-intellect/intellect-3"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  raifle: {
+    id: "raifle",
+    models: ["raifle/sorcererlm-8x22b"],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  rundiffusion: {
+    id: "rundiffusion",
+    models: [
+      "rundiffusion/juggernaut-pro-flux",
+      "rundiffusion/juggernaut-lightning-flux",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  stabilityai: {
+    id: "stabilityai",
+    models: [
+      "stabilityai/stable-diffusion-3-medium",
+      "stabilityai/stable-diffusion-xl-base-1.0",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  tngtech: {
+    id: "tngtech",
+    models: [
+      "tngtech/deepseek-r1t2-chimera",
+      "tngtech/tng-r1t-chimera",
+      "tngtech/deepseek-r1t-chimera",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  vidu: {
+    id: "vidu",
+    models: [
+      "vidu/vidu-q1",
+      "vidu/vidu-2.0",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  wanai: {
+    id: "wanai",
+    models: [
+      "wan-ai/wan2.7-t2v",
+      "wan-ai/wan2.6-image",
+      "wan-ai/wan2.2-t2v-a14b",
+      "wan-ai/wan2.2-i2v-a14b",
+    ],
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
