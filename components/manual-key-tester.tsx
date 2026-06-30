@@ -48,7 +48,9 @@ interface ProviderPreset {
   createKeyUrl: string   // direct link to API key creation page
   color: string
   models?: ProviderModelInfo[]  // compact model catalog with pricing
-}
+  /** Optional info note shown in the Config panel (e.g. "Requires an OpenRouter key") */
+  note?: string
+  }
 
 // ── Auto-detect provider from key prefix ─────────────────────────────────────
 // Returns a preset id string when the key format matches a known provider.
@@ -1235,6 +1237,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-green-300 bg-green-300/10 border-green-300/20",
   },
   // ── OpenRouter Providers (from OpenRouter API) ───────────────────────────
+  // These providers route through OpenRouter — use your OpenRouter key.
   {
     id: "aion-labs",
     name: "Aion Labs",
@@ -1337,12 +1340,19 @@ const PRESETS: ProviderPreset[] = [
     id: "inflection",
     name: "Inflection AI",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://layercake.pubwestus3.inf7ub8s8nvt.azure.com/openai/v1/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "inflection/inflection-3-productivity", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/inflection",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "inflection_3_productivity", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "inflection_3_productivity", label: "Inflection 3 Productivity", tag: "productivity", ctx: "8K",  in: "", out: "", cache: "" },
+      { id: "inflection_3_pi",           label: "Inflection 3 Pi",           tag: "conversational", ctx: "8K", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://developers.inflection.ai/",
+    createKeyUrl: "https://developers.inflection.ai/",
     color: "text-violet-400 bg-violet-400/10 border-violet-400/20",
   },
   {
@@ -1361,24 +1371,38 @@ const PRESETS: ProviderPreset[] = [
     id: "liquid",
     name: "Liquid AI",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://inference.liquid.ai/v1/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "liquid/lfm-2-24b-a2b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/liquid",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "lfm-2-24b-a2b", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "lfm-2-24b-a2b",  label: "LFM-2 24B A2B",  tag: "flagship", ctx: "128K", in: "", out: "", cache: "" },
+      { id: "lfm-2-3b",       label: "LFM-2 3B",        tag: "mini",     ctx: "32K",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://liquid.ai/liquid-foundation-models",
+    createKeyUrl: "https://inference.liquid.ai/",
     color: "text-sky-400 bg-sky-400/10 border-sky-400/20",
   },
   {
     id: "mancer",
     name: "Mancer",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://neuro.mancer.tech/oai/v1/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "mancer/weaver", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/mancer",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "weaver", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "weaver",           label: "Weaver",           tag: "flagship", ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "weaver-alpha",     label: "Weaver Alpha",     tag: "alpha",    ctx: "16K",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://mancer.tech/",
+    createKeyUrl: "https://mancer.tech/",
     color: "text-pink-500 bg-pink-500/10 border-pink-500/20",
   },
 
@@ -1386,12 +1410,22 @@ const PRESETS: ProviderPreset[] = [
     id: "microsoft",
     name: "Microsoft Phi",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://models.inference.ai.azure.com/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "microsoft/phi-4-mini-instruct", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/microsoft",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "Phi-4-mini-instruct", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "Phi-4-mini-instruct",     label: "Phi-4 Mini Instruct",     tag: "mini",     ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "Phi-4",                   label: "Phi-4",                    tag: "flagship", ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "Phi-4-multimodal-instruct", label: "Phi-4 Multimodal",       tag: "vision",   ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "Phi-3.5-MoE-instruct",    label: "Phi-3.5 MoE Instruct",    tag: "MoE",      ctx: "128K", in: "", out: "", cache: "" },
+      { id: "Phi-3.5-mini-instruct",   label: "Phi-3.5 Mini Instruct",   tag: "mini",     ctx: "128K", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://github.com/marketplace/models/azureml/Phi-4-mini-instruct",
+    createKeyUrl: "https://github.com/settings/tokens",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
   },
 
@@ -1567,7 +1601,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/sonnet-4.5",                        label: "Claude Sonnet 4.5",                   tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",          tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",  tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
-      // ── DeepSeek ──────────────────────────────────────────────────────────
+      // ── DeepSeek ──────────────────────────────────────────���───────────────
       { id: "mk/deepseek-3.2",                      label: "DeepSeek 3.2",                        tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
       { id: "mk/deepseek-3.2-thinking",             label: "DeepSeek 3.2 Thinking",               tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
       { id: "mk/deepseek-3.2-agentic",              label: "DeepSeek 3.2 Agentic",                tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
@@ -2083,16 +2117,25 @@ const PRESETS: ProviderPreset[] = [
     id: "leonardoai",
     name: "Leonardo.Ai",
     country: "AU",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://cloud.leonardo.ai/api/rest/v1/generations",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "leonardoai/phoenix-1.0", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      modelId: "aa77f04e-3eec-4034-9c07-d0f619684628",
+      prompt: "{{PROMPT}}",
+      num_images: 1,
+      width: 1024,
+      height: 1024,
+    }, null, 2),
     models: [
-      { id: "leonardoai/phoenix-1.0",   label: "Phoenix 1.0",   tag: "flagship", ctx: "–", in: "", out: "", cache: "" },
-      { id: "leonardoai/lucid-origin",  label: "Lucid Origin",  tag: "image",    ctx: "–", in: "", out: "", cache: "" },
+      { id: "aa77f04e-3eec-4034-9c07-d0f619684628", label: "Phoenix 1.0 (Image)",  tag: "image",   ctx: "–", in: "", out: "", cache: "" },
+      { id: "b24e16ff-06e3-43eb-8d33-4416c2d75876", label: "Lightning XL (Image)", tag: "fast",    ctx: "–", in: "", out: "", cache: "" },
     ],
-    docsUrl: "https://openrouter.ai/leonardoai",
-    createKeyUrl: "https://openrouter.ai/keys",
+    docsUrl: "https://docs.leonardo.ai/reference/creategeneration",
+    createKeyUrl: "https://app.leonardo.ai/settings/api-keys",
     color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
   },
   {
@@ -3309,7 +3352,7 @@ export default function ManualKeyTester() {
     const resolvedBody = activeEnv && bodyTemplate ? interpolate(bodyTemplate, activeEnv) : (bodyTemplate || undefined)
 
     if (useStreaming) {
-      // ── Streaming path ────────────────────────────────────────────────────
+      // ── Streaming path ───────────────────────────────────────��────────────
       setIsStreaming(true)
       setStreamingText("")
 
@@ -5373,6 +5416,18 @@ export default function ManualKeyTester() {
                       )}
                     </div>
                   </div>
+
+                  {/* Provider note — static note or auto-detected OpenRouter routing */}
+                  {(selectedPreset.note || selectedPreset.endpoint.includes("openrouter.ai")) && (
+                    <div className="flex items-start gap-2 px-2.5 py-2 rounded border border-amber-500/20 bg-amber-500/5">
+                      <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5 text-amber-400/80 flex-shrink-0 mt-px" aria-hidden>
+                        <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM7 7h2v5H7V7zm0-3h2v2H7V4z" fill="currentColor"/>
+                      </svg>
+                      <p className="text-[10px] text-amber-400/80 leading-relaxed">
+                        {selectedPreset.note ?? "Routed via OpenRouter — use your OpenRouter API key, not a direct provider key."}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Endpoint */}
                   <div className="flex flex-col gap-1.5">
