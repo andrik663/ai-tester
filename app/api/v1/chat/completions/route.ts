@@ -21,6 +21,56 @@ import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from 
 // Status codes that should trigger fallback to another key
 const FALLBACK_STATUS_CODES = new Set([401, 403, 429, 500, 502, 503, 504])
 
+/**
+ * Default max_tokens when the caller does not specify one.
+ * Set high enough to handle long code/web generation without truncation.
+ */
+const DEFAULT_MAX_TOKENS = 4096
+
+/**
+ * Hard cap per provider — prevents sending a value the provider will reject.
+ * These reflect each provider's documented output token limits.
+ */
+const PROVIDER_MAX_TOKENS: Record<string, number> = {
+  openai:      16_384,  // GPT-4o / o-series support up to 16k output
+  anthropic:    8_192,  // Claude default output cap
+  google:      65_536,  // Gemini 2.5 supports up to 65k output tokens
+  groq:         8_192,  // Groq enforces 8k max_tokens
+  mistral:     32_768,  // Mistral Large supports 32k
+  cohere:       4_096,  // Command R default
+  perplexity:   4_096,  // Sonar models
+  deepseek:    16_384,  // DeepSeek V3 / R1
+  qwen:        16_384,  // Qwen 2.5 supports 16k output
+  zhipu:        8_192,  // GLM-4 series
+  minimax:      8_192,
+  cerebras:     8_192,
+  fireworks:    8_192,
+  together:    32_768,
+  xai:          8_192,  // Grok via Responses API (no max_tokens field, but cap for safety)
+  huggingface:  2_048,
+  dahono:      16_384,  // Gateway — defer to underlying model
+  openrouter:  32_768,
+  siliconflow: 16_384,
+  novita:       8_192,
+  nebius:       8_192,
+  hyperbolic:  16_384,
+  sambanova:   16_384,
+  nvidia:      16_384,
+  deepinfra:   16_384,
+  featherless:  8_192,
+  lepton:       8_192,
+  friendli:     8_192,
+}
+
+/** Resolve effective max_tokens: clamp user value to provider cap, or use default. */
+function resolveMaxTokens(providerId: string, requested?: number): number {
+  const cap = PROVIDER_MAX_TOKENS[providerId] ?? DEFAULT_MAX_TOKENS
+  if (requested && requested > 0) {
+    return Math.min(requested, cap)
+  }
+  return Math.min(DEFAULT_MAX_TOKENS, cap)
+}
+
 export const runtime = "nodejs"
 export const maxDuration = 60
 
@@ -140,10 +190,13 @@ function buildForwardBody(
   // Strip provider prefix from model before forwarding (e.g. "dahono/deepseek-v3.2" → "deepseek-v3.2")
   const model = stripProviderPrefix(body.model, providerId)
 
+  // Resolve effective max_tokens: respect caller's value but clamp to provider cap
+  const maxTokens = resolveMaxTokens(providerId, body.max_tokens)
+
   if (providerId === "anthropic") {
     return {
       model,
-      max_tokens: body.max_tokens ?? 1024,
+      max_tokens: maxTokens,
       messages: body.messages,
       stream: body.stream ?? false,
     }
@@ -157,8 +210,17 @@ function buildForwardBody(
         parts: [{ text: typeof userMsg?.content === "string" ? userMsg.content : JSON.stringify(userMsg?.content) }],
       }],
       generationConfig: {
-        maxOutputTokens: body.max_tokens ?? 1024,
+        maxOutputTokens: maxTokens,
       },
+    }
+  }
+
+  // xAI Responses API — does not accept max_tokens field
+  if (providerId === "xai") {
+    return {
+      model,
+      input: body.messages,
+      stream: body.stream ?? false,
     }
   }
 
@@ -166,7 +228,7 @@ function buildForwardBody(
   return {
     model,
     messages: body.messages,
-    max_tokens: body.max_tokens ?? 1024,
+    max_tokens: maxTokens,
     temperature: body.temperature,
     stream: body.stream ?? false,
   }
