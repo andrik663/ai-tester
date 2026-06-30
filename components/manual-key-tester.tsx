@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import React, { useState, useRef, useEffect, useCallback } from "react"
 import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
@@ -1744,7 +1744,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
 
-  // ── Custom ─────────────────────����──────────────────────────────────────────
+  // ── Custom ──────────────────��──����──────────────────────────────────────────
   // ── Missing providers from requested list ────────────────────────────────
   {
     id: "alfredpros",
@@ -2306,7 +2306,81 @@ function ProviderLogo({
   )
 }
 
-// ── Icons ����────────────────────������─������───────────────────────────────────────────
+// ── Sidebar provider row ──────────────────────────────────────────────────────
+// Defined at module level so React can track hooks correctly.
+
+interface SidebarProviderRowProps {
+  p: ProviderPreset
+  isPinned: boolean
+  isSelected: boolean
+  togglePin: (id: string, e: React.MouseEvent) => void
+  applyPreset: (p: ProviderPreset) => void
+}
+
+function SidebarProviderRow({ p, isPinned, isSelected, togglePin, applyPreset }: SidebarProviderRowProps) {
+  const [hovered, setHovered] = useState(false)
+  const pinnable = p.id !== "dahono" && p.id !== "custom"
+
+  return (
+    <div
+      className="relative flex items-center rounded"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Main row button */}
+      <button
+        onClick={() => applyPreset(p)}
+        className={`text-xs font-medium py-2 rounded transition-colors text-left flex items-center gap-2 min-w-0 flex-1 ${
+          pinnable ? "pl-2.5 pr-7" : "px-2.5"
+        } ${
+          isSelected
+            ? "bg-secondary text-foreground"
+            : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
+        }`}
+      >
+        <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 transition-opacity ${
+          isSelected ? "opacity-100" : hovered ? "opacity-90" : "opacity-60"
+        }`}>
+          <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
+        </span>
+        <span className="flex-1 min-w-0 truncate">{p.name}</span>
+        {p.country && !hovered && (
+          <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
+            {p.country}
+          </span>
+        )}
+      </button>
+
+      {/* Pin / unpin button — overlaid, only for pinnable providers */}
+      {pinnable && (
+        <button
+          onClick={(e) => togglePin(p.id, e)}
+          aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
+          title={isPinned ? "Unpin" : "Pin to top"}
+          style={{ opacity: isPinned ? 1 : hovered ? 0.65 : 0 }}
+          className={`absolute right-1 flex items-center justify-center w-5 h-5 rounded transition-opacity ${
+            isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary hover:opacity-100"
+          } ${!isPinned && !hovered ? "pointer-events-none" : ""}`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill={isPinned ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-3 h-3"
+          >
+            <line x1="12" y1="17" x2="12" y2="22" />
+            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+          </svg>
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ── Icons ────────────────────────────────────────────────────────────────────
 
 function SpinnerIcon() {
   return (
@@ -3414,75 +3488,12 @@ export default function ManualKeyTester() {
                 </div>
               )
 
-              // Inline component so useState(hover) works per-row
-              const ProviderRow = ({ p, isPinned }: { p: ProviderPreset; isPinned: boolean }) => {
-                const [hovered, setHovered] = React.useState(false)
-                const isSelected = selectedPreset.id === p.id
-                const pinnable   = p.id !== "dahono" && p.id !== "custom"
-
-                return (
-                  <div
-                    className="relative flex items-center rounded"
-                    onMouseEnter={() => setHovered(true)}
-                    onMouseLeave={() => setHovered(false)}
-                  >
-                    {/* Main row button */}
-                    <button
-                      onClick={() => applyPreset(p)}
-                      className={`text-xs font-medium py-2 rounded transition-colors text-left flex items-center gap-2 min-w-0 flex-1 ${
-                        pinnable ? "pl-2.5 pr-7" : "px-2.5"
-                      } ${
-                        isSelected
-                          ? "bg-secondary text-foreground"
-                          : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
-                      }`}
-                    >
-                      <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 transition-opacity ${
-                        isSelected ? "opacity-100" : hovered ? "opacity-90" : "opacity-60"
-                      }`}>
-                        <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
-                      </span>
-                      <span className="flex-1 min-w-0 truncate">{p.name}</span>
-                      {p.country && !hovered && (
-                        <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
-                          {p.country}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Pin / unpin button — overlaid, only for pinnable providers */}
-                    {pinnable && (
-                      <button
-                        onClick={(e) => togglePin(p.id, e)}
-                        aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
-                        title={isPinned ? "Unpin" : "Pin to top"}
-                        style={{ opacity: isPinned ? 1 : hovered ? 0.65 : 0 }}
-                        className={`absolute right-1 flex items-center justify-center w-5 h-5 rounded transition-opacity ${
-                          isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary hover:opacity-100"
-                        } ${!isPinned && !hovered ? "pointer-events-none" : ""}`}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill={isPinned ? "currentColor" : "none"}
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="w-3 h-3"
-                        >
-                          <line x1="12" y1="17" x2="12" y2="22" />
-                          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                )
-              }
-
               return (
                 <>
                   {/* Dahono (always first) */}
-                  {dahonoRow.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
+                  {dahonoRow.map((p) => (
+                    <SidebarProviderRow key={p.id} p={p} isPinned={false} isSelected={selectedPreset.id === p.id} togglePin={togglePin} applyPreset={applyPreset} />
+                  ))}
 
                   {/* Pinned section */}
                   {pinned.length > 0 && !q && (
@@ -3494,7 +3505,9 @@ export default function ManualKeyTester() {
                         </svg>
                         <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/50">Pinned</span>
                       </div>
-                      {pinned.map((p) => <ProviderRow key={p.id} p={p} isPinned={true} />)}
+                      {pinned.map((p) => (
+                        <SidebarProviderRow key={p.id} p={p} isPinned={true} isSelected={selectedPreset.id === p.id} togglePin={togglePin} applyPreset={applyPreset} />
+                      ))}
                       <div className="mx-1 my-1.5 border-t border-border/40" />
                     </>
                   )}
@@ -3507,13 +3520,17 @@ export default function ManualKeyTester() {
                   )}
 
                   {/* Unpinned providers A→Z */}
-                  {middle.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
+                  {middle.map((p) => (
+                    <SidebarProviderRow key={p.id} p={p} isPinned={false} isSelected={selectedPreset.id === p.id} togglePin={togglePin} applyPreset={applyPreset} />
+                  ))}
 
                   {/* Custom (always last) */}
                   {customRow.length > 0 && (
                     <>
                       <div className="mx-1 my-1.5 border-t border-border/40" />
-                      {customRow.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
+                      {customRow.map((p) => (
+                        <SidebarProviderRow key={p.id} p={p} isPinned={false} isSelected={selectedPreset.id === p.id} togglePin={togglePin} applyPreset={applyPreset} />
+                      ))}
                     </>
                   )}
                 </>
