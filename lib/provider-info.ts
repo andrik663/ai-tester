@@ -632,7 +632,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Qwen3.x ───────────────���─��────���─����─��─���───────────────────────────────
+      // ── Qwen3.x ───────────��───���─��────���─����─��─���───────────────────────────────
       m("qwen3.7-max",              1.25, 3.75, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://qwenlm.github.io/blog/qwen3-7-max/", promoOriginalInputPer1M: 3.50, promoOriginalOutputPer1M: 10.50 }),
       m("qwen3.6-plus",             0.50, 3.00, 1000, { promo: true, promoLabel: "New",        promoLink: "https://qwenlm.github.io/blog/" }),
       m("qwen3-coder-480b-a35b",    0.38, 1.55,  262, { promo: true, promoLabel: "Coder",      promoLink: "https://qwenlm.github.io/blog/qwen3-coder/" }),
@@ -894,7 +894,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Deep Infra ──────────────────────────────────────────────────��──����──��──
+  // ── Deep Infra ──────────────────────────────────────────────────����──����──��──
   deepinfra: {
     id: "deepinfra",
     name: "Deep Infra",
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ───────────────────────────────��───��─��───��───��────��──��───��──
+      // ── Llama 3 ────────────────────────────��──��───��─��───��───��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1867,8 +1867,6 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("openai/o4-mini",                null, null, 200),
       m("google/gemini-2.5-pro",         null, null, 1000),
       m("google/gemini-2.5-flash",       null, null, 1000),
-      m("deepseek/deepseek-v4-flash",    null, null, 1000),
-      m("deepseek/deepseek-v4-pro",      null, null, 1000),
       m("meta/llama-3.3-70b-instruct",   null, null, 131),
       m("qwen/qwen3-235b-a22b",          null, null, 131),
       m("mistral/mistral-large-latest",  null, null, 128),

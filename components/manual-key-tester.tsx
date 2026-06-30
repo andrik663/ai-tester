@@ -1744,7 +1744,361 @@ const PRESETS: ProviderPreset[] = [
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
 
-  // ── Custom ────────────────────────────────────────────────────────────────
+  // ── Custom ─────────────────────����──────────────────────────────────────────
+  // ── Missing providers from requested list ────────────────────────────────
+  {
+    id: "alfredpros",
+    name: "AlfredPros",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "alfredpros/codellama-7b-instruct-solidity", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "alfredpros/codellama-7b-instruct-solidity", label: "CodeLLaMa 7B Instruct Solidity", tag: "code", ctx: "4K ctx", in: "$0.8/M", out: "$1.2/M", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/alfredpros",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+  },
+  {
+    id: "alpindale",
+    name: "Alpindale",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "alpindale/goliath-120b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "alpindale/goliath-120b", label: "Goliath 120B", tag: "large", ctx: "6K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/alpindale",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+  },
+  {
+    id: "arizeai",
+    name: "Arize AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "arize-ai/qwen-2-1.5b-instruct", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "arize-ai/qwen-2-1.5b-instruct", label: "Qwen 2 1.5B Instruct", tag: "instruct", ctx: "32K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/arizeai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+  },
+  {
+    id: "bytedance-seed",
+    name: "ByteDance Seed",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "bytedance-seed/seed-2.0-lite", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "bytedance-seed/seed-2.0-lite",   label: "Seed 2.0 Lite",    tag: "chat",  ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "bytedance-seed/seed-2.0-mini",   label: "Seed 2.0 Mini",    tag: "mini",  ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "bytedance-seed/seed-1.6",        label: "Seed 1.6",         tag: "chat",  ctx: "256K ctx", in: "", out: "", cache: "" },
+      { id: "bytedance-seed/seed-1.6-flash",  label: "Seed 1.6 Flash",   tag: "fast",  ctx: "256K ctx", in: "", out: "", cache: "" },
+      { id: "bytedance-seed/seedream-4.0",    label: "Seedream 4.0",     tag: "image", ctx: "–",        in: "", out: "", cache: "" },
+      { id: "bytedance-seed/seedream-3.0",    label: "Seedream 3.0",     tag: "image", ctx: "–",        in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/bytedance-seed",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-red-400 bg-red-400/10 border-red-400/20",
+  },
+  {
+    id: "eleutherai",
+    name: "EleutherAI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "eleutherai/llemma_7b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "eleutherai/llemma_7b", label: "Llemma 7B (Math)", tag: "math", ctx: "4K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/eleutherai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-green-400 bg-green-400/10 border-green-400/20",
+  },
+  {
+    id: "essentialai",
+    name: "Essential AI",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "essentialai/rnj-1-instruct", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "essentialai/rnj-1-instruct", label: "RNJ-1 Instruct", tag: "instruct", ctx: "131K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/essentialai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-teal-400 bg-teal-400/10 border-teal-400/20",
+  },
+  {
+    id: "hidream",
+    name: "HiDream",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "hidream-ai/hidream-i1-full", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "hidream-ai/hidream-i1-full",  label: "HiDream-I1 Full",  tag: "image",  ctx: "–",  in: "", out: "", cache: "" },
+      { id: "hidream-ai/hidream-i1-dev",   label: "HiDream-I1 Dev",   tag: "image",  ctx: "–",  in: "", out: "", cache: "" },
+      { id: "hidream-ai/hidream-i1-fast",  label: "HiDream-I1 Fast",  tag: "image",  ctx: "–",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/hidream-ai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-pink-400 bg-pink-400/10 border-pink-400/20",
+  },
+  {
+    id: "kling",
+    name: "Kling (Kuaishou)",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "kwaivgi/kling-2.1-master", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "kwaivgi/kling-2.1-master",   label: "Kling 2.1 Master",   tag: "flagship", ctx: "–", in: "", out: "", cache: "" },
+      { id: "kwaivgi/kling-2.1-pro",      label: "Kling 2.1 Pro",      tag: "pro",      ctx: "–", in: "", out: "", cache: "" },
+      { id: "kwaivgi/kling-2.1-standard", label: "Kling 2.1 Standard", tag: "standard", ctx: "–", in: "", out: "", cache: "" },
+      { id: "kwaivgi/kling-2.0-master",   label: "Kling 2.0 Master",   tag: "stable",   ctx: "–", in: "", out: "", cache: "" },
+      { id: "kwaivgi/kling-1.6-pro",      label: "Kling 1.6 Pro",      tag: "v1.6",     ctx: "–", in: "", out: "", cache: "" },
+      { id: "kwaivgi/kling-1.6-standard", label: "Kling 1.6 Standard", tag: "v1.6",     ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/kwaivgi",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-red-300 bg-red-300/10 border-red-300/20",
+  },
+  {
+    id: "leonardoai",
+    name: "Leonardo.Ai",
+    country: "AU",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "leonardoai/phoenix-1.0", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "leonardoai/phoenix-1.0",   label: "Phoenix 1.0",   tag: "flagship", ctx: "–", in: "", out: "", cache: "" },
+      { id: "leonardoai/lucid-origin",  label: "Lucid Origin",  tag: "image",    ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/leonardoai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+  },
+  {
+    id: "lykon",
+    name: "Lykon",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "lykon/dreamshaper", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "lykon/dreamshaper", label: "DreamShaper", tag: "image", ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/lykon",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-fuchsia-300 bg-fuchsia-300/10 border-fuchsia-300/20",
+  },
+  {
+    id: "meituan",
+    name: "Meituan",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "meituan/longcat-flash-chat", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "meituan/longcat-flash-chat", label: "LongCat Flash Chat", tag: "flagship", ctx: "128K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/meituan",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+  },
+  {
+    id: "neversleep",
+    name: "NeverSleep",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "neversleep/llama-3.1-lumimaid-8b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "neversleep/llama-3.1-lumimaid-8b", label: "Lumimaid v0.2 8B", tag: "roleplay", ctx: "32K ctx", in: "", out: "", cache: "" },
+      { id: "neversleep/noromaid-20b",           label: "Noromaid 20B",     tag: "roleplay", ctx: "8K ctx",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/neversleep",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-indigo-300 bg-indigo-300/10 border-indigo-300/20",
+  },
+  {
+    id: "opengvlab",
+    name: "OpenGVLab",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "opengvlab/internvl3-78b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "opengvlab/internvl3-78b", label: "InternVL3 78B", tag: "vision", ctx: "12K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/opengvlab",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+  },
+  {
+    id: "pearlresearch",
+    name: "Pearl Research Labs",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "pearl-ai/gemma-4-31b-it", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "pearl-ai/gemma-4-31b-it", label: "Gemma 4 31B IT (Pearl)", tag: "instruct", ctx: "128K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/pearl-ai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
+  },
+  {
+    id: "pixverse",
+    name: "PixVerse",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "pixverse/pixverse-v5", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "pixverse/pixverse-v5", label: "PixVerse V5", tag: "latest", ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/pixverse",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+  },
+  {
+    id: "primeintellect",
+    name: "Prime Intellect",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "prime-intellect/intellect-3", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "prime-intellect/intellect-3", label: "INTELLECT-3", tag: "reasoning", ctx: "16K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/prime-intellect",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
+  },
+  {
+    id: "raifle",
+    name: "Raifle",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "raifle/sorcererlm-8x22b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "raifle/sorcererlm-8x22b", label: "SorcererLM 8x22B", tag: "MoE", ctx: "65K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/raifle",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-rose-300 bg-rose-300/10 border-rose-300/20",
+  },
+  {
+    id: "rundiffusion",
+    name: "RunDiffusion",
+    country: "US",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "rundiffusion/juggernaut-pro-flux", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "rundiffusion/juggernaut-pro-flux",       label: "Juggernaut Pro Flux",       tag: "image", ctx: "–", in: "", out: "", cache: "" },
+      { id: "rundiffusion/juggernaut-lightning-flux", label: "Juggernaut Lightning Flux", tag: "fast",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/rundiffusion",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+  },
+  {
+    id: "stabilityai",
+    name: "Stability AI",
+    country: "UK",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "stabilityai/stable-diffusion-3-medium", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "stabilityai/stable-diffusion-3-medium",   label: "Stable Diffusion 3 Medium",    tag: "SD3",   ctx: "–", in: "", out: "", cache: "" },
+      { id: "stabilityai/stable-diffusion-xl-base-1.0", label: "Stable Diffusion XL Base 1.0", tag: "SDXL",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/stabilityai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
+  },
+  {
+    id: "tngtech",
+    name: "TNG Technology",
+    country: "DE",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "tngtech/deepseek-r1t2-chimera", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "tngtech/deepseek-r1t2-chimera", label: "DeepSeek R1T2 Chimera", tag: "reasoning", ctx: "163K ctx", in: "", out: "", cache: "" },
+      { id: "tngtech/tng-r1t-chimera",       label: "R1T Chimera",           tag: "reasoning", ctx: "163K ctx", in: "", out: "", cache: "" },
+      { id: "tngtech/deepseek-r1t-chimera",  label: "DeepSeek R1T Chimera",  tag: "reasoning", ctx: "163K ctx", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/tngtech",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  },
+  {
+    id: "vidu",
+    name: "Vidu",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "vidu/vidu-q1", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "vidu/vidu-q1",  label: "Vidu Q1",  tag: "latest", ctx: "–", in: "", out: "", cache: "" },
+      { id: "vidu/vidu-2.0", label: "Vidu 2.0", tag: "stable", ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/vidu",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+  },
+  {
+    id: "wanai",
+    name: "Wan AI",
+    country: "CN",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    method: "POST" as const,
+    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
+    bodyTemplate: JSON.stringify({ model: "wan-ai/wan2.7-t2v", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "wan-ai/wan2.7-t2v",       label: "Wan 2.7 Text-to-Video",   tag: "video", ctx: "–", in: "", out: "", cache: "" },
+      { id: "wan-ai/wan2.6-image",      label: "Wan 2.6 Image",           tag: "image", ctx: "–", in: "", out: "", cache: "" },
+      { id: "wan-ai/wan2.2-t2v-a14b",  label: "Wan 2.2 T2V 14B",         tag: "video", ctx: "–", in: "", out: "", cache: "" },
+      { id: "wan-ai/wan2.2-i2v-a14b",  label: "Wan 2.2 Image-to-Video 14B", tag: "video", ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://openrouter.ai/wan-ai",
+    createKeyUrl: "https://openrouter.ai/keys",
+    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/20",
+  },
+
   {
     id: "custom",
     name: "Custom / cURL",
@@ -1865,6 +2219,29 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   miuclaw:        "www.miuclaw.my.id",
   conduit:        "conduit.ozdoev.net",
   zenmux:         "zenmux.ai",
+  // Added providers
+  alfredpros:       "openrouter.ai",
+  alpindale:        "openrouter.ai",
+  arizeai:          "arize.com",
+  "bytedance-seed": "volcengine.com",
+  eleutherai:       "eleuther.ai",
+  essentialai:      "essentialtai.com",
+  hidream:          "hidreamai.com",
+  kling:            "klingai.com",
+  leonardoai:       "leonardo.ai",
+  lykon:            "openrouter.ai",
+  meituan:          "meituan.com",
+  neversleep:       "openrouter.ai",
+  opengvlab:        "openrouter.ai",
+  pearlresearch:    "openrouter.ai",
+  pixverse:         "pixverse.ai",
+  primeintellect:   "primeintellect.ai",
+  raifle:           "openrouter.ai",
+  rundiffusion:     "rundiffusion.com",
+  stabilityai:      "stability.ai",
+  tngtech:          "tngtech.com",
+  vidu:             "vidu.studio",
+  wanai:            "openrouter.ai",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
@@ -2188,6 +2565,25 @@ export default function ManualKeyTester() {
   }, [])
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved">("unified")
+  // Pinned providers — persisted in localStorage
+  const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("ai_tester_pinned_providers")
+      if (stored) setPinnedProviders(JSON.parse(stored))
+    } catch {}
+  }, [])
+  function togglePin(providerId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    setPinnedProviders((prev) => {
+      const next = prev.includes(providerId)
+        ? prev.filter((id) => id !== providerId)
+        : [...prev, providerId]
+      try { localStorage.setItem("ai_tester_pinned_providers", JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
   // Onboarding banner — dismissed in localStorage
   // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
@@ -2766,7 +3162,7 @@ export default function ManualKeyTester() {
         setIsStreaming(false)
       }
     } else {
-      // ── Non-streaming path ──────────────────────────���─────────────────────
+      // ��─ Non-streaming path ──────────────────────────���─────────────────────
       setLoading(true)
       try {
         const res = await fetch("/api/manual-test", {
@@ -3002,39 +3398,126 @@ export default function ManualKeyTester() {
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
               const matched = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
-              // Dahono pinned first, Custom pinned last, rest sorted A→Z
-              const pinFirst = matched.filter((p) => p.id === "dahono")
-              const pinLast  = matched.filter((p) => p.id === "custom")
-              const middle   = matched.filter((p) => p.id !== "dahono" && p.id !== "custom").sort((a, b) => a.name.localeCompare(b.name))
-              const filtered = [...pinFirst, ...middle, ...pinLast]
-              if (filtered.length === 0) return (
+              // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
+              const dahonoRow = matched.filter((p) => p.id === "dahono")
+              const customRow = matched.filter((p) => p.id === "custom")
+              const pinned    = matched
+                .filter((p) => p.id !== "dahono" && p.id !== "custom" && pinnedProviders.includes(p.id))
+                .sort((a, b) => pinnedProviders.indexOf(a.id) - pinnedProviders.indexOf(b.id))
+              const middle    = matched
+                .filter((p) => p.id !== "dahono" && p.id !== "custom" && !pinnedProviders.includes(p.id))
+                .sort((a, b) => a.name.localeCompare(b.name))
+
+              if ([...dahonoRow, ...pinned, ...middle, ...customRow].length === 0) return (
                 <div className="text-center py-8 text-[11px] text-muted-foreground/50">
                   No providers match &ldquo;{sidebarSearch}&rdquo;
                 </div>
               )
-              return filtered.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => applyPreset(p)}
-                  className={`text-xs font-medium px-2.5 py-2 rounded transition-colors text-left w-full flex items-center gap-2 group ${
-                    selectedPreset.id === p.id
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
-                  }`}
-                >
-                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors ${
-                    selectedPreset.id === p.id ? "opacity-100" : "opacity-60 group-hover:opacity-90"
-                  }`}>
-                    <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
-                  </span>
-                  <span className="flex-1 min-w-0 truncate">{p.name}</span>
-                  {p.country && (
-                    <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
-                      {p.country}
-                    </span>
+
+              // Inline component so useState(hover) works per-row
+              const ProviderRow = ({ p, isPinned }: { p: ProviderPreset; isPinned: boolean }) => {
+                const [hovered, setHovered] = React.useState(false)
+                const isSelected = selectedPreset.id === p.id
+                const pinnable   = p.id !== "dahono" && p.id !== "custom"
+
+                return (
+                  <div
+                    className="relative flex items-center rounded"
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
+                  >
+                    {/* Main row button */}
+                    <button
+                      onClick={() => applyPreset(p)}
+                      className={`text-xs font-medium py-2 rounded transition-colors text-left flex items-center gap-2 min-w-0 flex-1 ${
+                        pinnable ? "pl-2.5 pr-7" : "px-2.5"
+                      } ${
+                        isSelected
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
+                      }`}
+                    >
+                      <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 transition-opacity ${
+                        isSelected ? "opacity-100" : hovered ? "opacity-90" : "opacity-60"
+                      }`}>
+                        <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
+                      </span>
+                      <span className="flex-1 min-w-0 truncate">{p.name}</span>
+                      {p.country && !hovered && (
+                        <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
+                          {p.country}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Pin / unpin button — overlaid, only for pinnable providers */}
+                    {pinnable && (
+                      <button
+                        onClick={(e) => togglePin(p.id, e)}
+                        aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
+                        title={isPinned ? "Unpin" : "Pin to top"}
+                        style={{ opacity: isPinned ? 1 : hovered ? 0.65 : 0 }}
+                        className={`absolute right-1 flex items-center justify-center w-5 h-5 rounded transition-opacity ${
+                          isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary hover:opacity-100"
+                        } ${!isPinned && !hovered ? "pointer-events-none" : ""}`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill={isPinned ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-3 h-3"
+                        >
+                          <line x1="12" y1="17" x2="12" y2="22" />
+                          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )
+              }
+
+              return (
+                <>
+                  {/* Dahono (always first) */}
+                  {dahonoRow.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
+
+                  {/* Pinned section */}
+                  {pinned.length > 0 && !q && (
+                    <>
+                      <div className="flex items-center gap-1.5 px-1 pt-2 pb-0.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-primary/70 flex-shrink-0">
+                          <line x1="12" y1="17" x2="12" y2="22" />
+                          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                        </svg>
+                        <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/50">Pinned</span>
+                      </div>
+                      {pinned.map((p) => <ProviderRow key={p.id} p={p} isPinned={true} />)}
+                      <div className="mx-1 my-1.5 border-t border-border/40" />
+                    </>
                   )}
-                </button>
-              ))
+
+                  {/* "All providers" label — only when pinned section is showing */}
+                  {!q && middle.length > 0 && pinned.length > 0 && (
+                    <div className="px-1 pt-0.5 pb-0.5">
+                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/40">All providers</span>
+                    </div>
+                  )}
+
+                  {/* Unpinned providers A→Z */}
+                  {middle.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
+
+                  {/* Custom (always last) */}
+                  {customRow.length > 0 && (
+                    <>
+                      <div className="mx-1 my-1.5 border-t border-border/40" />
+                      {customRow.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
+                    </>
+                  )}
+                </>
+              )
             })()}
           </div>
 
@@ -3911,7 +4394,7 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── IMAGE GEN TAB ────────────────────────────────────────────────── */}
+        {/* ── IMAGE GEN TAB ────────────────────────────────────────────��───── */}
         {activeTab === "unified" && unifiedSubTab === "image-gen" && (() => {
           const imageModels = getImageCapabilities(selectedPreset.id)
           const isImageSupported = imageModels.length > 0
@@ -4013,7 +4496,7 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── COMPARE TAB ──────────────────────────────────────────────────── */}
+        {/* ── COMPARE TAB ────��─────────────────────────────────────────────── */}
         {activeTab === "unified" && unifiedSubTab === "compare" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="max-w-5xl mx-auto px-4 py-5 flex flex-col gap-5">
@@ -4145,7 +4628,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── SAVED TAB (History + Collections merged) ──────────────────────── */}
+        {/* ── SAVED TAB (History + Collections merged) ��─────────────────────── */}
         {(activeTab === "saved" || activeTab === "history" || activeTab === "collections") && (() => {
           const savedSub = activeTab === "collections" ? "collections" : "history"
           return (
@@ -4215,7 +4698,7 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── ENVIRONMENTS TAB ──────────────────────────────────────────────── */}
+        {/* ── ENVIRONMENTS TAB ───────────────────────────────��──────────────── */}
         {activeTab === "environments" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <EnvSwitcher onEnvChange={(env) => setActiveEnv(env)} />

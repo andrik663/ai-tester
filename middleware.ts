@@ -10,9 +10,12 @@ const PUBLIC_PREFIXES = [
   '/apple-icon',
   '/robots',
   '/login',
-  '/api/auth',    // /api/auth/login and /api/auth/logout
-  '/api/export',  // /api/export/working-keys + /api/export/push — own Bearer token auth
-  '/api/v1',      // Miuclaw Gateway: /api/v1/chat/completions, /api/v1/models, /api/v1/gateway — own Bearer token auth
+  '/api/auth',        // /api/auth/login and /api/auth/logout
+  '/api/export',      // /api/export/working-keys + /api/export/push — own Bearer token auth
+  '/api/v1',          // Miuclaw Gateway: /api/v1/chat/completions, /api/v1/models, /api/v1/gateway — own Bearer token auth
+  '/api/batch-test',  // Batch model tester — auth is the provider API key supplied in the request body
+  '/api/manual-test', // Manual single request tester — same pattern
+  '/api/fetch-models', // Live model list fetcher — same pattern
 ]
 
 function isPublic(pathname: string): boolean {
