@@ -273,10 +273,16 @@ interface Props {
 // Providers that fetch live model list from the gateway (Dahono, OpenAI, Groq, etc.)
 // Imported directly from lib/providers.ts — single source of truth.
 const DYNAMIC_PROVIDERS = PROVIDERS_WITH_LIVE_MODELS
-// Image/video-only or non-standard providers — no batch chat test
+// Providers that truly cannot be batch-tested (no standard chat endpoint or
+// require interactive OAuth / variable env-based URLs):
+//   - "custom"  : user-defined endpoint, no static model list
+//   - "azure"   : endpoint URL varies per user ({{AZURE_RESOURCE_NAME}})
+// All other providers — including image/video ones — are allowed through so the
+// "Run All" button is always visible. The batch-test API will surface its own
+// error for providers with non-chat endpoints instead of silently hiding the button.
 const UNSUPPORTED_PROVIDERS = new Set([
-  "replicate", "custom", "azure",
-  "bfl", "bytedance", "recraft", "ideogram", "luma", "amazon",
+  "custom",
+  "azure",
 ])
 
 // ── Main component ────────────────────────────────────────────────────────────

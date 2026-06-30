@@ -5,13 +5,12 @@ import * as lockedKeysSchema from "./locked-keys-schema"
 import * as userSessionsSchema from "./user-sessions-schema"
 import * as gatewaySchema from "./gateway-schema"
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set")
-}
+// DATABASE_URL is optional — gateway-cache catches DB errors gracefully.
+// Throwing at module load time crashes every route that imports this file,
+// even routes that never touch the DB (e.g. /api/v1/models when empty).
+const connectionString = process.env.DATABASE_URL ?? "postgres://placeholder:placeholder@localhost:5432/placeholder"
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-})
+export const pool = new Pool({ connectionString })
 
 const schema = { ...apiKeySchema, ...lockedKeysSchema, ...userSessionsSchema, ...gatewaySchema }
 export const db = drizzle(pool, { schema })
