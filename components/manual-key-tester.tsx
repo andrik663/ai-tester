@@ -1794,7 +1794,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/minimax-m2.1-agentic",              label: "MiniMax M2.1 Agentic",                tag: "MiniMax",   ctx: "1M",     in: "", out: "", cache: "" },
       { id: "mk/minimax-m2.5",                      label: "MiniMax M2.5",                        tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
       { id: "mk/minimax-m2.5-thinking-agentic",     label: "MiniMax M2.5 Thinking Agentic",       tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
-      // ── Kimi (Moonshot) ───────────────────────────────────────────────────
+      // ── Kimi (Moonshot) ─────────────────────────────────���─────────────────
       { id: "mk/kimi-k2.7-code",                    label: "Kimi K2.7 Code (limited)",            tag: "Kimi",      ctx: "262K",   in: "", out: "", cache: "" },
       // ── Qwen3 ─────────────────────────────────────────────────────────────
       { id: "mk/qwen3-max",                         label: "Qwen3 Max",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
@@ -2260,8 +2260,8 @@ const PRESETS: ProviderPreset[] = [
     color: "text-pink-400 bg-pink-400/10 border-pink-400/20",
   },
   {
-    id: "kling",
-    name: "Kling (Kuaishou)",
+    id: "kling-or",
+    name: "Kling (via OpenRouter)",
     country: "CN",
     endpoint: "https://openrouter.ai/api/v1/chat/completions",
     method: "POST" as const,
@@ -2682,6 +2682,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   essentialai:      "essentialtai.com",
   hidream:          "hidreamai.com",
   kling:            "klingai.com",
+  "kling-or":       "openrouter.ai",
   leonardoai:       "leonardo.ai",
   lykon:            "openrouter.ai",
   meituan:          "meituan.com",
@@ -4740,7 +4741,7 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── OCR TAB ──────────────────────��───────────────��───────────────── */}
+        {/* ── OCR TAB ──────────────────────��───────────────��───────────────���─ */}
         {activeTab === "unified" && unifiedSubTab === "ocr" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">

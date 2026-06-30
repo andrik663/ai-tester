@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ���������──────────────────────────────────────────────────────────
+      // ── MiniMax ����������──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1651,8 +1651,8 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  kling: {
-    id: "kling",
+  "kling-or": {
+    id: "kling-or",
     models: [
       "kwaivgi/kling-2.1-master",
       "kwaivgi/kling-2.1-pro",
