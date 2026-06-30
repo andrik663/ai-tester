@@ -159,6 +159,35 @@ export async function POST(req: Request) {
     return Response.json({ operationName: `kling:${taskId}`, provider: "kling" })
   }
 
+  // ── Jempol.in video ──────────────────────────────────────────────────────
+  if (providerId === "jempol") {
+    const selectedModel = model ?? "grok-premium-video"
+    const body: Record<string, string> = {
+      model: selectedModel,
+      prompt,
+      aspectRatio: aspectRatio ?? "16:9",
+    }
+    const res = await fetch("https://jempol.in/v1/videos/generations", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { message?: string; error?: string }
+      return Response.json({ error: err.message ?? err.error ?? `HTTP ${res.status}` }, { status: res.status })
+    }
+    const data = await res.json() as {
+      success?: boolean
+      job_id?: string
+      status?: string
+      message?: string
+    }
+    if (!data.success || !data.job_id) {
+      return Response.json({ error: data.message ?? "No job_id returned" }, { status: 500 })
+    }
+    return Response.json({ operationName: `jempol:${data.job_id}`, provider: "jempol" })
+  }
+
   // ── Google Veo (default) ───────────────────────────────────────────────────
   const selectedModel = model ?? "veo-3.1-generate-preview"
   const response = await fetch(
@@ -356,6 +385,44 @@ export async function GET(req: Request) {
     if (task?.task_status === "failed") return Response.json({ done: true, error: data.message ?? "Generation failed" })
     if (task?.task_status !== "succeed" || !task.task_result?.videos?.[0]?.url) return Response.json({ done: false })
     const videoUrl = task.task_result.videos[0].url!
+    const videoRes = await fetch(videoUrl)
+    if (!videoRes.ok) return Response.json({ done: true, error: "Failed to download video" })
+    const buf = await videoRes.arrayBuffer()
+    const base64 = Buffer.from(buf).toString("base64")
+    return Response.json({ done: true, videoBase64: base64, mimeType: "video/mp4" })
+  }
+
+  // ── Jempol.in polling ────────────────────────────────────────────────────
+  // Poll GET /v1/jobs/{job_id} every 5 s until success:true or status:failed.
+  // 503 + transient:true → retry, not a hard failure.
+  if (operationName.startsWith("jempol:")) {
+    const jobId = operationName.slice("jempol:".length)
+    const res = await fetch(`https://jempol.in/v1/jobs/${jobId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    })
+    // Transient 503 → keep polling
+    if (res.status === 503) {
+      const body = await res.json().catch(() => ({})) as { transient?: boolean }
+      if (body.transient) return Response.json({ done: false })
+      return Response.json({ done: true, error: "Service unavailable (503)" })
+    }
+    if (!res.ok) return Response.json({ done: true, error: `HTTP ${res.status}` })
+    const data = await res.json() as {
+      success?: boolean
+      status?: string
+      credits_released?: number
+      data?: Array<{ url?: string }>
+      message?: string
+    }
+    // Still queued / processing
+    if (!data.success && data.status !== "failed") return Response.json({ done: false })
+    // Failed
+    if (data.status === "failed") {
+      return Response.json({ done: true, error: data.message ?? "Generation failed" })
+    }
+    // Succeeded — download video and return as base64
+    const videoUrl = data.data?.[0]?.url
+    if (!videoUrl) return Response.json({ done: true, error: "No video URL in response" })
     const videoRes = await fetch(videoUrl)
     if (!videoRes.ok) return Response.json({ done: true, error: "Failed to download video" })
     const buf = await videoRes.arrayBuffer()

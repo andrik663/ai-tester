@@ -537,6 +537,22 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     videoAspectRatios: ["16:9", "9:16", "1:1"],
   },
 
+  // ── Jempol.in ─────────────────────────────────────────────────────────────
+  jempol: {
+    image: [
+      {
+        id: "grok-premium-image",
+        label: "Grok Premium Image",
+        tag: "Jempol",
+        description: "Jempol.in image generation powered by Grok",
+      },
+    ],
+    video: [
+      { id: "grok-premium-video", label: "Grok Premium Video", badge: "ID" },
+    ],
+    videoAspectRatios: ["16:9", "9:16", "1:1"],
+  },
+
   // ── Fal.ai ────────────────────────────────────────────────────────────────
   fal: {
     image: [

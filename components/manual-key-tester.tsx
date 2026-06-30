@@ -1092,6 +1092,31 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://klingai.com/api-keys",
     color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
   },
+  // ── Jempol.in ─────────────────────────────────────────────────────────────
+  {
+    id: "jempol",
+    name: "Jempol.in",
+    country: "ID",
+    endpoint: "https://jempol.in/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "grok-premium",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "grok-premium",        label: "Grok Premium",        tag: "chat",  ctx: "131K", in: "", out: "", cache: "" },
+      { id: "grok-premium-vision", label: "Grok Premium Vision", tag: "vision",ctx: "131K", in: "", out: "", cache: "" },
+      { id: "grok-premium-video",  label: "Grok Premium Video",  tag: "video", ctx: "–",    in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://jempol.in/tutorial.php",
+    createKeyUrl: "https://jempol.in/dashboard",
+    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/20",
+  },
   // ── Fal.ai ────────────────────────────────────────────────────────────────
   {
     id: "fal",

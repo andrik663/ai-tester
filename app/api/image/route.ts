@@ -554,8 +554,33 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
   },
 }
 
-// Alias: dahono uses openai-compatible image API
+// Alias: jempol uses openai-compatible image API
+PROVIDER_CONFIGS.jempol = {
+  buildUrl: () => "https://jempol.in/v1/images/generations",
+  buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
+  buildBody: (prompt, _model, aspectRatio) => {
+    const sizeMap: Record<string, string> = { "1:1": "1024x1024", "16:9": "1792x1024", "9:16": "1024x1792" }
+    return {
+      model: "grok-premium-image",
+      prompt,
+      n: 1,
+      size: sizeMap[aspectRatio] ?? "1024x1024",
+      response_format: "url",
+    }
+  },
+  extractImage: (data: unknown) => {
+    const d = data as { data?: Array<{ url?: string; b64_json?: string }> }
+    const item = d.data?.[0]
+    if (item?.b64_json) return { imageData: item.b64_json, imageMimeType: "image/png", textContent: "" }
+    return { imageData: null, imageMimeType: "image/png", textContent: item?.url ?? "" }
+  },
+  extractError: (data: unknown, status: number) => {
+    const d = data as { error?: { message?: string } }
+    return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+  },
+}
 
+// Alias: dahono uses openai-compatible image API
 PROVIDER_CONFIGS.dahono = {
   ...PROVIDER_CONFIGS.openai,
   buildUrl: () => "https://gateway.dahono.com/v1/images/generations",
