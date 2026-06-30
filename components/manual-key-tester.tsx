@@ -987,6 +987,138 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://lumalabs.ai/dream-machine/api/keys",
     color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
   },
+  // ── Stability AI ─────────────────────────────────────────────────────────
+  {
+    id: "stability",
+    name: "Stability AI",
+    country: "GB",
+    endpoint: "https://api.stability.ai/v2beta/stable-image/generate/sd3",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Accept": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "sd3.5-large",
+      prompt: "{{PROMPT}}",
+      output_format: "png",
+      aspect_ratio: "1:1",
+    }, null, 2),
+    models: [
+      { id: "sd3.5-large",           label: "SD 3.5 Large",        tag: "flagship", ctx: "–", in: "", out: "", cache: "" },
+      { id: "sd3.5-large-turbo",     label: "SD 3.5 Large Turbo",  tag: "fast",     ctx: "–", in: "", out: "", cache: "" },
+      { id: "sd3.5-medium",          label: "SD 3.5 Medium",       tag: "balanced", ctx: "–", in: "", out: "", cache: "" },
+      { id: "stable-image-ultra",    label: "Stable Image Ultra",  tag: "ultra",    ctx: "–", in: "", out: "", cache: "" },
+      { id: "stable-image-core",     label: "Stable Image Core",   tag: "core",     ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://platform.stability.ai/docs/api-reference",
+    createKeyUrl: "https://platform.stability.ai/account/keys",
+    color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+  },
+  // ── Runway ────────────────────────────────────────────────────────────────
+  {
+    id: "runway",
+    name: "Runway",
+    country: "US",
+    endpoint: "https://api.dev.runwayml.com/v1/image_to_video",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+      "X-Runway-Version": "2024-11-06",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "gen4_turbo",
+      promptText: "{{PROMPT}}",
+      ratio: "1280:720",
+      duration: 5,
+    }, null, 2),
+    models: [
+      { id: "gen4_turbo",   label: "Gen-4 Turbo",         tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "gen3a_turbo",  label: "Gen-3 Alpha Turbo",   tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.dev.runwayml.com/api/endpoints/image_to_video",
+    createKeyUrl: "https://app.runwayml.com/settings/api-keys",
+    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+  },
+  // ── Pika Labs ─────────────────────────────────────────────────────────────
+  {
+    id: "pika",
+    name: "Pika Labs",
+    country: "US",
+    endpoint: "https://api.pika.art/v2/generate",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      promptText: "{{PROMPT}}",
+      model: "pika-2.2",
+      options: { aspectRatio: "16:9", frameRate: 24, duration: 5 },
+    }, null, 2),
+    models: [
+      { id: "pika-2.2",  label: "Pika 2.2",  tag: "video", ctx: "–", in: "", out: "", cache: "" },
+      { id: "pika-2.1",  label: "Pika 2.1",  tag: "video", ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.pika.art/",
+    createKeyUrl: "https://pika.art/dashboard/api-keys",
+    color: "text-rose-400 bg-rose-400/10 border-rose-400/20",
+  },
+  // ── Kling (Kuaishou) direct API ───────────────────────────────────────────
+  {
+    id: "kling",
+    name: "Kling AI (Kuaishou)",
+    country: "CN",
+    endpoint: "https://api.klingai.com/v1/videos/text2video",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model_name: "kling-v2.1",
+      prompt: "{{PROMPT}}",
+      aspect_ratio: "16:9",
+      duration: "5",
+    }, null, 2),
+    models: [
+      { id: "kling-v2.1",       label: "Kling V2.1",       tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "kling-v2.0",       label: "Kling V2.0",       tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "kling-v1.6",       label: "Kling V1.6",       tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "kling-v2-0-image", label: "Kling V2.0 Image", tag: "image",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.qingque.cn/d/home/eZQDzO9eMXuVGpFPi9gqtApFq",
+    createKeyUrl: "https://klingai.com/api-keys",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+  },
+  // ── Fal.ai ────────────────────────────────────────────────────────────────
+  {
+    id: "fal",
+    name: "Fal.ai",
+    country: "US",
+    endpoint: "https://fal.run/fal-ai/flux-pro/v1.1-ultra",
+    method: "POST",
+    headers: {
+      "Authorization": "Key {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      prompt: "{{PROMPT}}",
+      image_size: "square",
+      num_images: 1,
+    }, null, 2),
+    models: [
+      { id: "fal-ai/flux-pro/v1.1-ultra", label: "FLUX Pro 1.1 Ultra",  tag: "FLUX",     ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/flux/schnell",         label: "FLUX Schnell",         tag: "FLUX FAST", ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/ideogram/v3",          label: "Ideogram V3",          tag: "Ideogram",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/recraft-v3",           label: "Recraft V3",           tag: "Recraft",   ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/aura-flow",            label: "AuraFlow",             tag: "AuraFlow",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://fal.ai/docs",
+    createKeyUrl: "https://fal.ai/dashboard/keys",
+    color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
+  },
   {
     id: "amazon",
     name: "Amazon Nova (Bedrock)",
@@ -1617,7 +1749,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/qwen3-coder-plus",                  label: "Qwen3 Coder Plus",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-480b-a35b-instruct",    label: "Qwen3 Coder 480B A35B Instruct",      tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-flash",                 label: "Qwen3 Coder Flash",                   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
-      // ── GLM (Z-AI) ────────────────────────────────────────────────────────
+      // ── GLM (Z-AI) ─────────────────────────���──────────────────────────────
       { id: "mk/glm-5",                             label: "GLM-5",                               tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/glm-5-thinking",                    label: "GLM-5 Thinking",                      tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/glm-5-agentic",                     label: "GLM-5 Agentic",                       tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },

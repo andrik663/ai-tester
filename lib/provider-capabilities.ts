@@ -439,7 +439,7 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     video: [],
   },
 
-  // ── Luma (Photon) ─────────────────────────────────────────────────────────
+  // ── Luma (Photon + Dream Machine) ────────────────────────────────────────
   luma: {
     image: [
       {
@@ -453,6 +453,122 @@ export const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
         label: "Photon Flash",
         tag: "Luma Fast",
         description: "Fast Luma Photon image generation",
+      },
+    ],
+    video: [
+      { id: "luma-dream-machine-v1.6", label: "Dream Machine 1.6", badge: "NEW" },
+      { id: "luma-dream-machine-v1.5", label: "Dream Machine 1.5", badge: "STABLE" },
+    ],
+    videoAspectRatios: ["16:9", "9:16", "1:1", "4:3"],
+  },
+
+  // ── Stability AI ─────────────────────────────────────────────────────────
+  stability: {
+    image: [
+      {
+        id: "sd3.5-large",
+        label: "Stable Diffusion 3.5 Large",
+        tag: "SD 3.5",
+        description: "Stability AI's best quality model, photorealistic and creative",
+      },
+      {
+        id: "sd3.5-large-turbo",
+        label: "Stable Diffusion 3.5 Large Turbo",
+        tag: "SD 3.5 Turbo",
+        description: "Fast 4-step SD 3.5 generation",
+      },
+      {
+        id: "sd3.5-medium",
+        label: "Stable Diffusion 3.5 Medium",
+        tag: "SD 3.5",
+        description: "Balanced quality and speed for everyday use",
+      },
+      {
+        id: "stable-image-ultra",
+        label: "Stable Image Ultra",
+        tag: "Ultra",
+        description: "Highest resolution, flagship Stable Image model",
+      },
+      {
+        id: "stable-image-core",
+        label: "Stable Image Core",
+        tag: "Core",
+        description: "Fast, cost-effective high-quality image generation",
+      },
+    ],
+    video: [],
+  },
+
+  // ── Runway ────────────────────────────────────────────────────────────────
+  runway: {
+    image: [],
+    video: [
+      { id: "gen4_turbo", label: "Gen-4 Turbo", badge: "NEW" },
+      { id: "gen3a_turbo", label: "Gen-3 Alpha Turbo", badge: "STABLE" },
+    ],
+    videoAspectRatios: ["16:9", "9:16", "1:1"],
+  },
+
+  // ── Pika Labs ─────────────────────────────────────────────────────────────
+  pika: {
+    image: [],
+    video: [
+      { id: "pika-2.2", label: "Pika 2.2", badge: "NEW" },
+      { id: "pika-2.1", label: "Pika 2.1", badge: "STABLE" },
+    ],
+    videoAspectRatios: ["16:9", "9:16", "1:1"],
+  },
+
+  // ── Kling (Kuaishou) ──────────────────────────────────────────────────────
+  kling: {
+    image: [
+      {
+        id: "kling-v2-0-image",
+        label: "Kling V2.0 Image",
+        tag: "Kling",
+        description: "Kling AI high-quality text-to-image generation",
+      },
+    ],
+    video: [
+      { id: "kling-v2.1", label: "Kling V2.1", badge: "NEW" },
+      { id: "kling-v2.0", label: "Kling V2.0", badge: "STABLE" },
+      { id: "kling-v1.6", label: "Kling V1.6", badge: "FAST" },
+    ],
+    videoAspectRatios: ["16:9", "9:16", "1:1"],
+  },
+
+  // ── Fal.ai ────────────────────────────────────────────────────────────────
+  fal: {
+    image: [
+      {
+        id: "fal-ai/flux-pro/v1.1-ultra",
+        label: "FLUX Pro 1.1 Ultra",
+        tag: "FLUX",
+        description: "Highest quality FLUX model via Fal.ai",
+      },
+      {
+        id: "fal-ai/flux/schnell",
+        label: "FLUX Schnell",
+        tag: "FLUX FAST",
+        description: "Fastest FLUX model, 4-step generation",
+      },
+      {
+        id: "fal-ai/ideogram/v3",
+        label: "Ideogram V3",
+        tag: "Ideogram",
+        description: "Ideogram V3 with excellent text rendering via Fal",
+      },
+      {
+        id: "fal-ai/recraft-v3",
+        label: "Recraft V3",
+        tag: "Recraft",
+        description: "Recraft design-focused image generation via Fal",
+      },
+      {
+        id: "fal-ai/aura-flow",
+        label: "AuraFlow",
+        tag: "AuraFlow",
+        description: "Open-source high-quality image generation",
       },
     ],
     video: [],

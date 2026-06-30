@@ -451,6 +451,107 @@ const PROVIDER_CONFIGS: Record<string, ImageProviderConfig> = {
       return { error: d.error?.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
     },
   },
+
+  // ── Stability AI ─────────────────────────────────────────────────────────
+  stability: {
+    buildUrl: (model) => {
+      if (model === "stable-image-ultra") return "https://api.stability.ai/v2beta/stable-image/generate/ultra"
+      if (model === "stable-image-core")  return "https://api.stability.ai/v2beta/stable-image/generate/core"
+      // SD 3.5 models
+      return "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+    },
+    buildHeaders: (apiKey) => ({
+      "Authorization": `Bearer ${apiKey}`,
+      "Accept": "application/json",
+    }),
+    buildBody: (prompt, model, aspectRatio) => {
+      const arMap: Record<string, string> = {
+        "1:1": "1:1", "16:9": "16:9", "9:16": "9:16", "4:3": "4:3",
+      }
+      const body: Record<string, string> = {
+        prompt,
+        output_format: "png",
+        aspect_ratio: arMap[aspectRatio] ?? "1:1",
+      }
+      if (model.startsWith("sd3")) body.model = model
+      return body
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { image?: string; finish_reasons?: string[] }
+      return {
+        imageData: d.image ?? null,
+        imageMimeType: "image/png",
+        textContent: d.finish_reasons?.[0] ?? "",
+      }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { errors?: string[]; message?: string }
+      return {
+        error: d.errors?.[0] ?? d.message ?? `HTTP ${status}`,
+        errorCode: status,
+        errorStatus: "ERROR",
+      }
+    },
+  },
+
+  // ── Kling AI (Kuaishou) image ─────────────────────────────────────────────
+  kling: {
+    buildUrl: () => "https://api.klingai.com/v1/images/generations",
+    buildHeaders: (apiKey) => ({
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    }),
+    buildBody: (prompt, _model, aspectRatio) => {
+      const arMap: Record<string, string> = {
+        "1:1": "1:1", "16:9": "16:9", "9:16": "9:16", "4:3": "4:3",
+      }
+      return {
+        model_name: "kling-v2-0",
+        prompt,
+        n: 1,
+        aspect_ratio: arMap[aspectRatio] ?? "1:1",
+        image_fidelity: 0.5,
+      }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { data?: Array<{ url?: string }>; images?: Array<{ url?: string }> }
+      const url = d.data?.[0]?.url ?? d.images?.[0]?.url ?? ""
+      return { imageData: null, imageMimeType: "image/png", textContent: url }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { message?: string; error?: string }
+      return { error: d.message ?? d.error ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
+
+  // ── Fal.ai ────────────────────────────────────────────────────────────────
+  fal: {
+    buildUrl: (model) => `https://fal.run/${model}`,
+    buildHeaders: (apiKey) => ({
+      "Authorization": `Key ${apiKey}`,
+      "Content-Type": "application/json",
+    }),
+    buildBody: (prompt, _model, aspectRatio) => {
+      const arMap: Record<string, string> = {
+        "1:1": "square", "16:9": "landscape_16_9", "9:16": "portrait_9_16", "4:3": "landscape_4_3",
+      }
+      return {
+        prompt,
+        image_size: arMap[aspectRatio] ?? "square",
+        num_images: 1,
+        enable_safety_checker: true,
+      }
+    },
+    extractImage: (data: unknown) => {
+      const d = data as { images?: Array<{ url?: string; content_type?: string }> }
+      const item = d.images?.[0]
+      return { imageData: null, imageMimeType: item?.content_type ?? "image/jpeg", textContent: item?.url ?? "" }
+    },
+    extractError: (data: unknown, status: number) => {
+      const d = data as { detail?: string; message?: string }
+      return { error: d.detail ?? d.message ?? `HTTP ${status}`, errorCode: status, errorStatus: "ERROR" }
+    },
+  },
 }
 
 // Alias: dahono uses openai-compatible image API
