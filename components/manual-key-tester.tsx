@@ -2785,7 +2785,7 @@ export default function ManualKeyTester() {
         setIsStreaming(false)
       }
     } else {
-      // ── Non-streaming path ──────────────────────────���─────────────────────
+      // ��─ Non-streaming path ──────────────────────────���─────────────────────
       setLoading(true)
       try {
         const res = await fetch("/api/manual-test", {
@@ -3022,96 +3022,121 @@ export default function ManualKeyTester() {
               const q = sidebarSearch.trim().toLowerCase()
               const matched = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
               // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
-              const dahonoRow  = matched.filter((p) => p.id === "dahono")
-              const customRow  = matched.filter((p) => p.id === "custom")
-              const pinned     = matched.filter((p) => p.id !== "dahono" && p.id !== "custom" && pinnedProviders.includes(p.id))
-                                        .sort((a, b) => pinnedProviders.indexOf(a.id) - pinnedProviders.indexOf(b.id))
-              const middle     = matched.filter((p) => p.id !== "dahono" && p.id !== "custom" && !pinnedProviders.includes(p.id))
-                                        .sort((a, b) => a.name.localeCompare(b.name))
-              const filtered   = [...dahonoRow, ...pinned, ...middle, ...customRow]
+              const dahonoRow = matched.filter((p) => p.id === "dahono")
+              const customRow = matched.filter((p) => p.id === "custom")
+              const pinned    = matched
+                .filter((p) => p.id !== "dahono" && p.id !== "custom" && pinnedProviders.includes(p.id))
+                .sort((a, b) => pinnedProviders.indexOf(a.id) - pinnedProviders.indexOf(b.id))
+              const middle    = matched
+                .filter((p) => p.id !== "dahono" && p.id !== "custom" && !pinnedProviders.includes(p.id))
+                .sort((a, b) => a.name.localeCompare(b.name))
 
-              if (filtered.length === 0) return (
+              if ([...dahonoRow, ...pinned, ...middle, ...customRow].length === 0) return (
                 <div className="text-center py-8 text-[11px] text-muted-foreground/50">
                   No providers match &ldquo;{sidebarSearch}&rdquo;
                 </div>
               )
 
-              const renderRow = (p: ProviderPreset, isPinned: boolean) => (
-                <button
-                  key={p.id}
-                  onClick={() => applyPreset(p)}
-                  className={`text-xs font-medium px-2.5 py-2 rounded transition-colors text-left w-full flex items-center gap-2 group ${
-                    selectedPreset.id === p.id
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
-                  }`}
-                >
-                  <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-colors ${
-                    selectedPreset.id === p.id ? "opacity-100" : "opacity-60 group-hover:opacity-90"
-                  }`}>
-                    <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
-                  </span>
-                  <span className="flex-1 min-w-0 truncate">{p.name}</span>
-                  {p.country && !isPinned && (
-                    <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase group-hover:opacity-0 transition-opacity">
-                      {p.country}
-                    </span>
-                  )}
-                  {/* Pin button — always rendered, dimmed when unpinned, prominent when pinned */}
-                  {p.id !== "dahono" && p.id !== "custom" && (
-                    <span
-                      role="button"
-                      aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
-                      title={isPinned ? "Unpin" : "Pin to top"}
-                      onClick={(e) => togglePin(p.id, e)}
-                      className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded transition-all ${
-                        isPinned
-                          ? "text-primary opacity-100"
-                          : "text-muted-foreground/30 group-hover:text-muted-foreground/70 hover:!text-primary"
+              // Inline component so useState(hover) works per-row
+              const ProviderRow = ({ p, isPinned }: { p: ProviderPreset; isPinned: boolean }) => {
+                const [hovered, setHovered] = React.useState(false)
+                const isSelected = selectedPreset.id === p.id
+                const pinnable   = p.id !== "dahono" && p.id !== "custom"
+
+                return (
+                  <div
+                    className="relative flex items-center rounded"
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
+                  >
+                    {/* Main row button */}
+                    <button
+                      onClick={() => applyPreset(p)}
+                      className={`text-xs font-medium py-2 rounded transition-colors text-left flex items-center gap-2 min-w-0 flex-1 ${
+                        pinnable ? "pl-2.5 pr-7" : "px-2.5"
+                      } ${
+                        isSelected
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
                       }`}
                     >
-                      <svg viewBox="0 0 24 24" fill={isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                        <line x1="12" y1="17" x2="12" y2="22" />
-                        <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-                      </svg>
-                    </span>
-                  )}
-                </button>
-              )
+                      <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 transition-opacity ${
+                        isSelected ? "opacity-100" : hovered ? "opacity-90" : "opacity-60"
+                      }`}>
+                        <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
+                      </span>
+                      <span className="flex-1 min-w-0 truncate">{p.name}</span>
+                      {p.country && !hovered && (
+                        <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
+                          {p.country}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Pin / unpin button — overlaid, only for pinnable providers */}
+                    {pinnable && (
+                      <button
+                        onClick={(e) => togglePin(p.id, e)}
+                        aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
+                        title={isPinned ? "Unpin" : "Pin to top"}
+                        style={{ opacity: isPinned ? 1 : hovered ? 0.65 : 0 }}
+                        className={`absolute right-1 flex items-center justify-center w-5 h-5 rounded transition-opacity ${
+                          isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary hover:opacity-100"
+                        } ${!isPinned && !hovered ? "pointer-events-none" : ""}`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill={isPinned ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-3 h-3"
+                        >
+                          <line x1="12" y1="17" x2="12" y2="22" />
+                          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )
+              }
 
               return (
                 <>
                   {/* Dahono (always first) */}
-                  {dahonoRow.map((p) => renderRow(p, false))}
+                  {dahonoRow.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
 
                   {/* Pinned section */}
                   {pinned.length > 0 && !q && (
                     <>
                       <div className="flex items-center gap-1.5 px-1 pt-2 pb-0.5">
-                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" className="w-2.5 h-2.5 text-primary/70 flex-shrink-0">
-                          <line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
-                          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-primary/70 flex-shrink-0">
+                          <line x1="12" y1="17" x2="12" y2="22" />
+                          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
                         </svg>
                         <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/50">Pinned</span>
                       </div>
-                      {pinned.map((p) => renderRow(p, true))}
-                      <div className="mx-1 my-1 border-t border-border/40" />
+                      {pinned.map((p) => <ProviderRow key={p.id} p={p} isPinned={true} />)}
+                      <div className="mx-1 my-1.5 border-t border-border/40" />
                     </>
                   )}
 
-                  {/* All providers A→Z */}
+                  {/* "All providers" label — only when pinned section is showing */}
                   {!q && middle.length > 0 && pinned.length > 0 && (
-                    <div className="flex items-center gap-1.5 px-1 pt-1 pb-0.5">
-                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/50">All providers</span>
+                    <div className="px-1 pt-0.5 pb-0.5">
+                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/40">All providers</span>
                     </div>
                   )}
-                  {middle.map((p) => renderRow(p, false))}
+
+                  {/* Unpinned providers A→Z */}
+                  {middle.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
 
                   {/* Custom (always last) */}
                   {customRow.length > 0 && (
                     <>
-                      <div className="mx-1 my-1 border-t border-border/40" />
-                      {customRow.map((p) => renderRow(p, false))}
+                      <div className="mx-1 my-1.5 border-t border-border/40" />
+                      {customRow.map((p) => <ProviderRow key={p.id} p={p} isPinned={false} />)}
                     </>
                   )}
                 </>
