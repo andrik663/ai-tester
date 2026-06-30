@@ -75,16 +75,15 @@ const PROVIDER_DOMAIN_MAP: Record<string, string> = {
   akashml:"akash.network", "atlas-cloud":"atlascloud.ai", "io-net":"io.net",
   nousresearch:"nousresearch.com", reka:"reka.ai", rekaai:"reka.ai",
   "aion-labs":"aionlabs.net", mistral:"mistral.ai",
-  bfl:"blackforestlabs.ai", bytedance:"volcengine.com", recraft:"recraft.ai",
-  ideogram:"ideogram.ai", luma:"lumalabs.ai", stability:"stability.ai",
+  // new providers added to catalog
+  ideogram:"ideogram.ai", stability:"stability.ai",
   stabilityai:"stability.ai", runway:"runwayml.com", pika:"pika.art",
-  fal:"fal.ai", amazon:"aws.amazon.com", jempol:"jempol.in",
-  "arcee-ai":"arcee.ai", kling:"klingai.com", leonardoai:"leonardo.ai",
-  vidu:"vidu.io", pixverse:"pixverse.ai", meta:"ai.meta.com",
+  fal:"fal.ai", jempol:"jempol.in", kling:"klingai.com",
+  leonardoai:"leonardo.ai", vidu:"vidu.io", pixverse:"pixverse.ai",
   microsoft:"microsoft.com", hidream:"hidreamai.com",
   "anthracite-org":"openrouter.ai", "cognitivecomputations":"openrouter.ai",
   deepcogito:"deepcogito.com", primeintellect:"primeintellect.ai",
-  tngtech:"tngtech.com", opengvlab:"openrouter.ai", rekaai:"reka.ai",
+  tngtech:"tngtech.com", opengvlab:"openrouter.ai",
   wanai:"openrouter.ai", rundiffusion:"rundiffusion.com",
 }
 
@@ -303,7 +302,7 @@ function LiveModelBadge({ providerId, apiKey }: { providerId: string; apiKey?: s
   )
 }
 
-// ── Provider card ─────────────────────────────────────────────────────────────
+// ── Provider card ─────────���───────────────────────────────────────────────────
 function ProviderCard({ provider, apiKey, defaultExpanded }: {
   provider: ProviderInfo
   apiKey?: string

@@ -894,7 +894,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Deep Infra ───────────────────────────────────────────────��──����──����──��──
+  // ── Deep Infra ────────────────────────────────────────────��──��──����──����──��──
   deepinfra: {
     id: "deepinfra",
     name: "Deep Infra",
@@ -926,7 +926,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ─────────────────────────��──��──��───��─��───��───��────��──��───��──
+      // ── Llama 3 ─────────────────────��───��──��──��───��─��───��───��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1666,7 +1666,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Avian ─────────────────────────────────────────────────────────────────────
+  // ── Avian ─────────────────────────────────────────────���───────────────────────
   avian: {
     id: "avian",
     name: "Avian",
@@ -2065,18 +2065,6 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [ m("anthracite-org/magnum-v4-72b", null, null, 128) ],
   },
 
-  "arcee-ai": {
-    id: "arcee-ai", name: "Arcee AI",
-    website: "https://arcee.ai", pricingUrl: "https://arcee.ai/pricing",
-    docsUrl: "https://docs.arcee.ai",
-    description: "Arcee Maestro and Virtuoso — small, efficient models specialised for enterprise tasks.",
-    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
-    models: [
-      m("arcee-ai/maestro-reasoning", null, null, 128, { promo: true, promoLabel: "Reasoning" }),
-      m("arcee-ai/virtuoso-large",    null, null, 128),
-    ],
-  },
-
   arizeai: {
     id: "arizeai", name: "Arize AI",
     website: "https://arize.com", pricingUrl: "https://openrouter.ai/models?q=arizeai",
@@ -2237,14 +2225,6 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("neversleep/llama-3.1-lumimaid-70b", null, null, 128),
       m("neversleep/noromaid-20b",           null, null, 4),
     ],
-  },
-
-  "nex-agi": {
-    id: "nex-agi", name: "Nex AGI",
-    website: "https://nexagi.com", pricingUrl: "https://openrouter.ai/models?q=nex-agi",
-    description: "Nex AGI Research models for advanced reasoning tasks via OpenRouter.",
-    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
-    models: [ m("nex-agi/research-r1", null, null, 128, { promo: true, promoLabel: "Reasoning" }) ],
   },
 
   opengvlab: {
