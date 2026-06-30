@@ -11,7 +11,7 @@ import {
 import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
 import ExportApiPanel from "@/components/export-api-panel"
 import UserSessionPanel, { type WorkingKeyForSession } from "@/components/user-session-panel"
-import { inferCapabilities, loadScreenerResults, type CapabilityTag, type ScreenerModelResult } from "@/lib/model-screener"
+import { inferCapabilities, loadScreenerResults, maskApiKey, type CapabilityTag, type ScreenerModelResult } from "@/lib/model-screener"
 
 // ── Types for locked keys (DB-backed) ────────────────────────────────────────
 
@@ -214,8 +214,21 @@ function GroupedKeyCard({
   const primary = group.records[0]
 
   // ── Screener status lookup ────────────────────────────────────────────────
-  // Find the screener result for a given record (match by providerId + modelId)
+  // Match by providerId + modelId + masked key so that two different keys for the
+  // same provider/model each get their own independent screener status.
+  // Falls back to providerId + modelId only when no key-specific result exists
+  // (e.g. the key was never run through the screener).
   const getScreenerStatus = useCallback((record: WorkingKeyRecord): ScreenerModelResult | undefined => {
+    const masked = maskApiKey(record.apiKey)
+    // Prefer exact 3-field match first
+    const exact = screenerResults.find(
+      (s) =>
+        s.providerId === record.providerId &&
+        s.modelId    === record.modelId &&
+        s.apiKeyMasked === masked,
+    )
+    if (exact) return exact
+    // Fallback: same provider + model, any key (covers keys added before screener ran)
     return screenerResults.find(
       (s) => s.providerId === record.providerId && s.modelId === record.modelId,
     )
