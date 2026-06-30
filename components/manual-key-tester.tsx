@@ -1744,7 +1744,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
 
-  // ── Custom ────────────────────────────────────────────────────────────────
+  // ── Custom ─────────────────────��──────────────────────────────────────────
   {
     id: "custom",
     name: "Custom / cURL",
@@ -2188,6 +2188,25 @@ export default function ManualKeyTester() {
   }, [])
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved">("unified")
+  // Pinned providers — persisted in localStorage
+  const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("ai_tester_pinned_providers")
+      if (stored) setPinnedProviders(JSON.parse(stored))
+    } catch {}
+  }, [])
+  function togglePin(providerId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    setPinnedProviders((prev) => {
+      const next = prev.includes(providerId)
+        ? prev.filter((id) => id !== providerId)
+        : [...prev, providerId]
+      try { localStorage.setItem("ai_tester_pinned_providers", JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
   // Onboarding banner — dismissed in localStorage
   // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
@@ -3002,17 +3021,22 @@ export default function ManualKeyTester() {
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
               const matched = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
-              // Dahono pinned first, Custom pinned last, rest sorted A→Z
-              const pinFirst = matched.filter((p) => p.id === "dahono")
-              const pinLast  = matched.filter((p) => p.id === "custom")
-              const middle   = matched.filter((p) => p.id !== "dahono" && p.id !== "custom").sort((a, b) => a.name.localeCompare(b.name))
-              const filtered = [...pinFirst, ...middle, ...pinLast]
+              // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
+              const dahonoRow  = matched.filter((p) => p.id === "dahono")
+              const customRow  = matched.filter((p) => p.id === "custom")
+              const pinned     = matched.filter((p) => p.id !== "dahono" && p.id !== "custom" && pinnedProviders.includes(p.id))
+                                        .sort((a, b) => pinnedProviders.indexOf(a.id) - pinnedProviders.indexOf(b.id))
+              const middle     = matched.filter((p) => p.id !== "dahono" && p.id !== "custom" && !pinnedProviders.includes(p.id))
+                                        .sort((a, b) => a.name.localeCompare(b.name))
+              const filtered   = [...dahonoRow, ...pinned, ...middle, ...customRow]
+
               if (filtered.length === 0) return (
                 <div className="text-center py-8 text-[11px] text-muted-foreground/50">
                   No providers match &ldquo;{sidebarSearch}&rdquo;
                 </div>
               )
-              return filtered.map((p) => (
+
+              const renderRow = (p: ProviderPreset, isPinned: boolean) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p)}
@@ -3028,13 +3052,70 @@ export default function ManualKeyTester() {
                     <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
                   </span>
                   <span className="flex-1 min-w-0 truncate">{p.name}</span>
-                  {p.country && (
-                    <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
+                  {p.country && !isPinned && (
+                    <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase group-hover:hidden">
                       {p.country}
                     </span>
                   )}
+                  {/* Pin button — visible on hover for all pinnable rows, always visible when pinned */}
+                  {p.id !== "dahono" && p.id !== "custom" && (
+                    <span
+                      role="button"
+                      aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
+                      title={isPinned ? "Unpin" : "Pin to top"}
+                      onClick={(e) => togglePin(p.id, e)}
+                      className={`flex-shrink-0 flex items-center justify-center w-4 h-4 rounded transition-all ${
+                        isPinned
+                          ? "opacity-100 text-primary"
+                          : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground hover:text-primary"
+                      }`}
+                    >
+                      <svg viewBox="0 0 24 24" fill={isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                        <line x1="12" y1="17" x2="12" y2="22" />
+                        <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                      </svg>
+                    </span>
+                  )}
                 </button>
-              ))
+              )
+
+              return (
+                <>
+                  {/* Dahono (always first) */}
+                  {dahonoRow.map((p) => renderRow(p, false))}
+
+                  {/* Pinned section */}
+                  {pinned.length > 0 && !q && (
+                    <>
+                      <div className="flex items-center gap-1.5 px-1 pt-2 pb-0.5">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" className="w-2.5 h-2.5 text-primary/70 flex-shrink-0">
+                          <line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
+                        </svg>
+                        <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/50">Pinned</span>
+                      </div>
+                      {pinned.map((p) => renderRow(p, true))}
+                      <div className="mx-1 my-1 border-t border-border/40" />
+                    </>
+                  )}
+
+                  {/* All providers A→Z */}
+                  {!q && middle.length > 0 && pinned.length > 0 && (
+                    <div className="flex items-center gap-1.5 px-1 pt-1 pb-0.5">
+                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/50">All providers</span>
+                    </div>
+                  )}
+                  {middle.map((p) => renderRow(p, false))}
+
+                  {/* Custom (always last) */}
+                  {customRow.length > 0 && (
+                    <>
+                      <div className="mx-1 my-1 border-t border-border/40" />
+                      {customRow.map((p) => renderRow(p, false))}
+                    </>
+                  )}
+                </>
+              )
             })()}
           </div>
 
@@ -4013,7 +4094,7 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── COMPARE TAB ──────────────────────────────────────────────────── */}
+        {/* ── COMPARE TAB ────��─────────────────────────────────────────────── */}
         {activeTab === "unified" && unifiedSubTab === "compare" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="max-w-5xl mx-auto px-4 py-5 flex flex-col gap-5">
@@ -4145,7 +4226,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── SAVED TAB (History + Collections merged) ──────────────────────── */}
+        {/* ── SAVED TAB (History + Collections merged) ��─────────────────────── */}
         {(activeTab === "saved" || activeTab === "history" || activeTab === "collections") && (() => {
           const savedSub = activeTab === "collections" ? "collections" : "history"
           return (
