@@ -73,10 +73,35 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "parasail",  label: "Parasail",               country: "US", flag: "🇺🇸", example: "parasail:YOUR_KEY",       keyHint: "API key" },
   { id: "telnyx",    label: "Telnyx AI",              country: "US", flag: "🇺🇸", example: "telnyx:YOUR_KEY",         keyHint: "API key" },
   { id: "targon",    label: "Targon (Bittensor)",     country: "US", flag: "🇺🇸", example: "targon:YOUR_KEY",         keyHint: "API key" },
-  { id: "sakana",    label: "Sakana AI (Fugu)",       country: "JP", flag: "🇯🇵", example: "sakana:YOUR_KEY",          keyHint: "API key" },
-  { id: "miuclaw",   label: "Miuclaw Gateway",        country: "ID", flag: "🇮🇩", example: "miuclaw:EXPORT_API_TOKEN",  keyHint: "EXPORT_API_TOKEN" },
-  { id: "conduit",   label: "Conduit",                country: "US", flag: "🇺🇸", example: "conduit:YOUR_KEY",          keyHint: "API key" },
-  { id: "zenmux",    label: "ZenMux",                 country: "US", flag: "🇺🇸", example: "zenmux:YOUR_KEY",           keyHint: "API key" },
+  { id: "sakana",         label: "Sakana AI (Fugu)",       country: "JP", flag: "🇯🇵", example: "sakana:YOUR_KEY",             keyHint: "API key" },
+  { id: "miuclaw",        label: "Miuclaw Gateway",        country: "ID", flag: "🇮🇩", example: "miuclaw:EXPORT_API_TOKEN",    keyHint: "EXPORT_API_TOKEN" },
+  { id: "conduit",        label: "Conduit",                country: "US", flag: "🇺🇸", example: "conduit:YOUR_KEY",             keyHint: "API key" },
+  { id: "zenmux",         label: "ZenMux",                 country: "US", flag: "🇺🇸", example: "zenmux:YOUR_KEY",              keyHint: "API key" },
+  { id: "bynara",         label: "Bynara (NaraRouter)",    country: "ID", flag: "🇮🇩", example: "bynara:sk-nry-...",            keyHint: "sk-nry-...", autoDetect: true },
+  // ── OpenRouter-routed providers (key = OpenRouter key) ──────────────────────
+  { id: "alfredpros",     label: "AlfredPros",             country: "US", flag: "🇺🇸", example: "alfredpros:sk-or-v1-...",     keyHint: "OpenRouter key" },
+  { id: "alpindale",      label: "Alpindale",              country: "US", flag: "🇺🇸", example: "alpindale:sk-or-v1-...",      keyHint: "OpenRouter key" },
+  { id: "arizeai",        label: "Arize AI",               country: "US", flag: "🇺🇸", example: "arizeai:sk-or-v1-...",        keyHint: "OpenRouter key" },
+  { id: "bytedance-seed", label: "ByteDance Seed",         country: "CN", flag: "🇨🇳", example: "bytedance-seed:sk-or-v1-...", keyHint: "OpenRouter key" },
+  { id: "eleutherai",     label: "EleutherAI",             country: "US", flag: "🇺🇸", example: "eleutherai:sk-or-v1-...",     keyHint: "OpenRouter key" },
+  { id: "essentialai",    label: "Essential AI",           country: "US", flag: "🇺🇸", example: "essentialai:sk-or-v1-...",    keyHint: "OpenRouter key" },
+  { id: "hidream",        label: "HiDream AI",             country: "CN", flag: "🇨🇳", example: "hidream:sk-or-v1-...",        keyHint: "OpenRouter key" },
+  { id: "kling",          label: "Kling AI (Direct)",      country: "CN", flag: "🇨🇳", example: "kling:YOUR_KEY",              keyHint: "klingai.com key" },
+  { id: "kling-or",       label: "Kling (via OpenRouter)", country: "CN", flag: "🇨🇳", example: "kling-or:sk-or-v1-...",        keyHint: "OpenRouter key" },
+  { id: "leonardoai",     label: "Leonardo AI",            country: "AU", flag: "🇦🇺", example: "leonardoai:sk-or-v1-...",     keyHint: "OpenRouter key" },
+  { id: "lykon",          label: "Lykon",                  country: "DE", flag: "🇩🇪", example: "lykon:sk-or-v1-...",          keyHint: "OpenRouter key" },
+  { id: "meituan",        label: "Meituan",                country: "CN", flag: "🇨🇳", example: "meituan:sk-or-v1-...",        keyHint: "OpenRouter key" },
+  { id: "neversleep",     label: "NeverSleep",             country: "US", flag: "🇺🇸", example: "neversleep:sk-or-v1-...",     keyHint: "OpenRouter key" },
+  { id: "opengvlab",      label: "OpenGVLab",              country: "CN", flag: "🇨🇳", example: "opengvlab:sk-or-v1-...",      keyHint: "OpenRouter key" },
+  { id: "pearlresearch",  label: "Pearl Research",         country: "US", flag: "🇺🇸", example: "pearlresearch:sk-or-v1-...", keyHint: "OpenRouter key" },
+  { id: "pixverse",       label: "PixVerse",               country: "CN", flag: "🇨🇳", example: "pixverse:sk-or-v1-...",       keyHint: "OpenRouter key" },
+  { id: "primeintellect", label: "Prime Intellect",        country: "US", flag: "🇺🇸", example: "primeintellect:sk-or-v1-...", keyHint: "OpenRouter key" },
+  { id: "raifle",         label: "Raifle",                 country: "US", flag: "🇺🇸", example: "raifle:sk-or-v1-...",         keyHint: "OpenRouter key" },
+  { id: "rundiffusion",   label: "RunDiffusion",           country: "US", flag: "🇺🇸", example: "rundiffusion:sk-or-v1-...",   keyHint: "OpenRouter key" },
+  { id: "stabilityai",    label: "Stability AI",           country: "US", flag: "🇺🇸", example: "stabilityai:sk-or-v1-...",    keyHint: "OpenRouter key" },
+  { id: "tngtech",        label: "TNG Technology",         country: "DE", flag: "🇩🇪", example: "tngtech:sk-or-v1-...",        keyHint: "OpenRouter key" },
+  { id: "vidu",           label: "Vidu",                   country: "CN", flag: "🇨🇳", example: "vidu:sk-or-v1-...",           keyHint: "OpenRouter key" },
+  { id: "wanai",          label: "Wan AI",                 country: "CN", flag: "🇨🇳", example: "wanai:sk-or-v1-...",          keyHint: "OpenRouter key" },
 ]
 
 const KNOWN_PROVIDERS = PROVIDER_FORMATS.map((p) => p.id)
@@ -116,6 +141,7 @@ function detectProvider(key: string): string | null {
   if (k.startsWith("nvapi-"))              return "nvidia"
   if (k.startsWith("pplx-"))              return "perplexity"
   if (k.startsWith("esecret_"))           return "anyscale"
+  if (k.startsWith("sk-nry-"))            return "bynara"
   return null
 }
 
@@ -1523,7 +1549,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               )}
             </div>
 
-            {/* ── All-models results ────────────────────────────────────────── */}
+            {/* ── All-models results ────────���───────────────────────────────── */}
             {testMode === "all" && allModelsResults.length > 0 && (
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-foreground/65">

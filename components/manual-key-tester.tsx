@@ -88,6 +88,7 @@ function detectProviderFromKey(key: string): string | null {
   if (k.startsWith("esecret_"))        return "anyscale"       // Anyscale (old)
   if (k.startsWith("esec_"))           return "anyscale"       // Anyscale
   if (k.startsWith("neets-"))          return "neets"          // Neets AI
+  if (k.startsWith("sk-nry-"))         return "bynara"         // Bynara (NaraRouter)
 
   // ── OpenAI — project keys (most specific first) ───────────────────────────
   if (k.startsWith("sk-proj-"))         return "openai"        // OpenAI project key
@@ -113,7 +114,7 @@ function detectProviderFromKey(key: string): string | null {
 }
 
 const PRESETS: ProviderPreset[] = [
-  // ── Dahono Labs Gateway ───────────────────────────────────────────────────
+  // ── Dahono Labs Gateway ────────────────────────────────────────���──────────
   {
     id: "dahono",
     name: "Dahono Labs Gateway",
@@ -1793,7 +1794,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/minimax-m2.1-agentic",              label: "MiniMax M2.1 Agentic",                tag: "MiniMax",   ctx: "1M",     in: "", out: "", cache: "" },
       { id: "mk/minimax-m2.5",                      label: "MiniMax M2.5",                        tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
       { id: "mk/minimax-m2.5-thinking-agentic",     label: "MiniMax M2.5 Thinking Agentic",       tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
-      // ── Kimi (Moonshot) ───────────────────────────────────────────────────
+      // ── Kimi (Moonshot) ─────────────────────────────────�����─────────────────
       { id: "mk/kimi-k2.7-code",                    label: "Kimi K2.7 Code (limited)",            tag: "Kimi",      ctx: "262K",   in: "", out: "", cache: "" },
       // ── Qwen3 ─────────────────────────────────────────────────────────────
       { id: "mk/qwen3-max",                         label: "Qwen3 Max",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
@@ -2259,8 +2260,8 @@ const PRESETS: ProviderPreset[] = [
     color: "text-pink-400 bg-pink-400/10 border-pink-400/20",
   },
   {
-    id: "kling",
-    name: "Kling (Kuaishou)",
+    id: "kling-or",
+    name: "Kling (via OpenRouter)",
     country: "CN",
     endpoint: "https://openrouter.ai/api/v1/chat/completions",
     method: "POST" as const,
@@ -2508,6 +2509,49 @@ const PRESETS: ProviderPreset[] = [
     color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/20",
   },
 
+  // ── Bynara (NaraRouter) ──────────────────────────────────────────────────
+  {
+    id: "bynara",
+    name: "Bynara (NaraRouter)",
+    country: "ID",
+    endpoint: "https://router.bynara.id/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: claude-sonnet-4.6, claude-opus-4.7, gemini-3-flash,
+    //   deepseek-v4-flash, deepseek-v4-pro, kimi-k2.6, kimi-k2.7-code,
+    //   qwen3.7-max, qwen3.7-plus, mimo-v2.5, mimo-v2.5-pro, glm-5.1
+    // Free: mimo-v2.5-free, mimo-v2.5-pro-free, mistral-large, mistral-medium-3-5
+    bodyTemplate: JSON.stringify({
+      model: "deepseek-v4-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "claude-sonnet-4.6",          label: "Claude Sonnet 4.6",          tag: "flagship",  ctx: "200K ctx", in: "", out: "", cache: "" },
+      { id: "claude-opus-4.7",             label: "Claude Opus 4.7",            tag: "pro",       ctx: "200K ctx", in: "", out: "", cache: "" },
+      { id: "gemini-3-flash",              label: "Gemini 3 Flash",             tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "deepseek-v4-flash",           label: "DeepSeek V4 Flash",          tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "deepseek-v4-pro",             label: "DeepSeek V4 Pro",            tag: "reasoning", ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "kimi-k2.6",                   label: "Kimi K2.6",                  tag: "reasoning", ctx: "256K ctx", in: "", out: "", cache: "" },
+      { id: "kimi-k2.7-code",              label: "Kimi K2.7 Code",             tag: "code",      ctx: "256K ctx", in: "", out: "", cache: "" },
+      { id: "qwen3.7-max",                 label: "Qwen 3.7 Max",               tag: "flagship",  ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "qwen3.7-plus",                label: "Qwen 3.7 Plus",              tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "glm-5.1",                     label: "GLM 5.1",                    tag: "CN",        ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "mimo-v2.5",                   label: "MiMo V2.5",                  tag: "mini",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "mimo-v2.5-pro",               label: "MiMo V2.5 Pro",              tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "mistral-large",               label: "Mistral Large (Free)",       tag: "free",      ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "mistral-medium-3-5",          label: "Mistral Medium 3.5 (Free)",  tag: "free",      ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "mimo-v2.5-free",              label: "MiMo V2.5 (Free)",           tag: "free",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "mimo-v2.5-pro-free",          label: "MiMo V2.5 Pro (Free)",       tag: "free",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://router.bynara.id/docs",
+    createKeyUrl: "https://router.bynara.id/",
+    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+    note: "Indonesian AI gateway (NaraRouter). API key prefix: sk-nry-",
+  },
   {
     id: "custom",
     name: "Custom / cURL",
@@ -2524,6 +2568,15 @@ const PRESETS: ProviderPreset[] = [
     color: "text-muted-foreground bg-muted/10 border-border",
   },
 ]
+
+// ── Deduplicate PRESETS by id ────────────────────────────────────────────────
+// Guard against accidental duplicate id entries that cause React key warnings
+// and duplicate rows in the sidebar. Last-write-wins for same id.
+const PRESETS_DEDUPED: ProviderPreset[] = (() => {
+  const seen = new Map<string, ProviderPreset>()
+  for (const p of PRESETS) seen.set(p.id, p)
+  return Array.from(seen.values())
+})()
 
 // ── Provider logos ────────────────────────────────────────────────────────────
 // Uses Google's faviconV2 service (returns 64px PNG, no CORS issues).
@@ -2628,6 +2681,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   miuclaw:        "www.miuclaw.my.id",
   conduit:        "conduit.ozdoev.net",
   zenmux:         "zenmux.ai",
+  bynara:         "router.bynara.id",
   // Added providers
   alfredpros:       "openrouter.ai",
   alpindale:        "openrouter.ai",
@@ -2637,6 +2691,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   essentialai:      "essentialtai.com",
   hidream:          "hidreamai.com",
   kling:            "klingai.com",
+  "kling-or":       "openrouter.ai",
   leonardoai:       "leonardo.ai",
   lykon:            "openrouter.ai",
   meituan:          "meituan.com",
@@ -3807,7 +3862,7 @@ export default function ManualKeyTester() {
             </div>
             <div>
               <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Tester</p>
-              <p className="text-[10px] text-muted-foreground/60">{PRESETS.length} providers</p>
+                <p className="text-[10px] text-muted-foreground/60">{PRESETS_DEDUPED.length} providers</p>
             </div>
           </div>
           <button
@@ -3858,7 +3913,7 @@ export default function ManualKeyTester() {
                 type="search"
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
-                placeholder={`Search ${PRESETS.length} providers...`}
+                placeholder={`Search ${PRESETS_DEDUPED.length} providers...`}
                 className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
               />
               {sidebarSearch && (
@@ -3880,7 +3935,7 @@ export default function ManualKeyTester() {
           <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2 flex flex-col gap-px">
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
-              const matched = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
+              const matched = q ? PRESETS_DEDUPED.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS_DEDUPED
               // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
               const dahonoRow = matched.filter((p) => p.id === "dahono")
               const customRow = matched.filter((p) => p.id === "custom")
@@ -4695,7 +4750,7 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── OCR TAB ──────────────────────��───────────────��───────────────── */}
+        {/* ── OCR TAB ──────────────────────��─────────────���─��───────────────���─ */}
         {activeTab === "unified" && unifiedSubTab === "ocr" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
@@ -5244,7 +5299,7 @@ export default function ManualKeyTester() {
             { prefix: "—",           providerId: "cloudflare",  providerName: "Cloudflare Workers AI",   example: "accountId|apiToken",   confidence: "none", note: "Cloudflare keys use accountId|apiToken composite format" },
             { prefix: "—",           providerId: "azure",       providerName: "Azure OpenAI",            example: "32-char hex",          confidence: "none", note: "Azure keys are 32-char hex — indistinguishable from other hex keys" },
             { prefix: "—",           providerId: "writer",      providerName: "Writer AI (Palmyra)",     example: "random string",        confidence: "none", note: "Writer keys have no fixed prefix" },
-            { prefix: "—",           providerId: "bfl",         providerName: "Black Forest Labs (FLUX)", example: "random string",       confidence: "none", note: "BFL keys have no fixed prefix" },
+            { prefix: "��",           providerId: "bfl",         providerName: "Black Forest Labs (FLUX)", example: "random string",       confidence: "none", note: "BFL keys have no fixed prefix" },
             { prefix: "—",           providerId: "bytedance",   providerName: "Bytedance (SeedDream)",   example: "random string",        confidence: "none", note: "Bytedance Ark keys have no fixed prefix" },
             { prefix: "—",           providerId: "recraft",     providerName: "Recraft AI",              example: "random string",        confidence: "none", note: "Recraft keys have no fixed prefix" },
             { prefix: "—",           providerId: "ideogram",    providerName: "Ideogram AI",             example: "random string",        confidence: "none", note: "Ideogram keys have no fixed prefix" },

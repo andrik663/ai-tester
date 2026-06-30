@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ��������──────────────────────────────────────────────────────────
+      // ── MiniMax �����������──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1475,6 +1475,62 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
+  // ── Bynara (NaraRouter) ───────────────────────────────────────────────────
+  // OpenAI-compatible gateway. Base URL: https://router.bynara.id/v1
+  // Auth: Bearer sk-nry-*  (key prefix sk-nry-)
+  // Supports: chat completions, streaming SSE, reasoning_effort (low/medium/high)
+  // Live /v1/models returns models entitled to the caller's plan.
+  // Static list = all models visible on the public pricing page (June 2025).
+  bynara: {
+    id: "bynara",
+    models: [
+      // ── Free tier ────────────────────────────────────────────────────────
+      "mimo-v2.5-free",
+      "mimo-v2.5-pro-free",
+      "mistral-large",
+      "mistral-medium-3-5",
+      // ── Lite / Lite Mocin ────────────────────────────────────────────────
+      "claude-sonnet-4.6",
+      "gemini-3-flash",
+      "glm-5.1",
+      "deepseek-v4-flash",
+      "deepseek-v4-pro",
+      "mimo-v2.5",
+      "mimo-v2.5-pro-ultraspeed",
+      // ── Pro ───────────────────────────────────────────────────────────────
+      "claude-opus-4.7",
+      // ── Hermes / Mimo ─────────────────────────────────────────────────────
+      "mimo-v2.5-hermes",
+      "mimo-v2.5-pro-hermes",
+      // ── DeepSeek plan ─────────────────────────────────────────────────────
+      "deepseek-v4-flash-bynara",
+      "deepseek-v4-pro-bynara",
+      // ── Kimi ──────────────────────────────────────────────────────────────
+      "kimi-k2.6",
+      "kimi-k2.7-code",
+      "kimi-k2.7-code-bynara",
+      // ── Qwen ──────────────────────────────────────────────────────────────
+      "qwen3.7-max-bynara",
+      "qwen3.7-plus",
+      "qwen3.7-plus-1m",
+      "qwen3.7-max",
+      // ── Auto routing ──────────────────────────────────────────────────────
+      "auto/bynara",
+    ],
+    modelsEndpoint: "https://router.bynara.id/v1/models",
+    endpoint: "https://router.bynara.id/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    // Rate limit: 10–60 req/min depending on plan; keep concurrency modest
+    concurrencyLimit: 4,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model,
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
   // ── Sakana AI — Fugu ──────────────────────────────────────────────────────
   // OpenAI-compatible. Base URL: https://api.fugu.sakana.ai/v1
   // Two models: fugu-20260615 (balanced) and fugu-ultra-20260615 (max quality).
@@ -1595,8 +1651,33 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
+  // ── Kling AI direct (klingai.com) — video / image generation ───────────────
   kling: {
     id: "kling",
+    models: [
+      "kling-v2.1",
+      "kling-v2.0",
+      "kling-v1.6",
+      "kling-v2-0-image",
+    ],
+    endpoint: "https://api.klingai.com/v1/videos/text2video",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model = "kling-v2.1") => ({
+      model_name: model,
+      prompt: DEFAULT_PROMPT,
+      aspect_ratio: "16:9",
+      duration: "5",
+    }),
+    extractReply: (data) => {
+      const d = data as { data?: { task_id?: string } }
+      return d?.data?.task_id ? `task_id: ${d.data.task_id}` : JSON.stringify(data).slice(0, 120)
+    },
+  },
+
+  // ── Kling via OpenRouter ─────────────────────────────────────────────────────
+  "kling-or": {
+    id: "kling-or",
     models: [
       "kwaivgi/kling-2.1-master",
       "kwaivgi/kling-2.1-pro",

@@ -21,6 +21,74 @@ import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from 
 // Status codes that should trigger fallback to another key
 const FALLBACK_STATUS_CODES = new Set([401, 403, 429, 500, 502, 503, 504])
 
+/**
+ * Default max_tokens when the caller does not specify one.
+ * 16 384 is a safe high default — enough for full web page / code generation
+ * without hitting any provider's hard cap on the common models.
+ */
+const DEFAULT_MAX_TOKENS = 16_384
+
+/**
+ * Hard cap per provider — prevents sending a value the provider will reject.
+ * Values are based on each provider's latest documented output-token limits
+ * (verified June 2025).
+ *
+ * Rules:
+ *  - If a provider raises its limit in the future, update only this map.
+ *  - resolveMaxTokens() clamps the caller's value to this cap automatically.
+ */
+const PROVIDER_MAX_TOKENS: Record<string, number> = {
+  // ── Major cloud / frontier providers ───────────────────────────────────────
+  openai:       16_384,  // GPT-4o, o-series: 16 384 output tokens (OpenAI docs 2025)
+  anthropic:   128_000,  // Claude Sonnet 4.x / Claude 4 Opus: up to 128k output tokens
+  google:       65_535,  // Gemini 2.5 Pro/Flash: 65 535 max output tokens
+  xai:          32_768,  // Grok-3 / Grok-3 Mini: 32k output (field not sent to Responses API)
+
+  // ── Specialised inference / routing providers ───────────────────────────────
+  groq:          8_192,  // Groq hard-caps most models at 8 192 output tokens
+  mistral:      32_768,  // Mistral Large 3 (675B): 32k output
+  cohere:        8_000,  // Command A-03-2025: 8 000 output tokens
+  perplexity:  128_000,  // Sonar Pro/Reasoning: up to 128k via max_tokens param
+  deepseek:     32_768,  // DeepSeek V3 / R1: max generation length 32 768
+  qwen:         32_768,  // Qwen3 235B supports 32 768 output tokens
+  zhipu:         8_192,  // GLM-4 series: 8 192 output tokens
+  minimax:       8_192,  // MiniMax Text 01: 8 192 output tokens
+  cerebras:     32_768,  // Qwen3-235B on Cerebras: 32 768; GPT-OSS 120B: 16 384
+  fireworks:    32_768,  // Fireworks: varies; Llama-4 Scout/Maverick support 32k+
+  together:     32_768,  // Together AI: 32k for large Llama / Qwen models
+  huggingface:   8_192,  // HuggingFace Inference API: model-dependent, 8k safe max
+  sambanova:    16_000,  // SambaNova Llama 3.1 405B: 16 000 output tokens
+  nvidia:       32_768,  // NVIDIA NIM (Llama 3.1 70B+): 32k
+  deepinfra:    32_768,  // DeepInfra (Llama / Mistral): 32k output
+  hyperbolic:   32_768,  // Hyperbolic: 32k for large models
+  siliconflow:  32_768,  // SiliconFlow (Qwen / Llama): 32k
+  novita:       32_768,  // Novita AI: 32k output
+  nebius:       32_768,  // Nebius AI Studio: 32k
+  featherless:  32_768,  // Featherless (OSS models): 32k
+  lepton:       32_768,  // Lepton AI: 32k
+  friendli:     32_768,  // Friendli AI: 32k
+
+  // ── Gateways (routes to underlying models — use a generous but safe cap) ────
+  dahono:       65_535,  // Dahono/Miuclaw gateway — cap matches the highest underlying model (Gemini)
+  openrouter:   65_535,  // OpenRouter: routes to any provider, allow up to 65k
+  bynara:       32_768,  // NaraRouter — routes Claude, Gemini, DeepSeek, Qwen; 32k safe cap
+  marketku:     65_535,  // Marketku router — 65k (highest underlying model)
+  conduit:      65_535,  // Conduit gateway — 65k
+  zenmux:       65_535,  // ZenMux gateway — 65k
+  miuclaw:      65_535,  // Miuclaw self-hosted gateway — 65k
+  openmodel:    65_535,  // OpenModel gateway — 65k
+  avian:        65_535,  // Avian gateway — 65k
+}
+
+/** Resolve effective max_tokens: clamp user value to provider cap, or use default. */
+function resolveMaxTokens(providerId: string, requested?: number): number {
+  const cap = PROVIDER_MAX_TOKENS[providerId] ?? DEFAULT_MAX_TOKENS
+  if (requested && requested > 0) {
+    return Math.min(requested, cap)
+  }
+  return Math.min(DEFAULT_MAX_TOKENS, cap)
+}
+
 export const runtime = "nodejs"
 export const maxDuration = 60
 
@@ -140,10 +208,13 @@ function buildForwardBody(
   // Strip provider prefix from model before forwarding (e.g. "dahono/deepseek-v3.2" → "deepseek-v3.2")
   const model = stripProviderPrefix(body.model, providerId)
 
+  // Resolve effective max_tokens: respect caller's value but clamp to provider cap
+  const maxTokens = resolveMaxTokens(providerId, body.max_tokens)
+
   if (providerId === "anthropic") {
     return {
       model,
-      max_tokens: body.max_tokens ?? 1024,
+      max_tokens: maxTokens,
       messages: body.messages,
       stream: body.stream ?? false,
     }
@@ -157,8 +228,17 @@ function buildForwardBody(
         parts: [{ text: typeof userMsg?.content === "string" ? userMsg.content : JSON.stringify(userMsg?.content) }],
       }],
       generationConfig: {
-        maxOutputTokens: body.max_tokens ?? 1024,
+        maxOutputTokens: maxTokens,
       },
+    }
+  }
+
+  // xAI Responses API — does not accept max_tokens field
+  if (providerId === "xai") {
+    return {
+      model,
+      input: body.messages,
+      stream: body.stream ?? false,
     }
   }
 
@@ -166,7 +246,7 @@ function buildForwardBody(
   return {
     model,
     messages: body.messages,
-    max_tokens: body.max_tokens ?? 1024,
+    max_tokens: maxTokens,
     temperature: body.temperature,
     stream: body.stream ?? false,
   }
@@ -309,7 +389,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // ── All candidates failed ──────────────────────────────────────────────────
+  // ── All candidates failed ─────────────────────────────────────���────────────
   return NextResponse.json(
     {
       error: `All available keys failed. Last error from '${lastProvider}': ${lastError}`,
