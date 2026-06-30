@@ -1131,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/glm-5-thinking-agentic",
       "mk/glm-5.1",
       "mk/glm-5.2",
-      // ── MiniMax ����������──────────────────────────────────────────────────────────
+      // ── MiniMax �����������──────────────────────────────────────────────────────────
       "mk/minimax-m2.1-agentic",
       "mk/minimax-m2.5",
       "mk/minimax-m2.5-thinking-agentic",
@@ -1651,6 +1651,31 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
+  // ── Kling AI direct (klingai.com) — video / image generation ───────────────
+  kling: {
+    id: "kling",
+    models: [
+      "kling-v2.1",
+      "kling-v2.0",
+      "kling-v1.6",
+      "kling-v2-0-image",
+    ],
+    endpoint: "https://api.klingai.com/v1/videos/text2video",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model = "kling-v2.1") => ({
+      model_name: model,
+      prompt: DEFAULT_PROMPT,
+      aspect_ratio: "16:9",
+      duration: "5",
+    }),
+    extractReply: (data) => {
+      const d = data as { data?: { task_id?: string } }
+      return d?.data?.task_id ? `task_id: ${d.data.task_id}` : JSON.stringify(data).slice(0, 120)
+    },
+  },
+
+  // ── Kling via OpenRouter ─────────────────────────────────────────────────────
   "kling-or": {
     id: "kling-or",
     models: [

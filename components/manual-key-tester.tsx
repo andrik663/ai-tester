@@ -52,6 +52,15 @@ interface ProviderPreset {
   note?: string
   }
 
+// ── Deduplicate PRESETS by id ────────────────────────────────────────────────
+// Guard against accidental duplicate id entries that cause React key warnings
+// and duplicate rows in the sidebar. Last-write-wins for same id.
+const PRESETS_DEDUPED: ProviderPreset[] = (() => {
+  const seen = new Map<string, ProviderPreset>()
+  for (const p of PRESETS) seen.set(p.id, p)
+  return Array.from(seen.values())
+})()
+
 // ── Auto-detect provider from key prefix ─────────────────────────────────────
 // Returns a preset id string when the key format matches a known provider.
 // Ordered most-specific → least-specific to avoid false positives.
@@ -1794,7 +1803,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/minimax-m2.1-agentic",              label: "MiniMax M2.1 Agentic",                tag: "MiniMax",   ctx: "1M",     in: "", out: "", cache: "" },
       { id: "mk/minimax-m2.5",                      label: "MiniMax M2.5",                        tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
       { id: "mk/minimax-m2.5-thinking-agentic",     label: "MiniMax M2.5 Thinking Agentic",       tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
-      // ── Kimi (Moonshot) ─────────────────────────────────���─────────────────
+      // ── Kimi (Moonshot) ─────────────────────────────────�����─────────────────
       { id: "mk/kimi-k2.7-code",                    label: "Kimi K2.7 Code (limited)",            tag: "Kimi",      ctx: "262K",   in: "", out: "", cache: "" },
       // ── Qwen3 ─────────────────────────────────────────────────────────────
       { id: "mk/qwen3-max",                         label: "Qwen3 Max",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
@@ -3853,7 +3862,7 @@ export default function ManualKeyTester() {
             </div>
             <div>
               <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Tester</p>
-              <p className="text-[10px] text-muted-foreground/60">{PRESETS.length} providers</p>
+                <p className="text-[10px] text-muted-foreground/60">{PRESETS_DEDUPED.length} providers</p>
             </div>
           </div>
           <button
@@ -3904,7 +3913,7 @@ export default function ManualKeyTester() {
                 type="search"
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
-                placeholder={`Search ${PRESETS.length} providers...`}
+                placeholder={`Search ${PRESETS_DEDUPED.length} providers...`}
                 className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
               />
               {sidebarSearch && (
@@ -3926,7 +3935,7 @@ export default function ManualKeyTester() {
           <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2 flex flex-col gap-px">
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
-              const matched = q ? PRESETS.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS
+              const matched = q ? PRESETS_DEDUPED.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS_DEDUPED
               // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
               const dahonoRow = matched.filter((p) => p.id === "dahono")
               const customRow = matched.filter((p) => p.id === "custom")
@@ -4741,7 +4750,7 @@ export default function ManualKeyTester() {
           </>
         )}
 
-        {/* ── OCR TAB ──────────────────────��───────────────��───────────────���─ */}
+        {/* ── OCR TAB ──────────────────────��─────────────���─��───────────────���─ */}
         {activeTab === "unified" && unifiedSubTab === "ocr" && (
           <>
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
