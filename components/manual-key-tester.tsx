@@ -88,6 +88,7 @@ function detectProviderFromKey(key: string): string | null {
   if (k.startsWith("esecret_"))        return "anyscale"       // Anyscale (old)
   if (k.startsWith("esec_"))           return "anyscale"       // Anyscale
   if (k.startsWith("neets-"))          return "neets"          // Neets AI
+  if (k.startsWith("sk-nry-"))         return "bynara"         // Bynara (NaraRouter)
 
   // ── OpenAI — project keys (most specific first) ───────────────────────────
   if (k.startsWith("sk-proj-"))         return "openai"        // OpenAI project key
@@ -2508,6 +2509,49 @@ const PRESETS: ProviderPreset[] = [
     color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/20",
   },
 
+  // ── Bynara (NaraRouter) ──────────────────────────────────────────────────
+  {
+    id: "bynara",
+    name: "Bynara (NaraRouter)",
+    country: "ID",
+    endpoint: "https://router.bynara.id/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: claude-sonnet-4.6, claude-opus-4.7, gemini-3-flash,
+    //   deepseek-v4-flash, deepseek-v4-pro, kimi-k2.6, kimi-k2.7-code,
+    //   qwen3.7-max, qwen3.7-plus, mimo-v2.5, mimo-v2.5-pro, glm-5.1
+    // Free: mimo-v2.5-free, mimo-v2.5-pro-free, mistral-large, mistral-medium-3-5
+    bodyTemplate: JSON.stringify({
+      model: "deepseek-v4-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "claude-sonnet-4.6",          label: "Claude Sonnet 4.6",          tag: "flagship",  ctx: "200K ctx", in: "", out: "", cache: "" },
+      { id: "claude-opus-4.7",             label: "Claude Opus 4.7",            tag: "pro",       ctx: "200K ctx", in: "", out: "", cache: "" },
+      { id: "gemini-3-flash",              label: "Gemini 3 Flash",             tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "deepseek-v4-flash",           label: "DeepSeek V4 Flash",          tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "deepseek-v4-pro",             label: "DeepSeek V4 Pro",            tag: "reasoning", ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "kimi-k2.6",                   label: "Kimi K2.6",                  tag: "reasoning", ctx: "256K ctx", in: "", out: "", cache: "" },
+      { id: "kimi-k2.7-code",              label: "Kimi K2.7 Code",             tag: "code",      ctx: "256K ctx", in: "", out: "", cache: "" },
+      { id: "qwen3.7-max",                 label: "Qwen 3.7 Max",               tag: "flagship",  ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "qwen3.7-plus",                label: "Qwen 3.7 Plus",              tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "glm-5.1",                     label: "GLM 5.1",                    tag: "CN",        ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "mimo-v2.5",                   label: "MiMo V2.5",                  tag: "mini",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "mimo-v2.5-pro",               label: "MiMo V2.5 Pro",              tag: "fast",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "mistral-large",               label: "Mistral Large (Free)",       tag: "free",      ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "mistral-medium-3-5",          label: "Mistral Medium 3.5 (Free)",  tag: "free",      ctx: "128K ctx", in: "", out: "", cache: "" },
+      { id: "mimo-v2.5-free",              label: "MiMo V2.5 (Free)",           tag: "free",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+      { id: "mimo-v2.5-pro-free",          label: "MiMo V2.5 Pro (Free)",       tag: "free",      ctx: "1M ctx",   in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://router.bynara.id/docs",
+    createKeyUrl: "https://router.bynara.id/",
+    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+    note: "Indonesian AI gateway (NaraRouter). API key prefix: sk-nry-",
+  },
   {
     id: "custom",
     name: "Custom / cURL",
@@ -2628,6 +2672,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   miuclaw:        "www.miuclaw.my.id",
   conduit:        "conduit.ozdoev.net",
   zenmux:         "zenmux.ai",
+  bynara:         "router.bynara.id",
   // Added providers
   alfredpros:       "openrouter.ai",
   alpindale:        "openrouter.ai",
