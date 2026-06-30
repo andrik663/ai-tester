@@ -1444,6 +1444,92 @@ const PRESETS: ProviderPreset[] = [
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
+    models: [
+      // ── Auto-route ────────────────────────────────────────────────────────
+      { id: "mk/auto",                              label: "Auto (best available)",               tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
+      { id: "mk/auto-thinking",                     label: "Auto Thinking",                       tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
+      // ── Claude (Anthropic) ────────────────────────────────────────────────
+      { id: "mk/sonnet-4.5",                        label: "Claude Sonnet 4.5",                   tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",          tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",  tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
+      // ── DeepSeek ──────────────────────────────────────────────────────────
+      { id: "mk/deepseek-3.2",                      label: "DeepSeek 3.2",                        tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-3.2-thinking",             label: "DeepSeek 3.2 Thinking",               tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-3.2-agentic",              label: "DeepSeek 3.2 Agentic",                tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-3.2-thinking-agentic",     label: "DeepSeek 3.2 Thinking Agentic",       tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-v3.2",                     label: "DeepSeek V3.2",                       tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-v4-flash",                 label: "DeepSeek V4 Flash (limited)",         tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
+      { id: "mk/deepseek-v4-pro",                   label: "DeepSeek V4 Pro (limited)",           tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
+      // ── Qwen3 Coder ───────────────────────────────────────────────────────
+      { id: "mk/qwen3-coder-next",                  label: "Qwen3 Coder Next",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-next-thinking",         label: "Qwen3 Coder Next Thinking",           tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-next-agentic",          label: "Qwen3 Coder Next Agentic",            tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-next-thinking-agentic", label: "Qwen3 Coder Next Thinking Agentic",   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-plus",                  label: "Qwen3 Coder Plus",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-480b-a35b-instruct",    label: "Qwen3 Coder 480B A35B Instruct",      tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-flash",                 label: "Qwen3 Coder Flash",                   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── GLM (Z-AI) ────────────────────────────────────────────────────────
+      { id: "mk/glm-5",                             label: "GLM-5",                               tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5-thinking",                    label: "GLM-5 Thinking",                      tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5-agentic",                     label: "GLM-5 Agentic",                       tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5-thinking-agentic",            label: "GLM-5 Thinking Agentic",              tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5.1",                           label: "GLM-5.1 (limited)",                   tag: "GLM",       ctx: "202K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5.2",                           label: "GLM-5.2 (limited)",                   tag: "GLM",       ctx: "202K",   in: "", out: "", cache: "" },
+      // ── MiniMax ───────────────────────────────────────────────────────────
+      { id: "mk/minimax-m2.1-agentic",              label: "MiniMax M2.1 Agentic",                tag: "MiniMax",   ctx: "1M",     in: "", out: "", cache: "" },
+      { id: "mk/minimax-m2.5",                      label: "MiniMax M2.5",                        tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
+      { id: "mk/minimax-m2.5-thinking-agentic",     label: "MiniMax M2.5 Thinking Agentic",       tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
+      // ── Kimi (Moonshot) ───────────────────────────────────────────────────
+      { id: "mk/kimi-k2.7-code",                    label: "Kimi K2.7 Code (limited)",            tag: "Kimi",      ctx: "262K",   in: "", out: "", cache: "" },
+      // ── Qwen3 ─────────────────────────────────────────────────────────────
+      { id: "mk/qwen3-max",                         label: "Qwen3 Max",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-235b-a22b",                   label: "Qwen3 235B A22B",                     tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-235b-a22b-instruct-2507",     label: "Qwen3 235B A22B Instruct 2507",       tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-235b-a22b-thinking-2507",     label: "Qwen3 235B A22B Thinking 2507",       tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-32b",                         label: "Qwen3 32B",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-30b-a3b",                     label: "Qwen3 30B A3B",                       tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-30b-a3b-instruct-2507",       label: "Qwen3 30B A3B Instruct 2507",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-30b-a3b-thinking-2507",       label: "Qwen3 30B A3B Thinking 2507",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-14b",                         label: "Qwen3 14B",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-8b",                          label: "Qwen3 8B",                            tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-next-80b-a3b-thinking",       label: "Qwen3 Next 80B A3B Thinking",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-next-80b-a3b-instruct",       label: "Qwen3 Next 80B A3B Instruct",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      // ── Qwen3.5 ───────────────────────────────────────────────────────────
+      { id: "mk/qwen3.5-plus",                      label: "Qwen3.5 Plus (limited)",              tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-397b-a17b",                 label: "Qwen3.5 397B A17B",                   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-122b-a10b",                 label: "Qwen3.5 122B A10B",                   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-35b-a3b",                   label: "Qwen3.5 35B A3B",                     tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-27b",                       label: "Qwen3.5 27B",                         tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-flash",                     label: "Qwen3.5 Flash",                       tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── Qwen3.6 ───────────────────────────────────────────────────────────
+      { id: "mk/qwen3.6-plus",                      label: "Qwen3.6 Plus (limited)",              tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.6-27b",                       label: "Qwen3.6 27B",                         tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.6-35b-a3b",                   label: "Qwen3.6 35B A3B",                     tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.6-flash",                     label: "Qwen3.6 Flash",                       tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── Qwen3.7 ───────────────────────────────────────────────────────────
+      { id: "mk/qwen3.7-max",                       label: "Qwen3.7 Max (limited)",               tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.7-plus",                      label: "Qwen3.7 Plus (limited)",              tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── Qwen misc ─────────────────────────────────────────────────────────
+      { id: "mk/qwen-max",                          label: "Qwen Max",                            tag: "Qwen",      ctx: "32K",    in: "", out: "", cache: "" },
+      { id: "mk/qwen-plus",                         label: "Qwen Plus",                           tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-plus-latest",                  label: "Qwen Plus Latest",                    tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-turbo",                        label: "Qwen Turbo",                          tag: "Qwen",      ctx: "1M",     in: "", out: "", cache: "" },
+      { id: "mk/qwen-coder-plus",                   label: "Qwen Coder Plus",                     tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwq-plus",                          label: "QwQ Plus",                            tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qvq-max",                           label: "QvQ Max (vision)",                    tag: "Qwen",      ctx: "32K",    in: "", out: "", cache: "" },
+      { id: "mk/qwen-plus-character",               label: "Qwen Plus Character",                 tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-flash-character",              label: "Qwen Flash Character",                tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-flash",                        label: "Qwen Flash",                          tag: "Qwen",      ctx: "1M",     in: "", out: "", cache: "" },
+      // ── Qwen MT (translation) ─────────────────────────────────────────────
+      { id: "mk/qwen-mt-lite",                      label: "Qwen MT Lite",                        tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-mt-flash",                     label: "Qwen MT Flash",                       tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-mt-turbo",                     label: "Qwen MT Turbo",                       tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-mt-plus",                      label: "Qwen MT Plus",                        tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      // ── CCAI ──────────────────────────────────────────────────────────────
+      { id: "mk/ccai-pro",                          label: "CCAI Pro",                            tag: "CCAI",      ctx: "varies", in: "", out: "", cache: "" },
+      // ── Qwen2 ─────────────────────────────────────────────────────────────
+      { id: "mk/qwen2-7b-instruct",                 label: "Qwen2 7B Instruct",                   tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+    ],
     docsUrl: "https://router.marketku.id",
     createKeyUrl: "https://router.marketku.id",
     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
@@ -1744,7 +1830,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
 
-  // ── Custom ──────────────────��──����──────────────────────────────────────────
+  // ── Custom ──────────────────���──����──────────────────────────────────────────
   // ── Missing providers from requested list ────────────────────────────────
   {
     id: "alfredpros",
