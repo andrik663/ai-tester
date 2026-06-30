@@ -71,6 +71,13 @@ const PROVIDER_MAX_TOKENS: Record<string, number> = {
   // ── Gateways (routes to underlying models — use a generous but safe cap) ────
   dahono:       65_535,  // Dahono/Miuclaw gateway — cap matches the highest underlying model (Gemini)
   openrouter:   65_535,  // OpenRouter: routes to any provider, allow up to 65k
+  bynara:       32_768,  // NaraRouter — routes Claude, Gemini, DeepSeek, Qwen; 32k safe cap
+  marketku:     65_535,  // Marketku router — 65k (highest underlying model)
+  conduit:      65_535,  // Conduit gateway — 65k
+  zenmux:       65_535,  // ZenMux gateway — 65k
+  miuclaw:      65_535,  // Miuclaw self-hosted gateway — 65k
+  openmodel:    65_535,  // OpenModel gateway — 65k
+  avian:        65_535,  // Avian gateway — 65k
 }
 
 /** Resolve effective max_tokens: clamp user value to provider cap, or use default. */
@@ -382,7 +389,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // ── All candidates failed ──────────────────────────────────────────────────
+  // ── All candidates failed ─────────────────────────────────────���────────────
   return NextResponse.json(
     {
       error: `All available keys failed. Last error from '${lastProvider}': ${lastError}`,
