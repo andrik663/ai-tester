@@ -52,15 +52,6 @@ interface ProviderPreset {
   note?: string
   }
 
-// ── Deduplicate PRESETS by id ────────────────────────────────────────────────
-// Guard against accidental duplicate id entries that cause React key warnings
-// and duplicate rows in the sidebar. Last-write-wins for same id.
-const PRESETS_DEDUPED: ProviderPreset[] = (() => {
-  const seen = new Map<string, ProviderPreset>()
-  for (const p of PRESETS) seen.set(p.id, p)
-  return Array.from(seen.values())
-})()
-
 // ── Auto-detect provider from key prefix ─────────────────────────────────────
 // Returns a preset id string when the key format matches a known provider.
 // Ordered most-specific → least-specific to avoid false positives.
@@ -123,7 +114,7 @@ function detectProviderFromKey(key: string): string | null {
 }
 
 const PRESETS: ProviderPreset[] = [
-  // ── Dahono Labs Gateway ───────────────────────────────────────────────────
+  // ── Dahono Labs Gateway ────────────────────────────────────────���──────────
   {
     id: "dahono",
     name: "Dahono Labs Gateway",
@@ -2577,6 +2568,15 @@ const PRESETS: ProviderPreset[] = [
     color: "text-muted-foreground bg-muted/10 border-border",
   },
 ]
+
+// ── Deduplicate PRESETS by id ────────────────────────────────────────────────
+// Guard against accidental duplicate id entries that cause React key warnings
+// and duplicate rows in the sidebar. Last-write-wins for same id.
+const PRESETS_DEDUPED: ProviderPreset[] = (() => {
+  const seen = new Map<string, ProviderPreset>()
+  for (const p of PRESETS) seen.set(p.id, p)
+  return Array.from(seen.values())
+})()
 
 // ── Provider logos ────────────────────────────────────────────────────────────
 // Uses Google's faviconV2 service (returns 64px PNG, no CORS issues).
@@ -5299,7 +5299,7 @@ export default function ManualKeyTester() {
             { prefix: "—",           providerId: "cloudflare",  providerName: "Cloudflare Workers AI",   example: "accountId|apiToken",   confidence: "none", note: "Cloudflare keys use accountId|apiToken composite format" },
             { prefix: "—",           providerId: "azure",       providerName: "Azure OpenAI",            example: "32-char hex",          confidence: "none", note: "Azure keys are 32-char hex — indistinguishable from other hex keys" },
             { prefix: "—",           providerId: "writer",      providerName: "Writer AI (Palmyra)",     example: "random string",        confidence: "none", note: "Writer keys have no fixed prefix" },
-            { prefix: "—",           providerId: "bfl",         providerName: "Black Forest Labs (FLUX)", example: "random string",       confidence: "none", note: "BFL keys have no fixed prefix" },
+            { prefix: "��",           providerId: "bfl",         providerName: "Black Forest Labs (FLUX)", example: "random string",       confidence: "none", note: "BFL keys have no fixed prefix" },
             { prefix: "—",           providerId: "bytedance",   providerName: "Bytedance (SeedDream)",   example: "random string",        confidence: "none", note: "Bytedance Ark keys have no fixed prefix" },
             { prefix: "—",           providerId: "recraft",     providerName: "Recraft AI",              example: "random string",        confidence: "none", note: "Recraft keys have no fixed prefix" },
             { prefix: "—",           providerId: "ideogram",    providerName: "Ideogram AI",             example: "random string",        confidence: "none", note: "Ideogram keys have no fixed prefix" },
