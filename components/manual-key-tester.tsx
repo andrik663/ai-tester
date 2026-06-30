@@ -48,7 +48,9 @@ interface ProviderPreset {
   createKeyUrl: string   // direct link to API key creation page
   color: string
   models?: ProviderModelInfo[]  // compact model catalog with pricing
-}
+  /** Optional info note shown in the Config panel (e.g. "Requires an OpenRouter key") */
+  note?: string
+  }
 
 // ── Auto-detect provider from key prefix ─────────────────────────────────────
 // Returns a preset id string when the key format matches a known provider.
@@ -985,6 +987,171 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://lumalabs.ai/dream-machine/api/keys",
     color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
   },
+  // ── Stability AI ─────────────────────────────────────────────────────────
+  {
+    id: "stability",
+    name: "Stability AI",
+    country: "GB",
+    endpoint: "https://api.stability.ai/v2beta/stable-image/generate/sd3",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Accept": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "sd3.5-large",
+      prompt: "{{PROMPT}}",
+      output_format: "png",
+      aspect_ratio: "1:1",
+    }, null, 2),
+    models: [
+      { id: "sd3.5-large",           label: "SD 3.5 Large",        tag: "flagship", ctx: "–", in: "", out: "", cache: "" },
+      { id: "sd3.5-large-turbo",     label: "SD 3.5 Large Turbo",  tag: "fast",     ctx: "–", in: "", out: "", cache: "" },
+      { id: "sd3.5-medium",          label: "SD 3.5 Medium",       tag: "balanced", ctx: "–", in: "", out: "", cache: "" },
+      { id: "stable-image-ultra",    label: "Stable Image Ultra",  tag: "ultra",    ctx: "–", in: "", out: "", cache: "" },
+      { id: "stable-image-core",     label: "Stable Image Core",   tag: "core",     ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://platform.stability.ai/docs/api-reference",
+    createKeyUrl: "https://platform.stability.ai/account/keys",
+    color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+  },
+  // ── Runway ────────────────────────────────────────────────────────────────
+  {
+    id: "runway",
+    name: "Runway",
+    country: "US",
+    endpoint: "https://api.dev.runwayml.com/v1/image_to_video",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+      "X-Runway-Version": "2024-11-06",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "gen4_turbo",
+      promptText: "{{PROMPT}}",
+      ratio: "1280:720",
+      duration: 5,
+    }, null, 2),
+    models: [
+      { id: "gen4_turbo",   label: "Gen-4 Turbo",         tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "gen3a_turbo",  label: "Gen-3 Alpha Turbo",   tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.dev.runwayml.com/api/endpoints/image_to_video",
+    createKeyUrl: "https://app.runwayml.com/settings/api-keys",
+    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+  },
+  // ── Pika Labs ─────────────────────────────────────────────────────────────
+  {
+    id: "pika",
+    name: "Pika Labs",
+    country: "US",
+    endpoint: "https://api.pika.art/v2/generate",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      promptText: "{{PROMPT}}",
+      model: "pika-2.2",
+      options: { aspectRatio: "16:9", frameRate: 24, duration: 5 },
+    }, null, 2),
+    models: [
+      { id: "pika-2.2",  label: "Pika 2.2",  tag: "video", ctx: "–", in: "", out: "", cache: "" },
+      { id: "pika-2.1",  label: "Pika 2.1",  tag: "video", ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.pika.art/",
+    createKeyUrl: "https://pika.art/dashboard/api-keys",
+    color: "text-rose-400 bg-rose-400/10 border-rose-400/20",
+  },
+  // ── Kling (Kuaishou) direct API ───────────────────────────────────────────
+  {
+    id: "kling",
+    name: "Kling AI (Kuaishou)",
+    country: "CN",
+    endpoint: "https://api.klingai.com/v1/videos/text2video",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model_name: "kling-v2.1",
+      prompt: "{{PROMPT}}",
+      aspect_ratio: "16:9",
+      duration: "5",
+    }, null, 2),
+    models: [
+      { id: "kling-v2.1",       label: "Kling V2.1",       tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "kling-v2.0",       label: "Kling V2.0",       tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "kling-v1.6",       label: "Kling V1.6",       tag: "video",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "kling-v2-0-image", label: "Kling V2.0 Image", tag: "image",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.qingque.cn/d/home/eZQDzO9eMXuVGpFPi9gqtApFq",
+    createKeyUrl: "https://klingai.com/api-keys",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+  },
+  // ── Jempol.in ─────────────────────────────────────────────────────────────
+  {
+    id: "jempol",
+    name: "Jempol.in",
+    country: "ID",
+    endpoint: "https://jempol.in/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "grok-premium",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      // ── Chat ──────────────────────────────────────────────────────────────
+      { id: "grok-premium",                      label: "Grok Premium",                      tag: "chat",    ctx: "131K", in: "", out: "", cache: "" },
+      { id: "grok-premium-vision",               label: "Grok Premium Vision",               tag: "vision",  ctx: "131K", in: "", out: "", cache: "" },
+      // ── Claude (Anthropic via Jempol) ─────────────────────────────────────
+      { id: "sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
+      { id: "sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",        tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
+      { id: "sonnet-4.5-agentic",                label: "Claude Sonnet 4.5 Agentic",         tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
+      // ── Image ─────────────────────────────────────────────────────────────
+      { id: "grok-premium-image",                label: "Grok Premium Image",                tag: "image",   ctx: "–",    in: "", out: "", cache: "" },
+      // ── Video ─────────────────────────────────────────────────────────────
+      { id: "grok-premium-video",                label: "Grok Premium Video",                tag: "video",   ctx: "–",    in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://jempol.in/tutorial.php",
+    createKeyUrl: "https://jempol.in/dashboard",
+    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/20",
+  },
+  // ── Fal.ai ────────────────────────────────────────────────────────────────
+  {
+    id: "fal",
+    name: "Fal.ai",
+    country: "US",
+    endpoint: "https://fal.run/fal-ai/flux-pro/v1.1-ultra",
+    method: "POST",
+    headers: {
+      "Authorization": "Key {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      prompt: "{{PROMPT}}",
+      image_size: "square",
+      num_images: 1,
+    }, null, 2),
+    models: [
+      { id: "fal-ai/flux-pro/v1.1-ultra", label: "FLUX Pro 1.1 Ultra",  tag: "FLUX",     ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/flux/schnell",         label: "FLUX Schnell",         tag: "FLUX FAST", ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/ideogram/v3",          label: "Ideogram V3",          tag: "Ideogram",  ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/recraft-v3",           label: "Recraft V3",           tag: "Recraft",   ctx: "–", in: "", out: "", cache: "" },
+      { id: "fal-ai/aura-flow",            label: "AuraFlow",             tag: "AuraFlow",  ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://fal.ai/docs",
+    createKeyUrl: "https://fal.ai/dashboard/keys",
+    color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
+  },
   {
     id: "amazon",
     name: "Amazon Nova (Bedrock)",
@@ -1119,7 +1286,123 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://console.anyscale.com/credentials",
     color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
   },
+  {
+    id: "siliconflow",
+    name: "SiliconFlow",
+    country: "CN",
+    endpoint: "https://api.siliconflow.cn/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "deepseek-ai/DeepSeek-V3",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "deepseek-ai/DeepSeek-V3",                   label: "DeepSeek V3",                tag: "DeepSeek",  ctx: "64K",   in: "", out: "", cache: "" },
+      { id: "deepseek-ai/DeepSeek-R1",                   label: "DeepSeek R1",                tag: "DeepSeek",  ctx: "64K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen3-235B-A22B",                      label: "Qwen3 235B A22B",            tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen3-30B-A3B",                        label: "Qwen3 30B A3B",              tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen3-14B",                            label: "Qwen3 14B",                  tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen3-8B",                             label: "Qwen3 8B",                   tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen2.5-72B-Instruct",                 label: "Qwen2.5 72B Instruct",       tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "meta-llama/Meta-Llama-3.1-8B-Instruct",    label: "Llama 3.1 8B Instruct",     tag: "Meta",      ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "meta-llama/Meta-Llama-3.1-70B-Instruct",   label: "Llama 3.1 70B Instruct",    tag: "Meta",      ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "mistralai/Mistral-7B-Instruct-v0.2",        label: "Mistral 7B Instruct v0.2",   tag: "Mistral",   ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "THUDM/glm-4-9b-chat",                       label: "GLM-4 9B Chat",              tag: "GLM",       ctx: "128K",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.siliconflow.cn/",
+    createKeyUrl: "https://cloud.siliconflow.cn/account/ak",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+  },
+  {
+    id: "nebius",
+    name: "Nebius AI",
+    country: "EU",
+    endpoint: "https://api.studio.nebius.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "meta-llama/Llama-3.3-70B-Instruct",        label: "Llama 3.3 70B Instruct",    tag: "Meta",      ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "deepseek-ai/DeepSeek-R1",                   label: "DeepSeek R1",                tag: "DeepSeek",  ctx: "64K",   in: "", out: "", cache: "" },
+      { id: "deepseek-ai/DeepSeek-V3",                   label: "DeepSeek V3",                tag: "DeepSeek",  ctx: "64K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen3-235B-A22B-Instruct",             label: "Qwen3 235B A22B Instruct",   tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen2.5-72B-Instruct",                 label: "Qwen2.5 72B Instruct",       tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "mistralai/Mistral-Nemo-Instruct-2407",      label: "Mistral Nemo Instruct",      tag: "Mistral",   ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "google/gemma-3-27b-it",                     label: "Gemma 3 27B IT",             tag: "Google",    ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "microsoft/phi-3-medium-128k-instruct",      label: "Phi-3 Medium 128K",          tag: "Microsoft", ctx: "128K",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.studio.nebius.com/",
+    createKeyUrl: "https://studio.nebius.com/settings/api-keys",
+    color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
+  },
+  {
+    id: "featherless",
+    name: "Featherless AI",
+    country: "US",
+    endpoint: "https://api.featherless.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "meta-llama/Llama-3.3-70B-Instruct",        label: "Llama 3.3 70B Instruct",    tag: "Meta",      ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "meta-llama/Llama-3.1-8B-Instruct",         label: "Llama 3.1 8B Instruct",     tag: "Meta",      ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "mistralai/Mistral-7B-Instruct-v0.3",        label: "Mistral 7B Instruct v0.3",   tag: "Mistral",   ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "Qwen/Qwen2.5-72B-Instruct",                 label: "Qwen2.5 72B Instruct",       tag: "Qwen",      ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "deepseek-ai/DeepSeek-V2.5",                 label: "DeepSeek V2.5",              tag: "DeepSeek",  ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "google/gemma-2-27b-it",                     label: "Gemma 2 27B IT",             tag: "Google",    ctx: "8K",    in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://featherless.ai/docs",
+    createKeyUrl: "https://featherless.ai/dashboard",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+  },
+  {
+    id: "friendli",
+    name: "Friendli AI",
+    country: "KR",
+    endpoint: "https://inference.friendli.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama-3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "meta-llama-3-70b-instruct",                 label: "Llama 3 70B Instruct",       tag: "Meta",      ctx: "8K",    in: "", out: "", cache: "" },
+      { id: "meta-llama-3.1-8b-instruct",                label: "Llama 3.1 8B Instruct",      tag: "Meta",      ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "meta-llama-3.1-70b-instruct",               label: "Llama 3.1 70B Instruct",     tag: "Meta",      ctx: "128K",  in: "", out: "", cache: "" },
+      { id: "mistral-7b-instruct-v0-3",                  label: "Mistral 7B Instruct v0.3",   tag: "Mistral",   ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "mixtral-8x7b-instruct-v0-1",                label: "Mixtral 8x7B Instruct",      tag: "Mistral",   ctx: "32K",   in: "", out: "", cache: "" },
+      { id: "qwen2.5-72b-instruct",                      label: "Qwen2.5 72B Instruct",        tag: "Qwen",      ctx: "131K",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://docs.friendli.ai/",
+    createKeyUrl: "https://suite.friendli.ai/user-settings/tokens",
+    color: "text-green-300 bg-green-300/10 border-green-300/20",
+  },
   // ── OpenRouter Providers (from OpenRouter API) ───────────────────────────
+  // These providers route through OpenRouter — use your OpenRouter key.
   {
     id: "aion-labs",
     name: "Aion Labs",
@@ -1222,12 +1505,19 @@ const PRESETS: ProviderPreset[] = [
     id: "inflection",
     name: "Inflection AI",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://layercake.pubwestus3.inf7ub8s8nvt.azure.com/openai/v1/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "inflection/inflection-3-productivity", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/inflection",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "inflection_3_productivity", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "inflection_3_productivity", label: "Inflection 3 Productivity", tag: "productivity", ctx: "8K",  in: "", out: "", cache: "" },
+      { id: "inflection_3_pi",           label: "Inflection 3 Pi",           tag: "conversational", ctx: "8K", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://developers.inflection.ai/",
+    createKeyUrl: "https://developers.inflection.ai/",
     color: "text-violet-400 bg-violet-400/10 border-violet-400/20",
   },
   {
@@ -1246,24 +1536,38 @@ const PRESETS: ProviderPreset[] = [
     id: "liquid",
     name: "Liquid AI",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://inference.liquid.ai/v1/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "liquid/lfm-2-24b-a2b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/liquid",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "lfm-2-24b-a2b", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "lfm-2-24b-a2b",  label: "LFM-2 24B A2B",  tag: "flagship", ctx: "128K", in: "", out: "", cache: "" },
+      { id: "lfm-2-3b",       label: "LFM-2 3B",        tag: "mini",     ctx: "32K",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://liquid.ai/liquid-foundation-models",
+    createKeyUrl: "https://inference.liquid.ai/",
     color: "text-sky-400 bg-sky-400/10 border-sky-400/20",
   },
   {
     id: "mancer",
     name: "Mancer",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://neuro.mancer.tech/oai/v1/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "mancer/weaver", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/mancer",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "weaver", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "weaver",           label: "Weaver",           tag: "flagship", ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "weaver-alpha",     label: "Weaver Alpha",     tag: "alpha",    ctx: "16K",  in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://mancer.tech/",
+    createKeyUrl: "https://mancer.tech/",
     color: "text-pink-500 bg-pink-500/10 border-pink-500/20",
   },
 
@@ -1271,12 +1575,22 @@ const PRESETS: ProviderPreset[] = [
     id: "microsoft",
     name: "Microsoft Phi",
     country: "US",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://models.inference.ai.azure.com/chat/completions",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "microsoft/phi-4-mini-instruct", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
-    docsUrl: "https://openrouter.ai/microsoft",
-    createKeyUrl: "https://openrouter.ai/keys",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({ model: "Phi-4-mini-instruct", max_tokens: 1024, messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    models: [
+      { id: "Phi-4-mini-instruct",     label: "Phi-4 Mini Instruct",     tag: "mini",     ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "Phi-4",                   label: "Phi-4",                    tag: "flagship", ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "Phi-4-multimodal-instruct", label: "Phi-4 Multimodal",       tag: "vision",   ctx: "16K",  in: "", out: "", cache: "" },
+      { id: "Phi-3.5-MoE-instruct",    label: "Phi-3.5 MoE Instruct",    tag: "MoE",      ctx: "128K", in: "", out: "", cache: "" },
+      { id: "Phi-3.5-mini-instruct",   label: "Phi-3.5 Mini Instruct",   tag: "mini",     ctx: "128K", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://github.com/marketplace/models/azureml/Phi-4-mini-instruct",
+    createKeyUrl: "https://github.com/settings/tokens",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
   },
 
@@ -1444,6 +1758,92 @@ const PRESETS: ProviderPreset[] = [
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
+    models: [
+      // ── Auto-route ────────────────────────────────────────────────────────
+      { id: "mk/auto",                              label: "Auto (best available)",               tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
+      { id: "mk/auto-thinking",                     label: "Auto Thinking",                       tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
+      // ── Claude (Anthropic) ────────────────────────────────────────────────
+      { id: "mk/sonnet-4.5",                        label: "Claude Sonnet 4.5",                   tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",          tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",  tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
+      // ── DeepSeek ──────────────────────────────────────────���───────────────
+      { id: "mk/deepseek-3.2",                      label: "DeepSeek 3.2",                        tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-3.2-thinking",             label: "DeepSeek 3.2 Thinking",               tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-3.2-agentic",              label: "DeepSeek 3.2 Agentic",                tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-3.2-thinking-agentic",     label: "DeepSeek 3.2 Thinking Agentic",       tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-v3.2",                     label: "DeepSeek V3.2",                       tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
+      { id: "mk/deepseek-v4-flash",                 label: "DeepSeek V4 Flash (limited)",         tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
+      { id: "mk/deepseek-v4-pro",                   label: "DeepSeek V4 Pro (limited)",           tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
+      // ── Qwen3 Coder ───────────────────────────────────────────────────────
+      { id: "mk/qwen3-coder-next",                  label: "Qwen3 Coder Next",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-next-thinking",         label: "Qwen3 Coder Next Thinking",           tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-next-agentic",          label: "Qwen3 Coder Next Agentic",            tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-next-thinking-agentic", label: "Qwen3 Coder Next Thinking Agentic",   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-plus",                  label: "Qwen3 Coder Plus",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-480b-a35b-instruct",    label: "Qwen3 Coder 480B A35B Instruct",      tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-coder-flash",                 label: "Qwen3 Coder Flash",                   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── GLM (Z-AI) ─────────────────────────���──────────────────────────────
+      { id: "mk/glm-5",                             label: "GLM-5",                               tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5-thinking",                    label: "GLM-5 Thinking",                      tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5-agentic",                     label: "GLM-5 Agentic",                       tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5-thinking-agentic",            label: "GLM-5 Thinking Agentic",              tag: "GLM",       ctx: "200K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5.1",                           label: "GLM-5.1 (limited)",                   tag: "GLM",       ctx: "202K",   in: "", out: "", cache: "" },
+      { id: "mk/glm-5.2",                           label: "GLM-5.2 (limited)",                   tag: "GLM",       ctx: "202K",   in: "", out: "", cache: "" },
+      // ── MiniMax ───────────────────────────────────────────────────────────
+      { id: "mk/minimax-m2.1-agentic",              label: "MiniMax M2.1 Agentic",                tag: "MiniMax",   ctx: "1M",     in: "", out: "", cache: "" },
+      { id: "mk/minimax-m2.5",                      label: "MiniMax M2.5",                        tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
+      { id: "mk/minimax-m2.5-thinking-agentic",     label: "MiniMax M2.5 Thinking Agentic",       tag: "MiniMax",   ctx: "196K",   in: "", out: "", cache: "" },
+      // ── Kimi (Moonshot) ───────────────────────────────────────────────────
+      { id: "mk/kimi-k2.7-code",                    label: "Kimi K2.7 Code (limited)",            tag: "Kimi",      ctx: "262K",   in: "", out: "", cache: "" },
+      // ── Qwen3 ─────────────────────────────────────────────────────────────
+      { id: "mk/qwen3-max",                         label: "Qwen3 Max",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-235b-a22b",                   label: "Qwen3 235B A22B",                     tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-235b-a22b-instruct-2507",     label: "Qwen3 235B A22B Instruct 2507",       tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-235b-a22b-thinking-2507",     label: "Qwen3 235B A22B Thinking 2507",       tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-32b",                         label: "Qwen3 32B",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-30b-a3b",                     label: "Qwen3 30B A3B",                       tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-30b-a3b-instruct-2507",       label: "Qwen3 30B A3B Instruct 2507",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-30b-a3b-thinking-2507",       label: "Qwen3 30B A3B Thinking 2507",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-14b",                         label: "Qwen3 14B",                           tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-8b",                          label: "Qwen3 8B",                            tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-next-80b-a3b-thinking",       label: "Qwen3 Next 80B A3B Thinking",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3-next-80b-a3b-instruct",       label: "Qwen3 Next 80B A3B Instruct",         tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+      // ── Qwen3.5 ───────────────────────────────────────────────────────────
+      { id: "mk/qwen3.5-plus",                      label: "Qwen3.5 Plus (limited)",              tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-397b-a17b",                 label: "Qwen3.5 397B A17B",                   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-122b-a10b",                 label: "Qwen3.5 122B A10B",                   tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-35b-a3b",                   label: "Qwen3.5 35B A3B",                     tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-27b",                       label: "Qwen3.5 27B",                         tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.5-flash",                     label: "Qwen3.5 Flash",                       tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── Qwen3.6 ───────────────────────────────────────────────────────────
+      { id: "mk/qwen3.6-plus",                      label: "Qwen3.6 Plus (limited)",              tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.6-27b",                       label: "Qwen3.6 27B",                         tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.6-35b-a3b",                   label: "Qwen3.6 35B A3B",                     tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.6-flash",                     label: "Qwen3.6 Flash",                       tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── Qwen3.7 ───────────────────────────────────────────────────────────
+      { id: "mk/qwen3.7-max",                       label: "Qwen3.7 Max (limited)",               tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen3.7-plus",                      label: "Qwen3.7 Plus (limited)",              tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
+      // ── Qwen misc ─────────────────────────────────────────────────────────
+      { id: "mk/qwen-max",                          label: "Qwen Max",                            tag: "Qwen",      ctx: "32K",    in: "", out: "", cache: "" },
+      { id: "mk/qwen-plus",                         label: "Qwen Plus",                           tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-plus-latest",                  label: "Qwen Plus Latest",                    tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-turbo",                        label: "Qwen Turbo",                          tag: "Qwen",      ctx: "1M",     in: "", out: "", cache: "" },
+      { id: "mk/qwen-coder-plus",                   label: "Qwen Coder Plus",                     tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwq-plus",                          label: "QwQ Plus",                            tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qvq-max",                           label: "QvQ Max (vision)",                    tag: "Qwen",      ctx: "32K",    in: "", out: "", cache: "" },
+      { id: "mk/qwen-plus-character",               label: "Qwen Plus Character",                 tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-flash-character",              label: "Qwen Flash Character",                tag: "Qwen",      ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-flash",                        label: "Qwen Flash",                          tag: "Qwen",      ctx: "1M",     in: "", out: "", cache: "" },
+      // ── Qwen MT (translation) ─────────────────────────────────────────────
+      { id: "mk/qwen-mt-lite",                      label: "Qwen MT Lite",                        tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-mt-flash",                     label: "Qwen MT Flash",                       tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-mt-turbo",                     label: "Qwen MT Turbo",                       tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      { id: "mk/qwen-mt-plus",                      label: "Qwen MT Plus",                        tag: "Qwen MT",   ctx: "131K",   in: "", out: "", cache: "" },
+      // ── CCAI ──────────────────────────────────────────────────────────────
+      { id: "mk/ccai-pro",                          label: "CCAI Pro",                            tag: "CCAI",      ctx: "varies", in: "", out: "", cache: "" },
+      // ── Qwen2 ─────────────────────────────────────────────────────────────
+      { id: "mk/qwen2-7b-instruct",                 label: "Qwen2 7B Instruct",                   tag: "Qwen",      ctx: "128K",   in: "", out: "", cache: "" },
+    ],
     docsUrl: "https://router.marketku.id",
     createKeyUrl: "https://router.marketku.id",
     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
@@ -1744,7 +2144,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
 
-  // ── Custom ──────────────────��──����──────────────────────────────────────────
+  // ── Custom ──────────────────���──����──────────────────────────────────────────
   // ── Missing providers from requested list ────────────────────────────────
   {
     id: "alfredpros",
@@ -1882,16 +2282,25 @@ const PRESETS: ProviderPreset[] = [
     id: "leonardoai",
     name: "Leonardo.Ai",
     country: "AU",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://cloud.leonardo.ai/api/rest/v1/generations",
     method: "POST" as const,
-    headers: { "Authorization": "Bearer {{API_KEY}}", "Content-Type": "application/json", "HTTP-Referer": "https://openrouter.ai", "X-Title": "AI Tester" },
-    bodyTemplate: JSON.stringify({ model: "leonardoai/phoenix-1.0", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      modelId: "aa77f04e-3eec-4034-9c07-d0f619684628",
+      prompt: "{{PROMPT}}",
+      num_images: 1,
+      width: 1024,
+      height: 1024,
+    }, null, 2),
     models: [
-      { id: "leonardoai/phoenix-1.0",   label: "Phoenix 1.0",   tag: "flagship", ctx: "–", in: "", out: "", cache: "" },
-      { id: "leonardoai/lucid-origin",  label: "Lucid Origin",  tag: "image",    ctx: "–", in: "", out: "", cache: "" },
+      { id: "aa77f04e-3eec-4034-9c07-d0f619684628", label: "Phoenix 1.0 (Image)",  tag: "image",   ctx: "–", in: "", out: "", cache: "" },
+      { id: "b24e16ff-06e3-43eb-8d33-4416c2d75876", label: "Lightning XL (Image)", tag: "fast",    ctx: "–", in: "", out: "", cache: "" },
     ],
-    docsUrl: "https://openrouter.ai/leonardoai",
-    createKeyUrl: "https://openrouter.ai/keys",
+    docsUrl: "https://docs.leonardo.ai/reference/creategeneration",
+    createKeyUrl: "https://app.leonardo.ai/settings/api-keys",
     color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
   },
   {
@@ -2306,7 +2715,7 @@ function ProviderLogo({
   )
 }
 
-// ── Sidebar provider row ──────────────────────────────────────────────────────
+// ── Sidebar provider row ───────────────────────────────────��──────────────────
 // Defined at module level so React can track hooks correctly.
 
 interface SidebarProviderRowProps {
@@ -3108,7 +3517,7 @@ export default function ManualKeyTester() {
     const resolvedBody = activeEnv && bodyTemplate ? interpolate(bodyTemplate, activeEnv) : (bodyTemplate || undefined)
 
     if (useStreaming) {
-      // ── Streaming path ────────────────────────────────────────────────────
+      // ── Streaming path ───────────────────────────────────────��────────────
       setIsStreaming(true)
       setStreamingText("")
 
@@ -5172,6 +5581,18 @@ export default function ManualKeyTester() {
                       )}
                     </div>
                   </div>
+
+                  {/* Provider note — static note or auto-detected OpenRouter routing */}
+                  {(selectedPreset.note || selectedPreset.endpoint.includes("openrouter.ai")) && (
+                    <div className="flex items-start gap-2 px-2.5 py-2 rounded border border-amber-500/20 bg-amber-500/5">
+                      <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5 text-amber-400/80 flex-shrink-0 mt-px" aria-hidden>
+                        <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM7 7h2v5H7V7zm0-3h2v2H7V4z" fill="currentColor"/>
+                      </svg>
+                      <p className="text-[10px] text-amber-400/80 leading-relaxed">
+                        {selectedPreset.note ?? "Routed via OpenRouter — use your OpenRouter API key, not a direct provider key."}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Endpoint */}
                   <div className="flex flex-col gap-1.5">

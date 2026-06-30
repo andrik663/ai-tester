@@ -41,6 +41,7 @@ export default function VideoTester({
   const [status, setStatus] = useState<Status>("idle")
   const [error, setError] = useState<string | null>(null)
   const [videoBase64, setVideoBase64] = useState<string | null>(null)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [elapsedMs, setElapsedMs] = useState<number | null>(null)
   const [pollCount, setPollCount] = useState(0)
   const [operationName, setOperationName] = useState<string | null>(null)
@@ -90,6 +91,9 @@ export default function VideoTester({
         if (data.videoBase64) {
           setVideoBase64(data.videoBase64)
           setStatus("done")
+        } else if (data.videoUrl) {
+          setVideoUrl(data.videoUrl)
+          setStatus("done")
         } else {
           setError("Video completed but no data returned.")
           setStatus("error")
@@ -113,6 +117,7 @@ export default function VideoTester({
     setStatus("submitting")
     setError(null)
     setVideoBase64(null)
+    setVideoUrl(null)
     setPollCount(0)
     setOperationName(null)
     setRawResponse(null)
@@ -148,10 +153,17 @@ export default function VideoTester({
   }
 
   function downloadVideo() {
-    if (!videoBase64) return
     const a = document.createElement("a")
-    a.href = `data:video/mp4;base64,${videoBase64}`
     a.download = `video-${Date.now()}.mp4`
+    if (videoBase64) {
+      a.href = `data:video/mp4;base64,${videoBase64}`
+    } else if (videoUrl) {
+      a.href = videoUrl
+      a.target = "_blank"
+      a.rel = "noopener noreferrer"
+    } else {
+      return
+    }
     a.click()
   }
 
@@ -160,6 +172,7 @@ export default function VideoTester({
     setStatus("idle")
     setError(null)
     setVideoBase64(null)
+    setVideoUrl(null)
     setPollCount(0)
     setOperationName(null)
     setRawResponse(null)
@@ -322,13 +335,14 @@ export default function VideoTester({
           )}
 
           {/* Done */}
-          {status === "done" && videoBase64 && (
+          {status === "done" && (videoBase64 || videoUrl) && (
             <div className="p-4 flex flex-col gap-4">
               <video
-                src={`data:video/mp4;base64,${videoBase64}`}
+                src={videoBase64 ? `data:video/mp4;base64,${videoBase64}` : videoUrl ?? undefined}
                 controls
                 autoPlay
                 loop
+                playsInline
                 className="w-full rounded-xl border border-border bg-black"
                 style={{
                   aspectRatio: aspectRatio === "9:16" ? "9/16" : "16/9",
