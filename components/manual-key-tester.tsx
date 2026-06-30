@@ -1744,7 +1744,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
   },
 
-  // ── Custom ─────────────────────��──────────────────────────────────────────
+  // ── Custom ─────────────────────���──────────────────────────────────────────
   {
     id: "custom",
     name: "Custom / cURL",
@@ -3053,21 +3053,21 @@ export default function ManualKeyTester() {
                   </span>
                   <span className="flex-1 min-w-0 truncate">{p.name}</span>
                   {p.country && !isPinned && (
-                    <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase group-hover:hidden">
+                    <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase group-hover:opacity-0 transition-opacity">
                       {p.country}
                     </span>
                   )}
-                  {/* Pin button — visible on hover for all pinnable rows, always visible when pinned */}
+                  {/* Pin button — always rendered, dimmed when unpinned, prominent when pinned */}
                   {p.id !== "dahono" && p.id !== "custom" && (
                     <span
                       role="button"
                       aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
                       title={isPinned ? "Unpin" : "Pin to top"}
                       onClick={(e) => togglePin(p.id, e)}
-                      className={`flex-shrink-0 flex items-center justify-center w-4 h-4 rounded transition-all ${
+                      className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded transition-all ${
                         isPinned
-                          ? "opacity-100 text-primary"
-                          : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground hover:text-primary"
+                          ? "text-primary opacity-100"
+                          : "text-muted-foreground/30 group-hover:text-muted-foreground/70 hover:!text-primary"
                       }`}
                     >
                       <svg viewBox="0 0 24 24" fill={isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
@@ -4296,7 +4296,7 @@ export default function ManualKeyTester() {
           )
         })()}
 
-        {/* ── ENVIRONMENTS TAB ──────────────────────────────────────────────── */}
+        {/* ── ENVIRONMENTS TAB ───────────────────────────────��──────────────── */}
         {activeTab === "environments" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <EnvSwitcher onEnvChange={(env) => setActiveEnv(env)} />
