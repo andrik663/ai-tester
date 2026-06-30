@@ -1109,9 +1109,17 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     models: [
-      { id: "grok-premium",        label: "Grok Premium",        tag: "chat",  ctx: "131K", in: "", out: "", cache: "" },
-      { id: "grok-premium-vision", label: "Grok Premium Vision", tag: "vision",ctx: "131K", in: "", out: "", cache: "" },
-      { id: "grok-premium-video",  label: "Grok Premium Video",  tag: "video", ctx: "–",    in: "", out: "", cache: "" },
+      // ── Chat ──────────────────────────────────────────────────────────────
+      { id: "grok-premium",                      label: "Grok Premium",                      tag: "chat",    ctx: "131K", in: "", out: "", cache: "" },
+      { id: "grok-premium-vision",               label: "Grok Premium Vision",               tag: "vision",  ctx: "131K", in: "", out: "", cache: "" },
+      // ── Claude (Anthropic via Jempol) ─────────────────────────────────────
+      { id: "sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
+      { id: "sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",        tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
+      { id: "sonnet-4.5-agentic",                label: "Claude Sonnet 4.5 Agentic",         tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
+      // ── Image ─────────────────────────────────────────────────────────────
+      { id: "grok-premium-image",                label: "Grok Premium Image",                tag: "image",   ctx: "–",    in: "", out: "", cache: "" },
+      // ── Video ─────────────────────────────────────────────────────────────
+      { id: "grok-premium-video",                label: "Grok Premium Video",                tag: "video",   ctx: "–",    in: "", out: "", cache: "" },
     ],
     docsUrl: "https://jempol.in/tutorial.php",
     createKeyUrl: "https://jempol.in/dashboard",
@@ -2707,7 +2715,7 @@ function ProviderLogo({
   )
 }
 
-// ── Sidebar provider row ──────────────────────────────────────────────────────
+// ── Sidebar provider row ───────────────────────────────────��──────────────────
 // Defined at module level so React can track hooks correctly.
 
 interface SidebarProviderRowProps {
