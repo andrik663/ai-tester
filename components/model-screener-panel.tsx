@@ -9,6 +9,7 @@ import {
   nextRefreshIso,
   getDueForRefresh,
   clearScreenerResults,
+  maskApiKey,
   type ScreenerModelResult,
   type CapabilityTag,
 } from "@/lib/model-screener"
@@ -83,10 +84,8 @@ function ScanIcon() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function maskKey(key: string): string {
-  if (key.length <= 8) return "••••••••"
-  return key.slice(0, 6) + "••••••" + key.slice(-4)
-}
+// maskKey is now maskApiKey from @/lib/model-screener — alias for readability
+const maskKey = maskApiKey
 
 function formatCountdown(ms: number): string {
   if (ms <= 0) return "now"

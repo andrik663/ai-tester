@@ -126,3 +126,13 @@ export function getDueForRefresh(results: ScreenerModelResult[]): ScreenerModelR
 export function nextRefreshIso(from = Date.now()): string {
   return new Date(from + SCREENER_INTERVAL_MS).toISOString()
 }
+
+/**
+ * Mask an API key the same way the screener does when storing results.
+ * Format: first-6-chars + "••••••" + last-4-chars
+ * Used to match WorkingKeyRecord.apiKey against ScreenerModelResult.apiKeyMasked.
+ */
+export function maskApiKey(key: string): string {
+  if (!key || key.length <= 8) return "••••••••"
+  return key.slice(0, 6) + "••••••" + key.slice(-4)
+}

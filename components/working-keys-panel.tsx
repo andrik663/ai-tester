@@ -11,7 +11,7 @@ import {
 import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
 import ExportApiPanel from "@/components/export-api-panel"
 import UserSessionPanel, { type WorkingKeyForSession } from "@/components/user-session-panel"
-import { inferCapabilities, type CapabilityTag } from "@/lib/model-screener"
+import { inferCapabilities, loadScreenerResults, maskApiKey, type CapabilityTag, type ScreenerModelResult } from "@/lib/model-screener"
 
 // ── Types for locked keys (DB-backed) ────────────────────────────────────────
 
@@ -196,10 +196,12 @@ function GroupedKeyCard({
   group,
   onDeleteRecord,
   onLocked,
+  screenerResults,
 }: {
   group: GroupedRecord
   onDeleteRecord: (id: string) => void
   onLocked?: () => void
+  screenerResults: ScreenerModelResult[]
 }) {
   const [open, setOpen]             = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
@@ -210,6 +212,39 @@ function GroupedKeyCard({
 
   // Use the first/best record for lock/curl operations
   const primary = group.records[0]
+
+  // ── Screener status lookup ────────────────────────────────────────────────
+  // Match by providerId + modelId + masked key so that two different keys for the
+  // same provider/model each get their own independent screener status.
+  // Falls back to providerId + modelId only when no key-specific result exists
+  // (e.g. the key was never run through the screener).
+  const getScreenerStatus = useCallback((record: WorkingKeyRecord): ScreenerModelResult | undefined => {
+    const masked = maskApiKey(record.apiKey)
+    // Prefer exact 3-field match first
+    const exact = screenerResults.find(
+      (s) =>
+        s.providerId === record.providerId &&
+        s.modelId    === record.modelId &&
+        s.apiKeyMasked === masked,
+    )
+    if (exact) return exact
+    // Fallback: same provider + model, any key (covers keys added before screener ran)
+    return screenerResults.find(
+      (s) => s.providerId === record.providerId && s.modelId === record.modelId,
+    )
+  }, [screenerResults])
+
+  // Aggregate: how many of this group's models have screener data + are OFF
+  const groupScreenerCounts = (() => {
+    let on = 0, off = 0, unknown = 0
+    for (const r of group.records) {
+      const s = getScreenerStatus(r)
+      if (!s) unknown++
+      else if (s.isOn) on++
+      else off++
+    }
+    return { on, off, unknown }
+  })()
 
   const handleLock = useCallback(async () => {
     setLocking(true)
@@ -260,8 +295,14 @@ function GroupedKeyCard({
         className="px-3 py-2.5 flex items-center gap-2 cursor-pointer hover:bg-secondary/20 transition-colors select-none"
         onClick={() => setOpen((v) => !v)}
       >
-        {/* Status dot */}
-        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-400" />
+        {/* Status dot — red if all screened models are OFF, yellow if mixed, green otherwise */}
+        <span className={`flex-shrink-0 w-2 h-2 rounded-full ${
+          groupScreenerCounts.off > 0 && groupScreenerCounts.on === 0
+            ? "bg-red-400"
+            : groupScreenerCounts.off > 0
+            ? "bg-yellow-400"
+            : "bg-green-400"
+        }`} />
 
         {/* Provider + summary */}
         <div className="flex-1 min-w-0">
@@ -277,6 +318,21 @@ function GroupedKeyCard({
               {group.records.length} model{group.records.length !== 1 ? "s" : ""}
             </span>
             <span className="text-[9px] text-muted-foreground/40 font-mono">avg {avgLatency}ms</span>
+            {/* Screener summary badges — only shown when screener data exists */}
+            {(groupScreenerCounts.on > 0 || groupScreenerCounts.off > 0) && (
+              <>
+                {groupScreenerCounts.on > 0 && (
+                  <span className="text-[8px] px-1 py-0.5 rounded border border-green-400/25 bg-green-400/10 text-green-400 font-mono">
+                    {groupScreenerCounts.on} ON
+                  </span>
+                )}
+                {groupScreenerCounts.off > 0 && (
+                  <span className="text-[8px] px-1 py-0.5 rounded border border-red-400/25 bg-red-400/10 text-red-400 font-mono">
+                    {groupScreenerCounts.off} OFF
+                  </span>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -323,18 +379,41 @@ function GroupedKeyCard({
       {/* Expanded model list */}
       {open && (
         <div className="border-t border-border/50 bg-secondary/10 flex flex-col">
-          {group.records.map((r) => (
+          {group.records.map((r) => {
+            const screenerStatus = getScreenerStatus(r)
+            return (
             <div
               key={r.id}
               className="flex items-center gap-2 px-4 py-2 border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors"
             >
+              {/* Status dot from screener */}
+              <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${
+                !screenerStatus ? "bg-muted-foreground/20" : screenerStatus.isOn ? "bg-green-400" : "bg-red-400"
+              }`} />
+
               {/* Model ID */}
               <div className="flex-1 min-w-0 flex flex-col">
-                <span className="text-[11px] font-mono text-foreground/80 truncate">{r.modelId}</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-mono text-foreground/80 truncate">{r.modelId}</span>
+                  {screenerStatus && (
+                    <span className={`text-[8px] px-1 py-0.5 rounded border font-medium flex-shrink-0 ${
+                      screenerStatus.isOn
+                        ? "text-green-400 border-green-400/25 bg-green-400/10"
+                        : "text-red-400 border-red-400/25 bg-red-400/10"
+                    }`}>
+                      {screenerStatus.isOn ? "ON" : "OFF"}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-[9px] text-muted-foreground/40 font-mono">{r.latencyMs}ms</span>
                   {r.tokenUsage?.total !== undefined && (
                     <span className="text-[9px] text-muted-foreground/40 font-mono">{r.tokenUsage.total} tok</span>
+                  )}
+                  {screenerStatus && !screenerStatus.isOn && screenerStatus.error && (
+                    <span className="text-[8px] text-red-400/70 truncate max-w-[140px]" title={screenerStatus.error}>
+                      {screenerStatus.error}
+                    </span>
                   )}
                 </div>
               </div>
@@ -362,7 +441,7 @@ function GroupedKeyCard({
                 <TrashIcon />
               </button>
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>
@@ -548,6 +627,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
   const [confirmClear, setConfirmClear]     = useState(false)
   const [lockedTick, setLockedTick]         = useState(0)
   const [sessionToken, setSessionToken]     = useState<string | null>(null)
+  const [screenerResults, setScreenerResults] = useState<ScreenerModelResult[]>([])
 
   const sessionKeys: WorkingKeyForSession[] = records.map((r) => ({
     providerId:   r.providerId,
@@ -560,9 +640,17 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
 
   const reload = useCallback(() => {
     setRecords(loadWorkingKeys().sort((a, b) => b.savedAt - a.savedAt))
+    setScreenerResults(loadScreenerResults())
   }, [])
 
   useEffect(() => { reload() }, [reload, refreshTick])
+
+  // Re-sync screener results whenever localStorage changes (e.g. after a scan in Screener tab)
+  useEffect(() => {
+    const handler = () => setScreenerResults(loadScreenerResults())
+    window.addEventListener("storage", handler)
+    return () => window.removeEventListener("storage", handler)
+  }, [])
 
   const handleDelete = useCallback((id: string) => {
     const updated = deleteWorkingKey(id)
@@ -736,6 +824,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
               group={g}
               onDeleteRecord={handleDelete}
               onLocked={() => setLockedTick((t) => t + 1)}
+              screenerResults={screenerResults}
             />
           ))
         )}
