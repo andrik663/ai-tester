@@ -14,6 +14,7 @@ const SECTIONS = [
   { id: "models",          label: "List Models" },
   { id: "chat",            label: "Chat Completions" },
   { id: "streaming",       label: "Streaming" },
+  { id: "chat-flow",       label: "Chat UI Flow" },
   { id: "push",            label: "Sync Keys (Push)" },
   { id: "errors",          label: "Error Codes" },
   { id: "sdks",            label: "SDK Examples" },
@@ -42,6 +43,67 @@ const CURL_CHAT_STREAM = `curl ${BASE_URL}/api/v1/chat/completions \\
     "stream": true,
     "max_tokens": 512
   }'`
+
+// ── Chat UI flow examples ─────────────────────────────────────────────────────
+const CURL_CHAT_UI = `curl ${BASE_URL}/api/chat \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "gemini-2.5-flash",
+    "temperature": 1.0,
+    "maxOutputTokens": 2048,
+    "systemPrompt": "You are a helpful assistant.",
+    "apiKey": "YOUR_GEMINI_API_KEY",
+    "messages": [
+      { "role": "user", "content": "Hello!" }
+    ]
+  }'`
+
+const CHAT_REQUEST_BODY = `{
+  "model":           "gemini-2.5-flash",   // required — model ID from GEMINI_CHAT_MODELS
+  "messages":        [...],                 // required — full conversation history
+  "temperature":     1.0,                  // optional — default 1.0
+  "maxOutputTokens": 2048,                 // optional — default 2048
+  "systemPrompt":    "...",               // optional — injected as systemInstruction
+  "apiKey":          "AIza..."             // optional — falls back to GEMINI_API_KEY env var
+}`
+
+const CHAT_SSE_STREAM = `// Each chunk is a JSON object sent as SSE:
+data: {"text":"Hello"}
+data: {"text":"! How can I"}
+data: {"text":" help you today?"}
+data: {"inputTokens":12,"outputTokens":8}  // final metadata chunk
+data: [DONE]`
+
+const CHAT_CLIENT_CODE = `// Frontend fetch call (from chat.tsx)
+const res = await fetch("/api/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    model,
+    temperature,
+    maxOutputTokens: maxTokens,
+    systemPrompt: systemPrompt || undefined,
+    messages: newMessages,        // full history including new user message
+    apiKey: apiKey.trim() || undefined,
+  }),
+})
+
+// Read the SSE stream chunk-by-chunk
+const reader = res.body?.getReader()
+let assistantText = ""
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+  // parse SSE lines → JSON → append chunk.text to assistantText
+}`
+
+const GEMINI_MODELS_LIST = `[
+  "gemini-2.5-flash",       // default — fast, free tier available
+  "gemini-2.5-flash-lite",  // lightest / cheapest
+  "gemini-2.5-pro",         // highest capability
+  "gemini-3-flash",         // latest generation
+  "gemini-flash-latest"     // alias → always resolves to newest flash
+]`
 
 const CURL_PUSH = `curl -X POST ${BASE_URL}/api/v1/gateway/push \\
   -H "Content-Type: application/json" \\
@@ -361,6 +423,171 @@ export default function DocsPage() {
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">SSE chunks</p>
                 <CodeBlock title="Event stream" language="text" code={RESP_STREAM} />
+              </div>
+            </div>
+          </section>
+
+          {/* Chat UI Flow --------------------------------------------------- */}
+          <section id="chat-flow">
+            <h2 className="text-lg font-bold text-foreground mb-1">Chat UI Flow</h2>
+            <p className="text-[13px] text-muted-foreground mb-5 leading-relaxed">
+              The built-in Chat interface (accessible from the main app) proxies directly to the{" "}
+              <code className="text-primary/90 font-mono text-[12px]">/api/chat</code> route, which
+              forwards to Google Generative Language API and streams back SSE chunks. This is a separate
+              flow from the gateway &mdash; it uses a Gemini API key directly rather than the key pool.
+            </p>
+
+            {/* Step-by-step flow */}
+            <div className="mb-6">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                End-to-end flow
+              </p>
+              <div className="flex flex-col gap-0">
+                {[
+                  {
+                    step: "1",
+                    label: "User selects provider + model",
+                    detail: "In the left panel: choose a provider preset (e.g. Gemini), paste an API key, and pick a model from GEMINI_CHAT_MODELS. Temperature and max tokens are also configurable.",
+                  },
+                  {
+                    step: "2",
+                    label: "User types a message → Enter",
+                    detail: "Shift+Enter inserts a newline. IME composition (CJK input) is handled — the message is only submitted after composition ends. The full conversation history is included in every request.",
+                  },
+                  {
+                    step: "3",
+                    label: "Frontend POSTs to /api/chat",
+                    detail: "The Chat component sends the full message array plus model, temperature, maxOutputTokens, systemPrompt, and optionally the API key. If no key is provided, the server falls back to the GEMINI_API_KEY environment variable.",
+                  },
+                  {
+                    step: "4",
+                    label: "Server calls Gemini streamGenerateContent",
+                    detail: `The route handler hits https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse using the X-goog-api-key header. The request body includes contents[], generationConfig, and optionally systemInstruction.`,
+                  },
+                  {
+                    step: "5",
+                    label: "Server re-streams SSE to client",
+                    detail: 'Each Gemini SSE chunk is parsed for text and usageMetadata, then re-emitted as a simplified JSON object: {"text":"..."} or {"inputTokens":N,"outputTokens":N}. The stream terminates with data: [DONE].',
+                  },
+                  {
+                    step: "6",
+                    label: "Frontend renders text incrementally",
+                    detail: "The client reads the stream chunk-by-chunk, appends chunk.text to the assistant message, and updates React state in real-time. Token counts and latency are displayed in the top bar after the stream ends.",
+                  },
+                ].map((item, i, arr) => (
+                  <div key={item.step} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[10px] font-bold text-primary">{item.step}</span>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <div className="w-px flex-1 bg-border/40 my-1" />
+                      )}
+                    </div>
+                    <div className="pb-4">
+                      <p className="text-[13px] font-semibold text-foreground mb-0.5">{item.label}</p>
+                      <p className="text-[12px] text-muted-foreground leading-relaxed">{item.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Endpoint card */}
+            <div className="mb-4">
+              <EndpointCard
+                method="POST"
+                path="/api/chat"
+                description="Gemini streaming chat proxy — no gateway auth required"
+                auth={false}
+                badge="Gemini SSE"
+              />
+            </div>
+
+            {/* Request body params */}
+            <div className="mb-5">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Request body
+              </p>
+              <ParamTable params={[
+                { name: "model",            type: "string",   required: true,  description: "Gemini model ID (see supported models below)" },
+                { name: "messages",         type: "array",    required: true,  description: "Full conversation history as [{role, content}]. role must be \"user\" or \"assistant\"" },
+                { name: "temperature",      type: "number",   required: false, default: "1.0",   description: "Sampling temperature forwarded to generationConfig" },
+                { name: "maxOutputTokens",  type: "integer",  required: false, default: "2048",  description: "Max tokens to generate, forwarded to generationConfig" },
+                { name: "systemPrompt",     type: "string",   required: false, description: "Injected as systemInstruction.parts[0].text — sets the model's persona" },
+                { name: "apiKey",           type: "string",   required: false, description: "Gemini API key. If omitted, falls back to GEMINI_API_KEY env var on the server" },
+              ]} />
+            </div>
+
+            {/* Supported models */}
+            <div className="mb-5">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Supported models (GEMINI_CHAT_MODELS)
+              </p>
+              <CodeBlock title="Model list" language="json" code={GEMINI_MODELS_LIST} />
+            </div>
+
+            {/* Request body annotated */}
+            <div className="mb-5">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Request body (annotated)
+              </p>
+              <CodeBlock title="JSON body" language="javascript" code={CHAT_REQUEST_BODY} />
+            </div>
+
+            {/* cURL + SSE response */}
+            <div className="grid md:grid-cols-2 gap-4 mb-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">cURL example</p>
+                <CodeBlock title="cURL" code={CURL_CHAT_UI} />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">SSE response stream</p>
+                <CodeBlock title="Event stream" language="text" code={CHAT_SSE_STREAM} />
+              </div>
+            </div>
+
+            {/* Client-side fetch code */}
+            <div className="mb-5">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Frontend fetch (chat.tsx pattern)
+              </p>
+              <CodeBlock title="TypeScript — reading the SSE stream" language="javascript" code={CHAT_CLIENT_CODE} />
+            </div>
+
+            {/* Architecture note */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[11px] font-semibold text-foreground mb-1.5">Gemini role mapping</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">
+                  Gemini uses <code className="font-mono text-[11px]">model</code> instead of <code className="font-mono text-[11px]">assistant</code>.
+                  The route handler automatically remaps <code className="font-mono text-[11px]">role === &quot;assistant&quot;</code>{" "}
+                  to <code className="font-mono text-[11px]">&quot;model&quot;</code> before forwarding.
+                </p>
+              </div>
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[11px] font-semibold text-foreground mb-1.5">API key priority</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">
+                  Key resolution order: <span className="text-foreground/80">1.</span> <code className="font-mono text-[11px]">apiKey</code> field in request body
+                  &rarr; <span className="text-foreground/80">2.</span> <code className="font-mono text-[11px]">GEMINI_API_KEY</code> environment variable.
+                  If neither is set the request will return a 400 from Gemini.
+                </p>
+              </div>
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[11px] font-semibold text-foreground mb-1.5">Provider selector</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">
+                  The Chat tab is currently Gemini-only. The provider/model picker in the left panel controls
+                  which <code className="font-mono text-[11px]">model</code> string is sent. Selecting a different
+                  preset (e.g. OpenAI) routes to the gateway endpoint, not <code className="font-mono text-[11px]">/api/chat</code>.
+                </p>
+              </div>
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[11px] font-semibold text-foreground mb-1.5">No gateway auth needed</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">
+                  <code className="font-mono text-[11px]">/api/chat</code> does not require a Bearer token —
+                  authentication is handled by the Gemini API key in the body. Only the{" "}
+                  <code className="font-mono text-[11px]">/api/v1/*</code> gateway routes require <code className="font-mono text-[11px]">EXPORT_API_TOKEN</code>.
+                </p>
               </div>
             </div>
           </section>
