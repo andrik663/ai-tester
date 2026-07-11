@@ -102,16 +102,22 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     docsUrl: "https://platform.openai.com/docs",
     statusUrl: "https://status.openai.com",
     changelogUrl: "https://platform.openai.com/docs/changelog",
-    description: "Creator of GPT-5.5, o-series reasoning, image gen, and realtime voice models. Leads in multimodal, coding, and long-context tasks.",
+    description: "Creator of GPT-5.6, GPT-5.5, o-series reasoning, image gen, and realtime voice models. Leads in multimodal, coding, and long-context tasks.",
     hq: "US",
     tier: "frontier",
     hasFreeTier: false,
     liveModels: true,
-    lastUpdated: "2026-06-23",
+    lastUpdated: "2026-07-11",
     models: [
-      m("gpt-5.5",            5.00,  30.00, 1000, { promo: true, promoLabel: "Flagship",   promoLink: "https://openai.com/index/gpt-5-5/" }),
-      m("gpt-5.4",            2.50,  15.00, 1000, { promo: true, promoLabel: "Balanced",   promoLink: "https://openai.com/index/gpt-5-4/" }),
-      m("gpt-5.4-mini",       0.75,   4.50,  400, { promo: true, promoLabel: "Best value", promoLink: "https://openai.com/index/gpt-5-4-mini/", promoOriginalInputPer1M: 2.50, promoOriginalOutputPer1M: 10.00 }),
+      // ── GPT-5.6 (July 9, 2026 GA) ──────────────────────────────────────────
+      m("gpt-5.6-sol",        5.00,  30.00, 1000, { promo: true, promoLabel: "New · Flagship",  promoLink: "https://openai.com/blog/gpt-5-6/" }),
+      m("gpt-5.6-terra-pro",  2.50,  15.00, 1000, { promo: true, promoLabel: "New · Balanced",  promoLink: "https://openai.com/blog/gpt-5-6/" }),
+      m("gpt-5.6-luna",       1.00,   6.00, 1000, { promo: true, promoLabel: "New · Fast",      promoLink: "https://openai.com/blog/gpt-5-6/" }),
+      m("gpt-5.6",            5.00,  30.00, 1000),
+      // ── GPT-5.x (previous) ─────────────────────────────────────────────────
+      m("gpt-5.5",            5.00,  30.00, 1000, { promo: true, promoLabel: "Flagship" }),
+      m("gpt-5.4",            2.50,  15.00, 1000, { promo: true, promoLabel: "Balanced" }),
+      m("gpt-5.4-mini",       0.75,   4.50,  400, { promo: true, promoLabel: "Best value" }),
       m("gpt-5",             10.00,  40.00, 1000),
       m("gpt-5-mini",         0.40,   1.60, 1000),
       m("gpt-5-nano",         0.10,   0.40, 1000),
@@ -746,7 +752,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Yi (01.AI) ────────────────────────────────────────────────────────────
+  // ── Yi (01.AI) ────────────────────────���───────────────────────────────────
   yi: {
     id: "yi",
     name: "01.AI (Yi)",
@@ -796,16 +802,19 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     pricingUrl: "https://cloud.tencent.com/document/product/1729/97731",
     docsUrl: "https://cloud.tencent.com/document/product/1729",
     changelogUrl: "https://cloud.tencent.com/document/product/1729/112892",
-    description: "Tencent's LLM. Hunyuan-Turbo-S free tier; strong for Chinese language, code, and math.",
+    description: "Tencent's LLM platform. HY3 is a 295B MoE reasoning model (July 2026, 256K ctx, Apache 2.0). Endpoint: Tencent TokenHub. Supports fast/slow thinking modes.",
     hq: "CN",
     tier: "mid",
     hasFreeTier: true,
     liveModels: false,
-    lastUpdated: "2026-06-23",
+    lastUpdated: "2026-07-11",
     models: [
-      m("hunyuan-turbo-s", null, null, 256, { promo: true, promoLabel: "Free tier", promoLink: "https://cloud.tencent.com/document/product/1729/97731" }),
-      m("hunyuan-turbos",  0.07, 0.14, 256, { promo: true, promoLabel: "Popular" }),
-      m("hunyuan-lite",    null, null, 256, { promo: true, promoLabel: "Free" }),
+      // ── HY3 (latest, July 2026) ──────────────────────────────────────────
+      m("hy3",              null, null, 256, { promo: true, promoLabel: "New · 295B MoE" }),
+      // ── Legacy Hunyuan ───────────────────────────────────────────────────
+      m("hunyuan-turbo-s",  null, null, 256, { promo: true, promoLabel: "Free tier", promoLink: "https://cloud.tencent.com/document/product/1729/97731" }),
+      m("hunyuan-turbos",   0.07, 0.14, 256, { promo: true, promoLabel: "Popular" }),
+      m("hunyuan-lite",     null, null, 256, { promo: true, promoLabel: "Free" }),
     ],
   },
 
@@ -926,7 +935,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       // ── Llama 4 ────────────────────────────────────────────────────────────
       m("meta-llama/Llama-4-Maverick-17B-128E",             0.15, 0.60, 1024, { promo: true, promoLabel: "Llama 4",   promoLink: "https://deepinfra.com/pricing" }),
       m("meta-llama/Llama-4-Scout-17B-16E",                 0.10, 0.30,  320),
-      // ── Llama 3 ─────────────────────��───��──��──��───��─��───��───��────��──��───��──
+      // ── Llama 3 ────────────────────����───��──��──��───��─��───��───��────��──��───��──
       m("meta-llama/Llama-3.3-70B-Instruct-Turbo",          0.10, 0.32,  128),
       m("meta-llama/Meta-Llama-3.1-8B-Instruct",            0.02, 0.05,  128, { promo: true, promoLabel: "Ultra-cheap",promoLink: "https://deepinfra.com/pricing" }),
       // ── Gemma 4 ────────────────────────────────────────────────────────────
@@ -1666,7 +1675,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Avian ─────────────────────────────────────────────���───────────────────────
+  // ── Avian ───────────────────────────────────────────���─���───────────────────────
   avian: {
     id: "avian",
     name: "Avian",
