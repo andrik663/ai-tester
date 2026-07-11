@@ -158,6 +158,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     id: "openai",
     modelsEndpoint: "https://api.openai.com/v1/models",
     models: [
+      // ── GPT-5.6 (July 2026 GA) ─────────────────────────────────────────────
+      "gpt-5.6-sol",
+      "gpt-5.6-terra-pro",
+      "gpt-5.6-luna",
+      "gpt-5.6",
+      // ── GPT-5.x legacy ────────────────────────────────────────────────────
       "gpt-5.3-codex",
       "gpt-5.2",
       "gpt-5.2-pro",
@@ -647,6 +653,13 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   openrouter: {
     id: "openrouter",
     models: [
+      // ── GPT-5.6 (July 2026) ───────────────────────────────────────────────
+      "openai/gpt-5.6-sol",
+      "openai/gpt-5.6-terra-pro",
+      "openai/gpt-5.6-luna",
+      // ── Tencent HY3 (295B MoE, free until Jul 21 2026) ───────────────────
+      "tencent/hy3",
+      // ── Other models ──────────────────────────────────────────────────────
       "deepseek/deepseek-v4-flash",
       "minimax/minimax-m3",
       "anthropic/claude-opus-4.7",
@@ -834,11 +847,15 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   hunyuan: {
     id: "hunyuan",
     models: [
+      // ── HY3 (295B MoE, July 2026) ─────────────────────────────────────────
+      "hy3",
+      // ── HunyuanLite / Standard / Turbo (legacy) ───────────────────────────
       "hunyuan-turbos",
       "hunyuan-lite",
       "hunyuan-standard",
     ],
-    endpoint: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+    // Tencent TokenHub — OpenAI-compatible, supports hy3 and legacy Hunyuan models
+    endpoint: "https://tokenhub.tencentmaas.com/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
@@ -1124,7 +1141,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mk/deepseek-v3.2",
       "mk/deepseek-v4-flash",
       "mk/deepseek-v4-pro",
-      // ── GLM (Zhipu) ───────────────────────────────────────────────────────
+      // ── GLM (Zhipu) ─────────────────────────────────────────���─────────────
       "mk/glm-5",
       "mk/glm-5-thinking",
       "mk/glm-5-agentic",
@@ -1388,6 +1405,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   conduit: {
     id: "conduit",
     models: [
+      // ── New July 2026 ──────────────────────────────────────────────────────
+      "gpt-5.6-sol",
+      "gpt-5.6-terra-pro",
+      "gpt-5.6-luna",
+      "hunyuan-hy3",
+      // ── Existing ──────────────────────────────────────────────────────────
       "gpt-5",
       "gpt-5-mini",
       "gpt-4o",
@@ -1430,7 +1453,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   zenmux: {
     id: "zenmux",
     models: [
-      // New models (requested additions)
+      // ── New July 2026 ──────────────────────────────────────────────────────
+      "openai/gpt-5.6-sol",
+      "openai/gpt-5.6-terra-pro",
+      "openai/gpt-5.6-luna",
+      "tencent/hy3",
+      // ── Existing models ────────────────────────────────────────────────────
       "moonshotai/kimi-k2.7-code",
       "qwen/qwen3.7-plus",
       "minimax/minimax-m3",
@@ -1450,7 +1478,6 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "deepseek/deepseek-chat",
       "deepseek/deepseek-reasoner",
       "stepfun/step-3",
-      // Existing models
       "anthropic/claude-opus-4-5",
       "anthropic/claude-sonnet-4-5",
       "anthropic/claude-haiku-4-5",
@@ -1484,7 +1511,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   bynara: {
     id: "bynara",
     models: [
-      // ── Free tier ────────────────────────────────────────────────────────
+      // ── Free tier ──────────────��─────────────────────────────────────────
       "mimo-v2.5-free",
       "mimo-v2.5-pro-free",
       "mistral-large",

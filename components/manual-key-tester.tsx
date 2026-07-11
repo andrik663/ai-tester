@@ -165,14 +165,15 @@ const PRESETS: ProviderPreset[] = [
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
-    // Active: gpt-5.3-codex, gpt-5.2, gpt-5.2-pro, gpt-5.1, gpt-5, gpt-5-mini,
+    // Active (July 2026): gpt-5.6-sol, gpt-5.6-terra-pro, gpt-5.6-luna, gpt-5.6,
+    //   gpt-5.3-codex, gpt-5.2, gpt-5.2-pro, gpt-5.1, gpt-5, gpt-5-mini,
     //   gpt-5-nano, gpt-5-pro, o3-pro, o3, gpt-4.1, gpt-4.1-mini
     // Deprecated (still callable): gpt-5.3-chat, gpt-5.2-codex, gpt-5.1-codex,
     //   gpt-5.1-codex-max, gpt-5.1-codex-mini, gpt-5-codex, gpt-4.1-nano,
     //   o4-mini, o3-mini, o1-pro, o1, o1-mini, gpt-4o, gpt-4o-mini, gpt-4-turbo,
     //   gpt-4, gpt-3.5-turbo, babbage-002, davinci-002, codex-mini-latest
     bodyTemplate: JSON.stringify({
-      model: "gpt-5.3-codex",
+      model: "gpt-5.6-sol",
       input: "{{PROMPT}}",
     }, null, 2),
     docsUrl: "https://platform.openai.com/docs/api-reference/responses",
@@ -429,7 +430,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "minimax/minimax-m2-7",                              label: "MiniMax M2.7 (Hot)",          tag: "MiniMax",    ctx: "200K ctx", in: "$0.3/Mt",   out: "$1.2/Mt",   cache: "$0.06/Mt" },
       { id: "minimax/minimax-m2-5-highspeed",                    label: "MiniMax M2.5-Highspeed",      tag: "MiniMax",    ctx: "200K ctx", in: "$0.6/Mt",   out: "$2.4/Mt",   cache: "$0.03/Mt" },
       { id: "minimax/minimax-m1",                                label: "MiniMax M1",                  tag: "MiniMax",    ctx: "1M ctx",   in: "$0.55/Mt",  out: "$2.2/Mt",   cache: "" },
-      // ── Kimi ────�������───────────────────���────────────────────────────────────
+      // ── Kimi ────��������───────────────────���────────────────────────────────────
       { id: "moonshotai/kimi-k2-6",                              label: "Kimi K2.6 (New)",             tag: "MoonshotAI", ctx: "256K ctx", in: "$0.8/Mt",   out: "$3.4/Mt",   cache: "$0.16/Mt" },
       { id: "moonshotai/kimi-k2-instruct",                       label: "Kimi K2 Instruct",            tag: "MoonshotAI", ctx: "131K ctx", in: "$0.57/Mt",  out: "$2.3/Mt",   cache: "" },
       { id: "moonshotai/kimi-k2-thinking",                       label: "Kimi K2 Thinking",            tag: "MoonshotAI", ctx: "256K ctx", in: "$0.6/Mt",   out: "$2.5/Mt",   cache: "$0.15/Mt" },
@@ -796,14 +797,14 @@ const PRESETS: ProviderPreset[] = [
     id: "hunyuan",
     name: "Tencent Hunyuan",
     country: "CN",
-    endpoint: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+    endpoint: "https://tokenhub.tencentmaas.com/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "hunyuan-turbos-latest",
+      model: "hy3",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
@@ -1117,7 +1118,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
       { id: "sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",        tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
       { id: "sonnet-4.5-agentic",                label: "Claude Sonnet 4.5 Agentic",         tag: "Claude",  ctx: "200K", in: "", out: "", cache: "" },
-      // ── Image ─────────────────────────────────────────────────────────────
+      // ── Image ─────────────────���───────────────────────────────────────────
       { id: "grok-premium-image",                label: "Grok Premium Image",                tag: "image",   ctx: "–",    in: "", out: "", cache: "" },
       // ── Video ─────────────────────────────────────────────────────────────
       { id: "grok-premium-video",                label: "Grok Premium Video",                tag: "video",   ctx: "–",    in: "", out: "", cache: "" },
@@ -2090,7 +2091,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
   },
 
-  // ── ZenMux Gateway ───────────────────────────────────────────────────────
+  // ── ZenMux Gateway ─────────────────────────────────────────────────���─────
   {
     id: "zenmux",
     name: "ZenMux",
@@ -2770,7 +2771,7 @@ function ProviderLogo({
   )
 }
 
-// ── Sidebar provider row ───────────────────────────────────��──────────────────
+// ── Sidebar provider row ──────────────────────��────────────��──────────────────
 // Defined at module level so React can track hooks correctly.
 
 interface SidebarProviderRowProps {
