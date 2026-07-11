@@ -19,6 +19,7 @@ import HistoryPanel from "@/components/history-panel"
 import CollectionsPanel from "@/components/collections-panel"
 import EnvSwitcher from "@/components/env-switcher"
 import ModelScreenerPanel from "@/components/model-screener-panel"
+import LeaderboardPanel from "@/components/leaderboard-panel"
 import { pushHistory, type HistoryEntry } from "@/lib/history"
 import { getActiveEnvironment, interpolate, type Environment } from "@/lib/environments"
 import type { SavedRequest } from "@/lib/collections"
@@ -2091,7 +2092,7 @@ const PRESETS: ProviderPreset[] = [
     color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
   },
 
-  // ── ZenMux Gateway ─────────────────────────────────────────────────���─────
+  // ── ZenMux Gateway ──────────────────────────���──────────────────────���─────
   {
     id: "zenmux",
     name: "ZenMux",
@@ -2771,7 +2772,7 @@ function ProviderLogo({
   )
 }
 
-// ── Sidebar provider row ──────────────────────��────────────��──────────────────
+// ── Sidebar provider row ���─────────────────────��────────────��──────────────────
 // Defined at module level so React can track hooks correctly.
 
 interface SidebarProviderRowProps {
@@ -3103,7 +3104,7 @@ export default function ManualKeyTester() {
     setActiveEnv(env)
   }, [])
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved">("unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard">("unified")
   // Pinned providers — persisted in localStorage
   const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
   useEffect(() => {
@@ -4041,6 +4042,7 @@ export default function ManualKeyTester() {
                 { id: "multi-batch" as const,   label: "Batch" },
                 { id: "working-keys" as const,  label: "Keys"  },
                 { id: "saved" as const,         label: "Saved" },
+                { id: "leaderboard" as const,   label: "Rank"  },
               ]).map((t) => (
                 <button
                   key={t.id}
@@ -5545,6 +5547,11 @@ export default function ManualKeyTester() {
             </div>
           )
         })()}
+
+        {/* ── LEADERBOARD TAB ───────────────────────────────────────────────── */}
+        {activeTab === "leaderboard" && (
+          <LeaderboardPanel />
+        )}
 
         {/* ── MULTI-KEY BATCH TAB ────────────────────────────────────────────── */}
         {activeTab === "multi-batch" && (
