@@ -228,7 +228,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Groq ─────────────────────────────────────────��───────────────────────
+  // ── Groq ─────────────────────────────────────────���───────────────────────
   groq: {
     id: "groq",
     name: "Groq",
@@ -1071,22 +1071,33 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
   // ── Dahono Labs Gateway ────��──────────────────────────────────────────────
   dahono: {
     id: "dahono",
-    name: "Dahono Labs Gateway",
-    website: "https://gateway.dahono.com",
-    pricingUrl: "https://gateway.dahono.com",
-    docsUrl: "https://gateway.dahono.com/docs",
-    changelogUrl: "https://gateway.dahono.com/changelog",
-    description: "Indonesian AI gateway. 70+ models from all major providers, unified billing, and generous free tier.",
+    name: "Dahono Router",
+    website: "https://router.dahono.com",
+    pricingUrl: "https://router.dahono.com/models",
+    docsUrl: "https://router.dahono.com",
+    changelogUrl: "https://router.dahono.com",
+    description: "Indonesian AI gateway. 15+ models from OpenAI, DeepSeek, Moonshot, GLM, and more — free and paid tiers.",
     hq: "ID",
     tier: "gateway",
     hasFreeTier: true,
     liveModels: true,
-    lastUpdated: "2026-06-23",
+    lastUpdated: "2026-07-19",
     models: [
-      m("dahono/deepseek-chat",   null, null, 64,   { promo: true, promoLabel: "Free", promoLink: "https://gateway.dahono.com" }),
-      m("dahono/gemini-2.5-flash",null, null, 1000, { promo: true, promoLabel: "Free" }),
-      m("dahono/gpt-4o-mini",     null, null,  128, { promo: true, promoLabel: "Free" }),
-      m("dahono/claude-haiku-4-5",null, null,  200, { promo: true, promoLabel: "Free" }),
+      m("dahono/ai-chat",                  null, null, null, { promo: true, promoLabel: "Free", promoLink: "https://router.dahono.com/models" }),
+      m("dahono/deepseek-v4-flash",        null, null, null, { promo: true, promoLabel: "Free" }),
+      m("dahono/deepseek-v4-pro",          null, null, null, { promo: true, promoLabel: "Free · Starter" }),
+      m("dahono/auto",                     null, null, null, { promo: true, promoLabel: "Free" }),
+      m("dahono/glm-5.2",                  null, null, null, { promo: true, promoLabel: "Free · Pro" }),
+      m("dahono/kimi-k2.7-code",           null, null, null, { promo: true, promoLabel: "Free · Pro" }),
+      m("dahono/kimi-k2.7-code-highspeed", null, null, null, { promo: true, promoLabel: "Free · Pro" }),
+      m("dahono/kimi-k3",                  null, null, null, { promo: true, promoLabel: "Free · Pro" }),
+      m("dahono/gpt-5.5",                  null, null, null),
+      m("dahono/gpt-5.6-luna",             null, null, null),
+      m("dahono/gpt-5.6-sol",              null, null, null),
+      m("dahono/gpt-5.6-terra",            null, null, null),
+      m("dahono/minimax-m3",               null, null, null),
+      m("dahono/hy3",                      null, null, null, { promo: true, promoLabel: "Free · Starter" }),
+      m("dahono/laguna-xs-2.1",            null, null, null, { promo: true, promoLabel: "Free · Starter" }),
     ],
   },
 
@@ -1137,7 +1148,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [ m("aion-1", null, null, 128, { promo: true, promoLabel: "Flagship" }), m("aion-1-mini", null, null, 32) ],
   },
 
-  // ── AkashML ────────────��──────────────────────────────────────────────────────
+  // ── AkashML ───────────����──────────────────────────────────────────────────────
   akashml: {
     id: "akashml", name: "AkashML",
     website: "https://akash.network", pricingUrl: "https://console.akash.network",

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const apiKey = authHeader.replace("Bearer ", "").trim() || "dahono-xxx"
 
   try {
-    const res = await fetch("https://gateway.dahono.com/v1/models", {
+    const res = await fetch("https://router.dahono.com/v1/models", {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",

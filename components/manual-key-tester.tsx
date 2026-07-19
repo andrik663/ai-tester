@@ -119,9 +119,9 @@ const PRESETS: ProviderPreset[] = [
   // ── Dahono Labs Gateway ────────────────────────────────────────���──────────
   {
     id: "dahono",
-    name: "Dahono Labs Gateway",
+    name: "Dahono Router",
     country: "ID",
-    endpoint: "https://gateway.dahono.com/v1/chat/completions",
+    endpoint: "https://router.dahono.com/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
@@ -132,11 +132,11 @@ const PRESETS: ProviderPreset[] = [
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://labs.dahono.com/models",
-    createKeyUrl: "https://labs.dahono.com/account/api-keys",
+    docsUrl: "https://router.dahono.com/models",
+    createKeyUrl: "https://router.dahono.com",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ─────────────────�����─────────────────────────────
+  // ── Tier 1: Major providers ─────────────────�����─────────────��───────────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -1795,7 +1795,7 @@ const PRESETS: ProviderPreset[] = [
       // ── Auto-route ────────────────────────────────────────────────────────
       { id: "mk/auto",                              label: "Auto (best available)",               tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
       { id: "mk/auto-thinking",                     label: "Auto Thinking",                       tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
-      // ── Claude (Anthropic) ────────────────────────────────────────────────
+      // ── Claude (Anthropic) ─��──────────────────────────────────────────────
       { id: "mk/sonnet-4.5",                        label: "Claude Sonnet 4.5",                   tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",          tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",  tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
@@ -1807,7 +1807,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/deepseek-v3.2",                     label: "DeepSeek V3.2",                       tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
       { id: "mk/deepseek-v4-flash",                 label: "DeepSeek V4 Flash (limited)",         tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
       { id: "mk/deepseek-v4-pro",                   label: "DeepSeek V4 Pro (limited)",           tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
-      // ── Qwen3 Coder ───────────────────────────────────────────────────────
+      // ── Qwen3 Coder ────────────────────────────────────────────��──────────
       { id: "mk/qwen3-coder-next",                  label: "Qwen3 Coder Next",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-next-thinking",         label: "Qwen3 Coder Next Thinking",           tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-next-agentic",          label: "Qwen3 Coder Next Agentic",            tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
