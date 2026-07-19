@@ -8,6 +8,7 @@ import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
+import SkillsPanel, { type ActiveSkillConfig } from "@/components/skills-panel"
 import { loadWorkingKeys } from "@/lib/working-keys-store"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
@@ -136,7 +137,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://router.dahono.com",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ─────────────────�����─────────────��───────────────
+  // ── Tier 1: Major providers ─────────────────�����─────────────��─────���─────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -3135,7 +3136,8 @@ export default function ManualKeyTester() {
     setActiveEnv(env)
   }, [])
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard">("unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills">("unified")
+  const [activeSkillConfig, setActiveSkillConfig] = useState<ActiveSkillConfig | null>(null)
   // Pinned providers — persisted in localStorage
   const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
   useEffect(() => {
@@ -4072,6 +4074,7 @@ export default function ManualKeyTester() {
                 { id: "unified" as const,      label: "Test"  },
                 { id: "multi-batch" as const,   label: "Batch" },
                 { id: "working-keys" as const,  label: "Keys"  },
+                { id: "skills" as const,        label: activeSkillConfig ? "Skills ⚡" : "Skills" },
                 { id: "saved" as const,         label: "Saved" },
                 { id: "leaderboard" as const,   label: "Rank"  },
               ]).map((t) => (
@@ -5217,6 +5220,13 @@ export default function ManualKeyTester() {
         {activeTab === "environments" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <EnvSwitcher onEnvChange={(env) => setActiveEnv(env)} />
+          </div>
+        )}
+
+        {/* ── SKILLS TAB ────────────────────────────────────────────────────── */}
+        {activeTab === "skills" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <SkillsPanel onActiveSkillChange={setActiveSkillConfig} />
           </div>
         )}
 
