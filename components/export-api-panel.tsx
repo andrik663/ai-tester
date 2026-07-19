@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { type WorkingKeyRecord } from "@/lib/working-keys-store"
+import GatewayLogsPanel from "@/components/gateway-logs-panel"
 
 const CHUNK_SIZE = 8 // keys per request — keeps payloads small and avoids timeouts
 
@@ -106,9 +107,184 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out
 }
 
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+      strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  )
+}
+
+// ── Agent configs ─────────────────────────────────────────────────────────────
+
+type AgentTab = "sync" | "logs" | "agents"
+
+function AgentConfig({ origin }: { origin: string }) {
+  const endpoint = `${origin}/api/v1/chat/completions`
+  const [copied, setCopied] = useState<string | null>(null)
+
+  const copy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(key)
+      setTimeout(() => setCopied(null), 1500)
+    }).catch(() => {})
+  }
+
+  const agents = [
+    {
+      id: "claude-code",
+      name: "Claude Code",
+      description: "Set these env vars before running claude in your terminal.",
+      snippets: [
+        {
+          label: "Environment variables",
+          lang: "bash",
+          code: `export ANTHROPIC_BASE_URL="${endpoint}"
+export ANTHROPIC_API_KEY="YOUR_EXPORT_API_TOKEN"`,
+        },
+      ],
+    },
+    {
+      id: "opencode",
+      name: "Opencode",
+      description: "Add to your opencode config (opencode.config.ts or .opencode/config.json).",
+      snippets: [
+        {
+          label: "opencode.config.ts",
+          lang: "ts",
+          code: `import { defineConfig } from "opencode"
+export default defineConfig({
+  provider: {
+    openai: {
+      name: "Miuclaw Gateway",
+      baseURL: "${endpoint}",
+      apiKey: "YOUR_EXPORT_API_TOKEN",
+      models: {
+        "miuclaw/auto": { name: "Auto (fastest provider)" },
+      },
+    },
+  },
+})`,
+        },
+      ],
+    },
+    {
+      id: "vscode",
+      name: "VS Code Copilot",
+      description: "Add to .vscode/settings.json or your user settings.",
+      snippets: [
+        {
+          label: "settings.json",
+          lang: "json",
+          code: `{
+  "github.copilot.advanced": {
+    "debug.overrideEngine": "miuclaw/auto",
+    "debug.testOverrideProxyUrl": "${endpoint}",
+    "debug.overrideProxyUrl": "${endpoint}"
+  }
+}`,
+        },
+      ],
+    },
+    {
+      id: "cursor",
+      name: "Cursor",
+      description: "Open Cursor Settings → Models → Add custom model.",
+      snippets: [
+        {
+          label: "Manual config (Settings)",
+          lang: "text",
+          code: `Model Name:  miuclaw/auto
+Base URL:    ${origin}/api/v1
+API Key:     YOUR_EXPORT_API_TOKEN`,
+        },
+      ],
+    },
+    {
+      id: "openai-sdk",
+      name: "OpenAI SDK / Python",
+      description: "Drop-in replacement — just change base_url and api_key.",
+      snippets: [
+        {
+          label: "Python",
+          lang: "python",
+          code: `from openai import OpenAI
+
+client = OpenAI(
+    base_url="${origin}/api/v1",
+    api_key="YOUR_EXPORT_API_TOKEN",
+)
+
+response = client.chat.completions.create(
+    model="miuclaw/auto",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(response.choices[0].message.content)`,
+        },
+        {
+          label: "Node.js / TypeScript",
+          lang: "ts",
+          code: `import OpenAI from "openai"
+
+const client = new OpenAI({
+  baseURL: "${origin}/api/v1",
+  apiKey: "YOUR_EXPORT_API_TOKEN",
+})
+
+const res = await client.chat.completions.create({
+  model: "miuclaw/auto",
+  messages: [{ role: "user", content: "Hello!" }],
+})
+console.log(res.choices[0].message.content)`,
+        },
+      ],
+    },
+  ] as const
+
+  return (
+    <div className="flex flex-col gap-4 px-3 py-3 overflow-y-auto">
+      <p className="text-[9.5px] text-muted-foreground/60 leading-relaxed">
+        After syncing your working keys, use Miuclaw gateway as a unified endpoint
+        with any OpenAI-compatible coding agent or SDK.
+        Replace <span className="font-mono text-primary/70">YOUR_EXPORT_API_TOKEN</span> with
+        your token (set via <span className="font-mono text-primary/70">EXPORT_API_TOKEN</span> env var).
+      </p>
+
+      {agents.map((agent) => (
+        <div key={agent.id} className="flex flex-col gap-2 p-2.5 rounded-lg border border-border/30 bg-secondary/10">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10.5px] font-semibold text-foreground">{agent.name}</span>
+            <span className="text-[9px] text-muted-foreground/60 leading-relaxed">{agent.description}</span>
+          </div>
+          {agent.snippets.map((s) => (
+            <div key={s.label} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[8.5px] text-muted-foreground/50 uppercase tracking-wider">{s.label}</span>
+                <button
+                  onClick={() => copy(s.code, `${agent.id}-${s.label}`)}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+                >
+                  <CopyIcon />
+                  {copied === `${agent.id}-${s.label}` ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <pre className="p-2 rounded bg-secondary/20 border border-border/20 text-[8.5px] font-mono text-foreground/75 overflow-x-auto whitespace-pre leading-relaxed">
+                {s.code}
+              </pre>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function ExportApiPanel({ keys, onSynced }: Props) {
+  const [activeTab, setActiveTab] = useState<AgentTab>("sync")
   const [syncing, setSyncing]   = useState(false)
   const [progress, setProgress] = useState<Progress | null>(null)
   const [result, setResult]     = useState<SyncResult | null>(null)
@@ -225,7 +401,43 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
     : 0
 
   return (
-    <div className="flex flex-col gap-4 p-4 border-t border-border">
+    <div className="flex flex-col border-t border-border">
+
+      {/* Tab bar */}
+      <div className="flex items-center gap-0.5 px-3 h-8 border-b border-border/40 bg-sidebar/40 flex-shrink-0">
+        {([
+          { id: "sync",   label: "Sync"   },
+          { id: "logs",   label: "Logs"   },
+          { id: "agents", label: "Agents" },
+        ] as { id: AgentTab; label: string }[]).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            className={`px-2.5 h-6 rounded text-[10px] font-medium whitespace-nowrap transition-all ${
+              activeTab === t.id
+                ? "bg-primary/15 text-primary border border-primary/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Logs tab */}
+      {activeTab === "logs" && (
+        <div className="h-96">
+          <GatewayLogsPanel />
+        </div>
+      )}
+
+      {/* Agents tab */}
+      {activeTab === "agents" && (
+        <AgentConfig origin={origin} />
+      )}
+
+      {/* Sync tab */}
+      {activeTab === "sync" && <div className="flex flex-col gap-4 p-4">
 
       {/* Header */}
       <div className="flex flex-col gap-0.5">
@@ -315,6 +527,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
           </div>
         ))}
       </div>
+      </div>}{/* end sync tab */}
     </div>
   )
 }
