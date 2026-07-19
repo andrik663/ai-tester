@@ -8,6 +8,7 @@ import ProviderBatchTest from "@/components/provider-batch-test"
 import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
+import SkillsPanel, { type ActiveSkillConfig } from "@/components/skills-panel"
 import { loadWorkingKeys } from "@/lib/working-keys-store"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
@@ -73,6 +74,7 @@ function detectProviderFromKey(key: string): string | null {
   if (k.startsWith("or-"))              return "openrouter"    // OpenRouter
   if (k.startsWith("fw-"))              return "fireworks"     // Fireworks AI
   if (k.startsWith("nvapi-"))           return "nvidia"        // NVIDIA NIM
+  if (k.startsWith("tf_"))              return "freetoken"      // Free Token Faucet
   if (k.startsWith("dk-"))             return "dahono"         // Dahono Labs Gateway
   if (k.startsWith("dc-"))             return "dahono"         // Dahono Labs Gateway (alt)
   if (k.startsWith("r8_"))             return "replicate"      // Replicate
@@ -118,9 +120,9 @@ const PRESETS: ProviderPreset[] = [
   // ── Dahono Labs Gateway ────────────────────────────────────────���──────────
   {
     id: "dahono",
-    name: "Dahono Labs Gateway",
+    name: "Dahono Router",
     country: "ID",
-    endpoint: "https://gateway.dahono.com/v1/chat/completions",
+    endpoint: "https://router.dahono.com/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
@@ -131,11 +133,11 @@ const PRESETS: ProviderPreset[] = [
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    docsUrl: "https://labs.dahono.com/models",
-    createKeyUrl: "https://labs.dahono.com/account/api-keys",
+    docsUrl: "https://router.dahono.com/models",
+    createKeyUrl: "https://router.dahono.com",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ─────────────────�����─────────────────────────────
+  // ── Tier 1: Major providers ─────────────────�����─────────────��─────���─────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -1377,6 +1379,35 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://featherless.ai/dashboard",
     color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
   },
+  // ── Free Token Faucet ──────────────────────────────────────────────────────
+  {
+    id: "freetoken",
+    name: "Free Token",
+    country: "US",
+    endpoint: "https://freetokenfaucet.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "gpt-5.6-luna",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "gpt-5.6-luna",      label: "GPT-5.6 Luna",        tag: "OpenAI",   ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "gpt-5.6-terra",     label: "GPT-5.6 Terra",       tag: "OpenAI",   ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "deepseek-v4-flash", label: "DeepSeek V4 Flash",   tag: "DeepSeek", ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "mimo-v2.5",         label: "Mimo v2.5",           tag: "Mimo",     ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "mimo-v2.5-pro",     label: "Mimo v2.5 Pro",       tag: "Mimo",     ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "qwen3.6-flash",     label: "Qwen 3.6 Flash",      tag: "Alibaba",  ctx: "",  in: "free", out: "free", cache: "" },
+    ],
+    docsUrl: "https://freetokenfaucet.com",
+    createKeyUrl: "https://freetokenfaucet.com",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+    note: "Claim your daily free quota on freetokenfaucet.com. Use your tf_ API key.",
+  },
   {
     id: "friendli",
     name: "Friendli AI",
@@ -1765,7 +1796,7 @@ const PRESETS: ProviderPreset[] = [
       // ── Auto-route ────────────────────────────────────────────────────────
       { id: "mk/auto",                              label: "Auto (best available)",               tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
       { id: "mk/auto-thinking",                     label: "Auto Thinking",                       tag: "Auto",      ctx: "varies", in: "", out: "", cache: "" },
-      // ── Claude (Anthropic) ────────────────────────────────────────────────
+      // ── Claude (Anthropic) ─��──────────────────────────────────────────────
       { id: "mk/sonnet-4.5",                        label: "Claude Sonnet 4.5",                   tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/sonnet-4.5-thinking",               label: "Claude Sonnet 4.5 Thinking",          tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
       { id: "mk/sonnet-4.5-thinking-agentic",       label: "Claude Sonnet 4.5 Thinking Agentic",  tag: "Claude",    ctx: "200K",   in: "", out: "", cache: "" },
@@ -1777,7 +1808,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/deepseek-v3.2",                     label: "DeepSeek V3.2",                       tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
       { id: "mk/deepseek-v4-flash",                 label: "DeepSeek V4 Flash (limited)",         tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
       { id: "mk/deepseek-v4-pro",                   label: "DeepSeek V4 Pro (limited)",           tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
-      // ── Qwen3 Coder ───────────────────────────────────────────────────────
+      // ── Qwen3 Coder ────────────────────────────────────────────��──────────
       { id: "mk/qwen3-coder-next",                  label: "Qwen3 Coder Next",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-next-thinking",         label: "Qwen3 Coder Next Thinking",           tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-next-agentic",          label: "Qwen3 Coder Next Agentic",            tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
@@ -2708,6 +2739,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   tngtech:          "tngtech.com",
   vidu:             "vidu.studio",
   wanai:            "openrouter.ai",
+  freetoken:        "freetokenfaucet.com",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
@@ -3104,7 +3136,8 @@ export default function ManualKeyTester() {
     setActiveEnv(env)
   }, [])
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard">("unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills">("unified")
+  const [activeSkillConfig, setActiveSkillConfig] = useState<ActiveSkillConfig | null>(null)
   // Pinned providers — persisted in localStorage
   const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
   useEffect(() => {
@@ -4041,6 +4074,7 @@ export default function ManualKeyTester() {
                 { id: "unified" as const,      label: "Test"  },
                 { id: "multi-batch" as const,   label: "Batch" },
                 { id: "working-keys" as const,  label: "Keys"  },
+                { id: "skills" as const,        label: activeSkillConfig ? "Skills ⚡" : "Skills" },
                 { id: "saved" as const,         label: "Saved" },
                 { id: "leaderboard" as const,   label: "Rank"  },
               ]).map((t) => (
@@ -5186,6 +5220,13 @@ export default function ManualKeyTester() {
         {activeTab === "environments" && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <EnvSwitcher onEnvChange={(env) => setActiveEnv(env)} />
+          </div>
+        )}
+
+        {/* ── SKILLS TAB ────────────────────────────────────────────────────── */}
+        {activeTab === "skills" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <SkillsPanel onActiveSkillChange={setActiveSkillConfig} />
           </div>
         )}
 

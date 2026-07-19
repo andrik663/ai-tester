@@ -21,7 +21,7 @@ export interface DahnoBatchTestResponse {
   durationMs: number
 }
 
-const GATEWAY_URL = "https://gateway.dahono.com/v1"
+const GATEWAY_URL = "https://router.dahono.com/v1"
 const TEST_PROMPT  = "halo"
 const MAX_TOKENS   = 64 // keep it cheap — we only need a short reply
 const CONCURRENCY  = 8  // run at most 8 requests in parallel

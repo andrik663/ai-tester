@@ -583,7 +583,7 @@ PROVIDER_CONFIGS.jempol = {
 // Alias: dahono uses openai-compatible image API
 PROVIDER_CONFIGS.dahono = {
   ...PROVIDER_CONFIGS.openai,
-  buildUrl: () => "https://gateway.dahono.com/v1/images/generations",
+  buildUrl: () => "https://router.dahono.com/v1/images/generations",
   buildHeaders: (apiKey) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` }),
 }
 

@@ -109,14 +109,25 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     id: "dahono",
     // Static fallback — overridden at runtime via modelsEndpoint
     models: [
+      "dahono/ai-chat",
       "dahono/deepseek-v4-flash",
-      "dahono/gemini-2.5-flash",
-      "dahono/gpt-4o-mini",
-      "dahono/claude-haiku-4-5",
+      "dahono/deepseek-v4-pro",
+      "dahono/auto",
+      "dahono/glm-5.2",
+      "dahono/kimi-k2.7-code",
+      "dahono/kimi-k2.7-code-highspeed",
+      "dahono/kimi-k3",
+      "dahono/gpt-5.5",
+      "dahono/gpt-5.6-luna",
+      "dahono/gpt-5.6-sol",
+      "dahono/gpt-5.6-terra",
+      "dahono/minimax-m3",
+      "dahono/hy3",
+      "dahono/laguna-xs-2.1",
     ],
-    endpoint: "https://gateway.dahono.com/v1/chat/completions",
-    // Live model list — same API the single-key tester uses, returns all 70+ models
-    modelsEndpoint: "https://gateway.dahono.com/v1/models",
+    endpoint: "https://router.dahono.com/v1/chat/completions",
+    // Live model list — same API the single-key tester uses
+    modelsEndpoint: "https://router.dahono.com/v1/models",
     parseModels: (data) => {
       const d = data as { data?: { id: string; free?: boolean }[] }
       return (d?.data ?? []).map((m) => m.id)
@@ -774,7 +785,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Moonshot (Kimi) ───────────────────────────────────────────────────────
+  // ── Moonshot (Kimi) ─────────────────────────────────────────�����─────────────
   moonshot: {
     id: "moonshot",
     models: [
@@ -1120,7 +1131,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Marketku Router ───────────────────────────────────────────────────────
+  // ── Marketku Router ──────────────────────────────────────────────────────���
   // Static list = full 69-model catalog as of 2026-06-28.
   // Live fetch via modelsEndpoint (requires API key) always takes priority.
   marketku: {
@@ -1458,7 +1469,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "openai/gpt-5.6-terra-pro",
       "openai/gpt-5.6-luna",
       "tencent/hy3",
-      // ── Existing models ────────────────────────────────────────────────────
+      // ── Existing models ────────────────────────────────────────────────��─��─
       "moonshotai/kimi-k2.7-code",
       "qwen/qwen3.7-plus",
       "minimax/minimax-m3",
@@ -1526,7 +1537,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "mimo-v2.5-pro-ultraspeed",
       // ── Pro ───────────────────────────────────────────────────────────────
       "claude-opus-4.7",
-      // ── Hermes / Mimo ─────────────────────────────────────────────────────
+      // ── Hermes / Mimo ───────────────────────────────────────────────��──��──
       "mimo-v2.5-hermes",
       "mimo-v2.5-pro-hermes",
       // ── DeepSeek plan ─────────────────────────────────────────────────────
@@ -1907,6 +1918,27 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     ],
     endpoint: "https://openrouter.ai/api/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Free Token Faucet ─────────────────────────────────────────────────────
+  freetoken: {
+    id: "freetoken",
+    models: [
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "deepseek-v4-flash",
+      "mimo-v2.5",
+      "mimo-v2.5-pro",
+      "qwen3.6-flash",
+    ],
+    modelsEndpoint: "https://freetokenfaucet.com/v1/models",
+    endpoint: "https://freetokenfaucet.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],

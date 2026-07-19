@@ -277,7 +277,7 @@ async function enrichDahono(key: string): Promise<Partial<KeyInfoResult>> {
   const headers = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }
   const out: Partial<KeyInfoResult> = { provider: "Dahono" }
   try {
-    const r = await fetch("https://gateway.dahono.com/v1/models", { headers, signal: AbortSignal.timeout(8_000) })
+    const r = await fetch("https://router.dahono.com/v1/models", { headers, signal: AbortSignal.timeout(8_000) })
     if (r.ok) {
       const d = await r.json()
       const all: { id: string; free?: boolean; tier?: string }[] = d?.data ?? []

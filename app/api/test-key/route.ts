@@ -644,8 +644,8 @@ async function testMinimax(key: string): Promise<TestKeyResult> {
 
 async function testDahono(key: string): Promise<TestKeyResult> {
   const { log, logs, start } = makeLogger()
-  const modelsUrl = "https://gateway.dahono.com/v1/models"
-  const chatUrl = "https://gateway.dahono.com/v1/chat/completions"
+  const modelsUrl = "https://router.dahono.com/v1/models"
+  const chatUrl = "https://router.dahono.com/v1/chat/completions"
   const headers = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }
 
   log("info", "Provider: Dahono Labs Gateway (OpenAI-compatible)")
