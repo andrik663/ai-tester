@@ -228,7 +228,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Groq ─────────────────────────────────────────────────────────────────
+  // ── Groq ─────────────────────────────────────────��───────────────────────
   groq: {
     id: "groq",
     name: "Groq",
@@ -1137,7 +1137,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [ m("aion-1", null, null, 128, { promo: true, promoLabel: "Flagship" }), m("aion-1-mini", null, null, 32) ],
   },
 
-  // ── AkashML ───────────────────────────────────────────────────────────────────
+  // ── AkashML ────────────��──────────────────────────────────────────────────────
   akashml: {
     id: "akashml", name: "AkashML",
     website: "https://akash.network", pricingUrl: "https://console.akash.network",
@@ -2367,6 +2367,29 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     description: "Wan 2.1-I2V video generation model via OpenRouter.",
     hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
     models: [ m("wan-ai/wan2.1-i2v-720p", null, null, null, { promo: true, promoLabel: "New" }) ],
+  },
+
+  // ── Free Token Faucet ─────────────────────────────────────────────────────
+  freetoken: {
+    id: "freetoken",
+    name: "Free Token",
+    website: "https://freetokenfaucet.com",
+    pricingUrl: "https://freetokenfaucet.com",
+    docsUrl: "https://freetokenfaucet.com",
+    description: "Free Token Faucet — daily free quota for GPT-5.6, DeepSeek V4 Flash, Mimo, and Qwen models. OpenAI-compatible API.",
+    hq: "US",
+    tier: "budget",
+    hasFreeTier: true,
+    liveModels: true,
+    lastUpdated: "2026-07-19",
+    models: [
+      m("gpt-5.6-luna",     null, null, null, { promo: true, promoLabel: "Free · 90% off", promoLink: "https://freetokenfaucet.com" }),
+      m("gpt-5.6-terra",    null, null, null, { promo: true, promoLabel: "Free · 90% off", promoLink: "https://freetokenfaucet.com" }),
+      m("deepseek-v4-flash",null, null, null, { promo: true, promoLabel: "Free · 2% off",  promoLink: "https://freetokenfaucet.com" }),
+      m("mimo-v2.5",        null, null, null, { promo: true, promoLabel: "Free",            promoLink: "https://freetokenfaucet.com" }),
+      m("mimo-v2.5-pro",    null, null, null, { promo: true, promoLabel: "Free",            promoLink: "https://freetokenfaucet.com" }),
+      m("qwen3.6-flash",    null, null, null, { promo: true, promoLabel: "Free",            promoLink: "https://freetokenfaucet.com" }),
+    ],
   },
 }
 
