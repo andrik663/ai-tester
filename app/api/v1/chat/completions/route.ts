@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getInternalToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey } from "@/lib/gateway-cache"
 import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from "@/lib/providers"
+import { writeGatewayLog } from "@/lib/gateway-logs"
 
 // Status codes that should trigger fallback to another key
 const FALLBACK_STATUS_CODES = new Set([401, 403, 429, 500, 502, 503, 504])
@@ -316,6 +317,7 @@ export async function POST(req: NextRequest) {
   let lastError = ""
   let lastStatus = 502
   let lastProvider = primaryKey.providerId
+  let attemptCount = 0
 
   for (const key of candidates) {
     const endpoint = buildEndpoint(key.providerId, body.model, key.apiKey)
@@ -323,6 +325,8 @@ export async function POST(req: NextRequest) {
 
     const headers = buildProviderHeaders(key.providerId, key.apiKey)
     const forwardBody = buildForwardBody(key.providerId, body)
+    attemptCount++
+    const t0 = Date.now()
 
     let upstreamRes: Response
     try {
@@ -336,6 +340,13 @@ export async function POST(req: NextRequest) {
       lastError = err instanceof Error ? err.message : "Upstream request failed"
       lastProvider = key.providerId
       lastStatus = 502
+      // fire-and-forget log write
+      writeGatewayLog({
+        model: body.model, providerId: key.providerId, providerName: key.providerName,
+        success: false, statusCode: 502, latencyMs: Date.now() - t0,
+        errorMessage: lastError.slice(0, 200), streaming: !!body.stream,
+        fallbackUsed: attemptCount > 1, attemptCount,
+      }).catch(() => {})
       continue // network error — try next key
     }
 
@@ -345,12 +356,24 @@ export async function POST(req: NextRequest) {
       lastError = `Provider '${key.providerId}' returned ${upstreamRes.status}: ${errText.slice(0, 200)}`
       lastProvider = key.providerId
       lastStatus = upstreamRes.status
+      writeGatewayLog({
+        model: body.model, providerId: key.providerId, providerName: key.providerName,
+        success: false, statusCode: upstreamRes.status, latencyMs: Date.now() - t0,
+        errorMessage: lastError.slice(0, 200), streaming: !!body.stream,
+        fallbackUsed: attemptCount > 1, attemptCount,
+      }).catch(() => {})
       continue
     }
 
     if (!upstreamRes.ok) {
       // Non-retriable error (e.g. 400 bad request) — return immediately
       const errText = await upstreamRes.text().catch(() => `HTTP ${upstreamRes.status}`)
+      writeGatewayLog({
+        model: body.model, providerId: key.providerId, providerName: key.providerName,
+        success: false, statusCode: upstreamRes.status, latencyMs: Date.now() - t0,
+        errorMessage: errText.slice(0, 200), streaming: !!body.stream,
+        fallbackUsed: attemptCount > 1, attemptCount,
+      }).catch(() => {})
       return NextResponse.json(
         {
           error: `Provider '${key.providerId}' returned ${upstreamRes.status}`,
@@ -364,8 +387,14 @@ export async function POST(req: NextRequest) {
 
     // ── Success: stream or JSON passthrough ─────────────────────────────────
     const contentType = upstreamRes.headers.get("content-type") ?? "application/json"
+    const latencyMs = Date.now() - t0
 
     if (body.stream && upstreamRes.body) {
+      writeGatewayLog({
+        model: body.model, providerId: key.providerId, providerName: key.providerName,
+        success: true, statusCode: 200, latencyMs,
+        streaming: true, fallbackUsed: attemptCount > 1, attemptCount,
+      }).catch(() => {})
       return new NextResponse(upstreamRes.body, {
         status: 200,
         headers: {
@@ -379,6 +408,14 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await upstreamRes.json().catch(() => ({}))
+    const usage = (data as { usage?: { prompt_tokens?: number; completion_tokens?: number } }).usage
+    writeGatewayLog({
+      model: body.model, providerId: key.providerId, providerName: key.providerName,
+      success: true, statusCode: 200, latencyMs,
+      streaming: false, fallbackUsed: attemptCount > 1, attemptCount,
+      promptTokens:     usage?.prompt_tokens     ?? 0,
+      completionTokens: usage?.completion_tokens ?? 0,
+    }).catch(() => {})
     return NextResponse.json(data, {
       status: 200,
       headers: {
@@ -389,7 +426,13 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // ── All candidates failed ─────────────────────────────────────���────────────
+  // ── All candidates failed ─────────────────────────────────────────────────
+  writeGatewayLog({
+    model: body.model, providerId: lastProvider, providerName: lastProvider,
+    success: false, statusCode: lastStatus, latencyMs: 0,
+    errorMessage: `All keys failed: ${lastError.slice(0, 200)}`,
+    streaming: !!body.stream, fallbackUsed: true, attemptCount,
+  }).catch(() => {})
   return NextResponse.json(
     {
       error: `All available keys failed. Last error from '${lastProvider}': ${lastError}`,
