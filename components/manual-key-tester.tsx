@@ -73,6 +73,7 @@ function detectProviderFromKey(key: string): string | null {
   if (k.startsWith("or-"))              return "openrouter"    // OpenRouter
   if (k.startsWith("fw-"))              return "fireworks"     // Fireworks AI
   if (k.startsWith("nvapi-"))           return "nvidia"        // NVIDIA NIM
+  if (k.startsWith("tf_"))              return "freetoken"      // Free Token Faucet
   if (k.startsWith("dk-"))             return "dahono"         // Dahono Labs Gateway
   if (k.startsWith("dc-"))             return "dahono"         // Dahono Labs Gateway (alt)
   if (k.startsWith("r8_"))             return "replicate"      // Replicate
@@ -1376,6 +1377,35 @@ const PRESETS: ProviderPreset[] = [
     docsUrl: "https://featherless.ai/docs",
     createKeyUrl: "https://featherless.ai/dashboard",
     color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+  },
+  // ── Free Token Faucet ──────────────────────────────────────────────────────
+  {
+    id: "freetoken",
+    name: "Free Token",
+    country: "US",
+    endpoint: "https://freetokenfaucet.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "gpt-5.6-luna",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "gpt-5.6-luna",      label: "GPT-5.6 Luna",        tag: "OpenAI",   ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "gpt-5.6-terra",     label: "GPT-5.6 Terra",       tag: "OpenAI",   ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "deepseek-v4-flash", label: "DeepSeek V4 Flash",   tag: "DeepSeek", ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "mimo-v2.5",         label: "Mimo v2.5",           tag: "Mimo",     ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "mimo-v2.5-pro",     label: "Mimo v2.5 Pro",       tag: "Mimo",     ctx: "",  in: "free", out: "free", cache: "" },
+      { id: "qwen3.6-flash",     label: "Qwen 3.6 Flash",      tag: "Alibaba",  ctx: "",  in: "free", out: "free", cache: "" },
+    ],
+    docsUrl: "https://freetokenfaucet.com",
+    createKeyUrl: "https://freetokenfaucet.com",
+    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+    note: "Claim your daily free quota on freetokenfaucet.com. Use your tf_ API key.",
   },
   {
     id: "friendli",
@@ -2708,6 +2738,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   tngtech:          "tngtech.com",
   vidu:             "vidu.studio",
   wanai:            "openrouter.ai",
+  freetoken:        "freetokenfaucet.com",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
