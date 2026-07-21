@@ -51,64 +51,94 @@ const VIDEO_SUBSTRINGS = [
 ]
 
 // Coding-oriented model substrings
-// Source: Arena AI Code Leaderboard (arena.ai/leaderboard/code) — 101 models, updated Jul 21 2026
-// Criteria: any model whose ID matches these substrings ranks in the Code arena.
+// Source: Arena AI Code Leaderboard (arena.ai/leaderboard/code) — 101 models, Jul 2026
+// + cross-referenced against every provider model in lib/providers.ts.
+// Any model whose lowercased ID includes one of these strings gets the "coding" tag.
 const CODING_SUBSTRINGS = [
-  // ── Exact/prefix matches from top-ranked Code arena models ────────────────
-  // #1  kimi-k3                (Moonshot)
-  "kimi-k3",
-  // #2  claude-fable-5         (Anthropic)
-  "claude-fable",
-  // #3  gpt-5.6-sol-xhigh / gpt-5.x codex-harness variants
-  "gpt-5.6", "codex-harness", "sol-xhigh",
-  // #4  glm-5.2 (max)          (Z.ai)
-  "glm-5.2",
-  // #5  claude-opus-4-8-thinking
-  // #6  claude-opus-4-7-thinking
-  // #8  claude-opus-4-7
-  // #10 claude-opus-4-6-thinking
-  // #13 claude-opus-4-6
-  // #14 claude-opus-4-8
-  "claude-opus-4",
-  // #7  grok-4.5               (xAI)
-  "grok-4",
-  // #9  claude-sonnet-5-high
-  "claude-sonnet-5",
-  // #11 muse-spark-1.1         (Meta)
-  "muse-spark",
-  // #12 gemini-3.6-flash
-  "gemini-3.6",
-  // #15 seed-2.1-pro-preview   (ByteDance)
-  "seed-2.1-pro",
-  // #16 hy3                    (Tencent)
-  "hy3",
-  // #17 glm-5.1
-  "glm-5.1",
-  // ── Broader family matches that appear throughout the Code leaderboard ────
-  // Claude 3.x / 4.x coding-capable families
-  "claude-3-5", "claude-3-7", "claude-sonnet",
-  // GPT coding families
-  "gpt-4o", "gpt-4.1", "gpt-5.4", "gpt-5.5",
-  // Codex / code-specific suffixes (CEOWeb3 GPT-5 codex series + OpenAI)
-  "codex",
-  // DeepSeek coding families
-  "deepseek-r1", "deepseek-v3", "deepseek-coder", "deepseek-v4",
-  // Qwen coding families
-  "qwen-coder", "qwen3-coder", "qwen2.5-coder",
-  // StarCoder / Codestral
-  "starcoder", "codestral",
-  // Generic "code" / "coder" in model name
-  "code", "coder",
-  // Gemini coding-capable
-  "gemini-2.5", "gemini-3-pro", "gemini-3.5",
-  // Llama large coding
-  "llama-3.1-405", "llama-3.3",
-  // Kimi coding family
-  "kimi-k2",
-  // GLM general coding family
-  "glm-5", "glm-4.7",
-  // o1 / o3 / o4 reasoning-coding OpenAI
-  "o1", "o3", "o4",
+
+  // ── Anthropic ─────────────────────────────────────────────────────────────
+  // All Claude 3.x and 4.x variants are strong coders (Arena top-10 confirmed)
+  "claude-3-5", "claude-3-7",        // claude-3-5-*, claude-3-7-*
+  "claude-opus",                      // claude-opus-4-5/4-6/4-7/4-8 + 3-opus
+  "claude-sonnet",                    // claude-sonnet-4-5/4-6 + 3-5-sonnet
+  "claude-fable",                     // #2 Arena Code
+  "claude-haiku",                     // claude-haiku-4-5 (capable coder)
+
+  // ── OpenAI ────────────────────────────────────────────────────────────────
+  "codex",                            // codex-mini-latest, gpt-5.x-codex, codex-harness
+  "gpt-4",                            // gpt-4, gpt-4-turbo, gpt-4.1, gpt-4o, gpt-4.5
+  "gpt-5",                            // gpt-5, gpt-5.1 through gpt-5.6 all variants
+  "o1", "o3", "o4",                   // OpenAI reasoning series
+  "chatgpt-4o",                       // chatgpt-4o-latest
+
+  // ── Google ────────────────────────────────────────────────────────────────
+  "gemini-2.0",                       // gemini-2.0-flash
+  "gemini-2.5",                       // gemini-2.5-flash/pro  (#Arena top)
+  "gemini-3",                         // gemini-3-flash/pro, gemini-3.0/3.1/3.5/3.6
+  // Note: gemma is excluded — small base models, not coding-optimised
+
+  // ── xAI ───────────────────────────────────────────────────────────────────
+  "grok-3",                           // grok-3, grok-3-fast, grok-3-mini
+  "grok-4",                           // grok-4, grok-4.3, grok-4.20 (#7 Arena Code)
+
+  // ── DeepSeek ──────────────────────────────────────────────────────────────
+  "deepseek-r1",                      // deepseek-r1, deepseek-r1-distill-*
+  "deepseek-reasoner",                // deepseek-reasoner
+  "deepseek-coder",                   // deepseek-coder, deepseek-coder-v2
+  "deepseek-v3",                      // deepseek-v3, deepseek-v3.2, deepseek-v3-2-volc
+  "deepseek-v4",                      // deepseek-v4-flash, deepseek-v4-pro
+  "deepseek-chat",                    // deepseek-chat (V2/V3 backed)
+
+  // ── Z.ai / GLM ────────────────────────────────────────────────────────────
+  "glm-4.7",                          // glm-4.7
+  "glm-5",                            // glm-5.0/5.1/5.2 and sub-variants
+  "glm-z1",                           // glm-z1-air/airx/flash/plus (reasoning models)
+
+  // ── Kimi / Moonshot ───────────────────────────────────────────────────────
+  "kimi-k2",                          // kimi-k2.5/k2.6/k2.7/k2.7-code
+  "kimi-k3",                          // #1 Arena Code
+
+  // ── HunyuanHY3 / Tencent ─────────────────────────────────────────────────
+  "hy3",                              // hy3, hy3-preview, hunyuan-hy3 (#16 Arena Code)
+
+  // ── Muse Spark ────────────────────────────────────────────────────────────
+  "muse-spark",                       // muse-spark-1.1 (#11 Arena Code)
+
+  // ── Qwen / Alibaba ────────────────────────────────────────────────────────
+  "qwen-coder", "qwen2.5-coder", "qwen3-coder",  // explicit coder variants
+  "qwen2.5-72",                       // qwen2.5-72b-instruct (general but strong)
+  "qwen3-235",                        // qwen3-235b-a22b (MoE flagship)
+  "qwen3-30",                         // qwen3-30b-a3b
+
+  // ── Mistral ───────────────────────────────────────────────────────────────
+  "codestral",                        // codestral, codestral-latest
+  "mistral-large", "mistral-medium",  // strong coding-capable Mistral models
+  "starcoder",                        // StarCoder family
+
+  // ── Meta / Llama ──────────────────────────────────────────────────────────
+  "llama-3.1-405",                    // Meta-Llama-3.1-405B
+  "llama-3.3",                        // llama-3.3-70b
+  "llama-4",                          // llama-4-maverick, llama-4-scout
+
+  // ── Inception / Mercury Coder ─────────────────────────────────────────────
+  "mercury-coder",                    // mercury-coder, mercury-coder-small
+
+  // ── ByteDance Seed ────────────────────────────────────────────────────────
+  "seed-2.1-pro",                     // seed-2.1-pro-preview (#15 Arena Code)
+
+  // ── Fugu (special frontier models) ───────────────────────────────────────
+  "fugu",                             // fugu-20260615, fugu-ultra-20260615
+
+  // ── Cohere ────────────────────────────────────────────────────────────────
+  "command-r",                        // command-r, command-r-plus, command-r7b
+  "command-a-plus",                   // command-a-plus-05-2026
+
+  // ── Generic substrings (catch-all for any provider) ──────────────────────
+  "code", "coder",                    // any model with "code"/"coder" in name
+  "cogito",                           // deepcogito/cogito-v2-1-671b
+
+  // ── Dahono gateway models (specific to that provider's catalogue) ─────────
+  "laguna-xs",                        // dahono/laguna-xs-2.1
 ]
 
 // Agentic / tool-use model substrings
