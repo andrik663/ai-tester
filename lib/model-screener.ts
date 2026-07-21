@@ -42,6 +42,26 @@ const CODING_SUBSTRINGS = [
   "gemini-2.5", "llama-3.1-405",
 ]
 
+/**
+ * Infer capability tags for a model based on its id string.
+ *
+ * Uses substring matching against curated lists:
+ *   - `IMAGE_SUBSTRINGS`    → `"image"` tag
+ *   - `VIDEO_SUBSTRINGS`    → `"video"` tag
+ *   - `CODING_SUBSTRINGS`   → `"coding"` tag (only for non-image/video models)
+ *   - `FLAGSHIP_SUBSTRINGS` → `"flagship"` tag (applied regardless of other tags)
+ *   - All non-image/video models also receive the baseline `"text"` tag.
+ *
+ * Matching is case-insensitive (modelId is lower-cased before comparison).
+ *
+ * @param modelId - Provider model identifier, e.g. `"gpt-4o"` or `"dall-e-3"`.
+ * @returns Array of {@link CapabilityTag} strings (may be empty for unknown models).
+ *
+ * @example
+ * inferCapabilities("gpt-4o")       // → ["text", "coding", "flagship"]
+ * inferCapabilities("dall-e-3")     // → ["image", "flagship"]
+ * inferCapabilities("cogvideox-5b") // → ["video"]
+ */
 export function inferCapabilities(modelId: string): CapabilityTag[] {
   const id = modelId.toLowerCase()
   const tags: CapabilityTag[] = []
@@ -88,6 +108,13 @@ export interface ScreenerModelResult {
 const SCREENER_STORAGE_KEY = "ai_tester_screener_v1"
 const SCREENER_INTERVAL_MS = 24 * 60 * 60 * 1000 // 24 h
 
+/**
+ * Load all screener probe results from localStorage.
+ *
+ * Returns `[]` when called server-side or when storage is empty/corrupt.
+ *
+ * @returns Array of `ScreenerModelResult` objects, or `[]`.
+ */
 export function loadScreenerResults(): ScreenerModelResult[] {
   if (typeof window === "undefined") return []
   try {
@@ -96,6 +123,12 @@ export function loadScreenerResults(): ScreenerModelResult[] {
   } catch { return [] }
 }
 
+/**
+ * Persist the full screener results array to localStorage.
+ * Silently no-ops server-side and on quota errors.
+ *
+ * @param results - The complete result set to persist.
+ */
 export function saveScreenerResults(results: ScreenerModelResult[]): void {
   if (typeof window === "undefined") return
   try {
@@ -103,6 +136,15 @@ export function saveScreenerResults(results: ScreenerModelResult[]): void {
   } catch {}
 }
 
+/**
+ * Upsert a single screener result into the persisted list.
+ *
+ * If a result with the same `id` already exists it is replaced in-place;
+ * otherwise the new result is appended. The updated list is immediately
+ * saved back to localStorage.
+ *
+ * @param incoming - The new or updated `ScreenerModelResult` to merge in.
+ */
 export function mergeScreenerResult(incoming: ScreenerModelResult): void {
   const existing = loadScreenerResults()
   const idx = existing.findIndex((r) => r.id === incoming.id)
@@ -111,18 +153,38 @@ export function mergeScreenerResult(incoming: ScreenerModelResult): void {
   saveScreenerResults(existing)
 }
 
+/**
+ * Remove all screener results from localStorage.
+ * Safe to call server-side (no-op).
+ */
 export function clearScreenerResults(): void {
   if (typeof window === "undefined") return
   localStorage.removeItem(SCREENER_STORAGE_KEY)
 }
 
-/** Returns items whose nextRefreshAt is in the past (needs re-probe) */
+/**
+ * Filter a results list to only those that are due for re-probing.
+ *
+ * A result is considered "due" when its `nextRefreshAt` ISO timestamp is in
+ * the past. The screener interval is `SCREENER_INTERVAL_MS` (24 hours).
+ *
+ * @param results - Full list of `ScreenerModelResult` objects to inspect.
+ * @returns The subset whose `nextRefreshAt` has elapsed.
+ */
 export function getDueForRefresh(results: ScreenerModelResult[]): ScreenerModelResult[] {
   const now = Date.now()
   return results.filter((r) => new Date(r.nextRefreshAt).getTime() <= now)
 }
 
-/** Build next refresh time */
+/**
+ * Compute the ISO timestamp for the next automatic refresh.
+ *
+ * Adds `SCREENER_INTERVAL_MS` (24 h) to the given base time. This value is
+ * stored in `ScreenerModelResult.nextRefreshAt` after each successful probe.
+ *
+ * @param from - Base epoch-ms timestamp (defaults to `Date.now()`).
+ * @returns ISO 8601 string representing the next refresh time.
+ */
 export function nextRefreshIso(from = Date.now()): string {
   return new Date(from + SCREENER_INTERVAL_MS).toISOString()
 }

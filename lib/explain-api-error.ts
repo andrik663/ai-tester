@@ -1,6 +1,32 @@
-// ── Shared API error explanation helper ──────────────────────────────────────
-// Returns a human-readable cause + actionable suggestion for common HTTP error codes.
+/**
+ * lib/explain-api-error.ts — Human-readable API error explanations.
+ *
+ * Converts raw HTTP status codes (and optional error-body text) into a
+ * `{ cause, suggestion }` pair that can be shown directly in the UI without
+ * exposing implementation details to the user.
+ *
+ * Used by: manual-key-tester, batch-test panel, and gateway routes.
+ */
 
+/**
+ * Map an HTTP status code (and optional response body) to a user-facing
+ * cause description and an actionable suggestion.
+ *
+ * Inspects `errorText` for provider-specific keywords (e.g. "expired",
+ * "quota", "billing") to produce a more precise diagnosis before falling
+ * back to a generic status-level explanation.
+ *
+ * @param status    - HTTP status code returned by the provider (use `0` for
+ *   network-level errors where no HTTP response was received).
+ * @param errorText - Optional raw response body or error message string.
+ *   Matched case-insensitively against common provider keywords.
+ * @returns A `{ cause, suggestion }` object, or `null` if the status code is
+ *   unrecognised (e.g. 2xx that still ended up here by mistake).
+ *
+ * @example
+ * const info = explainApiError(429, '{"error":"daily quota exceeded"}')
+ * // → { cause: "Daily quota or token limit reached.", suggestion: "Wait until..." }
+ */
 export function explainApiError(
   status: number,
   errorText?: string,

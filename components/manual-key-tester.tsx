@@ -3882,7 +3882,7 @@ export default function ManualKeyTester() {
       <aside className={`
         flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
-        w-72 md:w-60 lg:w-64
+        w-[85vw] max-w-xs md:w-60 lg:w-64
         transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
         ${configOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
@@ -4047,29 +4047,38 @@ export default function ManualKeyTester() {
         {/* ── HEADER: mobile config toggle + provider badge + tab bar ───────── */}
         <div className="flex flex-col border-b border-border bg-card flex-shrink-0">
 
-          {/* Single combined header row */}
-          <div className="flex items-center gap-1 px-2 h-10">
-            {/* Mobile: config drawer toggle */}
+          {/* ── MOBILE: top status bar — provider + response chip ─────────────── */}
+          <div className="md:hidden flex items-center gap-2 px-3 py-1.5 border-b border-border/30 bg-sidebar/40">
             <button
               onClick={() => setConfigOpen(true)}
-              className="md:hidden flex items-center justify-center w-7 h-7 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex-shrink-0"
-              aria-label="Open configuration"
+              className="flex items-center gap-1.5 min-w-0 flex-1"
+              aria-label="Open provider selection"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+              <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
+              <span className="text-[12px] font-semibold text-foreground truncate">{selectedPreset.name}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-muted-foreground/60 flex-shrink-0 ml-auto">
+                <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
+            {activeTab === "unified" && (unifiedSubTab === "vision" ? visionResult : result) && (
+              <span className={`text-[10px] font-mono flex-shrink-0 px-1.5 py-0.5 rounded border ${(unifiedSubTab === "vision" ? visionResult?.ok : result?.ok) ? "text-green-400 border-green-400/20 bg-green-400/8" : "text-red-400 border-red-400/20 bg-red-400/8"}`}>
+                {(unifiedSubTab === "vision" ? visionResult?.status : result?.status)}&nbsp;·&nbsp;{(unifiedSubTab === "vision" ? visionResult?.durationMs : result?.durationMs)}ms
+              </span>
+            )}
+          </div>
 
-            {/* Provider badge — desktop */}
-            <span className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground mr-1 flex-shrink-0">
+          {/* ── DESKTOP: single combined header row ───────────────────────────── */}
+          <div className="hidden md:flex items-center gap-1 px-2 h-10">
+            {/* Provider badge — desktop only */}
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground mr-1 flex-shrink-0">
               <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-3 h-3 opacity-60 flex-shrink-0" />
               <span className="font-medium text-foreground/60 max-w-[80px] truncate">{selectedPreset.name}</span>
             </span>
 
             {/* Divider */}
-            <div className="hidden md:block w-px h-4 bg-border/60 flex-shrink-0 mr-1" />
+            <div className="w-px h-4 bg-border/60 flex-shrink-0 mr-1" />
 
-            {/* Primary tabs — inline with header */}
+            {/* Primary tabs */}
             <div className="flex items-center gap-0.5 flex-1 min-w-0">
               {([
                 { id: "unified" as const,      label: "Test"  },
@@ -4095,70 +4104,33 @@ export default function ManualKeyTester() {
 
             {/* Icon-only utility buttons — right side */}
             <div className="flex items-center gap-0.5 flex-shrink-0">
-              {/* Envs */}
-              <button
-                onClick={() => setActiveTab("environments")}
-                title="Environments"
-                className={`w-7 h-7 flex items-center justify-center rounded transition-all ${
-                  activeTab === "environments"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                }`}
-              >
+              <button onClick={() => setActiveTab("environments")} title="Environments" className={`w-7 h-7 flex items-center justify-center rounded transition-all ${activeTab === "environments" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"}`}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
               </button>
-              {/* API Docs */}
-              <a
-                href="/docs"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="API Documentation"
-                className="w-7 h-7 flex items-center justify-center rounded transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-              >
+              <a href="/docs" target="_blank" rel="noopener noreferrer" title="API Documentation" className="w-7 h-7 flex items-center justify-center rounded transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
                   <polyline points="10 9 9 9 8 9" />
                 </svg>
               </a>
-
-              {/* Pricing */}
-              <button
-                onClick={() => setActiveTab("info")}
-                title="Pricing"
-                className={`w-7 h-7 flex items-center justify-center rounded transition-all ${
-                  activeTab === "info"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                }`}
-              >
+              <button onClick={() => setActiveTab("info")} title="Pricing" className={`w-7 h-7 flex items-center justify-center rounded transition-all ${activeTab === "info" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"}`}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
               </button>
-
-              {/* Logout — only shown when DEV_PASSWORD gate is active */}
-              <button
-                title="Sign out"
-                onClick={async () => {
-                  await fetch("/api/auth/logout", { method: "POST" })
-                  window.location.href = "/login"
-                }}
-                className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all"
-              >
+              <button title="Sign out" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login" }} className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
+                  <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
               </button>
             </div>
 
-            {/* Response status chip */}
+            {/* Response status chip — desktop */}
             {activeTab === "unified" && (unifiedSubTab === "vision" ? visionResult : result) && (
               <span className={`text-[10px] font-mono flex-shrink-0 ml-1 ${(unifiedSubTab === "vision" ? visionResult?.ok : result?.ok) ? "text-green-400" : "text-red-400"}`}>
                 {(unifiedSubTab === "vision" ? visionResult?.status : result?.status)}&nbsp;·&nbsp;{(unifiedSubTab === "vision" ? visionResult?.durationMs : result?.durationMs)}ms
@@ -4166,9 +4138,87 @@ export default function ManualKeyTester() {
             )}
           </div>
 
+          {/* ── MOBILE: primary tab bar ────────────────────────────────────────── */}
+          <div className="md:hidden flex items-center border-b border-border/40 bg-card overflow-x-auto scrollbar-none">
+            {/* Hamburger */}
+            <button
+              onClick={() => setConfigOpen(true)}
+              className="flex items-center justify-center w-10 h-10 flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors border-r border-border/40"
+              aria-label="Open configuration"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+
+            {/* Scrollable primary tabs */}
+            <div className="flex items-center flex-1 overflow-x-auto scrollbar-none">
+              {([
+                { id: "unified" as const,      label: "Test"  },
+                { id: "multi-batch" as const,   label: "Batch" },
+                { id: "working-keys" as const,  label: "Keys"  },
+                { id: "skills" as const,        label: activeSkillConfigs.length > 0 ? `Skills\u00a0${activeSkillConfigs.length}` : "Skills" },
+                { id: "saved" as const,         label: "Saved" },
+                { id: "leaderboard" as const,   label: "Rank"  },
+              ]).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id as typeof activeTab)}
+                  className={`px-3.5 h-10 text-[12px] font-medium whitespace-nowrap flex-shrink-0 transition-all border-b-2 ${
+                    activeTab === t.id || (t.id === "saved" && (activeTab === "history" || activeTab === "collections"))
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Utility icons — compact row */}
+            <div className="flex items-center flex-shrink-0 border-l border-border/40">
+              {/* Environments */}
+              <button
+                onClick={() => setActiveTab("environments")}
+                title="Environments"
+                className={`w-10 h-10 flex items-center justify-center transition-colors ${activeTab === "environments" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              </button>
+              {/* API Docs — links to provider-specific docs when available */}
+              <a
+                href={selectedPreset.docsUrl || "/docs"}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="API Documentation"
+                className="w-10 h-10 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </a>
+              {/* Pricing */}
+              <button
+                onClick={() => setActiveTab("info")}
+                title="Pricing"
+                className={`w-10 h-10 flex items-center justify-center transition-colors ${activeTab === "info" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
           {/* Sub-tab row — only shown inside Unified tab */}
           {activeTab === "unified" && (
-            <div className="flex items-center gap-0.5 px-3 h-8 bg-sidebar/60 border-t border-border/40 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-0.5 px-2 md:px-3 h-9 bg-sidebar/60 border-t border-border/40 overflow-x-auto scrollbar-none">
               {([
                 {
                   id: "chat" as const,
@@ -4223,7 +4273,7 @@ export default function ManualKeyTester() {
                 <button
                   key={t.id}
                   onClick={() => setUnifiedSubTab(t.id)}
-                  className={`flex items-center gap-1 px-2 h-6 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                  className={`flex items-center gap-1 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
                     unifiedSubTab === t.id
                       ? "bg-primary/15 text-primary border border-primary/30"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -4296,7 +4346,7 @@ export default function ManualKeyTester() {
             )}
 
             {/* Chat messages area */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 flex flex-col gap-3">
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4 flex flex-col gap-3">
               {chatHistory.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full gap-4 text-center max-w-sm mx-auto w-full">
                   <div className="w-12 h-12 rounded-xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_oklch(0.76_0.17_192_/_0.12)]">
@@ -4524,11 +4574,11 @@ export default function ManualKeyTester() {
             </div>
 
             {/* Chat input */}
-            <div className="border-t border-border px-4 py-3 flex-shrink-0 bg-card">
+            <div className="border-t border-border px-3 sm:px-4 py-3 flex-shrink-0 bg-card">
 
-              {/* Inline API key input — hidden for Miuclaw (no client key needed), shown for others when no saved key exists */}
+              {/* Inline API key input — hidden for Miuclaw, shown for others when no saved key exists */}
               {selectedPreset.id !== "miuclaw" && !apiKey.trim() && workingModels.length === 0 && (
-                <div className="flex items-center gap-2 px-1 py-1 rounded-lg border border-primary/20 bg-primary/5">
+                <div className="flex items-center gap-2 px-1 py-1 mb-2 rounded-lg border border-primary/20 bg-primary/5">
                   <div className="relative flex-1 min-w-0">
                     <input
                       type={showKey ? "text" : "password"}
@@ -4556,67 +4606,70 @@ export default function ManualKeyTester() {
                   )}
                 </div>
               )}
+
+              {/* Textarea + send button */}
               <div className="flex gap-2 items-end">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={(selectedPreset.id === "miuclaw" || apiKey.trim()) ? "Type a message... (Enter to send)" : "Enter API key above first..."}
+                  placeholder={(selectedPreset.id === "miuclaw" || apiKey.trim()) ? "Describe what to build... (Enter to send)" : "Enter API key above first..."}
                   disabled={(loading || isStreaming) || (selectedPreset.id !== "miuclaw" && !apiKey.trim())}
                   rows={2}
-                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
+                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runTest}
                   disabled={(selectedPreset.id !== "miuclaw" && !apiKey.trim()) || !prompt.trim() || loading || isStreaming}
-                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 min-w-[80px] h-[46px]"
+                  className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 w-11 sm:w-auto sm:min-w-[80px] h-[46px]"
                 >
                   {loading || isStreaming ? <SpinnerIcon /> : <SendIcon />}
-                  {loading || isStreaming ? "..." : "Send"}
+                  <span className="hidden sm:inline">{loading || isStreaming ? "..." : "Send"}</span>
                 </button>
               </div>
-              <div className="flex items-center justify-between mt-1.5 gap-2 flex-wrap">
-                {/* Streaming toggle */}
-                <label className="flex items-center gap-1.5 cursor-pointer select-none" htmlFor="streaming-toggle">
-                  <button
-                    id="streaming-toggle"
-                    role="switch"
-                    aria-checked={useStreaming}
-                    onClick={() => setUseStreaming((v) => !v)}
-                    className={`relative w-7 h-4 rounded-full border transition-all flex-shrink-0 ${useStreaming ? "bg-primary/80 border-primary/60" : "bg-secondary border-border"}`}
-                  >
-                    <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${useStreaming ? "left-3.5" : "left-0.5"}`} />
-                  </button>
-                  <span className="text-[9px] text-muted-foreground">Stream</span>
-                </label>
-                {/* Notification bell */}
-                {notifPerm !== "granted" && (
-                  <button
-                    onClick={requestNotifPermission}
-                    title="Enable notifications when response arrives"
-                    className="text-[9px] text-muted-foreground/50 hover:text-foreground flex items-center gap-1 transition-colors"
-                  >
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
-                      <path d="M8 2a5 5 0 0 1 5 5v2l1.5 2.5H1.5L3 9V7a5 5 0 0 1 5-5z" />
-                      <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" />
-                    </svg>
-                    Notify
-                  </button>
-                )}
-                {/* TTFT display */}
-                {ttftMs !== null && (
-                  <span className="text-[9px] font-mono text-cyan-400/80">TTFT {ttftMs}ms</span>
-                )}
-                <div className="flex items-center gap-3 ml-auto">
+
+              {/* Footer controls — two-row on mobile, single row on sm+ */}
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                {/* Left cluster: Stream + Notify + TTFT */}
+                <div className="flex items-center gap-2">
+                  {/* Streaming toggle */}
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none" htmlFor="streaming-toggle">
+                    <button
+                      id="streaming-toggle"
+                      role="switch"
+                      aria-checked={useStreaming}
+                      onClick={() => setUseStreaming((v) => !v)}
+                      className={`relative w-7 h-4 rounded-full border transition-all flex-shrink-0 ${useStreaming ? "bg-primary/80 border-primary/60" : "bg-secondary border-border"}`}
+                    >
+                      <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${useStreaming ? "left-3.5" : "left-0.5"}`} />
+                    </button>
+                    <span className="text-[10px] text-muted-foreground">Stream</span>
+                  </label>
+                  {notifPerm !== "granted" && (
+                    <button onClick={requestNotifPermission} title="Enable notifications" className="text-[10px] text-muted-foreground/50 hover:text-foreground flex items-center gap-1 transition-colors">
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
+                        <path d="M8 2a5 5 0 0 1 5 5v2l1.5 2.5H1.5L3 9V7a5 5 0 0 1 5-5z" />
+                        <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" />
+                      </svg>
+                      Notify
+                    </button>
+                  )}
+                  {ttftMs !== null && (
+                    <span className="text-[10px] font-mono text-cyan-400/80">TTFT {ttftMs}ms</span>
+                  )}
+                </div>
+
+                {/* Right cluster: Export + Clear */}
+                <div className="flex items-center gap-2 ml-auto">
                   {chatHistory.length > 0 && (
                     <>
-                      <button onClick={exportChatMarkdown} className="text-[9px] text-muted-foreground/50 hover:text-foreground transition-colors">Export MD</button>
-                      {result && <button onClick={exportResultJSON} className="text-[9px] text-muted-foreground/50 hover:text-foreground transition-colors">Export JSON</button>}
+                      <button onClick={exportChatMarkdown} className="text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors">MD</button>
+                      {result && <button onClick={exportResultJSON} className="text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors">JSON</button>}
                       <button
                         onClick={() => { setChatHistory([]); setResult(null); setStreamingText(""); setTtftMs(null) }}
-                        className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                        className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                       >
-                        Clear chat
+                        Clear
                       </button>
                     </>
                   )}
@@ -5312,7 +5365,7 @@ export default function ManualKeyTester() {
           <ProviderInfoPanel apiKey={apiKey || undefined} />
         )}
 
-        {/* ── AUTO-DETECT TAB ────────────────���──���──────────────────────────��─ */}
+        {/* ── AUTO-DETECT TAB ────────────────���──���──────────────────────────����� */}
         {activeTab === "auto-detect" && (() => {
           // Full provider pattern table — mirrors detectProviderFromKey but with metadata
           type DetectPattern = {

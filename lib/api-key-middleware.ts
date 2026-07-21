@@ -20,7 +20,25 @@ export interface ApiKeyValidationError {
 }
 
 /**
- * Validate API key from request header
+ * Validate an API key extracted from the `Authorization: Bearer` header.
+ *
+ * Performs the full validation pipeline in order:
+ *   1. Extract and format-check the raw key from `authHeader`.
+ *   2. Hash the key and look it up in the `api_keys` table (active, not expired).
+ *   3. Check endpoint permissions against `allowedEndpoints` (supports `"*"` wildcard).
+ *   4. Count recent requests (last hour) and enforce `rateLimitPerHour`.
+ *   5. Update `last_used_at` on the key row (best-effort, errors ignored).
+ *
+ * @param authHeader - Value of the `Authorization` HTTP request header.
+ *   Expected format: `"Bearer atk_<hex>"`.
+ * @param endpoint   - The API path being accessed (e.g. `"/api/v1/chat/completions"`).
+ *   Pass `undefined` to skip endpoint-permission checking.
+ * @returns A `ValidatedApiKey` on success, or an `ApiKeyValidationError` with
+ *   `status`, `message`, and `code` fields on any failure.
+ *
+ * @example
+ * const result = await validateApiKey(req.headers.get("authorization"), "/api/v1/chat/completions")
+ * if ("status" in result) return new Response(result.message, { status: result.status })
  */
 export async function validateApiKey(
   authHeader?: string,
@@ -121,7 +139,19 @@ export async function validateApiKey(
 }
 
 /**
- * Log API usage
+ * Write one API-usage log row to the `api_usage_logs` table.
+ *
+ * Called after every request handled by a gateway route to record usage
+ * metrics for billing, auditing, and rate-limit enforcement. Errors are
+ * logged to the console but never rethrown — a logging failure must never
+ * break the primary request flow.
+ *
+ * @param apiKeyId      - The `api_keys.id` UUID of the authenticated key.
+ * @param req           - The incoming `NextRequest` (used for method, UA, IP).
+ * @param endpoint      - API path string, e.g. `"/api/v1/chat/completions"`.
+ * @param statusCode    - HTTP status code of the outbound response.
+ * @param responseTimeMs - Total wall-clock time from request receipt to response send (ms).
+ * @param errorMessage  - Optional error description if the request failed.
  */
 export async function logApiUsage(
   apiKeyId: string,
@@ -151,7 +181,14 @@ export async function logApiUsage(
 }
 
 /**
- * Extract API key info from request for logging
+ * Resolve a minimal key identity object from an Authorization header.
+ *
+ * Used in logging contexts where only the key `id` and `name` are needed
+ * (not the full validation pipeline). Does NOT check expiry, rate limits,
+ * or endpoint permissions.
+ *
+ * @param authHeader - Value of the `Authorization` HTTP header, or `undefined`.
+ * @returns `{ id, name }` if the key exists in the database, otherwise `null`.
  */
 export async function getApiKeyInfo(authHeader?: string) {
   if (!authHeader) return null
