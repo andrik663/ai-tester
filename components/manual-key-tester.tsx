@@ -3138,19 +3138,7 @@ export default function ManualKeyTester() {
   }, [])
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills">("unified")
-  const [activeSkillConfig, setActiveSkillConfig] = useState<ActiveSkillConfig | null>(null)
-  // Map skill IDs → display names for the Code tab badge
-  const SKILLS_NAME_MAP: Record<string, string> = {
-    "web-artifacts-builder": "Web Artifacts Builder",
-    "algorithmic-art": "Algorithmic Art",
-    "theme-factory": "Theme Factory",
-    "frontend-design": "Frontend Design",
-    "skill-creator": "Skill Creator",
-    "webapp-testing": "Web App Testing",
-    "vercel-react-best-practices": "React Best Practices",
-    "deploy-to-vercel": "Deploy to Vercel",
-    "find-skills": "Find Skills",
-  }
+  const [activeSkillConfigs, setActiveSkillConfigs] = useState<ActiveSkillConfig[]>([])
   // Pinned providers — persisted in localStorage
   const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
   useEffect(() => {
@@ -3620,7 +3608,7 @@ export default function ManualKeyTester() {
     const resolvedBody = activeEnv && bodyTemplate ? interpolate(bodyTemplate, activeEnv) : (bodyTemplate || undefined)
 
     if (useStreaming) {
-      // ── Streaming path ───────────────────────────────────────��────────────
+      // ── Streaming path ────────────────────────────────��──────��────────────
       setIsStreaming(true)
       setStreamingText("")
 
@@ -4087,7 +4075,7 @@ export default function ManualKeyTester() {
                 { id: "unified" as const,      label: "Test"  },
                 { id: "multi-batch" as const,   label: "Batch" },
                 { id: "working-keys" as const,  label: "Keys"  },
-                { id: "skills" as const,        label: activeSkillConfig ? "Skills ⚡" : "Skills" },
+                { id: "skills" as const,        label: activeSkillConfigs.length > 0 ? `Skills (${activeSkillConfigs.length})` : "Skills" },
                 { id: "saved" as const,         label: "Saved" },
                 { id: "leaderboard" as const,   label: "Rank"  },
               ]).map((t) => (
@@ -5256,8 +5244,7 @@ export default function ManualKeyTester() {
             workingModels={workingModels}
             presetModels={selectedPreset.models?.map((m) => ({ id: m.id, label: m.label }))}
             isMiuclaw={selectedPreset.id === "miuclaw"}
-            activeSkillSystemPrompt={activeSkillConfig?.systemPrompt}
-            activeSkillName={activeSkillConfig ? SKILLS_NAME_MAP[activeSkillConfig.skillId] ?? activeSkillConfig.skillId : undefined}
+            activeSkillConfigs={activeSkillConfigs}
           />
         )}
 
@@ -5271,7 +5258,7 @@ export default function ManualKeyTester() {
         {/* ── SKILLS TAB ────────────────────────────────────────────────────── */}
         {activeTab === "skills" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <SkillsPanel onActiveSkillChange={setActiveSkillConfig} />
+            <SkillsPanel onActiveSkillChange={setActiveSkillConfigs} />
           </div>
         )}
 

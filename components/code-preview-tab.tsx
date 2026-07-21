@@ -27,6 +27,11 @@ interface PresetModel {
   label: string
 }
 
+interface ActiveSkillConfig {
+  skillId: string
+  systemPrompt: string
+}
+
 interface Props {
   /** Provider id (e.g. "openai", "bynara") */
   provider: string
@@ -41,10 +46,8 @@ interface Props {
   workingModels: WorkingModel[]
   presetModels?: PresetModel[]
   isMiuclaw?: boolean
-  /** System prompt override from an active Skill */
-  activeSkillSystemPrompt?: string
-  /** Human-readable name of the active skill */
-  activeSkillName?: string
+  /** Array of active skill configs to compose into the system prompt */
+  activeSkillConfigs?: ActiveSkillConfig[]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -186,9 +189,21 @@ export default function CodePreviewTab({
   workingModels,
   presetModels,
   isMiuclaw,
-  activeSkillSystemPrompt,
-  activeSkillName,
+  activeSkillConfigs = [],
 }: Props) {
+  // Compose all active skill system prompts into one
+  const composedSkillPrompt = activeSkillConfigs.length > 0
+    ? activeSkillConfigs
+        .map((c, i) => `### Skill ${i + 1}: ${c.skillId}\n${c.systemPrompt}`)
+        .join("\n\n---\n\n") +
+      "\n\n---\n\nWhen generating code output, always wrap it in a single fenced ```html code block containing a complete, self-contained HTML document with <!DOCTYPE html>. Include all CSS in a <style> tag and all JS in a <script> tag so the preview iframe can render it immediately."
+    : null
+
+  const activeSkillName = activeSkillConfigs.length === 1
+    ? activeSkillConfigs[0].skillId.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : activeSkillConfigs.length > 1
+    ? `${activeSkillConfigs.length} skills`
+    : undefined
   // ── State ───────────────────────────────────────────────────────────────────
   type ViewMode = "split" | "code" | "preview"
   const [viewMode, setViewMode]         = useState<ViewMode>("split")
@@ -264,9 +279,7 @@ export default function CodePreviewTab({
           endpoint,
           headers,
           messages: allMessages,
-          systemPrompt: activeSkillSystemPrompt
-            ? `${activeSkillSystemPrompt}\n\n---\n\nWhen generating code output, always wrap it in a single fenced \`\`\`html code block containing a complete, self-contained HTML document with <!DOCTYPE html>. Include all CSS in a <style> tag and all JS in a <script> tag so the preview iframe can render it immediately.`
-            : CODE_SYSTEM_PROMPT,
+          systemPrompt: composedSkillPrompt ?? CODE_SYSTEM_PROMPT,
           model: model.trim() || undefined,
         }),
         signal: ctrl.signal,
@@ -326,7 +339,7 @@ export default function CodePreviewTab({
     setStreamingText("")
     setIsStreaming(false)
     abortRef.current = null
-  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, activeSkillSystemPrompt])
+  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt])
 
   function stopStreaming() {
     abortRef.current?.abort()
@@ -455,13 +468,17 @@ export default function CodePreviewTab({
           </select>
         )}
 
-        {/* Active skill badge */}
-        {activeSkillName && (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-primary/30 bg-primary/10 text-primary max-w-[130px]">
+        {/* Active skills badge */}
+        {activeSkillConfigs.length > 0 && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-primary/30 bg-primary/10 text-primary max-w-[160px]">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" className="w-2.5 h-2.5 flex-shrink-0">
               <path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1L2 5.6l4.2-.9L8 1z" />
             </svg>
-            <span className="text-[10px] font-medium truncate">{activeSkillName}</span>
+            <span className="text-[10px] font-medium truncate">
+              {activeSkillConfigs.length === 1
+                ? activeSkillName
+                : `${activeSkillConfigs.length} skills active`}
+            </span>
           </div>
         )}
 
@@ -529,35 +546,37 @@ export default function CodePreviewTab({
                   </div>
                   <div>
                     <p className="text-[13px] font-medium text-foreground mb-0.5">
-                      {activeSkillName ? `Skill: ${activeSkillName}` : "Code Preview"}
+                      {activeSkillConfigs.length > 0 ? `${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} active` : "Code Preview"}
                     </p>
                     <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
-                      {activeSkillName
-                        ? `AI is using the "${activeSkillName}" skill. Ask it to build or create something.`
+                      {activeSkillConfigs.length > 0
+                        ? `System prompts from ${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} are composed and injected. Ask it to build something.`
                         : "Ask the AI to build something — it generates live HTML, CSS & JS you can preview instantly."}
                     </p>
                   </div>
-                  {activeSkillName && (
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-primary/30 bg-primary/10 text-primary">
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" className="w-3 h-3 flex-shrink-0">
-                        <path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1L2 5.6l4.2-.9L8 1z" />
-                      </svg>
-                      <span className="text-[10px] font-semibold">{activeSkillName} active</span>
+                  {activeSkillConfigs.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                      {activeSkillConfigs.map((c) => (
+                        <div key={c.skillId} className="flex items-center gap-1 px-2 py-0.5 rounded border border-primary/30 bg-primary/10 text-primary">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" className="w-2.5 h-2.5 flex-shrink-0">
+                            <path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1L2 5.6l4.2-.9L8 1z" />
+                          </svg>
+                          <span className="text-[9px] font-semibold truncate max-w-[90px]">
+                            {c.skillId.replace(/-/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   )}
                   <div className="flex flex-col gap-1.5 w-full max-w-[220px]">
-                    {(activeSkillName === "Web Artifacts Builder"
-                      ? ["Build a dashboard with charts", "Create a shadcn/ui form", "Make a multi-step wizard"]
-                      : activeSkillName === "Algorithmic Art"
-                      ? ["Particle flow field with p5.js", "Cellular automata simulation", "Perlin noise landscape"]
-                      : activeSkillName === "Theme Factory"
-                      ? ["Apply Ocean Depths theme", "Generate a dark tech theme", "Create a warm golden theme"]
-                      : [
-                          "Build a todo app with dark mode",
-                          "Create an animated gradient clock",
-                          "Make a responsive pricing card",
-                        ]
-                    ).map((ex) => (
+                    {(() => {
+                      const ids = activeSkillConfigs.map((c) => c.skillId)
+                      if (ids.includes("algorithmic-art")) return ["Particle flow field with p5.js", "Cellular automata simulation", "Perlin noise landscape"]
+                      if (ids.includes("web-artifacts-builder") && ids.includes("theme-factory")) return ["Build a dashboard with Ocean Depths theme", "Create a themed shadcn/ui form", "Make a tech-themed analytics app"]
+                      if (ids.includes("web-artifacts-builder")) return ["Build a dashboard with charts", "Create a shadcn/ui form", "Make a multi-step wizard"]
+                      if (ids.includes("theme-factory")) return ["Apply Ocean Depths theme", "Generate a dark tech theme", "Create a warm golden theme"]
+                      return ["Build a todo app with dark mode", "Create an animated gradient clock", "Make a responsive pricing card"]
+                    })().map((ex) => (
                       <button
                         key={ex}
                         onClick={() => { setInput(ex); textareaRef.current?.focus() }}
