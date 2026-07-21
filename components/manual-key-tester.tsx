@@ -21,6 +21,7 @@ import CollectionsPanel from "@/components/collections-panel"
 import EnvSwitcher from "@/components/env-switcher"
 import ModelScreenerPanel from "@/components/model-screener-panel"
 import LeaderboardPanel from "@/components/leaderboard-panel"
+import CodePreviewTab from "@/components/code-preview-tab"
 import { pushHistory, type HistoryEntry } from "@/lib/history"
 import { getActiveEnvironment, interpolate, type Environment } from "@/lib/environments"
 import type { SavedRequest } from "@/lib/collections"
@@ -137,7 +138,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://router.dahono.com",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ─────────────────�����─────────────��─────���─────────
+  // ── Tier 1: Major providers ──────────────��──�����─────────────��─────���─────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -1808,7 +1809,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "mk/deepseek-v3.2",                     label: "DeepSeek V3.2",                       tag: "DeepSeek",  ctx: "163K",   in: "", out: "", cache: "" },
       { id: "mk/deepseek-v4-flash",                 label: "DeepSeek V4 Flash (limited)",         tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
       { id: "mk/deepseek-v4-pro",                   label: "DeepSeek V4 Pro (limited)",           tag: "DeepSeek",  ctx: "1M",     in: "", out: "", cache: "" },
-      // ── Qwen3 Coder ────────────────────────────────────────────��──────────
+      // ── Qwen3 Coder ───────────────────���────────────────────────��──────────
       { id: "mk/qwen3-coder-next",                  label: "Qwen3 Coder Next",                    tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-next-thinking",         label: "Qwen3 Coder Next Thinking",           tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
       { id: "mk/qwen3-coder-next-agentic",          label: "Qwen3 Coder Next Agentic",            tag: "Qwen",      ctx: "256K",   in: "", out: "", cache: "" },
@@ -2804,7 +2805,7 @@ function ProviderLogo({
   )
 }
 
-// ── Sidebar provider row ���─────────────────────��────────────��──────────────────
+// ── Sidebar provider row ���──���──────────────────��────────────��──────────────────
 // Defined at module level so React can track hooks correctly.
 
 interface SidebarProviderRowProps {
@@ -3209,7 +3210,7 @@ export default function ManualKeyTester() {
     localStorage.setItem(`ai_tester_key_${selectedPreset.id}`, btoa(apiKey))
   }, [apiKey, rememberKey, selectedPreset.id])
   // Sub-tab inside "unified"
-  const [unifiedSubTab, setUnifiedSubTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "compare">("chat")
+  const [unifiedSubTab, setUnifiedSubTab] = useState<"chat" | "vision" | "ocr" | "image-gen" | "video-gen" | "compare" | "code">("chat")
   
   // Per-tab model selectors — each tab remembers its own model choice
   const [chatModel, setChatModel] = useState<string>("")
@@ -4205,6 +4206,16 @@ export default function ManualKeyTester() {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
                       <rect x="3" y="3" width="7" height="18" rx="1" />
                       <rect x="14" y="3" width="7" height="18" rx="1" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: "code" as const,
+                  label: "Code",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                      <polyline points="16 18 22 12 16 6" />
+                      <polyline points="8 6 2 12 8 18" />
                     </svg>
                   ),
                 },
@@ -5215,6 +5226,26 @@ export default function ManualKeyTester() {
             </div>
           )
         })()}
+
+        {/* ── CODE PREVIEW TAB ────────────────────────────────────────────── */}
+        {activeTab === "unified" && unifiedSubTab === "code" && (
+          <CodePreviewTab
+            provider={selectedPreset.id}
+            providerName={selectedPreset.name}
+            apiKey={apiKey}
+            endpoint={endpoint}
+            headers={Object.fromEntries(headerRows.filter((r) => r.key.trim()).map((r) => [r.key, r.value]))}
+            model={chatModel}
+            onModelChange={(m) => {
+              setChatModel(m)
+              const wm = workingModels.find((w) => w.modelId === m)
+              if (wm && !apiKey.trim()) handleApiKeyChange(wm.apiKey)
+            }}
+            workingModels={workingModels}
+            presetModels={selectedPreset.models?.map((m) => ({ id: m.id, label: m.label }))}
+            isMiuclaw={selectedPreset.id === "miuclaw"}
+          />
+        )}
 
         {/* ── ENVIRONMENTS TAB ───────────────────────────────��──────────────── */}
         {activeTab === "environments" && (
