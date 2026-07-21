@@ -2,7 +2,7 @@
 
 // ── Model capability tags ─────────────────────────────────────────────────────
 
-export type CapabilityTag = "coding" | "text" | "image" | "video" | "flagship"
+export type CapabilityTag = "coding" | "text" | "image" | "video" | "flagship" | "agent" | "document"
 
 // Flagship model substrings — if modelId contains any of these it gets the flagship badge
 const FLAGSHIP_SUBSTRINGS = [
@@ -40,6 +40,28 @@ const CODING_SUBSTRINGS = [
   "qwen-coder", "o1", "o3", "o4", "claude-3-5", "claude-3-7",
   "gpt-4o", "gpt-4.1", "claude-sonnet", "deepseek-r1",
   "gemini-2.5", "llama-3.1-405",
+  // CEOWeb3 codex models
+  "codex",
+]
+
+// Agentic / tool-use model substrings
+const AGENT_SUBSTRINGS = [
+  "agent", "tool", "function", "browse", "computer-use", "operator",
+  "claude-opus", "claude-sonnet", "gpt-4o", "gpt-4.1",
+  "llama-3.3", "llama-4", "mistral-large",
+  "command-r", "qwen-max", "deepseek-r1",
+  "kimi-k2", "kimi-k3",
+  "glm-5", "glm-4",
+  "grok-3",
+]
+
+// Document / long-context model substrings
+const DOCUMENT_SUBSTRINGS = [
+  "doc", "pdf", "ocr", "vision", "vl", "vlm", "multimodal",
+  "gemini", "claude", "pixtral", "minicpm-v", "internvl",
+  "qwen-vl", "qwen2-vl", "llava", "yi-vl",
+  // CEOWeb3 vision models
+  "glm-5v", "kimi", "minimax", "muse", "hy3",
 ]
 
 /**
@@ -49,6 +71,8 @@ const CODING_SUBSTRINGS = [
  *   - `IMAGE_SUBSTRINGS`    → `"image"` tag
  *   - `VIDEO_SUBSTRINGS`    → `"video"` tag
  *   - `CODING_SUBSTRINGS`   → `"coding"` tag (only for non-image/video models)
+ *   - `AGENT_SUBSTRINGS`    → `"agent"` tag (only for non-image/video models)
+ *   - `DOCUMENT_SUBSTRINGS` → `"document"` tag (only for non-image/video models)
  *   - `FLAGSHIP_SUBSTRINGS` → `"flagship"` tag (applied regardless of other tags)
  *   - All non-image/video models also receive the baseline `"text"` tag.
  *
@@ -58,7 +82,7 @@ const CODING_SUBSTRINGS = [
  * @returns Array of {@link CapabilityTag} strings (may be empty for unknown models).
  *
  * @example
- * inferCapabilities("gpt-4o")       // → ["text", "coding", "flagship"]
+ * inferCapabilities("gpt-4o")       // → ["text", "coding", "agent", "document", "flagship"]
  * inferCapabilities("dall-e-3")     // → ["image", "flagship"]
  * inferCapabilities("cogvideox-5b") // → ["video"]
  */
@@ -72,10 +96,12 @@ export function inferCapabilities(modelId: string): CapabilityTag[] {
   if (isImage) tags.push("image")
   if (isVideo) tags.push("video")
 
-  // Only tag as text/coding if not image/video only
+  // Only tag as text/coding/agent/document if not image/video only
   if (!isImage && !isVideo) {
     tags.push("text")
     if (CODING_SUBSTRINGS.some((s) => id.includes(s))) tags.push("coding")
+    if (AGENT_SUBSTRINGS.some((s) => id.includes(s)))  tags.push("agent")
+    if (DOCUMENT_SUBSTRINGS.some((s) => id.includes(s))) tags.push("document")
   }
 
   if (FLAGSHIP_SUBSTRINGS.some((s) => id.includes(s))) tags.push("flagship")
