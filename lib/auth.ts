@@ -8,6 +8,13 @@ const TTL_MS = 1000 * 60 * 60 * 24 // 24 hours
 
 // ── internal helpers ──────────────────────────────────────────────────────────
 
+/**
+ * Convert a hex-encoded string to a Uint8Array of raw bytes.
+ * Used internally to parse the HMAC signature stored in the session token.
+ *
+ * @param hex - Lowercase hex string (e.g. "deadbeef").
+ * @returns Raw byte array.
+ */
 function hexToBytes(hex: string): Uint8Array {
   const arr = new Uint8Array(hex.length / 2)
   for (let i = 0; i < arr.length; i++) {
@@ -16,12 +23,26 @@ function hexToBytes(hex: string): Uint8Array {
   return arr
 }
 
+/**
+ * Convert a Uint8Array to a lowercase hex string.
+ * Used internally to serialise the HMAC signature into the session token.
+ *
+ * @param bytes - Raw byte array.
+ * @returns Lowercase hex string.
+ */
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("")
 }
 
+/**
+ * Encode a UTF-8 string to URL-safe Base64 (no padding, `+` → `-`, `/` → `_`).
+ * Required because cookie values must not contain `+`, `/`, or `=`.
+ *
+ * @param str - Plain UTF-8 string to encode.
+ * @returns URL-safe Base64 string.
+ */
 function toBase64url(str: string): string {
   return btoa(unescape(encodeURIComponent(str)))
     .replace(/\+/g, "-")
@@ -29,12 +50,27 @@ function toBase64url(str: string): string {
     .replace(/=+$/, "")
 }
 
+/**
+ * Decode a URL-safe Base64 string back to a UTF-8 string.
+ * Inverse of `toBase64url`. Re-adds padding before calling `atob`.
+ *
+ * @param b64 - URL-safe Base64 string (no padding required).
+ * @returns Decoded UTF-8 string.
+ */
 function fromBase64url(b64: string): string {
   const padded = b64.replace(/-/g, "+").replace(/_/g, "/")
   const pad = (4 - (padded.length % 4)) % 4
   return decodeURIComponent(escape(atob(padded + "=".repeat(pad))))
 }
 
+/**
+ * Import a raw secret string as a Web Crypto `CryptoKey` for HMAC-SHA-256.
+ * The resulting key can be used with `crypto.subtle.sign` and
+ * `crypto.subtle.verify`. Works in both Edge Runtime and Node.js.
+ *
+ * @param secret - The `DEV_PASSWORD` environment variable value.
+ * @returns A non-extractable `CryptoKey` configured for sign + verify.
+ */
 async function importKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",
