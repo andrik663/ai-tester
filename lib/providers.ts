@@ -15,7 +15,7 @@
 export const DEFAULT_PROMPT    = "halo"
 export const BATCH_MAX_TOKENS  = 64       // per-model batch test — keep low for speed
 export const SINGLE_MAX_TOKENS = 256      // single-key multi-key test
-export const MANUAL_MAX_TOKENS = 1024     // manual tester — full responses
+export const MANUAL_MAX_TOKENS = 16384    // manual tester — full responses (raised for complete code generation)
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -1201,7 +1201,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       // ── Qwen3.7 ───────────────────────────────────────────────────────────
       "mk/qwen3.7-max",
       "mk/qwen3.7-plus",
-      // ── Qwen legacy ───────────────────────────────────────────────────────
+      // ── Qwen legacy ─────────────────────────────���─────────────────────────
       "mk/qwen-max",
       "mk/qwen-plus",
       "mk/qwen-plus-latest",
