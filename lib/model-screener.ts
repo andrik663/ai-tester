@@ -6,18 +6,34 @@ export type CapabilityTag = "coding" | "text" | "image" | "video" | "flagship" |
 
 // Flagship model substrings — if modelId contains any of these it gets the flagship badge
 const FLAGSHIP_SUBSTRINGS = [
-  "gpt-4o", "gpt-4.1", "gpt-4-turbo", "o1", "o3", "o4",
-  "claude-3-5", "claude-3-7", "claude-opus", "claude-sonnet",
-  "gemini-2.0-pro", "gemini-2.5-pro", "gemini-ultra",
+  // OpenAI
+  "gpt-4o", "gpt-4.1", "gpt-4-turbo", "gpt-5", "o1", "o3", "o4",
+  // Anthropic
+  "claude-3-5", "claude-3-7", "claude-opus", "claude-sonnet", "claude-fable",
+  // Google
+  "gemini-2.0-pro", "gemini-2.5-pro", "gemini-3-pro", "gemini-3.5", "gemini-3.6", "gemini-ultra",
+  // Meta / Llama
   "llama-3.3", "llama-4", "llama-3.1-405",
-  "deepseek-r1", "deepseek-v3",
-  "grok-3", "grok-2",
-  "qwen-max", "qwen2.5-72",
+  // DeepSeek
+  "deepseek-r1", "deepseek-v3", "deepseek-v4",
+  // xAI Grok
+  "grok-3", "grok-4", "grok-2",
+  // Qwen / Alibaba
+  "qwen-max", "qwen2.5-72", "qwen3-coder",
+  // Mistral
   "mistral-large", "mistral-medium", "pixtral-large",
+  // Cohere
   "command-r-plus",
+  // Yi
   "yi-large", "yi-34b",
+  // Amazon
   "nova-pro", "nova-lite",
+  // Perplexity
   "sonar-pro",
+  // Arena Code top models (Z.ai GLM, Kimi, Muse Spark, HY3)
+  "glm-5.2", "glm-5.1", "kimi-k3", "muse-spark", "hy3",
+  // ByteDance Seed
+  "seed-2.1-pro",
 ]
 
 // Image-generation model substrings
@@ -35,13 +51,64 @@ const VIDEO_SUBSTRINGS = [
 ]
 
 // Coding-oriented model substrings
+// Source: Arena AI Code Leaderboard (arena.ai/leaderboard/code) — 101 models, updated Jul 21 2026
+// Criteria: any model whose ID matches these substrings ranks in the Code arena.
 const CODING_SUBSTRINGS = [
-  "code", "coder", "starcoder", "codestral", "deepseek-coder",
-  "qwen-coder", "o1", "o3", "o4", "claude-3-5", "claude-3-7",
-  "gpt-4o", "gpt-4.1", "claude-sonnet", "deepseek-r1",
-  "gemini-2.5", "llama-3.1-405",
-  // CEOWeb3 codex models
+  // ── Exact/prefix matches from top-ranked Code arena models ────────────────
+  // #1  kimi-k3                (Moonshot)
+  "kimi-k3",
+  // #2  claude-fable-5         (Anthropic)
+  "claude-fable",
+  // #3  gpt-5.6-sol-xhigh / gpt-5.x codex-harness variants
+  "gpt-5.6", "codex-harness", "sol-xhigh",
+  // #4  glm-5.2 (max)          (Z.ai)
+  "glm-5.2",
+  // #5  claude-opus-4-8-thinking
+  // #6  claude-opus-4-7-thinking
+  // #8  claude-opus-4-7
+  // #10 claude-opus-4-6-thinking
+  // #13 claude-opus-4-6
+  // #14 claude-opus-4-8
+  "claude-opus-4",
+  // #7  grok-4.5               (xAI)
+  "grok-4",
+  // #9  claude-sonnet-5-high
+  "claude-sonnet-5",
+  // #11 muse-spark-1.1         (Meta)
+  "muse-spark",
+  // #12 gemini-3.6-flash
+  "gemini-3.6",
+  // #15 seed-2.1-pro-preview   (ByteDance)
+  "seed-2.1-pro",
+  // #16 hy3                    (Tencent)
+  "hy3",
+  // #17 glm-5.1
+  "glm-5.1",
+  // ── Broader family matches that appear throughout the Code leaderboard ────
+  // Claude 3.x / 4.x coding-capable families
+  "claude-3-5", "claude-3-7", "claude-sonnet",
+  // GPT coding families
+  "gpt-4o", "gpt-4.1", "gpt-5.4", "gpt-5.5",
+  // Codex / code-specific suffixes (CEOWeb3 GPT-5 codex series + OpenAI)
   "codex",
+  // DeepSeek coding families
+  "deepseek-r1", "deepseek-v3", "deepseek-coder", "deepseek-v4",
+  // Qwen coding families
+  "qwen-coder", "qwen3-coder", "qwen2.5-coder",
+  // StarCoder / Codestral
+  "starcoder", "codestral",
+  // Generic "code" / "coder" in model name
+  "code", "coder",
+  // Gemini coding-capable
+  "gemini-2.5", "gemini-3-pro", "gemini-3.5",
+  // Llama large coding
+  "llama-3.1-405", "llama-3.3",
+  // Kimi coding family
+  "kimi-k2",
+  // GLM general coding family
+  "glm-5", "glm-4.7",
+  // o1 / o3 / o4 reasoning-coding OpenAI
+  "o1", "o3", "o4",
 ]
 
 // Agentic / tool-use model substrings
