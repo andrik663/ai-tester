@@ -400,6 +400,16 @@ function SkillCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[11px] font-semibold text-foreground/90">{skill.name}</span>
             <span className="text-[8px] font-mono text-muted-foreground/40">{skill.installs} installs</span>
+            {skill.category === "Coding" && (
+              <span className="text-[8px] px-1.5 py-0.5 rounded border border-sky-400/30 bg-sky-400/10 text-sky-400 font-semibold flex items-center gap-0.5">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2 h-2">
+                  <polyline points="4 5 1 8 4 11" />
+                  <polyline points="12 5 15 8 12 11" />
+                  <line x1="9" y1="3" x2="7" y2="13" />
+                </svg>
+                Code tab
+              </span>
+            )}
             {isActive && (
               <span className="text-[8px] px-1.5 py-0.5 rounded-full border border-primary/40 bg-primary/15 text-primary font-semibold">
                 ACTIVE
@@ -516,7 +526,9 @@ function SkillCard({
           <>
             <span className="flex items-center gap-1.5 text-[9px] text-primary/80 flex-1">
               <ZapIcon />
-              Active on {workingKeyCount} key{workingKeyCount !== 1 ? "s" : ""}
+              {skill.category === "Coding"
+                ? "Active — switch to Code tab to use"
+                : `Active on ${workingKeyCount} key${workingKeyCount !== 1 ? "s" : ""}`}
             </span>
             <button
               onClick={() => onDeactivate(skill.id)}
@@ -528,7 +540,7 @@ function SkillCard({
         ) : (
           <>
             <span className="text-[9px] text-muted-foreground/40 flex-1">
-              Activates on all working keys
+              {skill.category === "Coding" ? "Injects skill into Code tab" : "Activates on all working keys"}
             </span>
             <button
               onClick={() => onActivate(skill)}

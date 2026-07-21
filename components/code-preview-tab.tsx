@@ -41,6 +41,10 @@ interface Props {
   workingModels: WorkingModel[]
   presetModels?: PresetModel[]
   isMiuclaw?: boolean
+  /** System prompt override from an active Skill */
+  activeSkillSystemPrompt?: string
+  /** Human-readable name of the active skill */
+  activeSkillName?: string
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -182,6 +186,8 @@ export default function CodePreviewTab({
   workingModels,
   presetModels,
   isMiuclaw,
+  activeSkillSystemPrompt,
+  activeSkillName,
 }: Props) {
   // ── State ───────────────────────────────────────────────────────────────────
   type ViewMode = "split" | "code" | "preview"
@@ -258,7 +264,9 @@ export default function CodePreviewTab({
           endpoint,
           headers,
           messages: allMessages,
-          systemPrompt: CODE_SYSTEM_PROMPT,
+          systemPrompt: activeSkillSystemPrompt
+            ? `${activeSkillSystemPrompt}\n\n---\n\nWhen generating code output, always wrap it in a single fenced \`\`\`html code block containing a complete, self-contained HTML document with <!DOCTYPE html>. Include all CSS in a <style> tag and all JS in a <script> tag so the preview iframe can render it immediately.`
+            : CODE_SYSTEM_PROMPT,
           model: model.trim() || undefined,
         }),
         signal: ctrl.signal,
@@ -318,7 +326,7 @@ export default function CodePreviewTab({
     setStreamingText("")
     setIsStreaming(false)
     abortRef.current = null
-  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model])
+  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, activeSkillSystemPrompt])
 
   function stopStreaming() {
     abortRef.current?.abort()
@@ -447,6 +455,16 @@ export default function CodePreviewTab({
           </select>
         )}
 
+        {/* Active skill badge */}
+        {activeSkillName && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-primary/30 bg-primary/10 text-primary max-w-[130px]">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" className="w-2.5 h-2.5 flex-shrink-0">
+              <path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1L2 5.6l4.2-.9L8 1z" />
+            </svg>
+            <span className="text-[10px] font-medium truncate">{activeSkillName}</span>
+          </div>
+        )}
+
         <div className="flex-1" />
 
         {/* View mode toggle */}
@@ -510,17 +528,36 @@ export default function CodePreviewTab({
                     <CodeIcon />
                   </div>
                   <div>
-                    <p className="text-[13px] font-medium text-foreground mb-0.5">Code Preview</p>
+                    <p className="text-[13px] font-medium text-foreground mb-0.5">
+                      {activeSkillName ? `Skill: ${activeSkillName}` : "Code Preview"}
+                    </p>
                     <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
-                      Ask the AI to build something — it generates live HTML, CSS & JS you can preview instantly.
+                      {activeSkillName
+                        ? `AI is using the "${activeSkillName}" skill. Ask it to build or create something.`
+                        : "Ask the AI to build something — it generates live HTML, CSS & JS you can preview instantly."}
                     </p>
                   </div>
+                  {activeSkillName && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-primary/30 bg-primary/10 text-primary">
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" className="w-3 h-3 flex-shrink-0">
+                        <path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1L2 5.6l4.2-.9L8 1z" />
+                      </svg>
+                      <span className="text-[10px] font-semibold">{activeSkillName} active</span>
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1.5 w-full max-w-[220px]">
-                    {[
-                      "Build a todo app with dark mode",
-                      "Create an animated gradient clock",
-                      "Make a responsive pricing card",
-                    ].map((ex) => (
+                    {(activeSkillName === "Web Artifacts Builder"
+                      ? ["Build a dashboard with charts", "Create a shadcn/ui form", "Make a multi-step wizard"]
+                      : activeSkillName === "Algorithmic Art"
+                      ? ["Particle flow field with p5.js", "Cellular automata simulation", "Perlin noise landscape"]
+                      : activeSkillName === "Theme Factory"
+                      ? ["Apply Ocean Depths theme", "Generate a dark tech theme", "Create a warm golden theme"]
+                      : [
+                          "Build a todo app with dark mode",
+                          "Create an animated gradient clock",
+                          "Make a responsive pricing card",
+                        ]
+                    ).map((ex) => (
                       <button
                         key={ex}
                         onClick={() => { setInput(ex); textareaRef.current?.focus() }}

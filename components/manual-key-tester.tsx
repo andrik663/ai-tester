@@ -3139,6 +3139,18 @@ export default function ManualKeyTester() {
   // Tab state
   const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills">("unified")
   const [activeSkillConfig, setActiveSkillConfig] = useState<ActiveSkillConfig | null>(null)
+  // Map skill IDs → display names for the Code tab badge
+  const SKILLS_NAME_MAP: Record<string, string> = {
+    "web-artifacts-builder": "Web Artifacts Builder",
+    "algorithmic-art": "Algorithmic Art",
+    "theme-factory": "Theme Factory",
+    "frontend-design": "Frontend Design",
+    "skill-creator": "Skill Creator",
+    "webapp-testing": "Web App Testing",
+    "vercel-react-best-practices": "React Best Practices",
+    "deploy-to-vercel": "Deploy to Vercel",
+    "find-skills": "Find Skills",
+  }
   // Pinned providers — persisted in localStorage
   const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
   useEffect(() => {
@@ -3466,7 +3478,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ─���─���────────────────────────��─��─────────────────────
+  // ── Vision / OCR helpers ─���─���────────────────────────��─��────���────────────────
 
   function handleImageFile(
     file: File,
@@ -5244,6 +5256,8 @@ export default function ManualKeyTester() {
             workingModels={workingModels}
             presetModels={selectedPreset.models?.map((m) => ({ id: m.id, label: m.label }))}
             isMiuclaw={selectedPreset.id === "miuclaw"}
+            activeSkillSystemPrompt={activeSkillConfig?.systemPrompt}
+            activeSkillName={activeSkillConfig ? SKILLS_NAME_MAP[activeSkillConfig.skillId] ?? activeSkillConfig.skillId : undefined}
           />
         )}
 
@@ -5311,7 +5325,7 @@ export default function ManualKeyTester() {
           <ProviderInfoPanel apiKey={apiKey || undefined} />
         )}
 
-        {/* ── AUTO-DETECT TAB ───────────────────���──────────────────────────��─ */}
+        {/* ── AUTO-DETECT TAB ────────────────���──���──────────────────────────��─ */}
         {activeTab === "auto-detect" && (() => {
           // Full provider pattern table — mirrors detectProviderFromKey but with metadata
           type DetectPattern = {
