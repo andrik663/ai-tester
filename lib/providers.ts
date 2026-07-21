@@ -959,7 +959,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
-  // ── DeepInfra ─────────────────────────────────────────────────────────────
+  // ── DeepInfra ─────────────────────────────────────���───────────────────────
   deepinfra: {
     id: "deepinfra",
     models: [
@@ -1201,7 +1201,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       // ── Qwen3.7 ───────────────────────────────────────────────────────────
       "mk/qwen3.7-max",
       "mk/qwen3.7-plus",
-      // ── Qwen legacy ─────────────────────────────���─────────────────────────
+      // ── Qwen legacy ────────────────��────────────���─────────────────────────
       "mk/qwen-max",
       "mk/qwen-plus",
       "mk/qwen-plus-latest",
@@ -1464,7 +1464,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   zenmux: {
     id: "zenmux",
     models: [
-      // ── New July 2026 ──────────────────────────────────────────────────────
+      // ── New July 2026 ─────────────────────────────────────���────────────────
       "openai/gpt-5.6-sol",
       "openai/gpt-5.6-terra-pro",
       "openai/gpt-5.6-luna",
@@ -1535,7 +1535,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "deepseek-v4-pro",
       "mimo-v2.5",
       "mimo-v2.5-pro-ultraspeed",
-      // ── Pro ───────────────────────────────────────────────────────────────
+      // ── Pro ─────────────────────���─────────────────────────────────────────
       "claude-opus-4.7",
       // ── Hermes / Mimo ───────────────────────────────────────────────��──��──
       "mimo-v2.5-hermes",
@@ -1919,6 +1919,63 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     endpoint: "https://openrouter.ai/api/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}`, "HTTP-Referer": "https://ai-tester.vercel.app", "X-Title": "AI Tester" }),
     extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── CEOWeb3 Gateway ──────────────────────────────────────────────────────
+  // OpenAI-compatible gateway. Base URL: https://dashboard.ceoweb3.dev/api/v1
+  // 29 models — GLM, Kimi, DeepSeek, Gemini, GPT, MiniMax, HunyuanHY3, Muse.
+  // Live /v1/models returns full catalogue. Auth: Bearer API key.
+  ceoweb3: {
+    id: "ceoweb3",
+    models: [
+      // ── DeepSeek ──────────────────────────────────────────────────────────
+      "deepseek-v3-2-volc",
+      "deepseek-v4-flash",
+      "deepseek-v4-pro",
+      // ── Google Gemini ──────────────────────────────────────────────────────
+      "gemini-2.5-flash",
+      "gemini-2.5-pro",
+      "gemini-3.0-flash",
+      "gemini-3.1-flash-lite",
+      "gemini-3.1-pro",
+      "gemini-3.5-flash",
+      // ── GLM (Zhipu AI) ────────────────────────────────────────────────────
+      "glm-4.7",
+      "glm-5.0",
+      "glm-5.0-turbo",
+      "glm-5.1",
+      "glm-5.2",
+      "glm-5v-turbo",
+      // ── OpenAI GPT ────────────────────────────────────────────────────────
+      "gpt-5.1-codex",
+      "gpt-5.1-codex-mini",
+      "gpt-5.3-codex",
+      "gpt-5.4",
+      "gpt-5.5",
+      // ── Tencent HY3 ───────────────────────────────────────────────────────
+      "hy3-preview",
+      // ── Kimi (Moonshot) ───────────────────────────────────────────────────
+      "kimi-k2.5",
+      "kimi-k2.6",
+      "kimi-k2.7",
+      "kimi-k3",
+      // ── MiniMax ───────────────────────────────────────────────────────────
+      "minimax-m2.7",
+      "minimax-m3",
+      // ── Muse ──────────────────────────────────────────────────────────────
+      "muse-spark-1.1",
+      // ── Default ───────────────────────────────────────────────────────────
+      "default-model",
+    ],
+    modelsEndpoint: "https://dashboard.ceoweb3.dev/api/v1/models",
+    endpoint: "https://dashboard.ceoweb3.dev/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 5,
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
       model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
     }),
