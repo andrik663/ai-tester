@@ -178,6 +178,24 @@ function StopIcon() {
   )
 }
 
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  )
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CodePreviewTab({
@@ -206,7 +224,7 @@ export default function CodePreviewTab({
     : activeSkillConfigs.length > 1
     ? `${activeSkillConfigs.length} skills`
     : undefined
-  // ── State ───────────────────────────────────────────────────────────────────
+  // ── State ───────────────────────────────────���───────────────────────────────
   type ViewMode = "split" | "code" | "preview"
   const [viewMode, setViewMode]         = useState<ViewMode>("split")
   const [messages, setMessages]         = useState<ChatMessage[]>([])
@@ -215,8 +233,9 @@ export default function CodePreviewTab({
   const [streamingText, setStreamingText] = useState("")
   const [previewSrc, setPreviewSrc]     = useState("")
   const [previewKey, setPreviewKey]     = useState(0)
-  const [copyFeedback, setCopyFeedback] = useState<number | null>(null)
-  const [iframeError, setIframeError]   = useState(false)
+  const [copyFeedback, setCopyFeedback]       = useState<number | null>(null)
+  const [iframeError, setIframeError]         = useState(false)
+  const [downloadOpenIdx, setDownloadOpenIdx] = useState<number | null>(null)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
@@ -361,6 +380,132 @@ export default function CodePreviewTab({
     } catch { /* ignore */ }
   }
 
+  type DownloadFormat = "html" | "txt" | "md" | "zip" | "json"
+
+  const DOWNLOAD_OPTIONS: { format: DownloadFormat; label: string; ext: string; mime: string; description: string }[] = [
+    { format: "html", label: "HTML File",      ext: "html",   mime: "text/html",              description: "Single page .html" },
+    { format: "txt",  label: "Plain Text",     ext: "txt",    mime: "text/plain",             description: "Raw .txt source"   },
+    { format: "md",   label: "Markdown",       ext: "md",     mime: "text/markdown",          description: "Fenced code block" },
+    { format: "zip",  label: "ZIP Archive",    ext: "zip",    mime: "application/zip",        description: "Compressed .zip"  },
+    { format: "json", label: "JSON Metadata",  ext: "json",   mime: "application/json",       description: "Code + meta .json" },
+  ]
+
+  async function downloadCode(code: string, lang: string, format: DownloadFormat) {
+    const ts   = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-")
+    const base = `code-${ts}`
+    let blob: Blob
+    let filename: string
+
+    if (format === "html") {
+      blob     = new Blob([code], { type: "text/html" })
+      filename = `${base}.html`
+    } else if (format === "txt") {
+      blob     = new Blob([code], { type: "text/plain" })
+      filename = `${base}.txt`
+    } else if (format === "md") {
+      const mdContent = `\`\`\`${lang}\n${code}\n\`\`\``
+      blob     = new Blob([mdContent], { type: "text/markdown" })
+      filename = `${base}.md`
+    } else if (format === "zip") {
+      // Build a minimal valid ZIP file with a single entry using raw bytes
+      const encoder   = new TextEncoder()
+      const fileBytes = encoder.encode(code)
+      const innerName = `${base}.${lang === "html" ? "html" : "txt"}`
+      const nameBytes = encoder.encode(innerName)
+
+      // Local file header
+      const localHeader = new Uint8Array([
+        0x50, 0x4b, 0x03, 0x04, // signature
+        0x14, 0x00,             // version needed: 2.0
+        0x00, 0x00,             // flags
+        0x00, 0x00,             // compression: stored
+        0x00, 0x00, 0x00, 0x00, // mod time/date (dummy)
+        0x00, 0x00, 0x00, 0x00, // CRC-32 (dummy — not validated by most apps)
+        ...u32le(fileBytes.length), // compressed size
+        ...u32le(fileBytes.length), // uncompressed size
+        ...u16le(nameBytes.length), // filename length
+        0x00, 0x00,             // extra field length
+      ])
+      const entryOffset = 0
+      const entrySize   = localHeader.length + nameBytes.length + fileBytes.length
+
+      // Central directory header
+      const centralHeader = new Uint8Array([
+        0x50, 0x4b, 0x01, 0x02, // signature
+        0x14, 0x00,             // version made by
+        0x14, 0x00,             // version needed
+        0x00, 0x00,             // flags
+        0x00, 0x00,             // compression: stored
+        0x00, 0x00, 0x00, 0x00, // mod time/date
+        0x00, 0x00, 0x00, 0x00, // CRC-32
+        ...u32le(fileBytes.length),
+        ...u32le(fileBytes.length),
+        ...u16le(nameBytes.length),
+        0x00, 0x00,             // extra length
+        0x00, 0x00,             // comment length
+        0x00, 0x00,             // disk start
+        0x00, 0x00,             // int attr
+        0x00, 0x00, 0x00, 0x00, // ext attr
+        ...u32le(entryOffset),  // local header offset
+      ])
+
+      // End of central directory
+      const eocd = new Uint8Array([
+        0x50, 0x4b, 0x05, 0x06, // signature
+        0x00, 0x00,             // disk number
+        0x00, 0x00,             // start disk
+        0x01, 0x00,             // entries on disk
+        0x01, 0x00,             // total entries
+        ...u32le(centralHeader.length + nameBytes.length), // central dir size
+        ...u32le(entrySize),    // central dir offset
+        0x00, 0x00,             // comment length
+      ])
+
+      const all = concat([localHeader, nameBytes, fileBytes, centralHeader, nameBytes, eocd])
+      blob     = new Blob([all], { type: "application/zip" })
+      filename = `${base}.zip`
+    } else {
+      // JSON
+      const meta = {
+        generatedAt: new Date().toISOString(),
+        language:    lang,
+        lines:       code.split("\n").length,
+        characters:  code.length,
+        provider,
+        model,
+        source:      "ai-tester-code-preview",
+        code,
+      }
+      blob     = new Blob([JSON.stringify(meta, null, 2)], { type: "application/json" })
+      filename = `${base}.json`
+    }
+
+    const url = URL.createObjectURL(blob)
+    const a   = document.createElement("a")
+    a.href    = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    setDownloadOpenIdx(null)
+  }
+
+  // ── ZIP helpers ─────────────────────────────────────────────────────────────
+  function u32le(n: number): number[] {
+    return [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >> 24) & 0xff]
+  }
+  function u16le(n: number): number[] {
+    return [n & 0xff, (n >> 8) & 0xff]
+  }
+  function concat(arrays: Uint8Array[]): Uint8Array {
+    const total = arrays.reduce((s, a) => s + a.length, 0)
+    const out   = new Uint8Array(total)
+    let offset  = 0
+    for (const a of arrays) { out.set(a, offset); offset += a.length }
+    return out
+  }
+
   // ── Render helpers ──────────────────────────────────────────────────────────
 
   /** Render a single message bubble */
@@ -384,22 +529,78 @@ export default function CodePreviewTab({
       <div key={i} className="flex flex-col gap-1.5">
         <div className="flex flex-col gap-2">
           {parts.map((part, pi) => {
-            const fenceMatch = part.match(/^```(\w*)\n([\s\S]*?)```$/)
+              const fenceMatch = part.match(/^```(\w*)\n([\s\S]*?)```$/)
             if (fenceMatch) {
-              const lang = fenceMatch[1] || "text"
-              const code = fenceMatch[2].trim()
+              const lang    = fenceMatch[1] || "text"
+              const code    = fenceMatch[2].trim()
+              const blockId = i * 100 + pi
+              const dlOpen  = downloadOpenIdx === blockId
               return (
                 <div key={pi} className="rounded-lg border border-border/60 bg-muted/40 overflow-hidden">
                   {/* Code block header */}
                   <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40 bg-muted/30">
+                    {/* Lang badge */}
                     <span className="text-[10px] font-mono text-muted-foreground">{lang}</span>
-                    <button
-                      onClick={() => copyCode(code, i * 100 + pi)}
-                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <CopyIcon />
-                      {copyFeedback === i * 100 + pi ? "Copied!" : "Copy"}
-                    </button>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1">
+
+                      {/* Copy button */}
+                      <button
+                        onClick={() => copyCode(code, blockId)}
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
+                      >
+                        <CopyIcon />
+                        {copyFeedback === blockId ? "Copied!" : "Copy"}
+                      </button>
+
+                      {/* Divider */}
+                      <div className="w-px h-3 bg-border/60" />
+
+                      {/* Download dropdown */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setDownloadOpenIdx(dlOpen ? null : blockId)}
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
+                        >
+                          <DownloadIcon />
+                          <span>Download</span>
+                          <ChevronDownIcon />
+                        </button>
+
+                        {dlOpen && (
+                          <>
+                            {/* Backdrop to close on outside click */}
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setDownloadOpenIdx(null)}
+                            />
+                            {/* Dropdown menu */}
+                            <div className="absolute right-0 top-full mt-1 z-20 min-w-[172px] rounded-lg border border-border/70 bg-background shadow-xl shadow-black/30 overflow-hidden">
+                              <div className="px-3 py-2 border-b border-border/40">
+                                <p className="text-[10px] font-semibold text-foreground/70 uppercase tracking-wider">Export as</p>
+                              </div>
+                              {DOWNLOAD_OPTIONS.map((opt) => (
+                                <button
+                                  key={opt.format}
+                                  onClick={() => downloadCode(code, lang, opt.format)}
+                                  className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-primary/8 hover:text-foreground transition-colors group"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="flex-shrink-0 w-8 text-center text-[9px] font-mono font-semibold px-1 py-0.5 rounded border border-border/60 bg-muted/60 text-primary/80 group-hover:border-primary/40 group-hover:bg-primary/10 transition-colors">
+                                      .{opt.ext}
+                                    </span>
+                                    <span className="text-[11px] text-foreground/90 font-medium truncate">{opt.label}</span>
+                                  </div>
+                                  <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">{opt.description}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                    </div>
                   </div>
                   <pre className="px-3 py-2.5 text-[11px] font-mono text-foreground/90 overflow-x-auto leading-relaxed whitespace-pre-wrap break-words">
                     {code}
