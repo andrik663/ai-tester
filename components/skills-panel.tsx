@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { copyToClipboard } from "@/lib/clipboard"
 import { loadWorkingKeys, type WorkingKeyRecord } from "@/lib/working-keys-store"
 
@@ -785,6 +785,29 @@ interface SkillsPanelProps {
   onActiveSkillChange?: (configs: ActiveSkillConfig[]) => void
 }
 
+// ── Skills persistence helpers ────────────────────────────────────────────────
+const SKILLS_STORAGE_KEY = "ai_tester_active_skills"
+
+function loadPersistedSkillIds(): Set<string> {
+  if (typeof window === "undefined") return new Set()
+  try {
+    const raw = localStorage.getItem(SKILLS_STORAGE_KEY)
+    if (!raw) return new Set()
+    const ids: string[] = JSON.parse(raw)
+    // Only restore ids that still exist in the current SKILLS list
+    const validIds = ids.filter((id) => SKILLS.some((s) => s.id === id))
+    return new Set(validIds)
+  } catch {
+    return new Set()
+  }
+}
+
+function saveSkillIds(ids: Set<string>): void {
+  try {
+    localStorage.setItem(SKILLS_STORAGE_KEY, JSON.stringify([...ids]))
+  } catch {}
+}
+
 export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
   const [activeSkillIds, setActiveSkillIds] = useState<Set<string>>(new Set())
   const [filterCategory, setFilterCategory] = useState<string>("all")
@@ -800,6 +823,21 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
       .map((s) => ({ skillId: s.id, systemPrompt: s.systemPrompt }))
     onActiveSkillChange?.(configs)
   }, [onActiveSkillChange])
+
+  // Restore persisted skills on mount (after hydration to avoid SSR mismatch)
+  useEffect(() => {
+    const restored = loadPersistedSkillIds()
+    if (restored.size > 0) {
+      setActiveSkillIds(restored)
+      notify(restored)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Persist whenever active skill ids change
+  useEffect(() => {
+    saveSkillIds(activeSkillIds)
+  }, [activeSkillIds])
 
   const handleActivate = useCallback((skill: Skill) => {
     setActiveSkillIds((prev) => {
@@ -820,7 +858,9 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
   }, [notify])
 
   const handleDeactivateAll = useCallback(() => {
-    setActiveSkillIds(new Set())
+    const empty = new Set<string>()
+    setActiveSkillIds(empty)
+    saveSkillIds(empty)
     onActiveSkillChange?.([])
   }, [onActiveSkillChange])
 
