@@ -1409,6 +1409,58 @@ const PRESETS: ProviderPreset[] = [
     color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
     note: "Claim your daily free quota on freetokenfaucet.com. Use your tf_ API key.",
   },
+  // ── CEOWeb3 Gateway ────────────────────────────────────────────────────────
+  {
+    id: "ceoweb3",
+    name: "CEOWeb3",
+    country: "ID",
+    endpoint: "https://dashboard.ceoweb3.dev/api/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "deepseek-v4-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "deepseek-v3-2-volc",    label: "DeepSeek V3.2 Volc",    tag: "DeepSeek",  ctx: "128K", in: "$0.30", out: "$1.20", cache: "" },
+      { id: "deepseek-v4-flash",     label: "DeepSeek V4 Flash",     tag: "DeepSeek",  ctx: "128K", in: "$0.30", out: "$1.20", cache: "" },
+      { id: "deepseek-v4-pro",       label: "DeepSeek V4 Pro",       tag: "DeepSeek",  ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gemini-2.5-flash",      label: "Gemini 2.5 Flash",      tag: "Google",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gemini-2.5-pro",        label: "Gemini 2.5 Pro",        tag: "Google",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gemini-3.0-flash",      label: "Gemini 3.0 Flash",      tag: "Google",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite", tag: "Google",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gemini-3.1-pro",        label: "Gemini 3.1 Pro",        tag: "Google",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gemini-3.5-flash",      label: "Gemini 3.5 Flash",      tag: "Google",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "glm-4.7",               label: "GLM-4.7",               tag: "Zhipu",     ctx: "128K", in: "$0.25", out: "$1.00", cache: "" },
+      { id: "glm-5.0",               label: "GLM-5.0",               tag: "Zhipu",     ctx: "128K", in: "$0.30", out: "$1.50", cache: "" },
+      { id: "glm-5.0-turbo",         label: "GLM-5.0 Turbo",         tag: "Zhipu",     ctx: "128K", in: "$0.15", out: "$0.60", cache: "" },
+      { id: "glm-5.1",               label: "GLM-5.1",               tag: "Zhipu",     ctx: "128K", in: "$0.30", out: "$1.50", cache: "" },
+      { id: "glm-5.2",               label: "GLM-5.2",               tag: "Zhipu",     ctx: "128K", in: "$0.30", out: "$1.50", cache: "" },
+      { id: "glm-5v-turbo",          label: "GLM-5v Turbo",          tag: "Zhipu",     ctx: "128K", in: "$0.20", out: "$0.80", cache: "" },
+      { id: "gpt-5.1-codex",         label: "GPT-5.1 Codex",         tag: "OpenAI",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gpt-5.1-codex-mini",    label: "GPT-5.1 Codex Mini",    tag: "OpenAI",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gpt-5.3-codex",         label: "GPT-5.3 Codex",         tag: "OpenAI",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gpt-5.4",               label: "GPT-5.4",               tag: "OpenAI",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "gpt-5.5",               label: "GPT-5.5",               tag: "OpenAI",    ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "hy3-preview",           label: "HY3 Preview",           tag: "Tencent",   ctx: "128K", in: "$0.30", out: "$1.20", cache: "" },
+      { id: "kimi-k2.5",             label: "Kimi K2.5",             tag: "Moonshot",  ctx: "128K", in: "$0.30", out: "$1.20", cache: "" },
+      { id: "kimi-k2.6",             label: "Kimi K2.6",             tag: "Moonshot",  ctx: "128K", in: "$0.40", out: "$1.50", cache: "" },
+      { id: "kimi-k2.7",             label: "Kimi K2.7",             tag: "Moonshot",  ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "kimi-k3",               label: "Kimi K3",               tag: "Moonshot",  ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "minimax-m2.7",          label: "MiniMax M2.7",          tag: "MiniMax",   ctx: "128K", in: "$0.30", out: "$1.20", cache: "" },
+      { id: "minimax-m3",            label: "MiniMax M3",            tag: "MiniMax",   ctx: "128K", in: "$0.40", out: "$1.60", cache: "" },
+      { id: "muse-spark-1.1",        label: "Muse Spark 1.1",        tag: "Muse",      ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+      { id: "default-model",         label: "Default Model",         tag: "CEOWeb3",   ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
+    ],
+    docsUrl: "https://dashboard.ceoweb3.dev",
+    createKeyUrl: "https://dashboard.ceoweb3.dev/redeem",
+    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+    note: "Indonesian AI gateway. 29 models — GLM, Kimi, DeepSeek, Gemini, GPT-5 Codex, MiniMax, HunyuanHY3, and Muse Spark.",
+  },
   {
     id: "friendli",
     name: "Friendli AI",
@@ -2603,7 +2655,7 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Deduplicate PRESETS by id ────────────────────────────────────────────────
+// ── Deduplicate PRESETS by id ───────────────────────────────��────────────────
 // Guard against accidental duplicate id entries that cause React key warnings
 // and duplicate rows in the sidebar. Last-write-wins for same id.
 const PRESETS_DEDUPED: ProviderPreset[] = (() => {
@@ -2741,6 +2793,7 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   vidu:             "vidu.studio",
   wanai:            "openrouter.ai",
   freetoken:        "freetokenfaucet.com",
+  ceoweb3:          "ceoweb3.dev",
 }
 
 /** Google faviconV2 — returns 64 px PNG, works cross-origin, no auth needed. */
@@ -5438,6 +5491,7 @@ export default function ManualKeyTester() {
             { prefix: "—",           providerId: "novita",      providerName: "Novita AI",               example: "random UUID",          confidence: "none", note: "Novita keys are UUIDs — not prefix-detectable" },
             { prefix: "—",           providerId: "inception",   providerName: "Inception (Mercury)",     example: "random string",        confidence: "none", note: "Inception keys have no fixed prefix" },
             { prefix: "—",           providerId: "deepinfra",   providerName: "Deep Infra (non-di_)",    example: "random string",        confidence: "none", note: "Some Deep Infra keys lack the di_ prefix �� use di_ keys for auto-detection" },
+            { prefix: "\u2014",          providerId: "ceoweb3",     providerName: "CEOWeb3 Gateway",         example: "random bearer token",  confidence: "none", note: "CEOWeb3 keys have no fixed prefix \u2014 not prefix-detectable" },
           ]
 
           function runDetect(raw: string): typeof detectResult {

@@ -228,7 +228,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Groq ─────────────────────────────────────────���───────────────────────
+  // ── Groq ─────────────────────────────────────────����───────────────────────
   groq: {
     id: "groq",
     name: "Groq",
@@ -1404,7 +1404,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [ m("morph-v3", null, null, 32, { promo: true, promoLabel: "Code edit" }) ],
   },
 
-  // ── Nebius ────────────────────────────────────────────────────────────────────
+  // ── Nebius ───────────────────────────────────────────────────────────────���────
   nebius: {
     id: "nebius", name: "Nebius",
     website: "https://nebius.com", pricingUrl: "https://nebius.com/prices",
@@ -1524,7 +1524,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Switchpoint ───────────────────────────────────────────────────────────────
+  // ── Switchpoint ───────���───────────────────────────────────────────────────────
   switchpoint: {
     id: "switchpoint", name: "Switchpoint",
     website: "https://switchpoint.ai", pricingUrl: "https://switchpoint.ai/pricing",
@@ -2378,6 +2378,61 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     description: "Wan 2.1-I2V video generation model via OpenRouter.",
     hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
     models: [ m("wan-ai/wan2.1-i2v-720p", null, null, null, { promo: true, promoLabel: "New" }) ],
+  },
+
+  // ── CEOWeb3 Gateway ──────────────────────────────────────────────────────
+  ceoweb3: {
+    id: "ceoweb3",
+    name: "CEOWeb3",
+    website: "https://ceoweb3.dev",
+    pricingUrl: "https://dashboard.ceoweb3.dev/models",
+    docsUrl: "https://dashboard.ceoweb3.dev",
+    description: "Multi-model AI gateway. 29 models — GLM, Kimi, DeepSeek, Gemini, GPT-5 codex, MiniMax, HunyuanHY3 preview, and Muse Spark. Credit-based, OpenAI-compatible API.",
+    hq: "ID",
+    tier: "gateway",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-07-22",
+    models: [
+      // ── DeepSeek ──────────────────────────────────────────────────────────
+      m("deepseek-v3-2-volc",    0.30, 1.20, 128, { promo: true, promoLabel: "Reasoning",   promoLink: "https://dashboard.ceoweb3.dev/models" }),
+      m("deepseek-v4-flash",     0.30, 1.20, 128),
+      m("deepseek-v4-pro",       0.50, 2.00, 128),
+      // ── Google Gemini ──────────────────────────────────────────────────────
+      m("gemini-2.5-flash",      0.50, 2.00, 128),
+      m("gemini-2.5-pro",        0.50, 2.00, 128),
+      m("gemini-3.0-flash",      0.50, 2.00, 128),
+      m("gemini-3.1-flash-lite", 0.50, 2.00, 128),
+      m("gemini-3.1-pro",        0.50, 2.00, 128),
+      m("gemini-3.5-flash",      0.50, 2.00, 128, { promo: true, promoLabel: "New" }),
+      // ── GLM (Zhipu AI) ────────────────────────────────────────────────────
+      m("glm-4.7",               0.25, 1.00, 128, { promo: true, promoLabel: "Reasoning" }),
+      m("glm-5.0",               0.30, 1.50, 128, { promo: true, promoLabel: "Reasoning" }),
+      m("glm-5.0-turbo",         0.15, 0.60, 128, { promo: true, promoLabel: "Cheapest" }),
+      m("glm-5.1",               0.30, 1.50, 128),
+      m("glm-5.2",               0.30, 1.50, 128),
+      m("glm-5v-turbo",          0.20, 0.80, 128, { promo: true, promoLabel: "Vision" }),
+      // ── OpenAI GPT ────────────────────────────────────────────────────────
+      m("gpt-5.1-codex",         0.50, 2.00, 128, { promo: true, promoLabel: "Coding" }),
+      m("gpt-5.1-codex-mini",    0.50, 2.00, 128),
+      m("gpt-5.3-codex",         0.50, 2.00, 128),
+      m("gpt-5.4",               0.50, 2.00, 128),
+      m("gpt-5.5",               0.50, 2.00, 128, { promo: true, promoLabel: "Flagship" }),
+      // ── Tencent HY3 ───────────────────────────────────────────────────────
+      m("hy3-preview",           0.30, 1.20, 128, { promo: true, promoLabel: "Reasoning" }),
+      // ── Kimi (Moonshot) ───────────────────────────────────────────────────
+      m("kimi-k2.5",             0.30, 1.20, 128, { promo: true, promoLabel: "Vision" }),
+      m("kimi-k2.6",             0.40, 1.50, 128, { promo: true, promoLabel: "Vision" }),
+      m("kimi-k2.7",             0.50, 2.00, 128, { promo: true, promoLabel: "Vision" }),
+      m("kimi-k3",               0.50, 2.00, 128),
+      // ── MiniMax ───────────────────────────────────────────────────────────
+      m("minimax-m2.7",          0.30, 1.20, 128, { promo: true, promoLabel: "Reasoning" }),
+      m("minimax-m3",            0.40, 1.60, 128, { promo: true, promoLabel: "Vision" }),
+      // ── Muse ──────────────────────────────────────────────────────────────
+      m("muse-spark-1.1",        0.50, 2.00, 128),
+      // ── Default ───────────────────────────────────────────────────────────
+      m("default-model",         0.50, 2.00, 128),
+    ],
   },
 
   // ── Free Token Faucet ─────────────────────────────────────────────────────

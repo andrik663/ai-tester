@@ -405,6 +405,32 @@ function GroupedKeyCard({
                     </span>
                   )}
                 </div>
+                {/* Capability tags row */}
+                {(() => {
+                  const caps = inferCapabilities(r.modelId).filter((c) => c !== "text")
+                  const CAP_TAG_COLORS: Record<string, string> = {
+                    flagship: "text-yellow-400/80 border-yellow-400/20 bg-yellow-400/5",
+                    agent:    "text-emerald-400/80 border-emerald-400/20 bg-emerald-400/5",
+                    coding:   "text-violet-400/80 border-violet-400/20 bg-violet-400/5",
+                    document: "text-orange-400/80 border-orange-400/20 bg-orange-400/5",
+                    image:    "text-amber-400/80 border-amber-400/20 bg-amber-400/5",
+                    video:    "text-rose-400/80 border-rose-400/20 bg-rose-400/5",
+                  }
+                  const CAP_TAG_LABELS: Record<string, string> = {
+                    flagship: "flagship", agent: "agent", coding: "code",
+                    document: "doc", image: "image", video: "video",
+                  }
+                  if (caps.length === 0) return null
+                  return (
+                    <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                      {caps.map((c) => (
+                        <span key={c} className={`text-[7px] px-1 py-px rounded border font-medium uppercase tracking-wide ${CAP_TAG_COLORS[c] ?? "text-muted-foreground/50 border-border/50"}`}>
+                          {CAP_TAG_LABELS[c] ?? c}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                })()}
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-[9px] text-muted-foreground/40 font-mono">{r.latencyMs}ms</span>
                   {r.tokenUsage?.total !== undefined && (
@@ -624,6 +650,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
   const [records, setRecords]               = useState<WorkingKeyRecord[]>([])
   const [filterProvider, setFilterProvider] = useState<string>("all")
   const [filterCap, setFilterCap]           = useState<CapabilityTag | "all">("all")
+  const [modelSearch, setModelSearch]       = useState<string>("")
   const [confirmClear, setConfirmClear]     = useState(false)
   const [lockedTick, setLockedTick]         = useState(0)
   const [sessionToken, setSessionToken]     = useState<string | null>(null)
@@ -675,6 +702,10 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
     if (filterCap !== "all") {
       const caps = inferCapabilities(r.modelId)
       if (!caps.includes(filterCap)) return false
+    }
+    if (modelSearch.trim()) {
+      const q = modelSearch.toLowerCase()
+      if (!r.modelId.toLowerCase().includes(q) && !r.providerName.toLowerCase().includes(q)) return false
     }
     return true
   })
@@ -744,52 +775,137 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
         </button>
       </div>
 
-      {/* Capability filter chips */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-muted-foreground/40">
-          <FilterIcon />
-        </span>
-        {(["all", "flagship", "coding", "text", "image", "video"] as const).map((cap) => {
-          const CAP_COLORS: Record<string, string> = {
-            flagship: "border-primary/50 bg-primary/10 text-primary",
+      {/* ── Capability filter tabs (Rank-style) ─────────────────────────── */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+        {([
+          { cap: "all",      label: "All",      icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M5 8h6M8 5v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )},
+          { cap: "agent",    label: "Agent",    icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <rect x="2" y="4" width="12" height="9" rx="2" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M5 7h2M9 7h2M5 10h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M6 4V2.5A.5.5 0 016.5 2h3a.5.5 0 01.5.5V4" stroke="currentColor" strokeWidth="1.3" />
+            </svg>
+          )},
+          { cap: "coding",   label: "Code",     icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M5 5l-3 3 3 3M11 5l3 3-3 3M9 3l-2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )},
+          { cap: "document", label: "Document", icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <rect x="3" y="1.5" width="10" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M6 5h4M6 8h4M6 11h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          )},
+          { cap: "text",     label: "Chat",     icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 2v-2H3a1 1 0 01-1-1V3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+            </svg>
+          )},
+          { cap: "image",    label: "Image",    icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="5.5" cy="6" r="1.2" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M1.5 11l3.5-3.5 3 3 2-2 3.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )},
+          { cap: "video",    label: "Video",    icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <rect x="1" y="3" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M11 6l4-2v8l-4-2V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+            </svg>
+          )},
+          { cap: "flagship", label: "Flagship", icon: (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.4l-3.7 2.2.7-4.1-3-2.9 4.2-.9L8 1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+            </svg>
+          )},
+        ] as const).map(({ cap, label, icon }) => {
+          const count = cap === "all"
+            ? records.length
+            : records.filter((r) => inferCapabilities(r.modelId).includes(cap as CapabilityTag)).length
+          if (cap !== "all" && count === 0) return null
+
+          const ACTIVE_COLORS: Record<string, string> = {
+            all:      "border-primary/50 bg-primary/10 text-primary",
+            agent:    "border-emerald-400/50 bg-emerald-400/10 text-emerald-400",
             coding:   "border-violet-400/50 bg-violet-400/10 text-violet-400",
+            document: "border-orange-400/50 bg-orange-400/10 text-orange-400",
             text:     "border-sky-400/50 bg-sky-400/10 text-sky-400",
             image:    "border-amber-400/50 bg-amber-400/10 text-amber-400",
             video:    "border-rose-400/50 bg-rose-400/10 text-rose-400",
+            flagship: "border-yellow-400/50 bg-yellow-400/10 text-yellow-400",
           }
-          const CAP_LABELS: Record<string, string> = {
-            all: "All", flagship: "Flagship", coding: "Coding", text: "Text", image: "Image", video: "Video",
-          }
-          const count = cap === "all" ? records.length : records.filter((r) => inferCapabilities(r.modelId).includes(cap as CapabilityTag)).length
-          if (cap !== "all" && count === 0) return null
+
+          const isActive = filterCap === cap
           return (
             <button
               key={cap}
               onClick={() => setFilterCap(cap as CapabilityTag | "all")}
-              className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
-                filterCap === cap
-                  ? (CAP_COLORS[cap] ?? "border-primary/50 bg-primary/10 text-primary")
-                  : "border-border text-muted-foreground hover:bg-secondary"
+              className={`flex items-center gap-1.5 flex-shrink-0 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition-all ${
+                isActive
+                  ? (ACTIVE_COLORS[cap] ?? "border-primary/50 bg-primary/10 text-primary")
+                  : "border-border/50 text-muted-foreground/50 hover:bg-secondary/60 hover:text-foreground/70 hover:border-border"
               }`}
             >
-              {CAP_LABELS[cap]} ({count})
+              <span className={isActive ? "" : "opacity-60"}>{icon}</span>
+              {label}
+              <span className={`text-[9px] font-mono ${isActive ? "opacity-90" : "opacity-40"}`}>
+                {count}
+              </span>
             </button>
           )
         })}
       </div>
 
-      {/* Provider filter chips */}
+      {/* ── Model search input ──────────────────────────────────────────── */}
+      <div className="relative">
+        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 pointer-events-none">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M10 10l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </span>
+        <input
+          type="text"
+          value={modelSearch}
+          onChange={(e) => setModelSearch(e.target.value)}
+          placeholder={`Search ${filterCap === "all" ? "all" : filterCap} models...`}
+          className="w-full pl-7 pr-3 py-1.5 text-[11px] rounded-lg border border-border/50 bg-secondary/30 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/40 focus:bg-secondary/60 transition-colors"
+        />
+        {modelSearch && (
+          <button
+            onClick={() => setModelSearch("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* ── Provider filter chips ───────────────────────────────────────── */}
       {providers.length > 1 && (
         <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-muted-foreground/30">
+            <FilterIcon />
+          </span>
           <button
             onClick={() => setFilterProvider("all")}
             className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
               filterProvider === "all"
                 ? "border-primary/50 bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:bg-secondary"
+                : "border-border/50 text-muted-foreground/50 hover:bg-secondary"
             }`}
           >
-            All providers ({records.length})
+            All ({records.length})
           </button>
           {providers.map((pid) => {
             const count = records.filter((r) => r.providerId === pid).length
@@ -801,7 +917,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
                 className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
                   filterProvider === pid
                     ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
-                    : "border-border text-muted-foreground hover:bg-secondary"
+                    : "border-border/50 text-muted-foreground/50 hover:bg-secondary"
                 }`}
               >
                 {name} ({count})
