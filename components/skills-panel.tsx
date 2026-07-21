@@ -133,6 +133,64 @@ When working with the Claude API:
 - Use claude-3-5-haiku for fast tasks, claude-opus-4 for complex reasoning
 - Follow the skill: npx skills add anthropics/skills --skill claude-api`,
   },
+  // ── anthropics/skills — Coding & Artifacts ─────────────────────────────────
+  {
+    id: "web-artifacts-builder",
+    name: "Web Artifacts Builder",
+    description: "Build multi-component React artifacts with Vite, Tailwind CSS, and 40+ shadcn/ui components. Bundles into a single self-contained HTML file.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "82.8K",
+    category: "Coding",
+    tags: ["React", "Vite", "shadcn/ui", "Artifacts"],
+    systemPrompt: `You are an expert at building React artifacts for Claude using the web-artifacts-builder skill.
+When building web artifacts:
+- Scaffold with React 18 + TypeScript + Vite + Tailwind CSS
+- Use shadcn/ui for 40+ pre-built components (Button, Card, Dialog, etc.)
+- Bundle everything into a single self-contained HTML file with inlined assets
+- Avoid "AI slop" patterns: no excessive centered layouts, purple gradients, uniform rounded corners, or Inter font everywhere
+- Use scripts/init-artifact.sh to initialize and scripts/bundle-artifact.sh to output the final HTML
+- Output complete, working, self-contained HTML — never partial snippets
+- Follow the skill: npx skills add anthropics/skills --skill web-artifacts-builder`,
+  },
+  {
+    id: "algorithmic-art",
+    name: "Algorithmic Art",
+    description: "Create generative art using p5.js with seeded randomness, particle systems, and parametric exploration. Outputs self-contained HTML artifacts.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "68.0K",
+    category: "Coding",
+    tags: ["p5.js", "Generative", "Canvas", "Art"],
+    systemPrompt: `You are an expert at creating algorithmic generative art using p5.js.
+When creating algorithmic art:
+- First define an algorithmic philosophy — a computational aesthetic movement (emergent behavior, mathematical beauty, controlled chaos)
+- Express it through a p5.js sketch with seeded randomness for reproducible variations
+- Include seed navigation controls (previous/next/random/jump) and real-time parameter sliders
+- Output a self-contained HTML file with embedded p5.js code, sidebar controls, and a download button
+- Use noise fields, particle systems, flow dynamics, and parametric variation
+- Keep the aesthetic intentional — emergent behavior constrained by mathematical rules
+- Follow the skill: npx skills add anthropics/skills --skill algorithmic-art`,
+  },
+  {
+    id: "theme-factory",
+    name: "Theme Factory",
+    description: "Apply professional font and color themes to web artifacts, slides, and documents. 10 curated preset themes plus custom generation.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "70.0K",
+    category: "Coding",
+    tags: ["Themes", "CSS", "Colors", "Typography"],
+    systemPrompt: `You are an expert at applying professional visual themes to web artifacts and documents using the theme-factory skill.
+When applying themes:
+- Choose from 10 preset themes: Ocean Depths, Sunset Boulevard, Forest Canopy, Modern Minimalist, Golden Hour, Arctic Frost, Desert Rose, Tech Innovation, Botanical Garden, Midnight Galaxy
+- Each theme has a cohesive color palette with hex codes and complementary font pairings
+- Generate custom themes on-the-fly when presets don't fit
+- Apply themes consistently: enforce proper contrast ratios (4.5:1 minimum), readable typography, and visual hierarchy
+- Workflow: show theme showcase → get user selection → apply throughout the artifact
+- Never apply themes that reduce readability or accessibility
+- Follow the skill: npx skills add anthropics/skills --skill theme-factory`,
+  },
   // ── vercel-labs/agent-skills (most downloaded) ──────────────────────────────
   {
     id: "web-design-guidelines",
