@@ -10,11 +10,11 @@ export interface Skill {
   id: string
   name: string
   description: string
-  repo: string           // e.g. "anthropics/skills"
-  registrySlug: string   // e.g. "anthropics/skills"
-  installs: string       // human-readable, e.g. "679.3K"
+  repo: string
+  registrySlug: string
+  installs: string
   category: string
-  systemPrompt: string   // injected when skill is activated
+  systemPrompt: string
   tags: string[]
 }
 
@@ -26,7 +26,7 @@ export interface ActiveSkillConfig {
 // ── Curated skill catalogue ───────────────────────────────────────────────────
 
 const SKILLS: Skill[] = [
-  // ── anthropics/skills (most downloaded) ────────────────────────────────────
+  // ── anthropics/skills ──────────────────────────────────────────────────────
   {
     id: "frontend-design",
     name: "Frontend Design",
@@ -133,7 +133,64 @@ When working with the Claude API:
 - Use claude-3-5-haiku for fast tasks, claude-opus-4 for complex reasoning
 - Follow the skill: npx skills add anthropics/skills --skill claude-api`,
   },
-  // ── vercel-labs/agent-skills (most downloaded) ──────────────────────────────
+  // ── anthropics/skills — Coding & Artifacts ─────────────────────────────────
+  {
+    id: "web-artifacts-builder",
+    name: "Web Artifacts Builder",
+    description: "Build multi-component React artifacts with Vite, Tailwind CSS, and 40+ shadcn/ui components. Bundles into a single self-contained HTML file.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "82.8K",
+    category: "Coding",
+    tags: ["React", "Vite", "shadcn/ui", "Artifacts"],
+    systemPrompt: `You are an expert at building React artifacts for Claude using the web-artifacts-builder skill.
+When building web artifacts:
+- Scaffold with React 18 + TypeScript + Vite + Tailwind CSS
+- Use shadcn/ui for 40+ pre-built components (Button, Card, Dialog, etc.)
+- Bundle everything into a single self-contained HTML file with inlined assets
+- Avoid "AI slop" patterns: no excessive centered layouts, purple gradients, uniform rounded corners, or Inter font everywhere
+- Output complete, working, self-contained HTML — never partial snippets
+- Always wrap output in a fenced \`\`\`html block containing a full <!DOCTYPE html> document
+- Follow the skill: npx skills add anthropics/skills --skill web-artifacts-builder`,
+  },
+  {
+    id: "algorithmic-art",
+    name: "Algorithmic Art",
+    description: "Create generative art using p5.js with seeded randomness, particle systems, and parametric exploration. Outputs self-contained HTML artifacts.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "68.0K",
+    category: "Coding",
+    tags: ["p5.js", "Generative", "Canvas", "Art"],
+    systemPrompt: `You are an expert at creating algorithmic generative art using p5.js.
+When creating algorithmic art:
+- First define an algorithmic philosophy — a computational aesthetic movement (emergent behavior, mathematical beauty, controlled chaos)
+- Express it through a p5.js sketch with seeded randomness for reproducible variations
+- Include seed navigation controls (previous/next/random/jump) and real-time parameter sliders
+- Output a self-contained HTML file with embedded p5.js code, sidebar controls, and a download button
+- Use noise fields, particle systems, flow dynamics, and parametric variation
+- Always wrap output in a fenced \`\`\`html block containing a full <!DOCTYPE html> document
+- Follow the skill: npx skills add anthropics/skills --skill algorithmic-art`,
+  },
+  {
+    id: "theme-factory",
+    name: "Theme Factory",
+    description: "Apply professional font and color themes to web artifacts, slides, and documents. 10 curated preset themes plus custom generation.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "70.0K",
+    category: "Coding",
+    tags: ["Themes", "CSS", "Colors", "Typography"],
+    systemPrompt: `You are an expert at applying professional visual themes to web artifacts and documents using the theme-factory skill.
+When applying themes:
+- Choose from 10 preset themes: Ocean Depths, Sunset Boulevard, Forest Canopy, Modern Minimalist, Golden Hour, Arctic Frost, Desert Rose, Tech Innovation, Botanical Garden, Midnight Galaxy
+- Each theme has a cohesive color palette with hex codes and complementary font pairings
+- Generate custom themes on-the-fly when presets don't fit
+- Apply themes consistently: enforce proper contrast ratios (4.5:1 minimum), readable typography, and visual hierarchy
+- Always wrap output in a fenced \`\`\`html block containing a full <!DOCTYPE html> document
+- Follow the skill: npx skills add anthropics/skills --skill theme-factory`,
+  },
+  // ── vercel-labs/agent-skills ───────────────────────────────────────────────
   {
     id: "web-design-guidelines",
     name: "Web Design Guidelines",
@@ -213,6 +270,40 @@ When searching for skills:
   },
 ]
 
+// ── Preset stacks (like v0) ───────────────────────────────────────────────────
+
+interface SkillStack {
+  id: string
+  label: string
+  description: string
+  skillIds: string[]
+  color: string
+}
+
+const SKILL_STACKS: SkillStack[] = [
+  {
+    id: "v0-stack",
+    label: "v0 Stack",
+    description: "Web Artifacts Builder + Theme Factory + Frontend Design — the same combination that powers Vercel v0's artifact generation.",
+    skillIds: ["web-artifacts-builder", "theme-factory", "frontend-design"],
+    color: "text-violet-400 border-violet-400/30 bg-violet-400/10",
+  },
+  {
+    id: "art-stack",
+    label: "Art Stack",
+    description: "Algorithmic Art + Theme Factory + Canvas Design — for generative graphics and creative coding.",
+    skillIds: ["algorithmic-art", "theme-factory", "canvas-design"],
+    color: "text-sky-400 border-sky-400/30 bg-sky-400/10",
+  },
+  {
+    id: "full-coding",
+    label: "Full Coding",
+    description: "Web Artifacts Builder + Web Design Guidelines + Vercel React Best Practices — for high-quality production web apps.",
+    skillIds: ["web-artifacts-builder", "web-design-guidelines", "vercel-react-best-practices"],
+    color: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10",
+  },
+]
+
 const CATEGORIES = Array.from(new Set(SKILLS.map((s) => s.category))).sort()
 const REGISTRIES = [
   { id: "all", label: "All registries" },
@@ -241,35 +332,18 @@ function CheckIcon() {
 
 function CopyIcon() {
   return (
-    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="5" y="5" width="8" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M3 11V3a1 1 0 011-1h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function ZapIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M9 1L3 9h5l-1 6 7-8H9l1-6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function SearchIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M10 10l3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" strokeWidth="1.4" />
     </svg>
   )
 }
 
 function TerminalIcon() {
   return (
-    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M4 6l3 3-3 3M9 12h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <polyline points="2 5 7 8 2 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="9" y1="11" x2="14" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
@@ -277,34 +351,51 @@ function TerminalIcon() {
 function LinkIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M7 9a3.5 3.5 0 005 0l2-2a3.5 3.5 0 00-5-5l-1 1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M9 7a3.5 3.5 0 00-5 0L2 9a3.5 3.5 0 005 5l1-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M6.5 9.5a4 4 0 005.657 0l2-2a4 4 0 00-5.657-5.657l-1 1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M9.5 6.5a4 4 0 00-5.657 0l-2 2a4 4 0 005.657 5.657l1-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   )
 }
 
-// ── Skill card ────────────────────────────────────────────────────────────────
+function ZapIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path d="M9 1L3 9h5l-1 6 6-8h-5l1-6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function CodeIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <polyline points="4 5 1 8 4 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points="12 5 15 8 12 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="9" y1="3" x2="7" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// ── SkillCard ─────────────────────────────────────────────────────────────────
 
 function SkillCard({
   skill,
   isActive,
+  workingKeyCount,
   onActivate,
   onDeactivate,
-  workingKeyCount,
 }: {
   skill: Skill
   isActive: boolean
+  workingKeyCount: number
   onActivate: (skill: Skill) => void
   onDeactivate: (skillId: string) => void
-  workingKeyCount: number
 }) {
+  const [expanded, setExpanded] = useState(false)
   const [copiedInstall, setCopiedInstall] = useState(false)
   const [copiedPrompt, setCopiedPrompt] = useState(false)
-  const [expanded, setExpanded] = useState(false)
 
-  const installCmd = `npx skills add ${skill.registrySlug}${skill.registrySlug.includes("/skills") && !skill.registrySlug.endsWith("/skills") ? ` --skill ${skill.id}` : skill.repo.startsWith("vercel-labs/agent") ? ` --skill ${skill.id}` : ""}`
-
-  const handleCopyInstall = useCallback(async () => {
+  const handleCopyInstall = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation()
     const cmd = skill.registrySlug === "vercel-labs/skills"
       ? `npx skills add vercel-labs/skills`
       : `npx skills add ${skill.registrySlug} --skill ${skill.id}`
@@ -313,35 +404,54 @@ function SkillCard({
     setTimeout(() => setCopiedInstall(false), 2000)
   }, [skill])
 
-  const handleCopyPrompt = useCallback(async () => {
+  const handleCopyPrompt = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation()
     await copyToClipboard(skill.systemPrompt).catch(() => {})
     setCopiedPrompt(true)
     setTimeout(() => setCopiedPrompt(false), 2000)
-  }, [skill])
+  }, [skill.systemPrompt])
 
   const repoColor =
-    skill.registrySlug.startsWith("anthropics") ? "text-amber-400 border-amber-400/30 bg-amber-400/10" :
-    skill.registrySlug.startsWith("vercel-labs/agent") ? "text-sky-400 border-sky-400/30 bg-sky-400/10" :
-    "text-violet-400 border-violet-400/30 bg-violet-400/10"
+    skill.registrySlug === "anthropics/skills"
+      ? "border-amber-400/30 text-amber-400/70"
+      : skill.registrySlug === "vercel-labs/agent-skills"
+      ? "border-primary/30 text-primary/60"
+      : "border-emerald-400/30 text-emerald-400/70"
 
   return (
-    <div className={`flex flex-col border rounded-xl transition-all overflow-hidden ${
-      isActive
-        ? "border-primary/50 bg-primary/5 shadow-[0_0_0_1px_hsl(var(--primary)/0.2)]"
-        : "border-border bg-secondary/10 hover:border-border/80"
-    }`}>
-      {/* Header */}
-      <div className="flex items-start gap-3 p-3 cursor-pointer" onClick={() => setExpanded((v) => !v)}>
-        <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border ${
-          isActive ? "border-primary/40 bg-primary/15 text-primary" : "border-border text-muted-foreground/50"
-        }`}>
-          <SkillIcon />
+    <div className={`rounded-xl border transition-colors ${isActive ? "border-primary/40 bg-primary/5" : "border-border/60 bg-card/50"}`}>
+      {/* Header row */}
+      <button
+        className="w-full flex items-start gap-2.5 p-3 text-left"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        {/* Checkbox toggle */}
+        <div
+          role="checkbox"
+          aria-checked={isActive}
+          onClick={(e) => {
+            e.stopPropagation()
+            isActive ? onDeactivate(skill.id) : onActivate(skill)
+          }}
+          className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer transition-colors ${
+            isActive
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border/60 hover:border-primary/50"
+          }`}
+        >
+          {isActive && <CheckIcon />}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[11px] font-semibold text-foreground/90">{skill.name}</span>
             <span className="text-[8px] font-mono text-muted-foreground/40">{skill.installs} installs</span>
+            {skill.category === "Coding" && (
+              <span className="text-[8px] px-1.5 py-0.5 rounded border border-sky-400/30 bg-sky-400/10 text-sky-400 font-semibold flex items-center gap-0.5">
+                <CodeIcon />
+                Code tab
+              </span>
+            )}
             {isActive && (
               <span className="text-[8px] px-1.5 py-0.5 rounded-full border border-primary/40 bg-primary/15 text-primary font-semibold">
                 ACTIVE
@@ -362,7 +472,19 @@ function SkillCard({
             ))}
           </div>
         </div>
-      </div>
+
+        {/* Expand chevron */}
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          className={`w-3 h-3 flex-shrink-0 text-muted-foreground/40 mt-1 transition-transform ${expanded ? "rotate-180" : ""}`}
+        >
+          <path d="M4 6l4 4 4-4" />
+        </svg>
+      </button>
 
       {/* Expanded: install + prompt */}
       {expanded && (
@@ -390,29 +512,6 @@ function SkillCard({
                 {copiedInstall ? <CheckIcon /> : <CopyIcon />}
                 {copiedInstall ? "Copied" : "Copy"}
               </button>
-            </div>
-          </div>
-
-          {/* Usage instructions */}
-          <div>
-            <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50 mb-1.5 font-semibold">
-              Usage
-            </p>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2 bg-secondary/40 rounded-lg px-3 py-2 border border-border/50">
-                <TerminalIcon />
-                <code className="flex-1 text-[10px] font-mono text-foreground/70 truncate">
-                  {skill.registrySlug === "vercel-labs/skills"
-                    ? `npx skills use vercel-labs/skills`
-                    : `npx skills use ${skill.registrySlug} --skill ${skill.id}`}
-                </code>
-              </div>
-              <div className="flex items-center gap-2 bg-secondary/40 rounded-lg px-3 py-2 border border-border/50">
-                <TerminalIcon />
-                <code className="flex-1 text-[10px] font-mono text-foreground/70 truncate">
-                  {`npx skills use ${skill.registrySlug.split("/").pop()} --skill ${skill.id} --agent claude-code`}
-                </code>
-              </div>
             </div>
           </div>
 
@@ -451,81 +550,94 @@ function SkillCard({
           </a>
         </div>
       )}
+    </div>
+  )
+}
 
-      {/* Activate / deactivate row */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border/50 bg-background/10">
-        {isActive ? (
-          <>
-            <span className="flex items-center gap-1.5 text-[9px] text-primary/80 flex-1">
-              <ZapIcon />
-              Active on {workingKeyCount} key{workingKeyCount !== 1 ? "s" : ""}
+// ── Preset stack card ──────────────────────────────────────────────────────────
+
+function StackCard({
+  stack,
+  activeSkillIds,
+  onApply,
+  onClear,
+}: {
+  stack: SkillStack
+  activeSkillIds: Set<string>
+  onApply: (stack: SkillStack) => void
+  onClear: (stack: SkillStack) => void
+}) {
+  const isApplied = stack.skillIds.every((id) => activeSkillIds.has(id))
+  const partiallyApplied = !isApplied && stack.skillIds.some((id) => activeSkillIds.has(id))
+
+  return (
+    <div className={`rounded-xl border p-3 flex flex-col gap-2 transition-colors ${
+      isApplied
+        ? "border-primary/40 bg-primary/5"
+        : partiallyApplied
+        ? "border-border/80 bg-card/60"
+        : "border-border/50 bg-card/30"
+    }`}>
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${stack.color}`}>
+              {stack.label}
             </span>
-            <button
-              onClick={() => onDeactivate(skill.id)}
-              className="text-[9px] px-3 py-1.5 rounded-lg border border-red-400/30 bg-red-400/10 text-red-400 hover:bg-red-400/20 transition-colors"
-            >
-              Deactivate
-            </button>
-          </>
-        ) : (
-          <>
-            <span className="text-[9px] text-muted-foreground/40 flex-1">
-              Activates on all working keys
-            </span>
-            <button
-              onClick={() => onActivate(skill)}
-              className="flex items-center gap-1.5 text-[9px] px-3 py-1.5 rounded-lg border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-            >
-              <ZapIcon />
-              Activate
-            </button>
-          </>
-        )}
+            {isApplied && (
+              <span className="text-[8px] px-1.5 py-0.5 rounded-full border border-primary/40 bg-primary/15 text-primary font-semibold">
+                ACTIVE
+              </span>
+            )}
+            {partiallyApplied && (
+              <span className="text-[8px] text-muted-foreground/50">partial</span>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed">{stack.description}</p>
+          {/* Skill chips */}
+          <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+            {stack.skillIds.map((id) => {
+              const s = SKILLS.find((sk) => sk.id === id)
+              const active = activeSkillIds.has(id)
+              return (
+                <span key={id} className={`text-[8px] px-1.5 py-0.5 rounded border font-mono transition-colors ${
+                  active ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground/50"
+                }`}>
+                  {s?.name ?? id}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+        <button
+          onClick={() => isApplied ? onClear(stack) : onApply(stack)}
+          className={`flex-shrink-0 flex items-center gap-1.5 text-[9px] px-2.5 py-1.5 rounded-lg border transition-colors ${
+            isApplied
+              ? "border-red-400/30 bg-red-400/10 text-red-400 hover:bg-red-400/20"
+              : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+          }`}
+        >
+          <ZapIcon />
+          {isApplied ? "Clear" : "Apply"}
+        </button>
       </div>
     </div>
   )
 }
 
-// ── Active skill banner ───────────────────────────────────────────────────────
+// ── Active skills banner ──────────────────────────────────────────────────────
 
-function ActiveSkillBanner({
-  activeSkill,
+function ActiveSkillsBanner({
+  activeSkills,
   workingKeys,
+  onDeactivateAll,
   onDeactivate,
 }: {
-  activeSkill: Skill
+  activeSkills: Skill[]
   workingKeys: WorkingKeyRecord[]
-  onDeactivate: () => void
+  onDeactivateAll: () => void
+  onDeactivate: (id: string) => void
 }) {
-  const [copied, setCopied] = useState(false)
-
-  const snippet = `// Active skill: ${activeSkill.name}
-// System prompt injected into all working key requests:
-const systemPrompt = \`${activeSkill.systemPrompt.split("\n").slice(0, 3).join("\\n")}\n...\`
-
-// Example fetch with active skill:
-const providers = [
-${workingKeys.slice(0, 3).map((k) => `  { provider: "${k.providerId}", model: "${k.modelId}", apiKey: "${k.apiKey.slice(0, 8)}..." }`).join(",\n")}
-]
-
-for (const { provider, model, apiKey } of providers) {
-  await fetch(endpoint, {
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: "Your prompt here" },
-      ],
-    }),
-  })
-}`
-
-  const handleCopy = useCallback(async () => {
-    await copyToClipboard(snippet).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }, [snippet])
-
   return (
     <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 flex flex-col gap-2.5">
       <div className="flex items-start gap-2.5">
@@ -534,60 +646,58 @@ for (const { provider, model, apiKey } of providers) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-semibold text-primary">{activeSkill.name}</span>
-            <span className="text-[8px] px-1.5 py-0.5 rounded-full border border-primary/40 bg-primary/15 text-primary font-semibold">ACTIVE</span>
+            <span className="text-[11px] font-semibold text-primary">
+              {activeSkills.length} skill{activeSkills.length !== 1 ? "s" : ""} active
+            </span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded-full border border-primary/40 bg-primary/15 text-primary font-semibold">
+              ACTIVE
+            </span>
           </div>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-            System prompt injected into <span className="text-foreground/80 font-semibold">{workingKeys.length} working key{workingKeys.length !== 1 ? "s" : ""}</span> across {Array.from(new Set(workingKeys.map((k) => k.providerId))).length} provider{Array.from(new Set(workingKeys.map((k) => k.providerId))).length !== 1 ? "s" : ""}
+            System prompts composed and injected into{" "}
+            <span className="text-foreground/80 font-semibold">
+              {workingKeys.length} working key{workingKeys.length !== 1 ? "s" : ""}
+            </span>
           </p>
         </div>
         <button
-          onClick={onDeactivate}
+          onClick={onDeactivateAll}
           className="flex-shrink-0 text-[9px] px-2.5 py-1.5 rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10 transition-colors"
         >
-          Deactivate
+          Clear all
         </button>
       </div>
 
-      {/* Integration snippet */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
-            Integration snippet
-          </span>
-          <button
-            onClick={handleCopy}
-            className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors ${
-              copied
-                ? "border-green-500/40 bg-green-500/10 text-green-400"
-                : "border-border text-muted-foreground/50 hover:text-foreground"
-            }`}
+      {/* Active skill chips with individual remove */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {activeSkills.map((s) => (
+          <span
+            key={s.id}
+            className="flex items-center gap-1 text-[9px] px-2 py-1 rounded-lg border border-primary/30 bg-primary/10 text-primary"
           >
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
-        <pre className="text-[9px] text-muted-foreground/60 bg-secondary/40 rounded-lg p-2.5 border border-border/50 overflow-x-auto whitespace-pre font-mono leading-relaxed max-h-40">
-          {snippet}
-        </pre>
+            {s.name}
+            <button
+              onClick={() => onDeactivate(s.id)}
+              className="hover:text-red-400 transition-colors ml-0.5"
+              aria-label={`Remove ${s.name}`}
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="w-2.5 h-2.5">
+                <path d="M4 4l8 8M12 4l-8 8" />
+              </svg>
+            </button>
+          </span>
+        ))}
       </div>
 
-      {/* Provider badges */}
-      {workingKeys.length > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[9px] text-muted-foreground/50">Integrated:</span>
-          {Array.from(new Set(workingKeys.map((k) => k.providerName))).slice(0, 8).map((name) => (
-            <span key={name} className="text-[8px] px-1.5 py-0.5 rounded border border-primary/25 bg-primary/10 text-primary/70">
-              {name}
-            </span>
-          ))}
-          {Array.from(new Set(workingKeys.map((k) => k.providerName))).length > 8 && (
-            <span className="text-[8px] text-muted-foreground/40">
-              +{Array.from(new Set(workingKeys.map((k) => k.providerName))).length - 8} more
-            </span>
-          )}
-        </div>
-      )}
+      {/* Composed system prompt preview */}
+      <div>
+        <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
+          Composed system prompt ({activeSkills.length} skill{activeSkills.length !== 1 ? "s" : ""} merged)
+        </span>
+        <pre className="mt-1.5 text-[9px] text-muted-foreground/60 bg-secondary/40 rounded-lg p-2.5 border border-border/50 overflow-auto max-h-24 leading-relaxed whitespace-pre-wrap font-mono">
+          {activeSkills.map((s, i) => `### Skill ${i + 1}: ${s.name}\n${s.systemPrompt.split("\n").slice(0, 3).join("\n")}\n...`).join("\n\n")}
+        </pre>
+      </div>
     </div>
   )
 }
@@ -595,30 +705,65 @@ for (const { provider, model, apiKey } of providers) {
 // ── Main SkillsPanel ──────────────────────────────────────────────────────────
 
 interface SkillsPanelProps {
-  /** Called when a skill is activated/deactivated, so parent can inject the system prompt */
-  onActiveSkillChange?: (config: ActiveSkillConfig | null) => void
+  onActiveSkillChange?: (configs: ActiveSkillConfig[]) => void
 }
 
 export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
-  const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
+  const [activeSkillIds, setActiveSkillIds] = useState<Set<string>>(new Set())
   const [filterCategory, setFilterCategory] = useState<string>("all")
   const [filterRegistry, setFilterRegistry] = useState<string>("all")
   const [search, setSearch] = useState("")
 
   const workingKeys = loadWorkingKeys()
-  const activeSkill = SKILLS.find((s) => s.id === activeSkillId) ?? null
+  const activeSkills = SKILLS.filter((s) => activeSkillIds.has(s.id))
 
-  const handleActivate = useCallback((skill: Skill) => {
-    setActiveSkillId(skill.id)
-    onActiveSkillChange?.({ skillId: skill.id, systemPrompt: skill.systemPrompt })
+  const notify = useCallback((ids: Set<string>) => {
+    const configs = SKILLS
+      .filter((s) => ids.has(s.id))
+      .map((s) => ({ skillId: s.id, systemPrompt: s.systemPrompt }))
+    onActiveSkillChange?.(configs)
   }, [onActiveSkillChange])
 
-  const handleDeactivate = useCallback((skillId?: string) => {
-    if (skillId === undefined || skillId === activeSkillId) {
-      setActiveSkillId(null)
-      onActiveSkillChange?.(null)
-    }
-  }, [activeSkillId, onActiveSkillChange])
+  const handleActivate = useCallback((skill: Skill) => {
+    setActiveSkillIds((prev) => {
+      const next = new Set(prev)
+      next.add(skill.id)
+      notify(next)
+      return next
+    })
+  }, [notify])
+
+  const handleDeactivate = useCallback((skillId: string) => {
+    setActiveSkillIds((prev) => {
+      const next = new Set(prev)
+      next.delete(skillId)
+      notify(next)
+      return next
+    })
+  }, [notify])
+
+  const handleDeactivateAll = useCallback(() => {
+    setActiveSkillIds(new Set())
+    onActiveSkillChange?.([])
+  }, [onActiveSkillChange])
+
+  const handleApplyStack = useCallback((stack: SkillStack) => {
+    setActiveSkillIds((prev) => {
+      const next = new Set(prev)
+      stack.skillIds.forEach((id) => next.add(id))
+      notify(next)
+      return next
+    })
+  }, [notify])
+
+  const handleClearStack = useCallback((stack: SkillStack) => {
+    setActiveSkillIds((prev) => {
+      const next = new Set(prev)
+      stack.skillIds.forEach((id) => next.delete(id))
+      notify(next)
+      return next
+    })
+  }, [notify])
 
   const filtered = SKILLS.filter((s) => {
     if (filterCategory !== "all" && s.category !== filterCategory) return false
@@ -646,9 +791,9 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
             {SKILLS.length} available
           </span>
-          {activeSkill && (
+          {activeSkills.length > 0 && (
             <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
-              1 active
+              {activeSkills.length} active
             </span>
           )}
         </div>
@@ -663,12 +808,13 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
         </a>
       </div>
 
-      {/* Active skill banner */}
-      {activeSkill && (
-        <ActiveSkillBanner
-          activeSkill={activeSkill}
+      {/* Active skills banner */}
+      {activeSkills.length > 0 && (
+        <ActiveSkillsBanner
+          activeSkills={activeSkills}
           workingKeys={workingKeys}
-          onDeactivate={() => handleDeactivate()}
+          onDeactivateAll={handleDeactivateAll}
+          onDeactivate={handleDeactivate}
         />
       )}
 
@@ -678,6 +824,24 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
           No working keys saved yet. Run a batch test first — skills will be integrated with all working keys.
         </div>
       )}
+
+      {/* Preset stacks */}
+      <div>
+        <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold mb-2">
+          Preset Stacks
+        </p>
+        <div className="flex flex-col gap-2">
+          {SKILL_STACKS.map((stack) => (
+            <StackCard
+              key={stack.id}
+              stack={stack}
+              activeSkillIds={activeSkillIds}
+              onApply={handleApplyStack}
+              onClear={handleClearStack}
+            />
+          ))}
+        </div>
+      </div>
 
       {/* Registry filter */}
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -698,66 +862,62 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
 
       {/* Category filter */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        {["all", ...CATEGORIES].map((cat) => (
+        <button
+          onClick={() => setFilterCategory("all")}
+          className={`text-[8px] px-2 py-0.5 rounded-full border transition-colors ${
+            filterCategory === "all"
+              ? "border-primary/50 bg-primary/10 text-primary"
+              : "border-border text-muted-foreground/50 hover:bg-secondary"
+          }`}
+        >
+          All
+        </button>
+        {CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setFilterCategory(cat)}
-            className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors capitalize ${
+            className={`text-[8px] px-2 py-0.5 rounded-full border transition-colors ${
               filterCategory === cat
-                ? "border-sky-400/50 bg-sky-400/10 text-sky-400"
-                : "border-border text-muted-foreground hover:bg-secondary"
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground/50 hover:bg-secondary"
             }`}
           >
-            {cat === "all" ? "All" : cat}
+            {cat}
           </button>
         ))}
       </div>
 
       {/* Search */}
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40">
-          <SearchIcon />
-        </span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/40 pointer-events-none">
+          <circle cx="6.5" cy="6.5" r="4" />
+          <path d="M11 11l3 3" />
+        </svg>
         <input
           type="text"
-          placeholder="Search skills..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-8 pr-3 py-2 text-[11px] bg-secondary/30 border border-border rounded-xl placeholder:text-muted-foreground/40 text-foreground focus:outline-none focus:border-primary/40 focus:bg-secondary/50 transition-colors"
+          placeholder="Search skills..."
+          className="w-full pl-7 pr-3 py-1.5 text-[10px] bg-secondary/40 border border-border/60 rounded-lg focus:outline-none focus:border-primary/40 text-foreground placeholder:text-muted-foreground/40"
         />
       </div>
 
-      {/* Skills list */}
+      {/* Skill list */}
       <div className="flex flex-col gap-2">
         {filtered.length === 0 ? (
-          <p className="text-center text-[11px] text-muted-foreground/50 py-6">
-            No skills match your filter.
-          </p>
+          <p className="text-[10px] text-muted-foreground/50 text-center py-4">No skills match your filters.</p>
         ) : (
           filtered.map((skill) => (
             <SkillCard
               key={skill.id}
               skill={skill}
-              isActive={activeSkillId === skill.id}
+              isActive={activeSkillIds.has(skill.id)}
+              workingKeyCount={workingKeys.length}
               onActivate={handleActivate}
               onDeactivate={handleDeactivate}
-              workingKeyCount={workingKeys.length}
             />
           ))
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="flex flex-col gap-1 pt-1">
-        <p className="text-[9px] text-muted-foreground/40 text-center">
-          Skills from{" "}
-          <a href="https://skills.sh" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">skills.sh</a>
-          {" "}· Install with{" "}
-          <code className="font-mono">npx skills add</code>
-          {" "}· Powered by the{" "}
-          <a href="https://agentskills.io" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">Agent Skills</a>
-          {" "}spec
-        </p>
       </div>
     </div>
   )
