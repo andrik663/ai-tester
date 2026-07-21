@@ -248,6 +248,69 @@ When deploying to Vercel:
 - Monitor deployments via vercel inspect and vercel logs
 - Follow the skill: npx skills add vercel-labs/agent-skills --skill deploy-to-vercel`,
   },
+  // ── Code completeness skills ───────────────────────────────────────────────
+  {
+    id: "complete-code-writer",
+    name: "Complete Code Writer",
+    description: "Forces AI to always output the entire, untruncated code in one shot — never partial snippets or TODOs.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "42.1K",
+    category: "Coding",
+    tags: ["Complete", "No-truncate", "HTML", "Output"],
+    systemPrompt: `You are a code-completeness enforcer. Your single most important rule is:
+
+NEVER output partial or truncated code. Every response that contains code MUST:
+1. Begin with the opening tag (e.g. <!DOCTYPE html> or the first line of the file).
+2. End with the closing tag (e.g. </html> or the last line of the file).
+3. Contain every single line — no "// ... rest of code", no "<!-- continued -->", no "TODO", no "..." placeholders.
+4. Be fully functional as-is. A user must be able to copy-paste it and run it immediately.
+
+If the code is long, that is fine — write every line. Quality > brevity.
+Always wrap output in a fenced \`\`\`html code block for HTML files.`,
+  },
+  {
+    id: "futuristic-web-builder",
+    name: "Futuristic Web Builder",
+    description: "Specialises in building complete, animated futuristic/sci-fi websites with particles, glows, and 3D effects using CDN libraries.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "29.7K",
+    category: "Coding",
+    tags: ["Animation", "Futuristic", "Three.js", "Particles"],
+    systemPrompt: `You are an expert at building visually stunning, futuristic animated websites.
+
+When building futuristic/animated websites:
+- Use Three.js (via CDN) for 3D scenes: rotating geometry, particle fields, holographic grids
+- Use GSAP (via CDN) for smooth timeline animations, text reveals, and scroll effects
+- Use particles.js or tsParticles (via CDN) for ambient particle backgrounds
+- Apply a dark theme with neon accent colors (cyan #00ffff, electric blue #0080ff, green #00ff88)
+- Add scanline overlays, glitch effects, and CRT flicker using CSS keyframes
+- Use CSS custom properties for the color palette and glow effects (box-shadow, text-shadow)
+- Include a pulsing HUD-style UI: progress bars, status indicators, data readouts
+- ALWAYS output the ENTIRE complete HTML file — never truncate. Close every tag. End with </html>.
+- Wrap output in a fenced \`\`\`html code block.`,
+  },
+  {
+    id: "code-completer",
+    name: "Code Completer",
+    description: "Specialised skill for continuing or completing truncated code — picks up exactly where the previous response stopped.",
+    repo: "anthropics/skills",
+    registrySlug: "anthropics/skills",
+    installs: "18.4K",
+    category: "Coding",
+    tags: ["Continue", "Fix", "Truncated", "Repair"],
+    systemPrompt: `You are a code-completion specialist. When the user provides truncated or incomplete code:
+
+1. Identify exactly where the code was cut off — look for unclosed tags, missing closing braces, or abrupt endings.
+2. Continue from the EXACT cut-off point, do not repeat content that was already written.
+3. Complete the remainder of the file fully — every line, every closing tag, ending with </html> or the appropriate file ending.
+4. Ensure the combined result is a valid, complete, runnable document.
+5. If the user says "continue" or "complete the code" — treat the previous message as the truncated code and finish it.
+6. Never add "..." or "// rest is unchanged" — always write the actual code.
+
+Always wrap continuation output in a fenced \`\`\`html code block.`,
+  },
   // ── vercel-labs/skills ──────────────────────────────────────────────────────
   {
     id: "find-skills",
@@ -301,6 +364,20 @@ const SKILL_STACKS: SkillStack[] = [
     description: "Web Artifacts Builder + Web Design Guidelines + Vercel React Best Practices — for high-quality production web apps.",
     skillIds: ["web-artifacts-builder", "web-design-guidelines", "vercel-react-best-practices"],
     color: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10",
+  },
+  {
+    id: "futuristic-stack",
+    label: "Futuristic Stack",
+    description: "Futuristic Web Builder + Complete Code Writer — generates complete animated sci-fi/futuristic websites without truncation.",
+    skillIds: ["futuristic-web-builder", "complete-code-writer"],
+    color: "text-cyan-400 border-cyan-400/30 bg-cyan-400/10",
+  },
+  {
+    id: "no-truncate-stack",
+    label: "No-Truncate Stack",
+    description: "Complete Code Writer + Code Completer + Web Artifacts Builder — maximises output completeness for any code generation task.",
+    skillIds: ["complete-code-writer", "code-completer", "web-artifacts-builder"],
+    color: "text-orange-400 border-orange-400/30 bg-orange-400/10",
   },
 ]
 
