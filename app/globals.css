@@ -133,10 +133,21 @@
       transparent 1px
     );
     background-size: 24px 24px;
+    height: 100%;
+    overflow: hidden;
   }
 
   html {
     @apply font-sans;
+    /* Lock the document itself from ever scrolling. The app's own layout
+       (h-dvh + overflow-hidden root, with overflow-y-auto only on the
+       message list / code view) is the single source of scrolling — if the
+       outer page were allowed to scroll too (e.g. a mobile browser's
+       dynamic viewport resize), it would carry the toolbar and Code/Split/
+       Preview switcher off-screen along with the content instead of
+       leaving them pinned above an internally-scrolling panel. */
+    height: 100%;
+    overflow: hidden;
   }
 
   /* Thin scrollbar for sidebar panels */

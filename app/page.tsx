@@ -16,7 +16,7 @@ export default async function Page() {
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
+    <div className="flex h-dvh bg-background text-foreground font-sans overflow-hidden">
       <ManualKeyTester />
     </div>
   )
