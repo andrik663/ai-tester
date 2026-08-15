@@ -3418,17 +3418,21 @@ interface ChatMessage {
   ts: string
 }
 
+// Default provider on load — Miuclaw Gateway (self-hosted aggregator), so a
+// fresh visit (no login, no saved key) lands ready to test via the gateway.
+const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "miuclaw") ?? PRESETS[0]
+
 export default function ManualKeyTester() {
-  const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(PRESETS[0])
+  const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(DEFAULT_PRESET)
   const [apiKey, setApiKey] = useState("")
   const [debouncedApiKey, setDebouncedApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
-  const [endpoint, setEndpoint] = useState(PRESETS[0].endpoint)
-  const [method, setMethod] = useState<"GET" | "POST" | "PUT" | "DELETE">(PRESETS[0].method)
+  const [endpoint, setEndpoint] = useState(DEFAULT_PRESET.endpoint)
+  const [method, setMethod] = useState<"GET" | "POST" | "PUT" | "DELETE">(DEFAULT_PRESET.method)
   const [headerRows, setHeaderRows] = useState<HeaderRow[]>(
-    Object.entries(PRESETS[0].headers).map(([key, value], i) => ({ key, value, id: i }))
+    Object.entries(DEFAULT_PRESET.headers).map(([key, value], i) => ({ key, value, id: i }))
   )
-  const [bodyTemplate, setBodyTemplate] = useState(PRESETS[0].bodyTemplate)
+  const [bodyTemplate, setBodyTemplate] = useState(DEFAULT_PRESET.bodyTemplate)
   const [prompt, setPrompt] = useState("")
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ManualTestResult | null>(null)
