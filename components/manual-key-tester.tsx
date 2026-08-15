@@ -2791,7 +2791,7 @@ const PRESETS: ProviderPreset[] = [
     id: "arceeai",
     name: "Arcee AI (Conductor, native)",
     country: "US",
-    endpoint: "https://api.arcee.ai/api/v1/chat/completions",
+    endpoint: "https://arcee.ai/api/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
