@@ -867,7 +867,21 @@ export default function CodePreviewTab({
           ancestor ends up scrolling (mobile browsers in particular can end
           up scrolling the outer page instead of just the inner message
           list, which would otherwise carry this toolbar off-screen). */}
-      <div className="sticky top-0 z-30 flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar flex-shrink-0">
+      <div className="sticky top-0 z-30 flex-shrink-0">
+
+        {/* Spacer bar — reserves one extra bar's worth of height (plus the
+            device's own safe-area inset) above the real toolbar. On mobile
+            web the browser chrome (URL bar) floats over the top of the page
+            and can visually cover the first bar of fixed/sticky content;
+            pushing the toolbar down by one bar keeps it clear of that
+            overlay instead of hiding behind it. */}
+        <div
+          className="w-full bg-sidebar border-b border-border/40 h-9"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          aria-hidden="true"
+        />
+
+        <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar">
 
         {/* Model selector */}
         {(workingModels.length > 0 || (presetModels && presetModels.length > 0)) && (
@@ -953,6 +967,7 @@ export default function CodePreviewTab({
             <RefreshIcon />
           </button>
         )}
+        </div>
       </div>
 
       {/* ── Main area ───────────────────────────────────────────────────────── */}
