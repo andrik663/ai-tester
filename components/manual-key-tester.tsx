@@ -3422,7 +3422,21 @@ interface ChatMessage {
 // fresh visit (no login, no saved key) lands ready to test via the gateway.
 const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "miuclaw") ?? PRESETS[0]
 
-export default function ManualKeyTester() {
+interface ManualKeyTesterProps {
+  /** True once a dev has logged in at /login with DEV_PASSWORD. Until then,
+   *  public visitors only ever see the Miuclaw Gateway preset — every other
+   *  provider (Dahono, OpenAI, Anthropic, Custom/cURL, ...) stays hidden. */
+  isDevAuthenticated?: boolean
+}
+
+export default function ManualKeyTester({ isDevAuthenticated = false }: ManualKeyTesterProps) {
+  // Public visitors only ever see Miuclaw Gateway — everything else (Dahono,
+  // direct providers, Custom/cURL) is hidden until a dev logs in at /login.
+  const visiblePresets = isDevAuthenticated ? PRESETS_DEDUPED : PRESETS_DEDUPED.filter((p) => p.id === "miuclaw")
+  const visibleComparePresets = isDevAuthenticated
+    ? PRESETS.filter((p) => p.id !== "custom")
+    : PRESETS.filter((p) => p.id === "miuclaw")
+
   const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(DEFAULT_PRESET)
   const [apiKey, setApiKey] = useState("")
   const [debouncedApiKey, setDebouncedApiKey] = useState("")
@@ -3659,11 +3673,19 @@ export default function ManualKeyTester() {
   }, [selectedPreset.id])
   // Compare mode state
   const [comparePrompt, setComparePrompt] = useState("Say hello in one sentence.")
-  const [compareSlots, setCompareSlots] = useState<Array<{ providerId: string; apiKey: string }>>([
-    { providerId: "anthropic", apiKey: "" },
-    { providerId: "openai",    apiKey: "" },
-    { providerId: "google",    apiKey: "" },
-  ])
+  const [compareSlots, setCompareSlots] = useState<Array<{ providerId: string; apiKey: string }>>(
+    isDevAuthenticated
+      ? [
+          { providerId: "anthropic", apiKey: "" },
+          { providerId: "openai",    apiKey: "" },
+          { providerId: "google",    apiKey: "" },
+        ]
+      : [
+          { providerId: "miuclaw", apiKey: "" },
+          { providerId: "miuclaw", apiKey: "" },
+          { providerId: "miuclaw", apiKey: "" },
+        ]
+  )
   const [compareResults, setCompareResults] = useState<Array<{ result: ManualTestResult | null; loading: boolean }>>([
     { result: null, loading: false },
     { result: null, loading: false },
@@ -4207,7 +4229,7 @@ export default function ManualKeyTester() {
         />
       )}
 
-      {/* ── LEFT: Config panel ──────────────────────────────────────────���──── */}
+      {/* ── LEFT: Config panel ────────────────────────────���─────────────���──── */}
       <aside className={`
         flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
@@ -4227,7 +4249,7 @@ export default function ManualKeyTester() {
             </div>
             <div>
               <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Tester</p>
-                <p className="text-[10px] text-muted-foreground/60">{PRESETS_DEDUPED.length} providers</p>
+                <p className="text-[10px] text-muted-foreground/60">{visiblePresets.length} providers</p>
             </div>
           </div>
           <button
@@ -4278,7 +4300,7 @@ export default function ManualKeyTester() {
                 type="search"
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
-                placeholder={`Search ${PRESETS_DEDUPED.length} providers...`}
+                placeholder={`Search ${visiblePresets.length} providers...`}
                 className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
               />
               {sidebarSearch && (
@@ -4300,7 +4322,7 @@ export default function ManualKeyTester() {
           <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2 flex flex-col gap-px">
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
-              const matched = q ? PRESETS_DEDUPED.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS_DEDUPED
+              const matched = q ? visiblePresets.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : visiblePresets
               // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
               const dahonoRow = matched.filter((p) => p.id === "dahono")
               const customRow = matched.filter((p) => p.id === "custom")
@@ -5465,7 +5487,7 @@ export default function ManualKeyTester() {
                             }}
                             className="flex-1 text-xs font-semibold bg-transparent text-foreground focus:outline-none cursor-pointer"
                           >
-                            {PRESETS.filter((p) => p.id !== "custom").map((p) => (
+                            {visibleComparePresets.map((p) => (
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>
