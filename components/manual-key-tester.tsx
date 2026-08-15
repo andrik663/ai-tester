@@ -3422,20 +3422,12 @@ interface ChatMessage {
 // fresh visit (no login, no saved key) lands ready to test via the gateway.
 const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "miuclaw") ?? PRESETS[0]
 
-interface ManualKeyTesterProps {
-  /** True once a dev has logged in at /login with DEV_PASSWORD. Until then,
-   *  public visitors only ever see the Miuclaw Gateway preset — every other
-   *  provider (Dahono, OpenAI, Anthropic, Custom/cURL, ...) stays hidden. */
-  isDevAuthenticated?: boolean
-}
-
-export default function ManualKeyTester({ isDevAuthenticated = false }: ManualKeyTesterProps) {
-  // Public visitors only ever see Miuclaw Gateway — everything else (Dahono,
-  // direct providers, Custom/cURL) is hidden until a dev logs in at /login.
-  const visiblePresets = isDevAuthenticated ? PRESETS_DEDUPED : PRESETS_DEDUPED.filter((p) => p.id === "miuclaw")
-  const visibleComparePresets = isDevAuthenticated
-    ? PRESETS.filter((p) => p.id !== "custom")
-    : PRESETS.filter((p) => p.id === "miuclaw")
+// This dashboard (all providers, all tabs) is only ever rendered behind the
+// dev-login gate in app/page.tsx — public visitors get the standalone
+// PublicCodePreview component instead, so no per-preset gating is needed here.
+export default function ManualKeyTester() {
+  const visiblePresets = PRESETS_DEDUPED
+  const visibleComparePresets = PRESETS.filter((p) => p.id !== "custom")
 
   const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(DEFAULT_PRESET)
   const [apiKey, setApiKey] = useState("")
@@ -3673,19 +3665,11 @@ export default function ManualKeyTester({ isDevAuthenticated = false }: ManualKe
   }, [selectedPreset.id])
   // Compare mode state
   const [comparePrompt, setComparePrompt] = useState("Say hello in one sentence.")
-  const [compareSlots, setCompareSlots] = useState<Array<{ providerId: string; apiKey: string }>>(
-    isDevAuthenticated
-      ? [
-          { providerId: "anthropic", apiKey: "" },
-          { providerId: "openai",    apiKey: "" },
-          { providerId: "google",    apiKey: "" },
-        ]
-      : [
-          { providerId: "miuclaw", apiKey: "" },
-          { providerId: "miuclaw", apiKey: "" },
-          { providerId: "miuclaw", apiKey: "" },
-        ]
-  )
+  const [compareSlots, setCompareSlots] = useState<Array<{ providerId: string; apiKey: string }>>([
+    { providerId: "anthropic", apiKey: "" },
+    { providerId: "openai",    apiKey: "" },
+    { providerId: "google",    apiKey: "" },
+  ])
   const [compareResults, setCompareResults] = useState<Array<{ result: ManualTestResult | null; loading: boolean }>>([
     { result: null, loading: false },
     { result: null, loading: false },
@@ -3817,7 +3801,7 @@ export default function ManualKeyTester({ isDevAuthenticated = false }: ManualKe
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ─���─���────────────────────────��─��────���────────────────
+  // ── Vision / OCR helpers ─���─���────────────────────────��─��────���──────���─────────
 
   function handleImageFile(
     file: File,
@@ -5030,7 +5014,7 @@ export default function ManualKeyTester({ isDevAuthenticated = false }: ManualKe
           </div>
         )}
 
-        {/* ── VISION TAB ───────────�����─────���────────��───────────────────����───��─ */}
+        {/* ── VISION TAB ───────────�����─────���────────��─���─────────────────����───��─ */}
         {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             {/* Provider Header Bar */}
