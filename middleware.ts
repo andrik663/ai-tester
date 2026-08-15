@@ -19,6 +19,8 @@ const PUBLIC_PREFIXES = [
 ]
 
 function isPublic(pathname: string): boolean {
+  // Dashboard (Miuclaw Gateway test-code page) is always public — no dev login required
+  if (pathname === '/') return true
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return true
   if (/\.(png|svg|ico|webmanifest|xml|txt|css|js|woff2?)$/.test(pathname)) return true
   return false
