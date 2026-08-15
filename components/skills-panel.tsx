@@ -788,17 +788,28 @@ interface SkillsPanelProps {
 // ── Skills persistence helpers ────────────────────────────────────────────────
 const SKILLS_STORAGE_KEY = "ai_tester_active_skills"
 
-function loadPersistedSkillIds(): Set<string> {
-  if (typeof window === "undefined") return new Set()
+// Developer-configured default — always active for a fresh visitor so code
+// generation never falls back to the bare, no-skill system prompt. Users can
+// still deactivate/change it in this panel; their explicit choice is
+// persisted and takes precedence over this default on future visits.
+const DEFAULT_ACTIVE_SKILL_IDS = ["complete-code-writer"]
+
+/**
+ * Returns the persisted skill id set, or `null` if the visitor has never
+ * explicitly saved a selection (fresh visit / cleared storage) — in that case
+ * the caller should fall back to DEFAULT_ACTIVE_SKILL_IDS instead of "none".
+ */
+function loadPersistedSkillIds(): Set<string> | null {
+  if (typeof window === "undefined") return null
   try {
     const raw = localStorage.getItem(SKILLS_STORAGE_KEY)
-    if (!raw) return new Set()
+    if (raw === null) return null
     const ids: string[] = JSON.parse(raw)
     // Only restore ids that still exist in the current SKILLS list
     const validIds = ids.filter((id) => SKILLS.some((s) => s.id === id))
     return new Set(validIds)
   } catch {
-    return new Set()
+    return null
   }
 }
 
@@ -809,7 +820,7 @@ function saveSkillIds(ids: Set<string>): void {
 }
 
 export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
-  const [activeSkillIds, setActiveSkillIds] = useState<Set<string>>(new Set())
+  const [activeSkillIds, setActiveSkillIds] = useState<Set<string>>(new Set(DEFAULT_ACTIVE_SKILL_IDS))
   const [filterCategory, setFilterCategory] = useState<string>("all")
   const [filterRegistry, setFilterRegistry] = useState<string>("all")
   const [search, setSearch] = useState("")
@@ -824,13 +835,15 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
     onActiveSkillChange?.(configs)
   }, [onActiveSkillChange])
 
-  // Restore persisted skills on mount (after hydration to avoid SSR mismatch)
+  // On mount: restore the visitor's explicit choice if they ever saved one,
+  // otherwise keep the developer default (already the initial state) — and
+  // always notify the parent so Code Preview picks up the active skill(s)
+  // immediately, even on a first-ever visit.
   useEffect(() => {
     const restored = loadPersistedSkillIds()
-    if (restored.size > 0) {
-      setActiveSkillIds(restored)
-      notify(restored)
-    }
+    const initial = restored ?? new Set(DEFAULT_ACTIVE_SKILL_IDS)
+    setActiveSkillIds(initial)
+    notify(initial)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
