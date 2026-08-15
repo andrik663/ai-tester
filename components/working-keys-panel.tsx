@@ -310,14 +310,14 @@ function GroupedKeyCard({
             <span className="text-[9px] uppercase tracking-widest font-semibold text-primary/70 bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">
               {group.providerName}
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground/40">{fingerprint}</span>
-            <span className="text-[9px] text-muted-foreground/30">{dateStr}</span>
+            <span className="text-[10px] font-mono text-muted-foreground/60">{fingerprint}</span>
+            <span className="text-[9px] text-muted-foreground/55">{dateStr}</span>
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-[11px] text-foreground/80 font-medium">
               {group.records.length} model{group.records.length !== 1 ? "s" : ""}
             </span>
-            <span className="text-[9px] text-muted-foreground/40 font-mono">avg {avgLatency}ms</span>
+            <span className="text-[9px] text-muted-foreground/60 font-mono">avg {avgLatency}ms</span>
             {/* Screener summary badges — only shown when screener data exists */}
             {(groupScreenerCounts.on > 0 || groupScreenerCounts.off > 0) && (
               <>
@@ -347,7 +347,7 @@ function GroupedKeyCard({
                 ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
                 : lockStatus === "error"
                 ? "border-destructive/50 bg-destructive/10 text-destructive"
-                : "border-border text-muted-foreground/40 hover:border-cyan-400/30 hover:text-cyan-400 hover:bg-cyan-400/5"
+                : "border-border text-muted-foreground/60 hover:border-cyan-400/30 hover:text-cyan-400 hover:bg-cyan-400/5"
             }`}
             title={lockStatus === "ok" ? "Locked" : lockStatus === "error" ? lockError : "Lock to DB"}
           >
@@ -361,7 +361,7 @@ function GroupedKeyCard({
             className={`flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all ${
               confirmDel
                 ? "border-destructive/50 bg-destructive/10 text-destructive"
-                : "border-border text-muted-foreground/40 hover:border-destructive/30 hover:text-destructive hover:bg-destructive/5"
+                : "border-border text-muted-foreground/60 hover:border-destructive/30 hover:text-destructive hover:bg-destructive/5"
             }`}
             title={confirmDel ? "Tap again to confirm" : "Delete all"}
           >
@@ -370,7 +370,7 @@ function GroupedKeyCard({
           </button>
 
           {/* Expand chevron */}
-          <span className="text-muted-foreground/40 px-1">
+          <span className="text-muted-foreground/60 px-1">
             <ChevronIcon open={open} />
           </span>
         </div>
@@ -424,7 +424,7 @@ function GroupedKeyCard({
                   return (
                     <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                       {caps.map((c) => (
-                        <span key={c} className={`text-[7px] px-1 py-px rounded border font-medium uppercase tracking-wide ${CAP_TAG_COLORS[c] ?? "text-muted-foreground/50 border-border/50"}`}>
+                        <span key={c} className={`text-[7px] px-1 py-px rounded border font-medium uppercase tracking-wide ${CAP_TAG_COLORS[c] ?? "text-muted-foreground/70 border-border/50"}`}>
                           {CAP_TAG_LABELS[c] ?? c}
                         </span>
                       ))}
@@ -432,9 +432,9 @@ function GroupedKeyCard({
                   )
                 })()}
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[9px] text-muted-foreground/40 font-mono">{r.latencyMs}ms</span>
+                  <span className="text-[9px] text-muted-foreground/60 font-mono">{r.latencyMs}ms</span>
                   {r.tokenUsage?.total !== undefined && (
-                    <span className="text-[9px] text-muted-foreground/40 font-mono">{r.tokenUsage.total} tok</span>
+                    <span className="text-[9px] text-muted-foreground/60 font-mono">{r.tokenUsage.total} tok</span>
                   )}
                   {screenerStatus && !screenerStatus.isOn && screenerStatus.error && (
                     <span className="text-[8px] text-destructive/70 truncate max-w-[140px]" title={screenerStatus.error}>
@@ -450,7 +450,7 @@ function GroupedKeyCard({
                 className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors flex-shrink-0 ${
                   copiedCurl === r.id
                     ? "border-success/40 bg-success/10 text-success"
-                    : "border-border text-muted-foreground/40 hover:text-foreground hover:border-primary/40"
+                    : "border-border text-muted-foreground/60 hover:text-foreground hover:border-primary/40"
                 }`}
                 title="Copy cURL (key is masked)"
               >
@@ -461,7 +461,7 @@ function GroupedKeyCard({
               {/* Delete single */}
               <button
                 onClick={() => onDeleteRecord(r.id)}
-                className="flex-shrink-0 text-muted-foreground/30 hover:text-destructive transition-colors p-1"
+                className="flex-shrink-0 text-muted-foreground/55 hover:text-destructive transition-colors p-1"
                 title="Remove"
               >
                 <TrashIcon />
@@ -539,7 +539,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
 
   if (noToken) {
     return (
-      <p className="text-[9px] text-muted-foreground/40 px-1 py-1">
+      <p className="text-[9px] text-muted-foreground/60 px-1 py-1">
         Set your EXPORT_API_TOKEN in the Export panel to view locked keys.
       </p>
     )
@@ -566,12 +566,12 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
           <button
             onClick={(e) => { e.stopPropagation(); handleRunNow() }}
             disabled={running}
-            className="flex items-center gap-1 text-[9px] px-2 py-1 rounded border border-border text-muted-foreground/50 hover:text-cyan-400 hover:border-cyan-400/40 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1 text-[9px] px-2 py-1 rounded border border-border text-muted-foreground/70 hover:text-cyan-400 hover:border-cyan-400/40 transition-colors disabled:opacity-40"
           >
             <RefreshIcon />
             {running ? "Testing..." : "Run now"}
           </button>
-          <span className={`text-muted-foreground/40 transition-transform ${open ? "" : "rotate-180"}`}>
+          <span className={`text-muted-foreground/60 transition-transform ${open ? "" : "rotate-180"}`}>
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
               <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -588,7 +588,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
       {open && (
         <div className="rounded-xl border border-border overflow-hidden">
           {loading ? (
-            <p className="px-4 py-4 text-center text-[10px] text-muted-foreground/50">Loading...</p>
+            <p className="px-4 py-4 text-center text-[10px] text-muted-foreground/70">Loading...</p>
           ) : (
             locked.map((row) => {
               const nextRefresh = new Date(row.nextRefreshAt)
@@ -606,11 +606,11 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
                           {row.isWorking ? "working" : "failed"}
                         </span>
                         {row.latencyMs && (
-                          <span className="text-[9px] font-mono text-muted-foreground/50">{row.latencyMs}ms</span>
+                          <span className="text-[9px] font-mono text-muted-foreground/70">{row.latencyMs}ms</span>
                         )}
                       </div>
                       <div className="text-[10px] font-mono text-foreground/80 mt-0.5 truncate">{row.modelId}</div>
-                      <div className="text-[8px] text-muted-foreground/30 mt-0.5">
+                      <div className="text-[8px] text-muted-foreground/55 mt-0.5">
                         Locked {lockedDate.toLocaleDateString()} · Next refresh {nextRefresh.toLocaleString()}
                       </div>
                       {!row.isWorking && row.lastError && (
@@ -621,7 +621,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
                     </div>
                     <button
                       onClick={() => handleUnlock(row.id)}
-                      className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground/40 hover:border-destructive/30 hover:text-destructive transition-colors"
+                      className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground/60 hover:border-destructive/30 hover:text-destructive transition-colors"
                     >
                       <LockIcon locked={false} />
                       Unlock
@@ -735,7 +735,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
     return (
       <div className="flex flex-col gap-3 px-3 sm:px-4 py-3">
         <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
-          <span className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground/40">
+          <span className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground/60">
             <KeyIcon />
           </span>
           <div>
@@ -767,7 +767,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
           className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-all ${
             confirmClear
               ? "border-destructive/50 bg-destructive/10 text-destructive"
-              : "border-border text-muted-foreground/40 hover:border-destructive/30 hover:text-destructive"
+              : "border-border text-muted-foreground/60 hover:border-destructive/30 hover:text-destructive"
           }`}
         >
           <TrashIcon />
@@ -850,7 +850,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
               className={`flex items-center gap-1.5 flex-shrink-0 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition-all ${
                 isActive
                   ? (ACTIVE_COLORS[cap] ?? "border-primary/50 bg-primary/10 text-primary")
-                  : "border-border/50 text-muted-foreground/50 hover:bg-secondary/60 hover:text-foreground/70 hover:border-border"
+                  : "border-border/50 text-muted-foreground/70 hover:bg-secondary/60 hover:text-foreground/70 hover:border-border"
               }`}
             >
               <span className={isActive ? "" : "opacity-60"}>{icon}</span>
@@ -865,7 +865,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
 
       {/* ── Model search input ──────────────────────────────────────────── */}
       <div className="relative">
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 pointer-events-none">
+        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none">
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
             <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M10 10l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -876,12 +876,12 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
           value={modelSearch}
           onChange={(e) => setModelSearch(e.target.value)}
           placeholder={`Search ${filterCap === "all" ? "all" : filterCap} models...`}
-          className="w-full pl-7 pr-3 py-1.5 text-[11px] rounded-lg border border-border/50 bg-secondary/30 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/40 focus:bg-secondary/60 transition-colors"
+          className="w-full pl-7 pr-3 py-1.5 text-[11px] rounded-lg border border-border/50 bg-secondary/30 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/40 focus:bg-secondary/60 transition-colors"
         />
         {modelSearch && (
           <button
             onClick={() => setModelSearch("")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
             aria-label="Clear search"
           >
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -894,7 +894,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
       {/* ── Provider filter chips ───────────────────────────────────────── */}
       {providers.length > 1 && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-muted-foreground/30">
+          <span className="text-muted-foreground/55">
             <FilterIcon />
           </span>
           <button
@@ -902,7 +902,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
             className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
               filterProvider === "all"
                 ? "border-primary/50 bg-primary/10 text-primary"
-                : "border-border/50 text-muted-foreground/50 hover:bg-secondary"
+                : "border-border/50 text-muted-foreground/70 hover:bg-secondary"
             }`}
           >
             All ({records.length})
@@ -917,7 +917,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
                 className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
                   filterProvider === pid
                     ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
-                    : "border-border/50 text-muted-foreground/50 hover:bg-secondary"
+                    : "border-border/50 text-muted-foreground/70 hover:bg-secondary"
                 }`}
               >
                 {name} ({count})
@@ -946,7 +946,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
         )}
       </div>
 
-      <p className="text-[9px] text-muted-foreground/40 text-center">
+      <p className="text-[9px] text-muted-foreground/60 text-center">
         Stored locally in your browser. Keys are never sent to our servers.
       </p>
 

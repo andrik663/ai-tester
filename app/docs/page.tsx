@@ -732,7 +732,7 @@ export default function DocsPage() {
 
           {/* Footer ---------------------------------------------------------- */}
           <footer className="pt-8 border-t border-border/30">
-            <p className="text-[12px] text-muted-foreground/50 text-center">
+            <p className="text-[12px] text-muted-foreground/70 text-center">
               Miuclaw Gateway &mdash; API Docs &mdash; {BASE_URL}
             </p>
           </footer>

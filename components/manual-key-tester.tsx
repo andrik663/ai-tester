@@ -3383,18 +3383,18 @@ function HeaderEditor({
             value={row.key}
             onChange={(e) => update(row.id, "key", e.target.value)}
             placeholder="Header-Name"
-            className="flex-1 min-w-0 text-[11px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 min-w-0 text-[11px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-ring"
           />
-          <span className="text-muted-foreground/40 text-[10px] flex-shrink-0">:</span>
+          <span className="text-muted-foreground/60 text-[10px] flex-shrink-0">:</span>
           <input
             value={row.value}
             onChange={(e) => update(row.id, "value", e.target.value)}
             placeholder="value or {{API_KEY}}"
-            className="flex-1 min-w-0 text-[11px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 min-w-0 text-[11px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-ring"
           />
           <button
             onClick={() => remove(row.id)}
-            className="flex-shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors p-1 rounded"
+            className="flex-shrink-0 text-muted-foreground/60 hover:text-destructive transition-colors p-1 rounded"
           >
             <TrashIcon />
           </button>
@@ -4275,7 +4275,7 @@ export default function ManualKeyTester() {
               <svg
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
                 strokeLinecap="round" strokeLinejoin="round"
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/70 pointer-events-none"
                 aria-hidden
               >
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -4285,12 +4285,12 @@ export default function ManualKeyTester() {
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
                 placeholder={`Search ${visiblePresets.length} providers...`}
-                className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
               />
               {sidebarSearch && (
                 <button
                   onClick={() => setSidebarSearch("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground transition-colors"
                   aria-label="Clear search"
                 >
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
@@ -4318,7 +4318,7 @@ export default function ManualKeyTester() {
                 .sort((a, b) => a.name.localeCompare(b.name))
 
               if ([...dahonoRow, ...pinned, ...middle, ...customRow].length === 0) return (
-                <div className="text-center py-8 text-[11px] text-muted-foreground/50">
+                <div className="text-center py-8 text-[11px] text-muted-foreground/70">
                   No providers match &ldquo;{sidebarSearch}&rdquo;
                 </div>
               )
@@ -4338,7 +4338,7 @@ export default function ManualKeyTester() {
                           <line x1="12" y1="17" x2="12" y2="22" />
                           <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
                         </svg>
-                        <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/50">Pinned</span>
+                        <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/70">Pinned</span>
                       </div>
                       {pinned.map((p) => (
                         <SidebarProviderRow key={p.id} p={p} isPinned={true} isSelected={selectedPreset.id === p.id} togglePin={togglePin} applyPreset={applyPreset} />
@@ -4350,7 +4350,7 @@ export default function ManualKeyTester() {
                   {/* "All providers" label — only when pinned section is showing */}
                   {!q && middle.length > 0 && pinned.length > 0 && (
                     <div className="px-1 pt-0.5 pb-0.5">
-                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/40">All providers</span>
+                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/60">All providers</span>
                     </div>
                   )}
 
@@ -4457,7 +4457,7 @@ export default function ManualKeyTester() {
                   <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
               </button>
-              <button title="Sign out" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login" }} className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all">
+              <button title="Sign out" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login" }} className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-all">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
@@ -4727,7 +4727,7 @@ export default function ManualKeyTester() {
                   }`}>
                     <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
                   </div>
-                  <span className="text-[9px] text-muted-foreground/50 px-1">
+                  <span className="text-[9px] text-muted-foreground/70 px-1">
                     {msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}
                   </span>
                 </div>
@@ -4920,11 +4920,11 @@ export default function ManualKeyTester() {
                       value={apiKey}
                       onChange={(e) => handleApiKeyChange(e.target.value)}
                       placeholder="Paste API key to start..."
-                      className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                      className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
                     />
                     <button
                       onClick={() => setShowKey((v) => !v)}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground transition-colors"
                     >
                       <EyeIcon show={showKey} />
                     </button>
@@ -4951,7 +4951,7 @@ export default function ManualKeyTester() {
                   placeholder={(selectedPreset.id === "miuclaw" || apiKey.trim()) ? "Describe what to build... (Enter to send)" : "Enter API key above first..."}
                   disabled={(loading || isStreaming) || (selectedPreset.id !== "miuclaw" && !apiKey.trim())}
                   rows={2}
-                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
+                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/70 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runTest}
@@ -4981,7 +4981,7 @@ export default function ManualKeyTester() {
                     <span className="text-[10px] text-muted-foreground">Stream</span>
                   </label>
                   {notifPerm !== "granted" && (
-                    <button onClick={requestNotifPermission} title="Enable notifications" className="text-[10px] text-muted-foreground/50 hover:text-foreground flex items-center gap-1 transition-colors">
+                    <button onClick={requestNotifPermission} title="Enable notifications" className="text-[10px] text-muted-foreground/70 hover:text-foreground flex items-center gap-1 transition-colors">
                       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden>
                         <path d="M8 2a5 5 0 0 1 5 5v2l1.5 2.5H1.5L3 9V7a5 5 0 0 1 5-5z" />
                         <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" />
@@ -4998,11 +4998,11 @@ export default function ManualKeyTester() {
                 <div className="flex items-center gap-2 ml-auto">
                   {chatHistory.length > 0 && (
                     <>
-                      <button onClick={exportChatMarkdown} className="text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors">MD</button>
-                      {result && <button onClick={exportResultJSON} className="text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors">JSON</button>}
+                      <button onClick={exportChatMarkdown} className="text-[10px] text-muted-foreground/70 hover:text-foreground transition-colors">MD</button>
+                      {result && <button onClick={exportResultJSON} className="text-[10px] text-muted-foreground/70 hover:text-foreground transition-colors">JSON</button>}
                       <button
                         onClick={() => { setChatHistory([]); setResult(null); setStreamingText(""); setTtftMs(null) }}
-                        className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                        className="text-[10px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                       >
                         Clear
                       </button>
@@ -5073,7 +5073,7 @@ export default function ManualKeyTester() {
                   }`}>
                     <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
                   </div>
-                  <span className="text-[9px] text-muted-foreground/50 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
+                  <span className="text-[9px] text-muted-foreground/70 px-1">{msg.role === "user" ? "You" : selectedPreset.name} · {msg.ts}</span>
                 </div>
               ))}
 
@@ -5091,7 +5091,7 @@ export default function ManualKeyTester() {
             {/* Vision result footer */}
             {visionResult?.ok && visionResult.tokenUsage && (
               <div className="border-t border-border bg-card/30 px-4 py-2 flex-shrink-0 flex items-center gap-4">
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Tokens</span>
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/70">Tokens</span>
                 {visionResult.tokenUsage.promptTokens !== undefined && (
                   <span className="text-[10px] font-mono text-muted-foreground">in: <span className="text-foreground">{visionResult.tokenUsage.promptTokens}</span></span>
                 )}
@@ -5168,7 +5168,7 @@ export default function ManualKeyTester() {
                   placeholder={visionImage ? "Optional: ask about the image..." : "Upload an image first..."}
                   disabled={!apiKey.trim() || !visionImage || visionLoading}
                   rows={2}
-                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none disabled:opacity-40 leading-relaxed"
+                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/70 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runVisionTest}
@@ -5179,7 +5179,7 @@ export default function ManualKeyTester() {
                   {visionLoading ? "..." : "Analyze"}
                 </button>
               </div>
-              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+              <p className="text-[9px] text-muted-foreground/60 mt-1.5">
                 Prompt optional — defaults to &quot;Describe this image in detail.&quot;
               </p>
             </div>
@@ -5304,7 +5304,7 @@ export default function ManualKeyTester() {
                 {ocrLoading ? <SpinnerIcon /> : <ScanIcon />}
                 {ocrLoading ? "Extracting text..." : "Extract Text"}
               </button>
-              <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+              <p className="text-[9px] text-muted-foreground/60 mt-1.5">
                 Uses the selected provider&apos;s vision model to read text from the image.
               </p>
             </div>
@@ -5434,7 +5434,7 @@ export default function ManualKeyTester() {
                     onChange={(e) => setComparePrompt(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") runCompare() }}
                     placeholder="Enter a prompt to send to all providers..."
-                    className="flex-1 rounded-lg border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                    className="flex-1 rounded-lg border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/70"
                   />
                   <button
                     onClick={runCompare}
@@ -5487,7 +5487,7 @@ export default function ManualKeyTester() {
                             })
                           }}
                           placeholder="API key for this slot..."
-                          className="w-full rounded border border-border bg-background text-foreground text-xs font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                          className="w-full rounded border border-border bg-background text-foreground text-xs font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/70"
                         />
                       </div>
 
@@ -5531,7 +5531,7 @@ export default function ManualKeyTester() {
                           </>
                         )}
                         {!res.loading && !res.result && (
-                          <p className="text-[11px] text-muted-foreground/50 mt-2">
+                          <p className="text-[11px] text-muted-foreground/70 mt-2">
                             {slot.apiKey ? "Press Run All to test" : "Enter an API key above"}
                           </p>
                         )}
@@ -5830,7 +5830,7 @@ export default function ManualKeyTester() {
                   value={detectInput}
                   onChange={(e) => setDetectInput(e.target.value)}
                   placeholder="sk-ant-api03-… or AIzaSy… or gsk_��"
-                  className="w-full bg-secondary/40 border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                  className="w-full bg-secondary/40 border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                   autoComplete="off"
                   spellCheck={false}
                 />
@@ -6057,7 +6057,7 @@ export default function ManualKeyTester() {
                         {apiKey && (
                           <button
                             onClick={() => { handleApiKeyChange(""); setShowKey(false) }}
-                            className="text-[9px] text-muted-foreground/50 hover:text-destructive transition-colors"
+                            className="text-[9px] text-muted-foreground/70 hover:text-destructive transition-colors"
                           >
                             clear
                           </button>
@@ -6070,7 +6070,7 @@ export default function ManualKeyTester() {
                         value={apiKey}
                         onChange={(e) => handleApiKeyChange(e.target.value)}
                         placeholder="Paste API key..."
-                        className="w-full rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                        className="w-full rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
                       />
                       <button
                         onClick={() => setShowKey((v) => !v)}
@@ -6137,7 +6137,7 @@ export default function ManualKeyTester() {
                         value={endpoint}
                         onChange={(e) => setEndpoint(e.target.value)}
                         placeholder="https://api.example.com/v1/..."
-                        className="flex-1 min-w-0 rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                        className="flex-1 min-w-0 rounded border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
                       />
                     </div>
                     {selectedPreset.docsUrl && (
@@ -6151,7 +6151,7 @@ export default function ManualKeyTester() {
                   <div className="flex flex-col gap-1.5">
                     <div>
                       <label className="text-[11px] font-medium text-muted-foreground">Test all models — single key</label>
-                      <p className="text-[10px] text-muted-foreground/50 mt-0.5">Uses the API key above</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">Uses the API key above</p>
                     </div>
                     <ProviderBatchTest
                       providerId={selectedPreset.id}
@@ -6165,7 +6165,7 @@ export default function ManualKeyTester() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-medium text-muted-foreground">Headers</label>
                     <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
-                    <p className="text-[10px] text-muted-foreground/50">
+                    <p className="text-[10px] text-muted-foreground/70">
                       <code className="text-primary/70">{"{{API_KEY}}"}</code> is replaced on send.
                     </p>
                   </div>
@@ -6174,7 +6174,7 @@ export default function ManualKeyTester() {
                   {selectedPreset.models && selectedPreset.models.length > 0 && (
                     <div className="flex flex-col gap-1.5">
                       <p className="text-[11px] font-medium text-muted-foreground">
-                        Models <span className="text-muted-foreground/40">({selectedPreset.models.length})</span>
+                        Models <span className="text-muted-foreground/60">({selectedPreset.models.length})</span>
                       </p>
                       <div className="flex flex-col gap-px">
                         {selectedPreset.models.map((m) => {
@@ -6196,7 +6196,7 @@ export default function ManualKeyTester() {
                               }`}
                             >
                               <span className={`text-[11px] truncate ${isActive ? "text-primary font-medium" : "text-foreground/70"}`}>{m.label}</span>
-                              <span className="text-[9px] text-muted-foreground/50 bg-muted/30 px-1 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
+                              <span className="text-[9px] text-muted-foreground/70 bg-muted/30 px-1 py-0.5 rounded flex-shrink-0 font-mono">{m.tag}</span>
                             </button>
                           )
                         })}
@@ -6221,9 +6221,9 @@ export default function ManualKeyTester() {
                           rows={7}
                           spellCheck={false}
                           placeholder={"{\n  \"model\": \"...\"\n}"}
-                          className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 resize-y"
+                          className="w-full rounded border border-border bg-background text-foreground text-[10px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/55 resize-y"
                         />
-                        <p className="text-[9px] text-muted-foreground/40">
+                        <p className="text-[9px] text-muted-foreground/60">
                           <code className="text-primary/60">{"{{PROMPT}}"}</code> — injected message placeholder.
                         </p>
                       </>

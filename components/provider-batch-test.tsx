@@ -114,7 +114,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
             {r.modelId}
           </span>
           {/* cURL always visible — single line preview */}
-          <span className="text-[9px] font-mono text-muted-foreground/50 truncate leading-tight">
+          <span className="text-[9px] font-mono text-muted-foreground/70 truncate leading-tight">
             {r.curlFull.split("\n")[0]}
           </span>
         </div>
@@ -126,12 +126,12 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           </span>
           <span className="text-[10px] font-mono text-muted-foreground">{r.latencyMs}ms</span>
           {r.tokenUsage?.total !== undefined && (
-            <span className="text-[9px] font-mono text-muted-foreground/50">{r.tokenUsage.total}tok</span>
+            <span className="text-[9px] font-mono text-muted-foreground/70">{r.tokenUsage.total}tok</span>
           )}
         </div>
 
         {/* Expand chevron */}
-        <span className="flex-shrink-0 text-muted-foreground/40 mt-0.5">
+        <span className="flex-shrink-0 text-muted-foreground/60 mt-0.5">
           <ChevronIcon open={expanded} />
         </span>
       </div>
@@ -143,7 +143,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {/* cURL block — always shown, full command */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">
                 cURL
               </span>
               <button
@@ -163,7 +163,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {r.ok && r.reply && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">
                   Reply
                 </span>
                 <button
@@ -183,7 +183,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {/* Error detail */}
           {!r.ok && r.errorMsg && (
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">
                 Error
               </span>
               <p className="text-[10px] font-mono text-destructive bg-destructive/5 rounded px-2.5 py-2 border border-destructive/15 break-all">
@@ -195,7 +195,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {/* Token usage */}
           {r.tokenUsage && (r.tokenUsage.prompt !== undefined || r.tokenUsage.completion !== undefined) && (
             <div className="flex items-center gap-3">
-              <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest">Tokens</span>
+              <span className="text-[9px] text-muted-foreground/70 uppercase tracking-widest">Tokens</span>
               {r.tokenUsage.prompt !== undefined && (
                 <span className="text-[10px] font-mono text-muted-foreground">
                   in: <span className="text-foreground">{r.tokenUsage.prompt}</span>
@@ -422,7 +422,7 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
             <SkeletonRow key={i} i={i} />
           ))}
           {skeletonCount > 24 && (
-            <p className="px-3 py-2 text-[9px] text-muted-foreground/50 text-center">
+            <p className="px-3 py-2 text-[9px] text-muted-foreground/70 text-center">
               +{skeletonCount - 24} more...
             </p>
           )}

@@ -108,7 +108,7 @@ function StatRow({
         {copy && (
           <button
             onClick={doCopy}
-            className="flex-shrink-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            className="flex-shrink-0 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
             title="Copy"
           >
             {copied ? (
@@ -279,7 +279,7 @@ export default function KeyInfoPanel({ provider, apiKey, responseHeaders, fetchT
           {data && (
             <button
               onClick={(e) => { e.stopPropagation(); mutate() }}
-              className="p-1 text-muted-foreground/40 hover:text-muted-foreground transition-colors rounded"
+              className="p-1 text-muted-foreground/60 hover:text-muted-foreground transition-colors rounded"
               title="Refresh"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
@@ -371,7 +371,7 @@ export default function KeyInfoPanel({ provider, apiKey, responseHeaders, fetchT
                     limit={rl.tokLimit}
                   />
                   {!rl.reqRemaining && !rl.tokRemaining && (
-                    <p className="text-[9px] text-muted-foreground/50 italic">No rate limit headers returned by this provider.</p>
+                    <p className="text-[9px] text-muted-foreground/70 italic">No rate limit headers returned by this provider.</p>
                   )}
                 </div>
               )}
@@ -379,14 +379,14 @@ export default function KeyInfoPanel({ provider, apiKey, responseHeaders, fetchT
               {/* Rate limit summary chips when no bar data */}
               {!rl && (
                 <div className="pt-1 border-t border-border/40">
-                  <p className="text-[9px] text-muted-foreground/50 italic">
+                  <p className="text-[9px] text-muted-foreground/70 italic">
                     Rate limit data available after sending a message.
                   </p>
                 </div>
               )}
 
               {/* Fetched timestamp */}
-              <p className="text-[9px] text-muted-foreground/30 text-right">
+              <p className="text-[9px] text-muted-foreground/55 text-right">
                 Updated {new Date(data.fetchedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
               </p>
             </>

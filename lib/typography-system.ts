@@ -43,7 +43,7 @@ export const TYPOGRAPHY = {
   // Form inputs & buttons
   buttonText: "text-sm font-semibold",       // Button labels
   inputText: "text-sm",                      // Input field text
-  placeholder: "text-sm text-muted-foreground/50", // Placeholder text
+  placeholder: "text-sm text-muted-foreground/70", // Placeholder text
   
   // Helper text
   helperText: "text-xs text-muted-foreground",  // Form helper text
@@ -52,7 +52,7 @@ export const TYPOGRAPHY = {
   
   // UI elements
   iconLabel: "text-xs",                      // Labels next to icons
-  separator: "text-xs text-muted-foreground/40", // Dividers, separators
+  separator: "text-xs text-muted-foreground/60", // Dividers, separators
 } as const
 
 // ── Spacing System ──────────────────────────────────────────────────────
@@ -81,8 +81,8 @@ export const TEXT_COLORS = {
   primary: "text-foreground",              // Main text
   secondary: "text-foreground/80",         // Secondary text
   tertiary: "text-muted-foreground",       // Tertiary text
-  muted: "text-muted-foreground/60",       // Very muted text
-  disabled: "text-muted-foreground/40",    // Disabled text
+  muted: "text-muted-foreground/75",       // Very muted text
+  disabled: "text-muted-foreground/55",    // Disabled text
   
   // Semantic colors
   success: "text-success",

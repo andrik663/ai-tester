@@ -112,7 +112,7 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
     <div className="flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg border border-border/40 bg-secondary/20">
       <span className="text-[15px] font-bold text-foreground tabular-nums">{value}</span>
       <span className="text-[8.5px] text-muted-foreground/60 uppercase tracking-wider">{label}</span>
-      {sub && <span className="text-[8px] text-muted-foreground/40">{sub}</span>}
+      {sub && <span className="text-[8px] text-muted-foreground/60">{sub}</span>}
     </div>
   )
 }
@@ -257,7 +257,7 @@ export default function GatewayLogsPanel() {
         <div className="flex-1 overflow-y-auto">
           {rows.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center h-32 gap-2">
-              <span className="text-[11px] text-muted-foreground/50">No requests yet</span>
+              <span className="text-[11px] text-muted-foreground/70">No requests yet</span>
               <span className="text-[9px] text-muted-foreground/35">
                 Send a request to{" "}
                 <span className="font-mono">/api/v1/chat/completions</span>
@@ -278,7 +278,7 @@ export default function GatewayLogsPanel() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[10px] font-mono text-foreground/90 truncate max-w-[130px]">{row.model}</span>
-                      <span className="text-[8.5px] text-muted-foreground/50 px-1 py-0.5 rounded bg-secondary/30 flex-shrink-0">{row.providerId}</span>
+                      <span className="text-[8.5px] text-muted-foreground/70 px-1 py-0.5 rounded bg-secondary/30 flex-shrink-0">{row.providerId}</span>
                       {row.streaming && (
                         <span className="text-blue-400 flex-shrink-0" title="Streaming"><IconStream /></span>
                       )}
@@ -290,7 +290,7 @@ export default function GatewayLogsPanel() {
                       <p className="text-[9px] text-destructive/80 mt-0.5 truncate">{row.errorMessage}</p>
                     )}
                     {row.completionTokens > 0 && (
-                      <p className="text-[8.5px] text-muted-foreground/40 mt-0.5">
+                      <p className="text-[8.5px] text-muted-foreground/60 mt-0.5">
                         {row.promptTokens}+{row.completionTokens} tok
                       </p>
                     )}
@@ -301,7 +301,7 @@ export default function GatewayLogsPanel() {
                     <span className={`text-[10px] font-mono font-semibold tabular-nums ${latencyColor(row.latencyMs)}`}>
                       {row.latencyMs}ms
                     </span>
-                    <span className="text-[8px] text-muted-foreground/40">{relativeTime(row.tsMs)}</span>
+                    <span className="text-[8px] text-muted-foreground/60">{relativeTime(row.tsMs)}</span>
                   </div>
                 </div>
               ))}
@@ -336,7 +336,7 @@ export default function GatewayLogsPanel() {
                       <div className="w-16 h-1 rounded-full bg-secondary/40 overflow-hidden flex-shrink-0">
                         <div className="h-full rounded-full bg-primary/60" style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-[9px] text-muted-foreground/50 w-7 text-right flex-shrink-0">{m.count}</span>
+                      <span className="text-[9px] text-muted-foreground/70 w-7 text-right flex-shrink-0">{m.count}</span>
                     </div>
                   )
                 })}
@@ -355,7 +355,7 @@ export default function GatewayLogsPanel() {
                     <span className={`text-[9px] font-mono font-semibold tabular-nums flex-shrink-0 ${latencyColor(p.avgLatencyMs)}`}>
                       {p.avgLatencyMs}ms
                     </span>
-                    <span className="text-[9px] text-muted-foreground/50 flex-shrink-0">{p.count} req</span>
+                    <span className="text-[9px] text-muted-foreground/70 flex-shrink-0">{p.count} req</span>
                   </div>
                 ))}
               </div>
@@ -364,7 +364,7 @@ export default function GatewayLogsPanel() {
 
           {summary.total === 0 && (
             <div className="flex flex-col items-center justify-center h-20 gap-1.5">
-              <span className="text-[11px] text-muted-foreground/50">No data in last hour</span>
+              <span className="text-[11px] text-muted-foreground/70">No data in last hour</span>
               <span className="text-[9px] text-muted-foreground/35">Make requests through the gateway to see analytics</span>
             </div>
           )}
@@ -374,7 +374,7 @@ export default function GatewayLogsPanel() {
       {/* Loading skeleton */}
       {loading && rows.length === 0 && view === "live" && (
         <div className="flex-1 flex items-center justify-center">
-          <span className="text-[10px] text-muted-foreground/40 animate-pulse">Loading logs...</span>
+          <span className="text-[10px] text-muted-foreground/60 animate-pulse">Loading logs...</span>
         </div>
       )}
     </div>

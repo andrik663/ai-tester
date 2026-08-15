@@ -209,7 +209,7 @@ export default function LeaderboardPanel() {
           href={data?.meta.source_url ?? "https://arena.ai/leaderboard"}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors flex-shrink-0"
+          className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/70 hover:text-muted-foreground transition-colors flex-shrink-0"
         >
           arena.ai
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden><path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -241,7 +241,7 @@ export default function LeaderboardPanel() {
         <div className="relative">
           <svg
             viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 pointer-events-none"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60 pointer-events-none"
             aria-hidden
           >
             <circle cx="6.5" cy="6.5" r="4"/><path d="M14 14l-3.5-3.5" strokeLinecap="round"/>
@@ -251,12 +251,12 @@ export default function LeaderboardPanel() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={`Search ${CATEGORY_LABELS[activeCategory] ?? activeCategory} models…`}
-            className="w-full pl-8 pr-3 py-1.5 rounded border border-border bg-background text-foreground text-[11px] focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+            className="w-full pl-8 pr-3 py-1.5 rounded border border-border bg-background text-foreground text-[11px] focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
               aria-label="Clear search"
             >
               <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3 h-3"><path d="M2 2l8 8M10 2L2 10" strokeLinecap="round"/></svg>
@@ -287,17 +287,17 @@ export default function LeaderboardPanel() {
               <path d="M10 6v5M10 13.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
             <p className="text-[11px] text-muted-foreground/70">Failed to load leaderboard data.</p>
-            <p className="text-[10px] text-muted-foreground/40">Check your network connection and try again.</p>
+            <p className="text-[10px] text-muted-foreground/60">Check your network connection and try again.</p>
           </div>
         )}
 
         {/* Empty search state */}
         {!isLoading && !error && data && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center h-32 gap-1.5">
-            <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 text-muted-foreground/30" aria-hidden>
+            <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 text-muted-foreground/55" aria-hidden>
               <circle cx="6.5" cy="6.5" r="4"/><path d="M14 14l-3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
-            <p className="text-[11px] text-muted-foreground/50">No models match &ldquo;{searchQuery}&rdquo;</p>
+            <p className="text-[11px] text-muted-foreground/70">No models match &ldquo;{searchQuery}&rdquo;</p>
           </div>
         )}
 
@@ -375,14 +375,14 @@ export default function LeaderboardPanel() {
         {/* Footer — model count + data source note */}
         {!isLoading && !error && data && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
-            <span className="text-[10px] text-muted-foreground/40">
+            <span className="text-[10px] text-muted-foreground/60">
               {filtered.length} of {data.meta.model_count} models
             </span>
             <a
               href="https://api.wulong.dev/arena-ai-leaderboards/v1"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+              className="text-[10px] text-muted-foreground/55 hover:text-muted-foreground/60 transition-colors"
             >
               Data via wulong.dev archive API
             </a>

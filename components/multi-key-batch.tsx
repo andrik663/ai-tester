@@ -216,9 +216,9 @@ function parseLines(text: string): ParsedEntry[] {
 // ── Token badge (inline compact) ─────────────────────────────────────────────
 
 function TokenBadge({ usage }: { usage?: TokenUsage }) {
-  if (!usage) return <span className="text-[10px] text-muted-foreground/30">—</span>
+  if (!usage) return <span className="text-[10px] text-muted-foreground/55">—</span>
   const hasData = usage.promptTokens !== null || usage.completionTokens !== null || usage.totalTokens !== null
-  if (!hasData) return <span className="text-[10px] text-muted-foreground/30">—</span>
+  if (!hasData) return <span className="text-[10px] text-muted-foreground/55">—</span>
 
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
@@ -246,7 +246,7 @@ function TokenBadge({ usage }: { usage?: TokenUsage }) {
 // ── Status pill ───────────────────────────────────────────────────────────────
 
 function StatusPill({ result }: { result: MultiKeyResult | null }) {
-  if (!result) return <span className="text-[10px] text-muted-foreground/30 font-mono">—</span>
+  if (!result) return <span className="text-[10px] text-muted-foreground/55 font-mono">—</span>
 
   if (result.statusText === "Skipped") {
     return (
@@ -276,7 +276,7 @@ function StatusPill({ result }: { result: MultiKeyResult | null }) {
         {result.status || "ERR"}
       </span>
       {result.durationMs > 0 && (
-        <span className="text-[9px] font-mono text-muted-foreground/40 tabular-nums">{result.durationMs}ms</span>
+        <span className="text-[9px] font-mono text-muted-foreground/60 tabular-nums">{result.durationMs}ms</span>
       )}
     </div>
   )
@@ -290,7 +290,7 @@ function ModelCell({ provider, result }: { provider: string; result: MultiKeyRes
   const activeModelId = result?.modelUsed ?? defaultModel?.id ?? ""
   const activeModel = models.find((m) => m.id === activeModelId) ?? defaultModel
 
-  if (!models.length) return <span className="text-[10px] text-muted-foreground/30 font-mono">—</span>
+  if (!models.length) return <span className="text-[10px] text-muted-foreground/55 font-mono">—</span>
 
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
@@ -305,7 +305,7 @@ function ModelCell({ provider, result }: { provider: string; result: MultiKeyRes
             .map((m) => (
               <span
                 key={m.id}
-                className="text-[8px] font-mono text-muted-foreground/30 border border-border/25 rounded px-0.5 py-0 leading-tight"
+                className="text-[8px] font-mono text-muted-foreground/55 border border-border/25 rounded px-0.5 py-0 leading-tight"
                 title={m.label}
               >
                 {m.label.split(/[\s-]/)[0]}
@@ -460,7 +460,7 @@ function MobileRow({
         onClick={onToggle}
       >
         {/* Index */}
-        <span className="text-[10px] font-mono text-muted-foreground/30 w-5 flex-shrink-0 pt-0.5 text-right">{idx + 1}</span>
+        <span className="text-[10px] font-mono text-muted-foreground/55 w-5 flex-shrink-0 pt-0.5 text-right">{idx + 1}</span>
 
         {/* Provider + key + model */}
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -480,7 +480,7 @@ function MobileRow({
           <span className="text-[10px] font-mono text-muted-foreground/45">{maskApiKey(entry.apiKey)}</span>
           {/* Model line */}
           {!entry.unknown && activeModel && (
-            <span className="text-[9px] text-muted-foreground/50 truncate max-w-[160px]">
+            <span className="text-[9px] text-muted-foreground/70 truncate max-w-[160px]">
               {isRunning ? (
                 <span className="inline-flex items-center gap-1"><Spinner size={8} /> testing…</span>
               ) : (
@@ -556,7 +556,7 @@ function DesktopRow({
         className={`border-b border-border/40 last:border-0 transition-colors ${rowBg} ${(result || entry.unknown) ? "cursor-pointer" : ""}`}
       >
         {/* # */}
-        <td className="px-3 py-2.5 text-muted-foreground/30 font-mono text-[10px] w-8">{idx + 1}</td>
+        <td className="px-3 py-2.5 text-muted-foreground/55 font-mono text-[10px] w-8">{idx + 1}</td>
 
         {/* Provider */}
         <td className="px-2 py-2.5 w-36">
@@ -587,7 +587,7 @@ function DesktopRow({
           {isRunning ? (
             <div className="flex items-center gap-1.5">
               <Spinner size={9} />
-              <span className="text-[9px] text-muted-foreground/40">testing…</span>
+              <span className="text-[9px] text-muted-foreground/60">testing…</span>
             </div>
           ) : (
             <ModelCell provider={entry.provider} result={result ?? null} />
@@ -614,7 +614,7 @@ function DesktopRow({
             {(result || entry.unknown) && (
               <button
                 onClick={(e) => { e.stopPropagation(); onToggle() }}
-                className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"
+                className="text-muted-foreground/55 hover:text-muted-foreground transition-colors"
                 title={isExpanded ? "Collapse" : "Expand"}
                 aria-label={isExpanded ? "Collapse row" : "Expand row"}
               >
@@ -711,12 +711,12 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
           </span>
           <span className="text-[10px] font-mono text-muted-foreground/60">{r.latencyMs}ms</span>
           {r.tokenUsage?.total !== undefined && (
-            <span className="text-[9px] font-mono text-muted-foreground/40">{r.tokenUsage.total}tok</span>
+            <span className="text-[9px] font-mono text-muted-foreground/60">{r.tokenUsage.total}tok</span>
           )}
         </div>
 
         {/* Chevron */}
-        <span className={`flex-shrink-0 text-muted-foreground/30 mt-0.5 transition-transform ${expanded ? "rotate-180" : ""}`}>
+        <span className={`flex-shrink-0 text-muted-foreground/55 mt-0.5 transition-transform ${expanded ? "rotate-180" : ""}`}>
           <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
             <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -728,7 +728,7 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
           {/* cURL */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">cURL</span>
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">cURL</span>
               <button onClick={copyCurl} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
                 <CopyIcon2 />
                 {copiedCurl ? "Copied!" : "Copy cURL"}
@@ -743,7 +743,7 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
           {r.ok && r.reply && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Reply</span>
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">Reply</span>
                 <button onClick={copyReply} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
                   <CopyIcon2 />
                   {copiedReply ? "Copied!" : "Copy"}
@@ -779,7 +779,7 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
           {/* Tokens */}
           {r.tokenUsage && (r.tokenUsage.prompt !== undefined || r.tokenUsage.completion !== undefined) && (
             <div className="flex items-center gap-3">
-              <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest">Tokens</span>
+              <span className="text-[9px] text-muted-foreground/70 uppercase tracking-widest">Tokens</span>
               {r.tokenUsage.prompt !== undefined && (
                 <span className="text-[10px] font-mono text-muted-foreground">in: <span className="text-foreground">{r.tokenUsage.prompt}</span></span>
               )}
@@ -828,29 +828,29 @@ function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
             <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${
               keyResult.modelSource === "live"
                 ? "border-teal-500/30 text-teal-400 bg-teal-500/10"
-                : "border-border/40 text-muted-foreground/50"
+                : "border-border/40 text-muted-foreground/70"
             }`}>
               {keyResult.modelSource === "live" ? "live" : "static"}
             </span>
           </div>
-          <span className="text-[10px] font-mono text-muted-foreground/50 truncate">{keyResult.apiKeyMasked}</span>
+          <span className="text-[10px] font-mono text-muted-foreground/70 truncate">{keyResult.apiKeyMasked}</span>
         </div>
 
         {/* Stats */}
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-mono font-bold text-success">{keyResult.passed} ok</span>
-            <span className="text-muted-foreground/30 text-[10px]">/</span>
+            <span className="text-muted-foreground/55 text-[10px]">/</span>
             <span className="text-[11px] font-mono font-bold text-destructive">{keyResult.failed} fail</span>
           </div>
-          <span className="text-[9px] font-mono text-muted-foreground/40 tabular-nums">{keyResult.total} models · {keyResult.durationMs}ms</span>
+          <span className="text-[9px] font-mono text-muted-foreground/60 tabular-nums">{keyResult.total} models · {keyResult.durationMs}ms</span>
           {keyResult.fetchError && (
             <span className="text-[9px] text-yellow-400/70 font-mono truncate max-w-[140px]">{keyResult.fetchError}</span>
           )}
         </div>
 
         {/* Chevron */}
-        <span className={`flex-shrink-0 text-muted-foreground/40 mt-0.5 transition-transform ${open ? "rotate-180" : ""}`}>
+        <span className={`flex-shrink-0 text-muted-foreground/60 mt-0.5 transition-transform ${open ? "rotate-180" : ""}`}>
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
             <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -1259,7 +1259,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                 : "border-border/60 hover:border-primary/40 hover:bg-secondary/20"
             }`}
           >
-            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/30" aria-hidden>
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" className="text-muted-foreground/55" aria-hidden>
               <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
               <path d="M10 10h12M10 14h12M10 18h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
@@ -1296,7 +1296,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                   onChange={(e) => setManualInput(e.target.value)}
                   rows={5}
                   placeholder={"anthropic:sk-ant-...\nopenai:sk-...\nsk-or-v1-..."}
-                  className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 resize-none"
+                  className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/55 resize-none"
                 />
                 <button
                   onClick={handleManualApply}
@@ -1399,7 +1399,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                       className={`flex-shrink-0 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-all mt-0.5 ${
                         copiedId === pf.id
                           ? "border-success/40 text-success bg-success/10"
-                          : "border-border/60 text-muted-foreground/50 hover:text-foreground hover:border-border opacity-0 group-hover:opacity-100 sm:opacity-100"
+                          : "border-border/60 text-muted-foreground/70 hover:text-foreground hover:border-border opacity-0 group-hover:opacity-100 sm:opacity-100"
                       }`}
                     >
                       {copiedId === pf.id ? "Copied" : "Copy"}
@@ -1448,7 +1448,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
               </div>
 
               {testMode === "all" && (
-                <p className="text-[9px] text-muted-foreground/50 leading-relaxed">
+                <p className="text-[9px] text-muted-foreground/70 leading-relaxed">
                   Tests every model for each key (live-fetched). Dahono will test all 70+ models simultaneously across all your keys.
                 </p>
               )}
@@ -1463,7 +1463,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="halo"
-                    className="w-full rounded-lg border border-border bg-background text-foreground text-[12px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+                    className="w-full rounded-lg border border-border bg-background text-foreground text-[12px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
                   />
                 </div>
                 {running ? (
@@ -1551,14 +1551,14 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Total Models</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">Total Models</span>
                   <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">{allModelsSummary.totalModels}</span>
-                  <span className="text-[9px] text-muted-foreground/30">across {validCount} keys</span>
+                  <span className="text-[9px] text-muted-foreground/55">across {validCount} keys</span>
                 </div>
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Total Time</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">Total Time</span>
                   <span className="text-xl font-bold font-mono text-foreground/70 leading-none tabular-nums">{(allModelsSummary.totalMs / 1000).toFixed(1)}s</span>
-                  <span className="text-[9px] text-muted-foreground/30 tabular-nums">{allModelsSummary.totalMs}ms</span>
+                  <span className="text-[9px] text-muted-foreground/55 tabular-nums">{allModelsSummary.totalMs}ms</span>
                 </div>
               </div>
             )}
@@ -1576,7 +1576,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
             {/* ── Entry count summary ───────────────────────────────────────── */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] text-muted-foreground/50">
+              <span className="text-[10px] text-muted-foreground/70">
                 {entries.length} {entries.length === 1 ? "entry" : "entries"} loaded
               </span>
               {validCount !== entries.length && (

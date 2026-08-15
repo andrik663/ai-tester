@@ -463,13 +463,13 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           {isOllama ? (
             <div className="flex flex-col gap-1.5">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Ollama URL</p>
-              <p className="text-[10px] text-muted-foreground/50">Browser connects directly — set <code className="font-mono">OLLAMA_ORIGINS=*</code> for CORS</p>
+              <p className="text-[10px] text-muted-foreground/70">Browser connects directly — set <code className="font-mono">OLLAMA_ORIGINS=*</code> for CORS</p>
               <input
                 type="text"
                 value={ollamaUrl}
                 onChange={e => setOllamaUrl(e.target.value)}
                 placeholder="http://localhost:11434"
-                className="w-full max-w-xs rounded-lg border border-border bg-background text-[11px] font-mono px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30"
+                className="w-full max-w-xs rounded-lg border border-border bg-background text-[11px] font-mono px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/55"
               />
             </div>
           ) : (
@@ -481,12 +481,12 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
                   value={apiKey}
                   onChange={e => setApiKey(e.target.value)}
                   placeholder="sk-or-v1-..."
-                  className="w-full rounded-lg border border-border bg-background text-[11px] font-mono px-3 py-2 pr-9 text-foreground focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30"
+                  className="w-full rounded-lg border border-border bg-background text-[11px] font-mono px-3 py-2 pr-9 text-foreground focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/55"
                 />
                 <button
                   onClick={() => setShowKey(v => !v)}
                   tabIndex={-1}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                 >
                   <EyeIcon show={showKey} />
                 </button>
@@ -553,7 +553,7 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
           {/* Messages */}
           {messages.map(msg => (
             <div key={msg.id} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-              <p className="text-[9px] uppercase tracking-widest font-semibold text-muted-foreground/40 px-1">
+              <p className="text-[9px] uppercase tracking-widest font-semibold text-muted-foreground/60 px-1">
                 {msg.role === "user" ? "You" : "Gateway"}
               </p>
               <div className={`flex flex-col gap-2 ${msg.role === "user" ? "items-end max-w-[82%]" : "items-start w-full max-w-full"}`}>
@@ -605,7 +605,7 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
             const firstPart = last?.parts?.[0]
             const hasText = firstPart?.type === "text" && firstPart.text
             return !hasText ? (
-              <div className="flex items-center gap-2 text-muted-foreground/50 pl-1">
+              <div className="flex items-center gap-2 text-muted-foreground/70 pl-1">
                 <SpinnerIcon />
                 <span className="text-xs">Thinking&hellip;</span>
               </div>

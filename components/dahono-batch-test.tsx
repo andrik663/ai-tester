@@ -136,7 +136,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {/* cURL block */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">cURL</span>
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">cURL</span>
               <button
                 onClick={copyCurl}
                 className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
@@ -153,7 +153,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {/* Reply */}
           {r.ok && r.reply && (
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Reply</span>
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">Reply</span>
               <div className="flex items-start gap-2">
                 <p className="text-[11px] text-foreground bg-secondary/50 rounded-md px-2.5 py-2 leading-relaxed flex-1">
                   {r.reply}
@@ -172,7 +172,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {/* Error */}
           {!r.ok && r.errorMsg && (
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Error</span>
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">Error</span>
               <p className="text-[10px] font-mono text-destructive bg-destructive/5 rounded px-2.5 py-2 border border-destructive/15 break-all">
                 {r.errorMsg}
               </p>
@@ -182,7 +182,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {/* Token usage */}
           {r.tokenUsage && (r.tokenUsage.prompt !== undefined || r.tokenUsage.completion !== undefined) && (
             <div className="flex items-center gap-3">
-              <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest">Tokens</span>
+              <span className="text-[9px] text-muted-foreground/70 uppercase tracking-widest">Tokens</span>
               {r.tokenUsage.prompt !== undefined && (
                 <span className="text-[10px] font-mono text-muted-foreground">
                   in: <span className="text-foreground">{r.tokenUsage.prompt}</span>
@@ -334,7 +334,7 @@ export default function DahonoBatchTest({ apiKey }: Props) {
       </button>
 
       {!canRun && !loading && (
-        <p className="text-[9px] text-muted-foreground/50 text-center">
+        <p className="text-[9px] text-muted-foreground/70 text-center">
           Enter a Dahono API key above to run
         </p>
       )}
@@ -359,7 +359,7 @@ export default function DahonoBatchTest({ apiKey }: Props) {
             <SkeletonRow key={i} i={i} />
           ))}
           {skeletonCount > 20 && (
-            <p className="px-3 py-2 text-[9px] text-muted-foreground/50 text-center">
+            <p className="px-3 py-2 text-[9px] text-muted-foreground/70 text-center">
               +{skeletonCount - 20} more…
             </p>
           )}

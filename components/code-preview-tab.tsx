@@ -346,6 +346,17 @@ export default function CodePreviewTab({
   // ── State ───────────────────────────────────���───────────────────────────────
   type ViewMode = "split" | "code" | "preview"
   const [viewMode, setViewMode]         = useState<ViewMode>("split")
+  const [isMobile, setIsMobile]         = useState(false)
+
+  // Track viewport width so narrow screens render a single active pane
+  // (Code or Preview) instead of a squeezed side-by-side split.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)")
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener("change", update)
+    return () => mq.removeEventListener("change", update)
+  }, [])
   const [messages, setMessages]         = useState<ChatMessage[]>([])
   const [input, setInput]               = useState("")
   const [isStreaming, setIsStreaming]   = useState(false)
@@ -829,29 +840,32 @@ export default function CodePreviewTab({
             </div>
           )}
         </div>
-        <span className="text-[10px] text-muted-foreground/50 ml-0.5">{msg.ts}</span>
+        <span className="text-[10px] text-muted-foreground/70 ml-0.5">{msg.ts}</span>
       </div>
     )
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────────
 
-  const showCode    = viewMode === "split" || viewMode === "code"
-  const showPreview = viewMode === "split" || viewMode === "preview"
+  // On mobile there is no room for a real side-by-side split, so "split"
+  // collapses to a single active pane (Code by default) with the toggle
+  // acting as a Code/Preview tab switcher instead.
+  const showCode    = isMobile ? viewMode !== "preview" : viewMode === "split" || viewMode === "code"
+  const showPreview = isMobile ? viewMode === "preview" : viewMode === "split" || viewMode === "preview"
   const noKey       = !apiKey.trim()
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-3 h-9 border-b border-border/40 bg-sidebar/40 flex-shrink-0">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar/40 flex-shrink-0">
 
         {/* Model selector */}
         {(workingModels.length > 0 || (presetModels && presetModels.length > 0)) && (
           <select
             value={model}
             onChange={(e) => onModelChange(e.target.value)}
-            className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer min-w-0 flex-1 max-w-[180px] truncate"
+            className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1.5 md:py-1 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer min-w-0 flex-1 max-w-[240px] md:max-w-[180px] truncate"
           >
             {isMiuclaw ? (
               workingModels.length > 0 ? (
@@ -896,20 +910,20 @@ export default function CodePreviewTab({
           </div>
         )}
 
-        <div className="flex-1" />
+        <div className="hidden md:block flex-1" />
 
-        {/* View mode toggle */}
-        <div className="flex items-center gap-0.5 rounded-md border border-border/50 bg-muted/30 p-0.5">
+        {/* View mode toggle — "Split" only makes sense once there's room for two panes */}
+        <div className="flex items-center gap-0.5 rounded-md border border-border/50 bg-muted/30 p-0.5 ml-auto">
           {([
             { id: "code"    as const, icon: <CodeIcon />,    label: "Code"    },
-            { id: "split"   as const, icon: <SplitIcon />,   label: "Split"   },
+            ...(isMobile ? [] : [{ id: "split" as const, icon: <SplitIcon />, label: "Split" }]),
             { id: "preview" as const, icon: <PreviewIcon />, label: "Preview" },
           ]).map((v) => (
             <button
               key={v.id}
               onClick={() => setViewMode(v.id)}
               title={v.label}
-              className={`flex items-center justify-center w-6 h-6 rounded transition-all ${
+              className={`flex items-center justify-center w-7 h-7 md:w-6 md:h-6 rounded transition-all ${
                 viewMode === v.id
                   ? "bg-primary/20 text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -925,7 +939,7 @@ export default function CodePreviewTab({
           <button
             onClick={refreshPreview}
             title="Reload preview"
-            className="flex items-center justify-center w-6 h-6 rounded text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary/50"
+            className="flex items-center justify-center w-7 h-7 md:w-6 md:h-6 rounded text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary/50"
           >
             <RefreshIcon />
           </button>
@@ -933,13 +947,18 @@ export default function CodePreviewTab({
       </div>
 
       {/* ── Main area ───────────────────────────────────────────────────────── */}
-      <div className={`flex-1 min-h-0 flex overflow-hidden ${viewMode === "split" ? "flex-row" : "flex-col"}`}>
+      {(() => {
+        // "Split" only renders side-by-side once there's room for two panes;
+        // on mobile it collapses to a single full-width active pane.
+        const isSplitActive = viewMode === "split" && !isMobile
+        return (
+      <div className={`flex-1 min-h-0 flex overflow-hidden ${isSplitActive ? "flex-row" : "flex-col"}`}>
 
         {/* ── LEFT: Code / Chat panel ──────────────────────────────────────── */}
         {showCode && (
           <div
             className={`flex flex-col min-h-0 overflow-hidden ${
-              viewMode === "split"
+              isSplitActive
                 ? "w-1/2 border-r border-border/50"
                 : "flex-1"
             }`}
@@ -955,19 +974,19 @@ export default function CodePreviewTab({
             <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 flex flex-col gap-3">
               {messages.length === 0 && !isStreaming && (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center select-none pointer-events-none">
-                  <div className="w-10 h-10 rounded-xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)]">
+                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)]">
                     <CodeIcon />
                   </div>
-                  <div>
-                    <p className="text-[13px] font-medium text-foreground mb-0.5">
-                      {activeSkillConfigs.length > 0 ? `${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} active` : "Code Preview"}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
-                      {activeSkillConfigs.length > 0
-                        ? `System prompts from ${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} are composed and injected. Ask it to build something.`
-                        : "Ask the AI to build something — it generates live HTML, CSS & JS you can preview instantly."}
-                    </p>
-                  </div>
+                  {activeSkillConfigs.length > 0 && (
+                    <div>
+                      <p className="text-[13px] font-medium text-foreground mb-0.5">
+                        {`${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} active`}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
+                        {`System prompts from ${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} are composed and injected. Ask it to build something.`}
+                      </p>
+                    </div>
+                  )}
                   {activeSkillConfigs.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap justify-center">
                       {activeSkillConfigs.map((c) => (
@@ -982,24 +1001,6 @@ export default function CodePreviewTab({
                       ))}
                     </div>
                   )}
-                  <div className="flex flex-col gap-1.5 w-full max-w-[220px]">
-                    {(() => {
-                      const ids = activeSkillConfigs.map((c) => c.skillId)
-                      if (ids.includes("algorithmic-art")) return ["Particle flow field with p5.js", "Cellular automata simulation", "Perlin noise landscape"]
-                      if (ids.includes("web-artifacts-builder") && ids.includes("theme-factory")) return ["Build a dashboard with Ocean Depths theme", "Create a themed shadcn/ui form", "Make a tech-themed analytics app"]
-                      if (ids.includes("web-artifacts-builder")) return ["Build a dashboard with charts", "Create a shadcn/ui form", "Make a multi-step wizard"]
-                      if (ids.includes("theme-factory")) return ["Apply Ocean Depths theme", "Generate a dark tech theme", "Create a warm golden theme"]
-                      return ["Build a todo app with dark mode", "Create an animated gradient clock", "Make a responsive pricing card"]
-                    })().map((ex) => (
-                      <button
-                        key={ex}
-                        onClick={() => { setInput(ex); textareaRef.current?.focus() }}
-                        className="pointer-events-auto text-left text-[11px] px-2.5 py-1.5 rounded-lg border border-border/50 bg-muted/20 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
-                      >
-                        {ex}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               )}
 
@@ -1052,13 +1053,13 @@ export default function CodePreviewTab({
                       ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
                       : input.trim() && !noKey
                       ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
-                      : "bg-muted/30 text-muted-foreground/40 cursor-not-allowed"
+                      : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
                   }`}
                 >
                   {isStreaming ? <StopIcon /> : <SendIcon />}
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground/40 mt-1.5 ml-1">
+              <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
                 Shift+Enter for new line · powered by {providerName}
               </p>
             </div>
@@ -1069,29 +1070,21 @@ export default function CodePreviewTab({
         {showPreview && (
           <div
             className={`flex flex-col min-h-0 overflow-hidden ${
-              viewMode === "split" ? "w-1/2" : "flex-1"
+              isSplitActive ? "w-1/2" : "flex-1"
             }`}
           >
             {/* Preview toolbar */}
-            <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
-              {/* Traffic light dots */}
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-destructive/60" />
-                <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
-                <span className="w-2 h-2 rounded-full bg-success/60" />
-              </div>
-              <span className="text-[10px] text-muted-foreground/60 flex-1 text-center truncate">
-                {previewSrc ? "Preview" : "No output yet"}
-              </span>
-              {previewSrc && (
+            {previewSrc && (
+              <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
+                <span className="text-[10px] text-muted-foreground flex-1 text-center truncate">Preview</span>
                 <button
                   onClick={refreshPreview}
-                  className="text-muted-foreground/50 hover:text-foreground transition-colors"
+                  className="text-muted-foreground/70 hover:text-foreground transition-colors"
                 >
                   <RefreshIcon />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* iframe */}
             <div className="flex-1 min-h-0 relative bg-white">
@@ -1105,14 +1098,14 @@ export default function CodePreviewTab({
                   onError={() => setIframeError(true)}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-3 bg-[#0f0f0f] select-none">
-                  <div className="w-10 h-10 rounded-xl border border-border/30 bg-muted/20 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center h-full gap-4 bg-sidebar select-none px-6">
+                  <div className="w-14 h-14 rounded-2xl border border-dashed border-border/40 bg-muted/10 flex items-center justify-center">
                     <PreviewIcon />
                   </div>
                   <div className="text-center">
-                    <p className="text-[12px] font-medium text-foreground/60 mb-0.5">Live Preview</p>
-                    <p className="text-[11px] text-muted-foreground/40 max-w-[180px] leading-relaxed">
-                      Preview will appear here when AI generates HTML code.
+                    <p className="text-[13px] font-medium text-foreground/70 mb-1">Live Preview</p>
+                    <p className="text-[11px] text-muted-foreground/70 max-w-[200px] leading-relaxed">
+                      Your generated app will render here once the AI finishes building it.
                     </p>
                   </div>
                 </div>
@@ -1134,6 +1127,8 @@ export default function CodePreviewTab({
           </div>
         )}
       </div>
+        )
+      })()}
     </div>
   )
 }
