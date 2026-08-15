@@ -9,11 +9,22 @@ interface ChatMessage {
   content: string
   ts: string
   codeBlocks?: ExtractedCode[]
+  /** The full merged HTML document after this turn — used to drive the
+   *  preview/download without re-displaying the whole file in the chat. */
+  fullHtml?: string
+  /** Set when this turn's edit request could not locate every SEARCH
+   *  snippet exactly, so one or more requested changes were skipped. */
+  failedEdits?: number
 }
 
 interface ExtractedCode {
   lang: string
   code: string
+}
+
+interface EditBlock {
+  search: string
+  replace: string
 }
 
 interface WorkingModel {
@@ -65,6 +76,39 @@ CRITICAL RULES — you MUST follow ALL of them:
 - If the user asks a question instead of requesting code, answer concisely in plain text.`
 
 /**
+ * System prompt used for every follow-up turn once a full HTML document
+ * already exists. Instead of asking the model to resend the entire file
+ * (slow, wasteful, and error-prone on long files), it must respond with
+ * small SEARCH/REPLACE edit blocks that are applied client-side on top of
+ * the last known full document — so only the touched region ever changes.
+ */
+function buildEditSystemPrompt(currentHtml: string, skillPrompt: string | null): string {
+  return `You are editing an existing, already-working HTML page that is live in a preview pane. The user will ask for a small, specific change (e.g. "tambahkan footer widget", "ubah warna tombol jadi hijau", "add a contact form").
+
+CRITICAL RULE — do NOT rewrite, resend, or repeat the whole file. Respond with ONLY one or more SEARCH/REPLACE edit blocks in this exact format:
+
+\`\`\`edit
+<<<<<<< SEARCH
+(exact snippet copied character-for-character from the current file below, including original whitespace/indentation)
+=======
+(the new code that replaces that exact snippet)
+>>>>>>> REPLACE
+\`\`\`
+
+Rules you MUST follow:
+1. Never output \`\`\`html or the full document — only \`\`\`edit blocks with SEARCH/REPLACE pairs.
+2. Each SEARCH section must copy an EXACT, contiguous snippet that exists verbatim in the current file below (same characters, same indentation). Keep it as short as possible — just enough lines (2-8) to uniquely locate the spot. Never paste the whole file into SEARCH.
+3. Include multiple SEARCH/REPLACE blocks in one response if the request touches multiple separate spots.
+4. To ADD brand-new markup (e.g. a new footer) rather than change existing text, use a short unique anchor line as SEARCH (e.g. the line right before </body>) and REPLACE it with that same anchor line followed by the new markup.
+5. If the user asks a question instead of requesting a change, just answer in plain text — no code block at all.
+${skillPrompt ? `\nAdditional style guidance to apply to any new code you add:\n${skillPrompt}\n` : ""}
+CURRENT FILE (reference only, to locate exact snippets from — do not repeat it back):
+\`\`\`html
+${currentHtml}
+\`\`\``
+}
+
+/**
  * Extract the first fenced code block from a markdown-formatted string.
  * Returns { lang, code } or null.
  */
@@ -80,6 +124,81 @@ function extractCodeBlocks(text: string): ExtractedCode[] {
     }
   }
   return results
+}
+
+/**
+ * Extract SEARCH/REPLACE edit blocks from a response. Looks inside fenced
+ * ```edit blocks first; falls back to scanning the raw text for the marker
+ * pattern in case the model omits the fence.
+ */
+function extractEditBlocks(text: string): EditBlock[] {
+  const out: EditBlock[] = []
+  const pairRegex = /<{3,}\s*SEARCH\s*\n([\s\S]*?)\n={3,}\s*\n([\s\S]*?)\n>{3,}\s*REPLACE/g
+
+  const fenceRegex = /```edit\n([\s\S]*?)```/g
+  let fenceMatch
+  let sawFence = false
+  while ((fenceMatch = fenceRegex.exec(text)) !== null) {
+    sawFence = true
+    let m
+    const segment = fenceMatch[1]
+    const localRegex = new RegExp(pairRegex.source, "g")
+    while ((m = localRegex.exec(segment)) !== null) {
+      out.push({ search: m[1], replace: m[2] })
+    }
+  }
+  if (!sawFence) {
+    let m
+    while ((m = pairRegex.exec(text)) !== null) {
+      out.push({ search: m[1], replace: m[2] })
+    }
+  }
+  return out
+}
+
+/**
+ * Apply SEARCH/REPLACE edit blocks on top of the current full HTML.
+ * Tries an exact substring match first, then falls back to a whitespace-
+ * tolerant line-window match so minor indentation drift from the model
+ * doesn't cause the edit to silently fail.
+ */
+function applyEditBlocks(baseHtml: string, edits: EditBlock[]): { html: string; appliedCount: number; failedCount: number } {
+  let html = baseHtml
+  let appliedCount = 0
+  let failedCount = 0
+
+  const normalize = (s: string) => s.replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").trim()
+
+  for (const edit of edits) {
+    const searchText = edit.search.trim()
+    if (!searchText) { failedCount++; continue }
+
+    if (html.includes(edit.search)) {
+      html = html.replace(edit.search, edit.replace)
+      appliedCount++
+      continue
+    }
+
+    // Whitespace-tolerant fallback: find a contiguous window of lines whose
+    // normalized text matches the normalized SEARCH snippet.
+    const lines = html.split("\n")
+    const searchLineCount = edit.search.split("\n").length
+    const normSearch = normalize(edit.search)
+    let matched = false
+    for (let i = 0; i <= lines.length - searchLineCount; i++) {
+      const windowText = lines.slice(i, i + searchLineCount).join("\n")
+      if (normalize(windowText) === normSearch) {
+        lines.splice(i, searchLineCount, edit.replace)
+        html = lines.join("\n")
+        matched = true
+        appliedCount++
+        break
+      }
+    }
+    if (!matched) failedCount++
+  }
+
+  return { html, appliedCount, failedCount }
 }
 
 /**
@@ -236,6 +355,11 @@ export default function CodePreviewTab({
   const [copyFeedback, setCopyFeedback]       = useState<number | null>(null)
   const [iframeError, setIframeError]         = useState(false)
   const [downloadOpenIdx, setDownloadOpenIdx] = useState<number | null>(null)
+  /** Ground-truth full HTML document, kept up to date after every turn
+   *  (either a fresh generation or an applied SEARCH/REPLACE edit). This is
+   *  what gets fed back to the model on each follow-up so it can locate
+   *  exact snippets, without ever having to re-display the whole file. */
+  const [lastFullHtml, setLastFullHtml] = useState("")
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
@@ -254,12 +378,19 @@ export default function CodePreviewTab({
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px"
   }, [input])
 
-  // When streaming finishes, extract latest code and update preview
+  // When streaming finishes, extract latest code and update preview.
+  // `fullHtml` (set for both fresh generations and applied edits) always
+  // wins — it's the merged, ground-truth document even when the chat only
+  // displayed a small diff for this turn.
   useEffect(() => {
     if (isStreaming) return
     if (messages.length === 0) return
     const last = messages[messages.length - 1]
-    if (last.role === "assistant" && last.codeBlocks && last.codeBlocks.length > 0) {
+    if (last.role !== "assistant") return
+    if (last.fullHtml) {
+      setPreviewSrc(last.fullHtml)
+      setIframeError(false)
+    } else if (last.codeBlocks && last.codeBlocks.length > 0) {
       const src = buildSrcDoc(last.codeBlocks)
       if (src) {
         setPreviewSrc(src)
@@ -288,6 +419,14 @@ export default function CodePreviewTab({
     const ctrl = new AbortController()
     abortRef.current = ctrl
 
+    // Once a full document already exists, switch to edit mode: the model
+    // is told to return only SEARCH/REPLACE blocks against the current file
+    // instead of resending the whole HTML on every follow-up.
+    const isEditTurn = lastFullHtml.trim().length > 0
+    const systemPromptToUse = isEditTurn
+      ? buildEditSystemPrompt(lastFullHtml, composedSkillPrompt)
+      : (composedSkillPrompt ?? CODE_SYSTEM_PROMPT)
+
     let accumulated = ""
 
     try {
@@ -300,7 +439,7 @@ export default function CodePreviewTab({
           endpoint,
           headers,
           messages: allMessages,
-          systemPrompt: composedSkillPrompt ?? CODE_SYSTEM_PROMPT,
+          systemPrompt: systemPromptToUse,
           model: model.trim() || undefined,
         }),
         signal: ctrl.signal,
@@ -351,16 +490,56 @@ export default function CodePreviewTab({
       }
     }
 
-    const codeBlocks = extractCodeBlocks(accumulated)
-    const replyTs    = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    let codeBlocks   = extractCodeBlocks(accumulated)
+    let fullHtml: string | undefined
+    let failedEdits: number | undefined
+
+    if (isEditTurn) {
+      const editBlocks = extractEditBlocks(accumulated)
+      if (editBlocks.length > 0) {
+        // Model followed the SEARCH/REPLACE format — apply the patch on top
+        // of the last known full document and show only the concise diff
+        // in the chat, never the whole file again.
+        const { html, appliedCount, failedCount } = applyEditBlocks(lastFullHtml, editBlocks)
+        fullHtml = html
+        failedEdits = failedCount > 0 ? failedCount : undefined
+        codeBlocks = editBlocks.map((b) => ({
+          lang: "diff",
+          code: `<<<<<<< SEARCH\n${b.search}\n=======\n${b.replace}\n>>>>>>> REPLACE`,
+        }))
+        if (appliedCount === 0 && failedCount > 0) {
+          // Nothing could be located — fall back to showing the raw reply
+          // text so the user isn't left staring at an unexplained diff.
+          codeBlocks = []
+        }
+      } else {
+        // Model ignored the edit-mode instructions and sent a full document
+        // anyway — accept it as a full replace rather than breaking.
+        const htmlBlock = codeBlocks.find((b) => b.lang === "html" || b.lang === "html5")
+        if (htmlBlock) fullHtml = htmlBlock.code
+      }
+    } else {
+      // First generation for this conversation.
+      const htmlBlock = codeBlocks.find((b) => b.lang === "html" || b.lang === "html5")
+      if (htmlBlock) fullHtml = htmlBlock.code
+    }
+
+    if (fullHtml) setLastFullHtml(fullHtml)
+
+    let finalContent = accumulated || "(empty response)"
+    if (failedEdits) {
+      finalContent += `\n\nNote: ${failedEdits} requested change${failedEdits > 1 ? "s" : ""} could not be located exactly in the current file and were skipped — try rephrasing the request.`
+    }
+
+    const replyTs = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
     setMessages((prev) => [
       ...prev,
-      { role: "assistant", content: accumulated || "(empty response)", ts: replyTs, codeBlocks },
+      { role: "assistant", content: finalContent, ts: replyTs, codeBlocks, fullHtml, failedEdits },
     ])
     setStreamingText("")
     setIsStreaming(false)
     abortRef.current = null
-  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt])
+  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml])
 
   function stopStreaming() {
     abortRef.current?.abort()
@@ -535,12 +714,15 @@ export default function CodePreviewTab({
               const code    = fenceMatch[2].trim()
               const blockId = i * 100 + pi
               const dlOpen  = downloadOpenIdx === blockId
+              const isDiff  = lang === "edit" || lang === "diff"
               return (
-                <div key={pi} className="rounded-lg border border-border/60 bg-muted/40 overflow-hidden">
+                <div key={pi} className={`rounded-lg border overflow-hidden ${isDiff ? "border-primary/25 bg-primary/5" : "border-border/60 bg-muted/40"}`}>
                   {/* Code block header */}
-                  <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40 bg-muted/30">
+                  <div className={`flex items-center justify-between px-3 py-1.5 border-b ${isDiff ? "border-primary/15 bg-primary/8" : "border-border/40 bg-muted/30"}`}>
                     {/* Lang badge */}
-                    <span className="text-[10px] font-mono text-muted-foreground">{lang}</span>
+                    <span className={`text-[10px] font-mono ${isDiff ? "text-primary/80" : "text-muted-foreground"}`}>
+                      {isDiff ? "diff · search & replace" : lang}
+                    </span>
 
                     {/* Action buttons */}
                     <div className="flex items-center gap-1">
@@ -555,10 +737,10 @@ export default function CodePreviewTab({
                       </button>
 
                       {/* Divider */}
-                      <div className="w-px h-3 bg-border/60" />
+                      {!isDiff && <div className="w-px h-3 bg-border/60" />}
 
-                      {/* Download dropdown */}
-                      <div className="relative">
+                      {/* Download dropdown — only meaningful for full files, not diffs */}
+                      {!isDiff && <div className="relative">
                         <button
                           onClick={() => setDownloadOpenIdx(dlOpen ? null : blockId)}
                           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
@@ -598,7 +780,7 @@ export default function CodePreviewTab({
                             </div>
                           </>
                         )}
-                      </div>
+                      </div>}
 
                     </div>
                   </div>
@@ -617,6 +799,35 @@ export default function CodePreviewTab({
             }
             return null
           })}
+
+          {/* Full-file action strip — shown once per turn when an edit was
+              merged, so the merged document stays copy/downloadable without
+              ever re-printing the whole file inline. */}
+          {msg.fullHtml && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/20 px-2.5 py-1.5">
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                <CodeIcon />
+                Full file updated
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => copyCode(msg.fullHtml!, i * 100 + 99)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
+                >
+                  <CopyIcon />
+                  {copyFeedback === i * 100 + 99 ? "Copied!" : "Copy HTML"}
+                </button>
+                <div className="w-px h-3 bg-border/60" />
+                <button
+                  onClick={() => downloadCode(msg.fullHtml!, "html", "html")}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
+                >
+                  <DownloadIcon />
+                  Download
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <span className="text-[10px] text-muted-foreground/50 ml-0.5">{msg.ts}</span>
       </div>
