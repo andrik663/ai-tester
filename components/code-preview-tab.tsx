@@ -718,6 +718,37 @@ export default function CodePreviewTab({
     return (
       <div key={i} className="flex flex-col gap-1.5">
         <div className="flex flex-col gap-2">
+          {/* Full-file action strip — shown once per turn when an edit was
+              merged, so the merged document stays copy/downloadable without
+              ever re-printing the whole file inline. Rendered first and
+              pinned to the top of the scroll area so it stays reachable
+              even while the generated content below is very long. */}
+          {msg.fullHtml && (
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/95 backdrop-blur-sm px-2.5 py-1.5 shadow-sm">
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                <CodeIcon />
+                Full file updated
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => copyCode(msg.fullHtml!, i * 100 + 99)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
+                >
+                  <CopyIcon />
+                  {copyFeedback === i * 100 + 99 ? "Copied!" : "Copy HTML"}
+                </button>
+                <div className="w-px h-3 bg-border/60" />
+                <button
+                  onClick={() => downloadCode(msg.fullHtml!, "html", "html")}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
+                >
+                  <DownloadIcon />
+                  Download
+                </button>
+              </div>
+            </div>
+          )}
+
           {parts.map((part, pi) => {
               const fenceMatch = part.match(/^```(\w*)\n([\s\S]*?)```$/)
             if (fenceMatch) {
@@ -728,8 +759,10 @@ export default function CodePreviewTab({
               const isDiff  = lang === "edit" || lang === "diff"
               return (
                 <div key={pi} className={`rounded-lg border overflow-hidden ${isDiff ? "border-primary/25 bg-primary/5" : "border-border/60 bg-muted/40"}`}>
-                  {/* Code block header */}
-                  <div className={`flex items-center justify-between px-3 py-1.5 border-b ${isDiff ? "border-primary/15 bg-primary/8" : "border-border/40 bg-muted/30"}`}>
+                  {/* Code block header — sticky so it stays visible while
+                      scrolling through long generated code instead of
+                      disappearing off the top of the chat. */}
+                  <div className={`sticky top-0 z-10 flex items-center justify-between px-3 py-1.5 border-b backdrop-blur-sm ${isDiff ? "border-primary/15 bg-primary/15" : "border-border/40 bg-muted/90"}`}>
                     {/* Lang badge */}
                     <span className={`text-[10px] font-mono ${isDiff ? "text-primary/80" : "text-muted-foreground"}`}>
                       {isDiff ? "diff · search & replace" : lang}
@@ -810,35 +843,6 @@ export default function CodePreviewTab({
             }
             return null
           })}
-
-          {/* Full-file action strip — shown once per turn when an edit was
-              merged, so the merged document stays copy/downloadable without
-              ever re-printing the whole file inline. */}
-          {msg.fullHtml && (
-            <div className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/20 px-2.5 py-1.5">
-              <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-                <CodeIcon />
-                Full file updated
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => copyCode(msg.fullHtml!, i * 100 + 99)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
-                >
-                  <CopyIcon />
-                  {copyFeedback === i * 100 + 99 ? "Copied!" : "Copy HTML"}
-                </button>
-                <div className="w-px h-3 bg-border/60" />
-                <button
-                  onClick={() => downloadCode(msg.fullHtml!, "html", "html")}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted/60"
-                >
-                  <DownloadIcon />
-                  Download
-                </button>
-              </div>
-            </div>
-          )}
         </div>
         <span className="text-[10px] text-muted-foreground/70 ml-0.5">{msg.ts}</span>
       </div>
