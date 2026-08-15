@@ -363,7 +363,7 @@ const SKILL_STACKS: SkillStack[] = [
     label: "Full Coding",
     description: "Web Artifacts Builder + Web Design Guidelines + Vercel React Best Practices — for high-quality production web apps.",
     skillIds: ["web-artifacts-builder", "web-design-guidelines", "vercel-react-best-practices"],
-    color: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10",
+    color: "text-success border-success/30 bg-success/10",
   },
   {
     id: "futuristic-stack",
@@ -493,7 +493,7 @@ function SkillCard({
       ? "border-amber-400/30 text-amber-400/70"
       : skill.registrySlug === "vercel-labs/agent-skills"
       ? "border-primary/30 text-primary/60"
-      : "border-emerald-400/30 text-emerald-400/70"
+      : "border-success/30 text-success/70"
 
   return (
     <div className={`rounded-xl border transition-colors ${isActive ? "border-primary/40 bg-primary/5" : "border-border/60 bg-card/50"}`}>
@@ -582,7 +582,7 @@ function SkillCard({
                 onClick={handleCopyInstall}
                 className={`flex-shrink-0 flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors ${
                   copiedInstall
-                    ? "border-green-500/40 bg-green-500/10 text-green-400"
+                    ? "border-success/40 bg-success/10 text-success"
                     : "border-border text-muted-foreground/50 hover:text-foreground hover:border-primary/40"
                 }`}
               >
@@ -602,7 +602,7 @@ function SkillCard({
                 onClick={handleCopyPrompt}
                 className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors ${
                   copiedPrompt
-                    ? "border-green-500/40 bg-green-500/10 text-green-400"
+                    ? "border-success/40 bg-success/10 text-success"
                     : "border-border text-muted-foreground/50 hover:text-foreground"
                 }`}
               >
@@ -690,7 +690,7 @@ function StackCard({
           onClick={() => isApplied ? onClear(stack) : onApply(stack)}
           className={`flex-shrink-0 flex items-center gap-1.5 text-[9px] px-2.5 py-1.5 rounded-lg border transition-colors ${
             isApplied
-              ? "border-red-400/30 bg-red-400/10 text-red-400 hover:bg-red-400/20"
+              ? "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20"
               : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
           }`}
         >
@@ -739,7 +739,7 @@ function ActiveSkillsBanner({
         </div>
         <button
           onClick={onDeactivateAll}
-          className="flex-shrink-0 text-[9px] px-2.5 py-1.5 rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10 transition-colors"
+          className="flex-shrink-0 text-[9px] px-2.5 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
         >
           Clear all
         </button>
@@ -755,7 +755,7 @@ function ActiveSkillsBanner({
             {s.name}
             <button
               onClick={() => onDeactivate(s.id)}
-              className="hover:text-red-400 transition-colors ml-0.5"
+              className="hover:text-destructive transition-colors ml-0.5"
               aria-label={`Remove ${s.name}`}
             >
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="w-2.5 h-2.5">

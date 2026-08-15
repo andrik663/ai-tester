@@ -194,8 +194,8 @@ export default function VideoTester({
           <span className={`w-1.5 h-1.5 flex-shrink-0 rounded-full ${
             !isSupported ? "bg-yellow-400" :
             isRunning ? "bg-primary animate-pulse" :
-            status === "done" ? "bg-green-400" :
-            hasKey ? "bg-green-400" : "bg-muted-foreground/40"
+            status === "done" ? "bg-success" :
+            hasKey ? "bg-success" : "bg-muted-foreground/40"
           }`} />
           <span className="text-[11px] font-mono text-muted-foreground truncate">
             {isSupported ? (currentModel?.label ?? activeModelId) : "Not supported"}

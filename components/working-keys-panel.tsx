@@ -298,10 +298,10 @@ function GroupedKeyCard({
         {/* Status dot — red if all screened models are OFF, yellow if mixed, green otherwise */}
         <span className={`flex-shrink-0 w-2 h-2 rounded-full ${
           groupScreenerCounts.off > 0 && groupScreenerCounts.on === 0
-            ? "bg-red-400"
+            ? "bg-destructive"
             : groupScreenerCounts.off > 0
             ? "bg-yellow-400"
-            : "bg-green-400"
+            : "bg-success"
         }`} />
 
         {/* Provider + summary */}
@@ -322,12 +322,12 @@ function GroupedKeyCard({
             {(groupScreenerCounts.on > 0 || groupScreenerCounts.off > 0) && (
               <>
                 {groupScreenerCounts.on > 0 && (
-                  <span className="text-[8px] px-1 py-0.5 rounded border border-green-400/25 bg-green-400/10 text-green-400 font-mono">
+                  <span className="text-[8px] px-1 py-0.5 rounded border border-success/25 bg-success/10 text-success font-mono">
                     {groupScreenerCounts.on} ON
                   </span>
                 )}
                 {groupScreenerCounts.off > 0 && (
-                  <span className="text-[8px] px-1 py-0.5 rounded border border-red-400/25 bg-red-400/10 text-red-400 font-mono">
+                  <span className="text-[8px] px-1 py-0.5 rounded border border-destructive/25 bg-destructive/10 text-destructive font-mono">
                     {groupScreenerCounts.off} OFF
                   </span>
                 )}
@@ -346,7 +346,7 @@ function GroupedKeyCard({
               lockStatus === "ok"
                 ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
                 : lockStatus === "error"
-                ? "border-red-400/50 bg-red-400/10 text-red-400"
+                ? "border-destructive/50 bg-destructive/10 text-destructive"
                 : "border-border text-muted-foreground/40 hover:border-cyan-400/30 hover:text-cyan-400 hover:bg-cyan-400/5"
             }`}
             title={lockStatus === "ok" ? "Locked" : lockStatus === "error" ? lockError : "Lock to DB"}
@@ -360,8 +360,8 @@ function GroupedKeyCard({
             onClick={handleDeleteGroup}
             className={`flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all ${
               confirmDel
-                ? "border-red-400/50 bg-red-400/10 text-red-400"
-                : "border-border text-muted-foreground/40 hover:border-red-400/30 hover:text-red-400 hover:bg-red-400/5"
+                ? "border-destructive/50 bg-destructive/10 text-destructive"
+                : "border-border text-muted-foreground/40 hover:border-destructive/30 hover:text-destructive hover:bg-destructive/5"
             }`}
             title={confirmDel ? "Tap again to confirm" : "Delete all"}
           >
@@ -388,7 +388,7 @@ function GroupedKeyCard({
             >
               {/* Status dot from screener */}
               <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${
-                !screenerStatus ? "bg-muted-foreground/20" : screenerStatus.isOn ? "bg-green-400" : "bg-red-400"
+                !screenerStatus ? "bg-muted-foreground/20" : screenerStatus.isOn ? "bg-success" : "bg-destructive"
               }`} />
 
               {/* Model ID */}
@@ -398,8 +398,8 @@ function GroupedKeyCard({
                   {screenerStatus && (
                     <span className={`text-[8px] px-1 py-0.5 rounded border font-medium flex-shrink-0 ${
                       screenerStatus.isOn
-                        ? "text-green-400 border-green-400/25 bg-green-400/10"
-                        : "text-red-400 border-red-400/25 bg-red-400/10"
+                        ? "text-success border-success/25 bg-success/10"
+                        : "text-destructive border-destructive/25 bg-destructive/10"
                     }`}>
                       {screenerStatus.isOn ? "ON" : "OFF"}
                     </span>
@@ -410,7 +410,7 @@ function GroupedKeyCard({
                   const caps = inferCapabilities(r.modelId).filter((c) => c !== "text")
                   const CAP_TAG_COLORS: Record<string, string> = {
                     flagship: "text-yellow-400/80 border-yellow-400/20 bg-yellow-400/5",
-                    agent:    "text-emerald-400/80 border-emerald-400/20 bg-emerald-400/5",
+                    agent:    "text-success/80 border-success/20 bg-success/5",
                     coding:   "text-violet-400/80 border-violet-400/20 bg-violet-400/5",
                     document: "text-orange-400/80 border-orange-400/20 bg-orange-400/5",
                     image:    "text-amber-400/80 border-amber-400/20 bg-amber-400/5",
@@ -437,7 +437,7 @@ function GroupedKeyCard({
                     <span className="text-[9px] text-muted-foreground/40 font-mono">{r.tokenUsage.total} tok</span>
                   )}
                   {screenerStatus && !screenerStatus.isOn && screenerStatus.error && (
-                    <span className="text-[8px] text-red-400/70 truncate max-w-[140px]" title={screenerStatus.error}>
+                    <span className="text-[8px] text-destructive/70 truncate max-w-[140px]" title={screenerStatus.error}>
                       {screenerStatus.error}
                     </span>
                   )}
@@ -449,7 +449,7 @@ function GroupedKeyCard({
                 onClick={() => handleCopyCurl(r)}
                 className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors flex-shrink-0 ${
                   copiedCurl === r.id
-                    ? "border-green-500/40 bg-green-500/10 text-green-400"
+                    ? "border-success/40 bg-success/10 text-success"
                     : "border-border text-muted-foreground/40 hover:text-foreground hover:border-primary/40"
                 }`}
                 title="Copy cURL (key is masked)"
@@ -461,7 +461,7 @@ function GroupedKeyCard({
               {/* Delete single */}
               <button
                 onClick={() => onDeleteRecord(r.id)}
-                className="flex-shrink-0 text-muted-foreground/30 hover:text-red-400 transition-colors p-1"
+                className="flex-shrink-0 text-muted-foreground/30 hover:text-destructive transition-colors p-1"
                 title="Remove"
               >
                 <TrashIcon />
@@ -596,13 +596,13 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
               return (
                 <div key={row.id} className="border-b border-border last:border-0 px-3 py-2.5 flex flex-col gap-1.5 hover:bg-secondary/20 transition-colors">
                   <div className="flex items-start gap-2">
-                    <span className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${row.isWorking ? "bg-green-400" : "bg-red-400"}`} />
+                    <span className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${row.isWorking ? "bg-success" : "bg-destructive"}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[9px] uppercase tracking-widest font-semibold text-cyan-400/80 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded">
                           {row.providerName}
                         </span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded border ${row.isWorking ? "text-green-400 border-green-400/20 bg-green-400/10" : "text-red-400 border-red-400/20 bg-red-400/10"}`}>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded border ${row.isWorking ? "text-success border-success/20 bg-success/10" : "text-destructive border-destructive/20 bg-destructive/10"}`}>
                           {row.isWorking ? "working" : "failed"}
                         </span>
                         {row.latencyMs && (
@@ -614,14 +614,14 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
                         Locked {lockedDate.toLocaleDateString()} · Next refresh {nextRefresh.toLocaleString()}
                       </div>
                       {!row.isWorking && row.lastError && (
-                        <div className="text-[8px] text-red-400/70 mt-0.5 truncate" title={row.lastError}>
+                        <div className="text-[8px] text-destructive/70 mt-0.5 truncate" title={row.lastError}>
                           {row.lastError}
                         </div>
                       )}
                     </div>
                     <button
                       onClick={() => handleUnlock(row.id)}
-                      className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground/40 hover:border-red-400/30 hover:text-red-400 transition-colors"
+                      className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground/40 hover:border-destructive/30 hover:text-destructive transition-colors"
                     >
                       <LockIcon locked={false} />
                       Unlock
@@ -758,7 +758,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
             Working Keys
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-green-400/10 text-green-400 border border-green-400/20">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20">
             {okCount} saved
           </span>
         </div>
@@ -766,8 +766,8 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
           onClick={handleClearAll}
           className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-all ${
             confirmClear
-              ? "border-red-400/50 bg-red-400/10 text-red-400"
-              : "border-border text-muted-foreground/40 hover:border-red-400/30 hover:text-red-400"
+              ? "border-destructive/50 bg-destructive/10 text-destructive"
+              : "border-border text-muted-foreground/40 hover:border-destructive/30 hover:text-destructive"
           }`}
         >
           <TrashIcon />
@@ -833,7 +833,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
 
           const ACTIVE_COLORS: Record<string, string> = {
             all:      "border-primary/50 bg-primary/10 text-primary",
-            agent:    "border-emerald-400/50 bg-emerald-400/10 text-emerald-400",
+            agent:    "border-success/50 bg-success/10 text-success",
             coding:   "border-violet-400/50 bg-violet-400/10 text-violet-400",
             document: "border-orange-400/50 bg-orange-400/10 text-orange-400",
             text:     "border-sky-400/50 bg-sky-400/10 text-sky-400",

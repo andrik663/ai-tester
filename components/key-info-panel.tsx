@@ -58,16 +58,16 @@ function ratePct(remaining?: string, limit?: string): number | null {
 
 function pctColor(pct: number | null): string {
   if (pct === null) return "text-muted-foreground"
-  if (pct > 60) return "text-green-400"
+  if (pct > 60) return "text-success"
   if (pct > 25) return "text-yellow-400"
-  return "text-red-400"
+  return "text-destructive"
 }
 
 function pctBarColor(pct: number | null): string {
   if (pct === null) return "bg-muted-foreground/20"
-  if (pct > 60) return "bg-green-400"
+  if (pct > 60) return "bg-success"
   if (pct > 25) return "bg-yellow-400"
-  return "bg-red-400"
+  return "bg-destructive"
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -87,9 +87,9 @@ function StatRow({
 }) {
   const [copied, setCopied] = useState(false)
   const colors = {
-    green:   "text-green-400",
+    green:   "text-success",
     yellow:  "text-yellow-400",
-    red:     "text-red-400",
+    red:     "text-destructive",
     blue:    "text-sky-400",
     muted:   "text-muted-foreground",
     default: "text-foreground",
@@ -112,7 +112,7 @@ function StatRow({
             title="Copy"
           >
             {copied ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-green-400">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 text-success">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             ) : (
@@ -258,7 +258,7 @@ export default function KeyInfoPanel({ provider, apiKey, responseHeaders, fetchT
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setCollapsed((v) => !v) }}
       >
         <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 flex-shrink-0 ${data && !error ? "text-green-400" : isLoading ? "text-yellow-400 animate-pulse" : "text-muted-foreground"}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 flex-shrink-0 ${data && !error ? "text-success" : isLoading ? "text-yellow-400 animate-pulse" : "text-muted-foreground"}`}>
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
@@ -269,7 +269,7 @@ export default function KeyInfoPanel({ provider, apiKey, responseHeaders, fetchT
             <span className="text-[9px] text-muted-foreground/60 font-normal normal-case">fetching...</span>
           )}
           {data && !isLoading && (
-            <span className="text-[9px] text-green-400/70 font-normal normal-case">
+            <span className="text-[9px] text-success/70 font-normal normal-case">
               {data.modelCount ? `${data.modelCount} models` : ""}
               {data.balance ? (data.modelCount ? " · " : "") + data.balance : ""}
             </span>
@@ -329,7 +329,7 @@ export default function KeyInfoPanel({ provider, apiKey, responseHeaders, fetchT
                   <div className="flex items-center justify-between py-1">
                     <span className="text-[10px] text-muted-foreground">Balance</span>
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-bold font-mono ${(data.balanceRaw ?? 1) > 0 ? "text-green-400" : "text-red-400"}`}>
+                      <span className={`text-sm font-bold font-mono ${(data.balanceRaw ?? 1) > 0 ? "text-success" : "text-destructive"}`}>
                         {data.balance}
                       </span>
                       {data.balanceRaw !== undefined && data.balanceRaw < 1 && (

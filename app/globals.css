@@ -25,6 +25,12 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -52,59 +58,65 @@
   color-scheme: dark;
 
   /* ── Base surfaces ──────────────────────────────────────────────── */
-  /* True dark — deep charcoal, not pure black */
-  --background:         oklch(0.11 0.012 255);
-  --foreground:         oklch(0.94 0.006 255);
+  /* Neutral charcoal canvas — Eesee reference */
+  --background:         #1c1d1f;
+  --foreground:         #f4f5f6;
 
   /* Cards: clearly elevated above background */
-  --card:               oklch(0.155 0.014 255);
-  --card-foreground:    oklch(0.94 0.006 255);
-  --popover:            oklch(0.155 0.014 255);
-  --popover-foreground: oklch(0.94 0.006 255);
+  --card:               #232528;
+  --card-foreground:    #f4f5f6;
+  --popover:            #232528;
+  --popover-foreground: #f4f5f6;
 
   /* ── Brand / Primary ────────────────────────────────────────────── */
-  /* Crisp teal — high saturation, readable on dark */
-  --primary:            oklch(0.76 0.17 192);
-  --primary-foreground: oklch(0.09 0.012 255);
+  /* Signature neon lime — CTAs, active states, focus rings */
+  --primary:            #afeb00;
+  --primary-hover:      #c8ff4d;
+  --primary-foreground: #0d0e0f;
 
   /* ── Secondary / Muted surfaces ────────────────────────────────── */
-  --secondary:           oklch(0.20 0.014 255);
-  --secondary-foreground:oklch(0.88 0.005 255);
-  --muted:               oklch(0.19 0.010 255);
-  --muted-foreground:    oklch(0.62 0.010 255);
+  --secondary:           #2b2d31;
+  --secondary-foreground:#f4f5f6;
+  --muted:               #2b2d31;
+  --muted-foreground:    #9aa0a6;
 
   /* ── Accent = primary ───────────────────────────────────────────── */
-  --accent:              oklch(0.76 0.17 192);
-  --accent-foreground:   oklch(0.09 0.012 255);
+  --accent:              #afeb00;
+  --accent-foreground:   #0d0e0f;
 
   /* ── Status ─────────────────────────────────────────────────────── */
-  --destructive:         oklch(0.62 0.22 25);
+  --destructive:         #ff5c7a;
+  --destructive-foreground: #0d0e0f;
+  --success:             #31e58a;
+  --success-foreground:  #0d0e0f;
+  --info:                #25d6c7;
+  --info-foreground:     #0d0e0f;
 
   /* ── Borders & inputs ───────────────────────────────────────────── */
   /* Stronger borders so panel edges are visible */
   --border:              oklch(1 0 0 / 11%);
   --input:               oklch(1 0 0 / 13%);
-  --ring:                oklch(0.76 0.17 192);
+  --ring:                #afeb00;
 
   /* ── Charts ─────────────────────────────────────────────────────── */
-  --chart-1: oklch(0.76 0.17 192);
-  --chart-2: oklch(0.75 0.14 145);
-  --chart-3: oklch(0.70 0.18 55);
-  --chart-4: oklch(0.65 0.20 25);
-  --chart-5: oklch(0.55 0.01 255);
+  --chart-1: #afeb00;
+  --chart-2: #31e58a;
+  --chart-3: #25d6c7;
+  --chart-4: #ff5c7a;
+  --chart-5: #9aa0a6;
 
   /* ── Radius ─────────────────────────────────────────────────────── */
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
   /* ── Sidebar — clearly distinct from main background ────────────── */
-  --sidebar:                oklch(0.135 0.013 255);
-  --sidebar-foreground:     oklch(0.94 0.006 255);
-  --sidebar-primary:        oklch(0.76 0.17 192);
-  --sidebar-primary-foreground: oklch(0.09 0.012 255);
-  --sidebar-accent:         oklch(0.20 0.014 255);
-  --sidebar-accent-foreground: oklch(0.88 0.005 255);
+  --sidebar:                #1a1b1d;
+  --sidebar-foreground:     #f4f5f6;
+  --sidebar-primary:        #afeb00;
+  --sidebar-primary-foreground: #0d0e0f;
+  --sidebar-accent:         #2b2d31;
+  --sidebar-accent-foreground: #f4f5f6;
   --sidebar-border:         oklch(1 0 0 / 11%);
-  --sidebar-ring:           oklch(0.76 0.17 192);
+  --sidebar-ring:           #afeb00;
 }
 
 @layer base {
@@ -149,5 +161,12 @@
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Signature lime glow — active tabs, primary CTAs */
+  .glow-primary {
+    box-shadow:
+      0 0 0 1px var(--primary),
+      0 0 20px -6px var(--primary);
   }
 }

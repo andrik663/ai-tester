@@ -7,10 +7,10 @@ interface EndpointCardProps {
 }
 
 const METHOD_COLORS: Record<string, string> = {
-  GET:    "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+  GET:    "text-success bg-success/10 border-success/30",
   POST:   "text-primary bg-primary/10 border-primary/30",
   PUT:    "text-amber-400 bg-amber-400/10 border-amber-400/30",
-  DELETE: "text-red-400 bg-red-400/10 border-red-400/30",
+  DELETE: "text-destructive bg-destructive/10 border-destructive/30",
   PATCH:  "text-orange-400 bg-orange-400/10 border-orange-400/30",
 }
 

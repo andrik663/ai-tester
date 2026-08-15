@@ -27,7 +27,7 @@ const CAP_META: Record<CapabilityTag, { label: string; color: string }> = {
   image:    { label: "Image",     color: "text-amber-400 bg-amber-400/10 border-amber-400/25" },
   video:    { label: "Video",     color: "text-rose-400 bg-rose-400/10 border-rose-400/25" },
   flagship: { label: "Flagship",  color: "text-primary bg-primary/10 border-primary/25" },
-  agent:    { label: "Agent",     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25" },
+  agent:    { label: "Agent",     color: "text-success bg-success/10 border-success/25" },
   document: { label: "Document",  color: "text-orange-400 bg-orange-400/10 border-orange-400/25" },
 }
 
@@ -110,7 +110,7 @@ function ModelRow({ result, probing }: { result: ScreenerModelResult; probing: b
     }`}>
       {/* Status dot */}
       <span className={`flex-shrink-0 mt-1.5 w-2 h-2 rounded-full ${
-        probing ? "bg-yellow-400/60 animate-pulse" : result.isOn ? "bg-green-400" : "bg-red-400"
+        probing ? "bg-yellow-400/60 animate-pulse" : result.isOn ? "bg-success" : "bg-destructive"
       }`} />
 
       <div className="flex-1 min-w-0">
@@ -123,8 +123,8 @@ function ModelRow({ result, probing }: { result: ScreenerModelResult; probing: b
             probing
               ? "text-yellow-400 border-yellow-400/20 bg-yellow-400/10"
               : result.isOn
-              ? "text-green-400 border-green-400/20 bg-green-400/10"
-              : "text-red-400 border-red-400/20 bg-red-400/10"
+              ? "text-success border-success/20 bg-success/10"
+              : "text-destructive border-destructive/20 bg-destructive/10"
           }`}>
             {probing ? (
               <RefreshIcon spinning />
@@ -169,7 +169,7 @@ function ModelRow({ result, probing }: { result: ScreenerModelResult; probing: b
 
         {/* Error message */}
         {!result.isOn && result.error && (
-          <div className="text-[8px] text-red-400/70 mt-0.5 truncate" title={result.error}>
+          <div className="text-[8px] text-destructive/70 mt-0.5 truncate" title={result.error}>
             {result.error}
           </div>
         )}
@@ -396,11 +396,11 @@ export default function ModelScreenerPanel() {
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Screener</span>
             {/* ON/OFF summary */}
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-400/10 text-green-400 border border-green-400/20 font-mono">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 font-mono">
               {onCount} ON
             </span>
             {offCount > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-400/10 text-red-400 border border-red-400/20 font-mono">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 font-mono">
                 {offCount} OFF
               </span>
             )}
@@ -441,7 +441,7 @@ export default function ModelScreenerPanel() {
             {results.length > 0 && !scanning && (
               <button
                 onClick={() => { clearScreenerResults(); setResults([]) }}
-                className="text-[9px] text-muted-foreground/30 hover:text-red-400 transition-colors px-1.5"
+                className="text-[9px] text-muted-foreground/30 hover:text-destructive transition-colors px-1.5"
                 title="Clear all screener results"
               >
                 Clear
@@ -469,8 +469,8 @@ export default function ModelScreenerPanel() {
               onClick={() => setFilterStatus(s)}
               className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
                 filterStatus === s
-                  ? s === "on"  ? "border-green-400/50 bg-green-400/10 text-green-400"
-                    : s === "off" ? "border-red-400/50 bg-red-400/10 text-red-400"
+                  ? s === "on"  ? "border-success/50 bg-success/10 text-success"
+                    : s === "off" ? "border-destructive/50 bg-destructive/10 text-destructive"
                     : "border-primary/50 bg-primary/10 text-primary"
                   : "border-border text-muted-foreground/50 hover:bg-secondary"
               }`}
@@ -567,8 +567,8 @@ export default function ModelScreenerPanel() {
                       <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                         {providerName}
                       </span>
-                      <span className="text-[8px] font-mono text-green-400/70">{provOn} ON</span>
-                      {provOff > 0 && <span className="text-[8px] font-mono text-red-400/70">{provOff} OFF</span>}
+                      <span className="text-[8px] font-mono text-success/70">{provOn} ON</span>
+                      {provOff > 0 && <span className="text-[8px] font-mono text-destructive/70">{provOff} OFF</span>}
                     </div>
                     {rows.map((r) => (
                       <ModelRow key={r.id} result={r} probing={probingIds.has(r.id)} />

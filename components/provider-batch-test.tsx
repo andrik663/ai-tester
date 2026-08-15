@@ -87,7 +87,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
   }
 
   return (
-    <div className={`border-b border-border last:border-0 ${r.ok ? "" : "bg-red-950/10"}`}>
+    <div className={`border-b border-border last:border-0 ${r.ok ? "" : "bg-destructive/10"}`}>
       {/* ── Main row ─────────────────────────────────────────────────────── */}
       <div
         className="flex items-start gap-2 px-3 py-2.5 cursor-pointer hover:bg-secondary/40 transition-colors select-none"
@@ -101,8 +101,8 @@ function ResultRow({ r }: { r: BatchModelResult }) {
         <span
           className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full border mt-0.5 ${
             r.ok
-              ? "text-green-400 border-green-400/30 bg-green-400/10"
-              : "text-red-400  border-red-400/30  bg-red-400/10"
+              ? "text-success border-success/30 bg-success/10"
+              : "text-destructive  border-destructive/30  bg-destructive/10"
           }`}
         >
           {r.ok ? <CheckIcon /> : <XIcon />}
@@ -121,7 +121,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
 
         {/* Right stats */}
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0 ml-1">
-          <span className={`text-[10px] font-mono font-semibold ${r.ok ? "text-green-400" : "text-red-400"}`}>
+          <span className={`text-[10px] font-mono font-semibold ${r.ok ? "text-success" : "text-destructive"}`}>
             {r.status > 0 ? r.status : "ERR"}
           </span>
           <span className="text-[10px] font-mono text-muted-foreground">{r.latencyMs}ms</span>
@@ -186,7 +186,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
                 Error
               </span>
-              <p className="text-[10px] font-mono text-red-400 bg-red-400/5 rounded px-2.5 py-2 border border-red-400/15 break-all">
+              <p className="text-[10px] font-mono text-destructive bg-destructive/5 rounded px-2.5 py-2 border border-destructive/15 break-all">
                 {r.errorMsg}
               </p>
             </div>
@@ -379,7 +379,7 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
         disabled={!canRun || loading}
         className={`flex items-center justify-center gap-2 w-full rounded-md px-3 py-2 text-[11px] font-semibold transition-all border ${
           canRun && !loading
-            ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/15 hover:border-primary/50"
+            ? "bg-primary text-primary-foreground border-primary hover:bg-primary-hover hover:border-primary-hover"
             : "bg-secondary text-muted-foreground border-border cursor-not-allowed opacity-50"
         }`}
       >
@@ -404,8 +404,8 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
 
       {/* Error state */}
       {error && (
-        <div className="rounded-md border border-red-400/20 bg-red-400/5 px-3 py-2">
-          <p className="text-[10px] font-mono text-red-400">{error}</p>
+        <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2">
+          <p className="text-[10px] font-mono text-destructive">{error}</p>
         </div>
       )}
 
@@ -434,13 +434,13 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
         <div className="flex flex-col gap-2">
           {/* Saved banner */}
           {savedCount !== null && savedCount > 0 && (
-            <div className="rounded-md border border-green-400/25 bg-green-400/8 px-3 py-2 flex items-center justify-between gap-2">
-              <span className="text-[10px] text-green-300">
+            <div className="rounded-md border border-success/25 bg-success/8 px-3 py-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] text-success">
                 <span className="font-semibold">{savedCount} working model{savedCount > 1 ? "s" : ""}</span> saved to Working Keys tab
               </span>
               <button
                 onClick={() => setSavedCount(null)}
-                className="text-[9px] text-green-400/60 hover:text-green-400 transition-colors"
+                className="text-[9px] text-success/60 hover:text-success transition-colors"
               >
                 dismiss
               </button>
@@ -460,10 +460,10 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
                 live
               </span>
             )}
-            <span className="text-[11px] text-green-400 font-mono font-semibold">
+            <span className="text-[11px] text-success font-mono font-semibold">
               {data.passed} passed
             </span>
-            <span className="text-[11px] text-red-400 font-mono font-semibold">
+            <span className="text-[11px] text-destructive font-mono font-semibold">
               {data.failed} failed
             </span>
             <span className="text-[10px] text-muted-foreground font-mono ml-auto">
@@ -478,11 +478,11 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
             />
             <FilterTab
               label="OK"    count={data.passed}  active={filter === "ok"}   onClick={() => setFilter("ok")}
-              color="text-green-400 border-green-400/30 bg-green-400/10"
+              color="text-success border-success/30 bg-success/10"
             />
             <FilterTab
               label="Fail"  count={data.failed}  active={filter === "fail"} onClick={() => setFilter("fail")}
-              color="text-red-400 border-red-400/30 bg-red-400/10"
+              color="text-destructive border-destructive/30 bg-destructive/10"
             />
           </div>
 

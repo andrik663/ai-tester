@@ -865,9 +865,9 @@ export default function CodePreviewTab({
             <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
               {/* Traffic light dots */}
               <div className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-red-500/60" />
+                <span className="w-2 h-2 rounded-full bg-destructive/60" />
                 <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
-                <span className="w-2 h-2 rounded-full bg-green-500/60" />
+                <span className="w-2 h-2 rounded-full bg-success/60" />
               </div>
               <span className="text-[10px] text-muted-foreground/60 flex-1 text-center truncate">
                 {previewSrc ? "Preview" : "No output yet"}

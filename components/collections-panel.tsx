@@ -75,10 +75,10 @@ function EditIcon() {
 
 function MethodBadge({ method }: { method: string }) {
   const colors: Record<string, string> = {
-    GET: "bg-green-500/12 text-green-400",
+    GET: "bg-success/12 text-success",
     POST: "bg-blue-500/12 text-blue-400",
     PUT: "bg-yellow-500/12 text-yellow-400",
-    DELETE: "bg-red-500/12 text-red-400",
+    DELETE: "bg-destructive/12 text-destructive",
   }
   return (
     <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${colors[method] ?? "bg-secondary text-muted-foreground"}`}>
@@ -166,7 +166,7 @@ function CollectionSection({
               if (!confirm(`Delete "${col.name}" and all its requests?`)) return
               onDelete(col.id)
             }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-red-400 hover:bg-red-400/8 transition-colors"
+            className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
           >
             <TrashIcon />
           </button>
@@ -202,7 +202,7 @@ function CollectionSection({
                   )}
                   <button
                     onClick={() => onDeleteRequest(col.id, req.id)}
-                    className="p-1 rounded text-muted-foreground/40 hover:text-red-400 hover:bg-red-400/8 transition-colors"
+                    className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
                   >
                     <TrashIcon />
                   </button>

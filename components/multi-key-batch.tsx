@@ -261,8 +261,8 @@ function StatusPill({ result }: { result: MultiKeyResult | null }) {
     <div className="flex flex-col gap-0.5 items-start">
       <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono whitespace-nowrap border ${
         ok
-          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-          : "bg-red-500/10 text-red-400 border-red-500/20"
+          ? "bg-success/10 text-success border-success/20"
+          : "bg-destructive/10 text-destructive border-destructive/20"
       }`}>
         {ok ? (
           <svg width="7" height="7" viewBox="0 0 8 8" fill="none" aria-hidden>
@@ -359,8 +359,8 @@ function ExpandedDetail({
       )}
       {result?.error && !result.ok && (
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-red-400/80">Error</span>
-          <p className="text-[10px] text-red-400/70 font-mono leading-relaxed break-all">{result.error}</p>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-destructive/80">Error</span>
+          <p className="text-[10px] text-destructive/70 font-mono leading-relaxed break-all">{result.error}</p>
         </div>
       )}
 
@@ -405,7 +405,7 @@ function ExpandedDetail({
                   key={m.id}
                   className={`text-[9px] font-mono px-1.5 py-0.5 rounded border leading-tight ${
                     isActive
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                      ? "border-success/30 bg-success/10 text-success"
                       : "border-border/40 text-muted-foreground/45"
                   }`}
                 >
@@ -447,9 +447,9 @@ function MobileRow({
   const activeModel = models.find((m) => m.id === activeModelId) ?? defaultModel
 
   const rowBg = result?.ok
-    ? "bg-emerald-500/[0.03] border-l-2 border-l-emerald-500/30"
+    ? "bg-success/[0.03] border-l-2 border-l-success/30"
     : result && !result.ok
-      ? "bg-red-500/[0.03] border-l-2 border-l-red-500/30"
+      ? "bg-destructive/[0.03] border-l-2 border-l-destructive/30"
       : "border-l-2 border-l-border/20"
 
   return (
@@ -544,9 +544,9 @@ function DesktopRow({
   const providerInfo = PROVIDER_FORMATS.find((p) => p.id === entry.provider)
 
   const rowBg = result?.ok
-    ? "bg-emerald-500/[0.02] hover:bg-emerald-500/[0.04]"
+    ? "bg-success/[0.02] hover:bg-success/[0.04]"
     : result && !result.ok
-      ? "bg-red-500/[0.02] hover:bg-red-500/[0.04]"
+      ? "bg-destructive/[0.02] hover:bg-destructive/[0.04]"
       : "hover:bg-secondary/20"
 
   return (
@@ -680,7 +680,7 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
   }
 
   return (
-    <div className={`border-b border-border/30 last:border-0 ${r.ok ? "" : "bg-red-950/10"}`}>
+    <div className={`border-b border-border/30 last:border-0 ${r.ok ? "" : "bg-destructive/10"}`}>
       <div
         className="flex items-start gap-2 px-3 py-2 cursor-pointer hover:bg-secondary/30 transition-colors select-none"
         onClick={() => setExpanded((v) => !v)}
@@ -690,7 +690,7 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
       >
         {/* Status circle */}
         <span className={`flex-shrink-0 flex items-center justify-center w-4 h-4 rounded-full border mt-0.5 ${
-          r.ok ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/10" : "text-red-400 border-red-400/30 bg-red-400/10"
+          r.ok ? "text-success border-success/30 bg-success/10" : "text-destructive border-destructive/30 bg-destructive/10"
         }`}>
           {r.ok
             ? <svg width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden><path d="M2 5l2.2 2.2L8 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -706,7 +706,7 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
 
         {/* Right stats */}
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0 ml-1">
-          <span className={`text-[10px] font-mono font-semibold ${r.ok ? "text-emerald-400" : "text-red-400"}`}>
+          <span className={`text-[10px] font-mono font-semibold ${r.ok ? "text-success" : "text-destructive"}`}>
             {r.status > 0 ? r.status : "ERR"}
           </span>
           <span className="text-[10px] font-mono text-muted-foreground/60">{r.latencyMs}ms</span>
@@ -757,17 +757,17 @@ function AllModelRow({ r }: { r: ModelTestResult }) {
           {!r.ok && r.errorMsg && (
             <div className="flex flex-col gap-1.5">
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-semibold">Error</span>
-              <p className="text-[10px] font-mono text-red-400 bg-red-400/5 rounded px-2.5 py-2 border border-red-400/15 break-all">{r.errorMsg}</p>
+              <p className="text-[10px] font-mono text-destructive bg-destructive/5 rounded px-2.5 py-2 border border-destructive/15 break-all">{r.errorMsg}</p>
               {(() => {
                 const exp = explainApiError(r.status, r.errorMsg)
                 if (!exp) return null
                 return (
-                  <div className="flex items-start gap-1.5 px-2.5 py-2 rounded bg-red-500/4 border border-red-500/12">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-red-400/70 flex-shrink-0 mt-0.5">
+                  <div className="flex items-start gap-1.5 px-2.5 py-2 rounded bg-destructive/4 border border-destructive/12">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-destructive/70 flex-shrink-0 mt-0.5">
                       <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     <div>
-                      <p className="text-[10px] font-semibold text-red-300/90">{exp.cause}</p>
+                      <p className="text-[10px] font-semibold text-destructive/90">{exp.cause}</p>
                       <p className="text-[10px] text-muted-foreground leading-snug">{exp.suggestion}</p>
                     </div>
                   </div>
@@ -802,8 +802,8 @@ function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
 
   const pf = PROVIDER_FORMATS.find((p) => p.id === keyResult.provider)
   const rowBg = keyResult.passed > 0
-    ? "border-l-2 border-l-emerald-500/40 bg-emerald-500/[0.02]"
-    : "border-l-2 border-l-red-500/30"
+    ? "border-l-2 border-l-success/40 bg-success/[0.02]"
+    : "border-l-2 border-l-destructive/30"
 
   const filtered = keyResult.models.filter((m) => {
     if (filter === "ok")   return m.ok
@@ -839,9 +839,9 @@ function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
         {/* Stats */}
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-mono font-bold text-emerald-400">{keyResult.passed} ok</span>
+            <span className="text-[11px] font-mono font-bold text-success">{keyResult.passed} ok</span>
             <span className="text-muted-foreground/30 text-[10px]">/</span>
-            <span className="text-[11px] font-mono font-bold text-red-400">{keyResult.failed} fail</span>
+            <span className="text-[11px] font-mono font-bold text-destructive">{keyResult.failed} fail</span>
           </div>
           <span className="text-[9px] font-mono text-muted-foreground/40 tabular-nums">{keyResult.total} models · {keyResult.durationMs}ms</span>
           {keyResult.fetchError && (
@@ -870,8 +870,8 @@ function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
                   onClick={(e) => { e.stopPropagation(); setFilter(f) }}
                   className={`text-[10px] px-2 py-0.5 rounded border transition-colors capitalize ${
                     filter === f
-                      ? f === "ok"   ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
-                      : f === "fail" ? "border-red-500/30 text-red-400 bg-red-500/10"
+                      ? f === "ok"   ? "border-success/30 text-success bg-success/10"
+                      : f === "fail" ? "border-destructive/30 text-destructive bg-destructive/10"
                       :                "border-border bg-secondary text-foreground"
                       : "border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
                   }`}
@@ -1217,7 +1217,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
-      {/* ── Header ───��─────────────────────────────────────────────────────── */}
+      {/* ── Header ───��───────────────────────────���─────────────────────────── */}
       <div className="flex-shrink-0 border-b border-border px-3 sm:px-4 py-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] text-muted-foreground/70">
@@ -1330,7 +1330,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                   onClick={(e) => { e.stopPropagation(); copyAllFormats() }}
                   className={`text-[10px] font-medium px-2 py-0.5 rounded border transition-colors ${
                     copiedId === "all"
-                      ? "border-emerald-400/40 text-emerald-400 bg-emerald-400/10"
+                      ? "border-success/40 text-success bg-success/10"
                       : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -1383,7 +1383,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                               key={m.id}
                               className={`text-[10px] font-mono px-1.5 py-0.5 rounded border leading-tight ${
                                 m.default
-                                  ? "border-emerald-500/40 text-emerald-400/90 bg-emerald-500/8"
+                                  ? "border-success/40 text-success/90 bg-success/8"
                                   : "border-border/50 text-muted-foreground/60"
                               }`}
                             >
@@ -1398,7 +1398,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                       title={`Copy format for ${pf.label}`}
                       className={`flex-shrink-0 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-all mt-0.5 ${
                         copiedId === pf.id
-                          ? "border-emerald-400/40 text-emerald-400 bg-emerald-400/10"
+                          ? "border-success/40 text-success bg-success/10"
                           : "border-border/60 text-muted-foreground/50 hover:text-foreground hover:border-border opacity-0 group-hover:opacity-100 sm:opacity-100"
                       }`}
                     >
@@ -1480,7 +1480,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                   <button
                     onClick={testMode === "all" ? runAllModels : runAll}
                     disabled={validCount === 0}
-                    className="flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
+                    className="flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:bg-primary-hover disabled:opacity-40 transition-colors whitespace-nowrap"
                   >
                     {testMode === "all"
                       ? (
@@ -1509,15 +1509,15 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
             {/* ── Summary stats ─────────────────────────────────────────────── */}
             {testMode === "quick" && summary && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400/70">Passed</span>
-                  <span className="text-xl font-bold font-mono text-emerald-400 leading-none tabular-nums">{summary.passed}</span>
-                  <span className="text-xs text-emerald-400/60 tabular-nums">{Math.round((summary.passed / results.length) * 100)}%</span>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-success/5 border border-success/20">
+                  <span className="text-xs font-bold uppercase tracking-wider text-success/70">Passed</span>
+                  <span className="text-xl font-bold font-mono text-success leading-none tabular-nums">{summary.passed}</span>
+                  <span className="text-xs text-success/60 tabular-nums">{Math.round((summary.passed / results.length) * 100)}%</span>
                 </div>
-                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-red-500/5 border border-red-500/20">
-                  <span className="text-xs font-bold uppercase tracking-wider text-red-400/70">Failed</span>
-                  <span className="text-xl font-bold font-mono text-red-400 leading-none tabular-nums">{summary.failed}</span>
-                  <span className="text-xs text-red-400/60 tabular-nums">{Math.round((summary.failed / results.length) * 100)}%</span>
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-destructive/5 border border-destructive/20">
+                  <span className="text-xs font-bold uppercase tracking-wider text-destructive/70">Failed</span>
+                  <span className="text-xl font-bold font-mono text-destructive leading-none tabular-nums">{summary.failed}</span>
+                  <span className="text-xs text-destructive/60 tabular-nums">{Math.round((summary.failed / results.length) * 100)}%</span>
                 </div>
                 <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Total Tokens</span>
@@ -1536,17 +1536,17 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
             {testMode === "all" && allModelsSummary && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400/50">Models Passed</span>
-                  <span className="text-xl font-bold font-mono text-emerald-400 leading-none tabular-nums">{allModelsSummary.totalPassed}</span>
-                  <span className="text-[9px] text-emerald-400/40 tabular-nums">
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-success/5 border border-success/20">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-success/50">Models Passed</span>
+                  <span className="text-xl font-bold font-mono text-success leading-none tabular-nums">{allModelsSummary.totalPassed}</span>
+                  <span className="text-[9px] text-success/40 tabular-nums">
                     {allModelsSummary.totalModels > 0 ? Math.round((allModelsSummary.totalPassed / allModelsSummary.totalModels) * 100) : 0}%
                   </span>
                 </div>
-                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-red-500/5 border border-red-500/20">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">Models Failed</span>
-                  <span className="text-xl font-bold font-mono text-red-400 leading-none tabular-nums">{allModelsSummary.totalFailed}</span>
-                  <span className="text-[9px] text-red-400/40 tabular-nums">
+                <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg bg-destructive/5 border border-destructive/20">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-destructive/50">Models Failed</span>
+                  <span className="text-xl font-bold font-mono text-destructive leading-none tabular-nums">{allModelsSummary.totalFailed}</span>
+                  <span className="text-[9px] text-destructive/40 tabular-nums">
                     {allModelsSummary.totalModels > 0 ? Math.round((allModelsSummary.totalFailed / allModelsSummary.totalModels) * 100) : 0}%
                   </span>
                 </div>
@@ -1580,7 +1580,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                 {entries.length} {entries.length === 1 ? "entry" : "entries"} loaded
               </span>
               {validCount !== entries.length && (
-                <span className="text-[10px] text-emerald-400/60">{validCount} valid</span>
+                <span className="text-[10px] text-success/60">{validCount} valid</span>
               )}
               {unknownCount > 0 && (
                 <span className="text-[10px] text-yellow-400/60">{unknownCount} unknown</span>
