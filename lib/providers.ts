@@ -1535,7 +1535,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "deepseek-v4-pro",
       "mimo-v2.5",
       "mimo-v2.5-pro-ultraspeed",
-      // ── Pro ─────────────────────���─────────────────────────────────────────
+      // ── Pro ────────────────�����────���─────────────────────────────────────────
       "claude-opus-4.7",
       // ── Hermes / Mimo ───────────────────────────────────────────────��──��──
       "mimo-v2.5-hermes",
@@ -1995,6 +1995,295 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     ],
     modelsEndpoint: "https://freetokenfaucet.com/v1/models",
     endpoint: "https://freetokenfaucet.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Amazon Bedrock (OpenAI-compatible, Bedrock API keys) ──────────────────
+  bedrock: {
+    id: "bedrock",
+    models: [
+      "openai.gpt-oss-120b-1:0",
+      "openai.gpt-oss-20b-1:0",
+      "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "anthropic.claude-3-5-haiku-20241022-v1:0",
+      "amazon.nova-pro-v1:0",
+      "amazon.nova-lite-v1:0",
+      "amazon.nova-micro-v1:0",
+      "meta.llama3-1-70b-instruct-v1:0",
+      "mistral.mistral-large-2407-v1:0",
+    ],
+    endpoint: "https://bedrock-mantle.us-west-2.api.aws/openai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── DigitalOcean Gradient AI (Serverless Inference) ───────────────────────
+  digitalocean: {
+    id: "digitalocean",
+    modelsEndpoint: "https://inference.do-ai.run/v1/models",
+    models: [
+      "meta-llama/Meta-Llama-3.1-8B-Instruct",
+      "meta-llama/Llama-3.3-70B-Instruct",
+      "openai-gpt-oss-120b",
+      "openai-gpt-oss-20b",
+      "deepseek-r1-distill-llama-70b",
+      "mistral-nemo-instruct-2407",
+    ],
+    endpoint: "https://inference.do-ai.run/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Clarifai (OpenAI-compatible) ───────────────────────────────────────────
+  clarifai: {
+    id: "clarifai",
+    models: [
+      "openai/chat-completion/models/gpt-4o",
+      "openai/chat-completion/models/gpt-4o-mini",
+      "deepseek-ai/deepseek-chat/models/DeepSeek-R1",
+      "meta/Llama-3/models/Llama-3_3-70B-Instruct",
+      "mistral-ai/completion/models/mistral-large",
+      "gcp/generate/models/gemini-2_5-flash",
+    ],
+    endpoint: "https://api.clarifai.com/v2/ext/openai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Reka AI ─────────────────────────────────────────────────────────────────
+  reka: {
+    id: "reka",
+    modelsEndpoint: "https://api.reka.ai/v1/models",
+    models: [
+      "reka-core",
+      "reka-flash",
+      "reka-flash-research",
+      "reka-edge",
+    ],
+    endpoint: "https://api.reka.ai/v1/chat/completions",
+    authHeader: (key) => ({ "X-Api-Key": key }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── GitHub Models ────────────────────────────────────────────────────────────
+  github: {
+    id: "github",
+    models: [
+      "openai/gpt-4o",
+      "openai/gpt-4o-mini",
+      "meta/Llama-3.3-70B-Instruct",
+      "deepseek/DeepSeek-R1",
+      "mistral-ai/Mistral-Large-2411",
+      "microsoft/Phi-4",
+      "xai/grok-3",
+    ],
+    endpoint: "https://models.github.ai/inference/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Nous Research (Nous Portal) ────────────────────────────────────────────
+  nousresearch: {
+    id: "nousresearch",
+    models: [
+      "hermes-4-405b",
+      "hermes-4-70b",
+      "hermes-3-llama-3.1-70b",
+      "deephermes-3-llama-3-8b-preview",
+    ],
+    endpoint: "https://inference-api.nousresearch.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Scaleway (Generative APIs) ──────────────────────────────────────────────
+  scaleway: {
+    id: "scaleway",
+    modelsEndpoint: "https://api.scaleway.ai/v1/models",
+    models: [
+      "llama-3.3-70b-instruct",
+      "llama-3.1-8b-instruct",
+      "qwen2.5-coder-32b-instruct",
+      "deepseek-r1-distill-llama-70b",
+      "mistral-nemo-instruct-2407",
+      "gemma-3-27b-it",
+      "pixtral-12b-2409",
+    ],
+    endpoint: "https://api.scaleway.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Crusoe Cloud (Managed Inference) ────────────────────────────────────────
+  crusoe: {
+    id: "crusoe",
+    models: [
+      "meta-llama/Llama-3.3-70B-Instruct",
+      "meta-llama/Llama-3.1-8B-Instruct",
+      "deepseek-ai/DeepSeek-R1",
+      "Qwen/Qwen2.5-72B-Instruct",
+    ],
+    endpoint: "https://api.inference.crusoecloud.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Arcee AI (Conductor) ─────────────────────────────────────────────────────
+  arceeai: {
+    id: "arceeai",
+    models: [
+      "auto",
+      "auto-tool",
+      "auto-reasoning",
+      "virtuoso-large",
+      "coder-large",
+      "maestro-reasoning",
+      "spotlight",
+    ],
+    endpoint: "https://models.arcee.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Alibaba Cloud (Model Studio / DashScope, intl) ──────────────────────────
+  alibabacloud: {
+    id: "alibabacloud",
+    models: [
+      "qwen3-max",
+      "qwen-max",
+      "qwen-plus",
+      "qwen-turbo",
+      "qwen3-coder-plus",
+      "qwen-vl-max",
+    ],
+    endpoint: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Thinking Machines Lab (Tinker) ───────────────────────────────────────────
+  thinkingmachines: {
+    id: "thinkingmachines",
+    models: [
+      "tinker://meta-llama/Llama-3.1-8B-Instruct",
+      "tinker://Qwen/Qwen3-8B",
+    ],
+    endpoint: "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Xiaomi MiMo ───────────────────────────────────────────────────────────────
+  xiaomi: {
+    id: "xiaomi",
+    models: [
+      "mimo-v2.5-pro",
+      "mimo-v2.5-flash",
+      "mimo-7b-rl",
+    ],
+    endpoint: "https://api.xiaomimimo.com/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Blackbox AI ───────────────────────────────────────────────────────────────
+  blackboxai: {
+    id: "blackboxai",
+    models: [
+      "blackboxai/openai/gpt-5.1",
+      "blackboxai/anthropic/claude-opus-4.5",
+      "blackboxai/deepseek/deepseek-chat",
+      "blackboxai/google/gemini-2.5-pro",
+    ],
+    endpoint: "https://api.blackbox.ai/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── Public AI (Inference Utility) ────────────────────────────────────────────
+  publicai: {
+    id: "publicai",
+    models: [
+      "swiss-ai/apertus-70b-instruct",
+      "swiss-ai/apertus-v1.5-8b",
+      "meta-llama/llama-3.3-70b-instruct",
+    ],
+    endpoint: "https://api.publicai.co/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json", "User-Agent": "AI-Tester/1.0" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
+  // ── InclusionAI (Ant Ling) ───────────────────────────────────────────────────
+  inclusionai: {
+    id: "inclusionai",
+    models: [
+      "Ling-2.6-1T",
+      "Ling-flash-2.0",
+      "Ling-mini-2.0",
+      "Ring-1T",
+    ],
+    endpoint: "https://api.ant-ling.com/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
