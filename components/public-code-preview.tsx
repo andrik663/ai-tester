@@ -47,13 +47,6 @@ export default function PublicCodePreview() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans overflow-hidden">
-      {/* Minimal branding strip — this is the entire public surface */}
-      <header className="flex-shrink-0 flex items-center gap-2 h-9 px-3 border-b border-border/40 bg-sidebar/40">
-        <span className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_oklch(0.76_0.17_192_/_0.5)]" />
-        <span className="text-[12px] font-semibold text-foreground">Miuclaw Gateway</span>
-        <span className="text-[10px] text-muted-foreground/50">Code Preview</span>
-      </header>
-
       <CodePreviewTab
         provider="miuclaw"
         providerName="Miuclaw Gateway"
