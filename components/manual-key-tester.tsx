@@ -2791,13 +2791,12 @@ const PRESETS: ProviderPreset[] = [
     id: "arceeai",
     name: "Arcee AI (Conductor, native)",
     country: "US",
-    endpoint: "https://models.arcee.ai/v1/chat/completions",
+    endpoint: "https://api.arcee.ai/api/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
-    // Models: auto, auto-tool, auto-reasoning, virtuoso-large, coder-large, maestro-reasoning, spotlight
     bodyTemplate: JSON.stringify({
       model: "auto",
       max_tokens: 1024,
@@ -4204,7 +4203,7 @@ export default function ManualKeyTester() {
         />
       )}
 
-      {/* ── LEFT: Config panel ─────────────────────────────────────────────── */}
+      {/* ── LEFT: Config panel ──────────────────────────────────────────���──── */}
       <aside className={`
         flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
