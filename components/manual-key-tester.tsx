@@ -2639,6 +2639,112 @@ const PRESETS: ProviderPreset[] = [
     note: "Indonesian AI gateway (NaraRouter). API key prefix: sk-nry-",
   },
   {
+    id: "github",
+    name: "GitHub Models",
+    country: "US",
+    endpoint: "https://models.github.ai/inference/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: openai/gpt-4o, openai/gpt-4o-mini, meta/Llama-3.3-70B-Instruct,
+    //   deepseek/DeepSeek-R1, mistral-ai/Mistral-Large-2411, microsoft/Phi-4, xai/grok-3
+    bodyTemplate: JSON.stringify({
+      model: "openai/gpt-4o-mini",
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.github.com/en/github-models",
+    createKeyUrl: "https://github.com/settings/tokens",
+    color: "text-slate-400 bg-slate-400/10 border-slate-400/30",
+    note: "Requires a GitHub PAT with the models:read scope.",
+  },
+  {
+    id: "digitalocean",
+    name: "DigitalOcean Gradient AI",
+    country: "US",
+    endpoint: "https://inference.do-ai.run/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: meta-llama/Llama-3.3-70B-Instruct, meta-llama/Meta-Llama-3.1-8B-Instruct,
+    //   openai-gpt-oss-120b, openai-gpt-oss-20b, deepseek-r1-distill-llama-70b, mistral-nemo-instruct-2407
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.digitalocean.com/products/gradient-ai-platform/",
+    createKeyUrl: "https://cloud.digitalocean.com/gen-ai/model-access-keys",
+    color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
+    note: "Use a Gradient AI model access key, not a control-plane token.",
+  },
+  {
+    id: "clarifai",
+    name: "Clarifai",
+    country: "US",
+    endpoint: "https://api.clarifai.com/v2/ext/openai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: openai/chat-completion/models/gpt-4o, deepseek-ai/deepseek-chat/models/DeepSeek-R1,
+    //   meta/Llama-3/models/Llama-3_3-70B-Instruct, mistral-ai/completion/models/mistral-large
+    bodyTemplate: JSON.stringify({
+      model: "openai/chat-completion/models/gpt-4o-mini",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.clarifai.com/compute/inference/api/openai",
+    createKeyUrl: "https://clarifai.com/settings/security",
+    color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
+    note: "Use your Clarifai Personal Access Token (PAT) as the key.",
+  },
+  {
+    id: "reka",
+    name: "Reka AI",
+    country: "US",
+    endpoint: "https://api.reka.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "X-Api-Key": "{{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: reka-core, reka-flash, reka-flash-research, reka-edge
+    bodyTemplate: JSON.stringify({
+      model: "reka-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.reka.ai",
+    createKeyUrl: "https://platform.reka.ai",
+    color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
+  },
+  {
+    id: "nousresearch",
+    name: "Nous Research",
+    country: "US",
+    endpoint: "https://inference-api.nousresearch.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: hermes-4-405b, hermes-4-70b, hermes-3-llama-3.1-70b, deephermes-3-llama-3-8b-preview
+    bodyTemplate: JSON.stringify({
+      model: "hermes-4-70b",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.nousresearch.com",
+    createKeyUrl: "https://portal.nousresearch.com",
+    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
+    note: "Key is generated from a Nous Portal subscription.",
+  },
+  {
     id: "custom",
     name: "Custom / cURL",
     country: "",
@@ -2655,7 +2761,7 @@ const PRESETS: ProviderPreset[] = [
   },
 ]
 
-// ── Deduplicate PRESETS by id ───────────────────────────────��────────────────
+// ── Deduplicate PRESETS by id ────────────────────────────��──��────────────────
 // Guard against accidental duplicate id entries that cause React key warnings
 // and duplicate rows in the sidebar. Last-write-wins for same id.
 const PRESETS_DEDUPED: ProviderPreset[] = (() => {

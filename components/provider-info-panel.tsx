@@ -85,6 +85,7 @@ const PROVIDER_DOMAIN_MAP: Record<string, string> = {
   deepcogito:"deepcogito.com", primeintellect:"primeintellect.ai",
   tngtech:"tngtech.com", opengvlab:"openrouter.ai",
   wanai:"openrouter.ai", rundiffusion:"rundiffusion.com",
+  bedrock:"aws.amazon.com", github:"github.com",
 }
 
 function providerBgColor(name: string): string {

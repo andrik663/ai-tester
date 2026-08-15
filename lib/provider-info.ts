@@ -228,7 +228,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Groq ─────────────────────────────────────────����───────────────────────
+  // ── Groq ─────────────────────────────────────────�����───────────────────────
   groq: {
     id: "groq",
     name: "Groq",
@@ -1222,10 +1222,17 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
   clarifai: {
     id: "clarifai", name: "Clarifai",
     website: "https://clarifai.com", pricingUrl: "https://clarifai.com/pricing",
-    docsUrl: "https://docs.clarifai.com",
-    description: "AI platform for computer vision, NLP, and audio. 80+ hosted models including Llama, GPT, Claude.",
-    hq: "US", tier: "gateway", hasFreeTier: true, liveModels: false, lastUpdated: "2026-06-24",
-    models: [ m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "Free tier" }) ],
+    docsUrl: "https://docs.clarifai.com/compute/inference/api/openai",
+    description: "AI platform with an OpenAI-compatible compute layer. Routes to GPT, Claude, DeepSeek, Llama, Gemini, and Mistral models via a single PAT.",
+    hq: "US", tier: "gateway", hasFreeTier: true, liveModels: false, lastUpdated: "2026-07-19",
+    models: [
+      m("openai/chat-completion/models/gpt-4o",        null, null, 128, { promo: true, promoLabel: "Free tier" }),
+      m("openai/chat-completion/models/gpt-4o-mini",   null, null, 128),
+      m("deepseek-ai/deepseek-chat/models/DeepSeek-R1", null, null, 128, { promo: true, promoLabel: "Reasoning" }),
+      m("meta/Llama-3/models/Llama-3_3-70B-Instruct",   null, null, 128),
+      m("mistral-ai/completion/models/mistral-large",   null, null, 128),
+      m("gcp/generate/models/gemini-2_5-flash",         null, null, 1000),
+    ],
   },
 
   // ── Crusoe ────────────────────────────────────────────────────────────────────
@@ -1241,16 +1248,20 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
   // ── DeepInfra ─────────────────────────────────────────────────────────────────
   // Already exists
 
-  // ── DigitalOcean ──────────────────────────────────────────────────────────────
+  // ── DigitalOcean Gradient AI ──────────────────────────────────────────────────
   digitalocean: {
-    id: "digitalocean", name: "DigitalOcean",
-    website: "https://www.digitalocean.com/products/ai-ml", pricingUrl: "https://www.digitalocean.com/pricing/ai-ml",
-    docsUrl: "https://docs.digitalocean.com/products/ai-ml",
-    description: "Developer cloud with GenAI models on managed GPU droplets. Llama, Mistral, and more.",
-    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    id: "digitalocean", name: "DigitalOcean Gradient AI",
+    website: "https://www.digitalocean.com/products/gradient/platform", pricingUrl: "https://www.digitalocean.com/pricing/gradient-ai-platform",
+    docsUrl: "https://docs.digitalocean.com/products/gradient-ai-platform/",
+    description: "Serverless inference platform on the developer cloud. OpenAI-compatible endpoint for open-weight models, billed per token.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: true, lastUpdated: "2026-07-19",
     models: [
-      m("llama3-8b-instruct", null, null, 8),
-      m("llama3-70b-instruct", null, null, 8, { promo: true, promoLabel: "Popular" }),
+      m("meta-llama/Llama-3.3-70B-Instruct",     0.65, 0.65, 128, { promo: true, promoLabel: "Popular", promoLink: "https://www.digitalocean.com/pricing/gradient-ai-platform" }),
+      m("meta-llama/Meta-Llama-3.1-8B-Instruct", 0.10, 0.10, 128),
+      m("openai-gpt-oss-120b",                    0.15, 0.60, 131),
+      m("openai-gpt-oss-20b",                     0.07, 0.30, 131),
+      m("deepseek-r1-distill-llama-70b",          0.60, 0.60, 128),
+      m("mistral-nemo-instruct-2407",             0.15, 0.15, 128),
     ],
   },
 
@@ -1404,7 +1415,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [ m("morph-v3", null, null, 32, { promo: true, promoLabel: "Code edit" }) ],
   },
 
-  // ── Nebius ───────────────────────────────────────────────────────────────���────
+  // ── Nebius ───────────────────────────────────────────────────────────��───���────
   nebius: {
     id: "nebius", name: "Nebius",
     website: "https://nebius.com", pricingUrl: "https://nebius.com/prices",
@@ -1438,12 +1449,15 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
   // ── Nous Research ─────────────────────────────────────────────────────────────
   nousresearch: {
     id: "nousresearch", name: "Nous Research",
-    website: "https://nousresearch.com", pricingUrl: "https://nousresearch.com",
-    description: "Open-source AI research lab. Hermes, Capybara fine-tunes for advanced instruction following.",
-    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    website: "https://portal.nousresearch.com", pricingUrl: "https://portal.nousresearch.com/pricing",
+    docsUrl: "https://docs.nousresearch.com",
+    description: "Open model lab behind the Hermes series. Nous Portal subscription unlocks Hermes 4 and DeepHermes via a single API key.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-07-19",
     models: [
-      m("hermes-3-405b-instruct", null, null, 128, { promo: true, promoLabel: "Hermes" }),
-      m("hermes-3-70b-instruct",  null, null, 128),
+      m("hermes-4-405b",                  null, null, 128, { promo: true, promoLabel: "Flagship" }),
+      m("hermes-4-70b",                    null, null, 128),
+      m("hermes-3-llama-3.1-70b",          null, null, 128),
+      m("deephermes-3-llama-3-8b-preview", null, null, 128),
     ],
   },
 
@@ -1478,14 +1492,15 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
   // ── Reka ──────────────────────────────────────────────────────────────────────
   reka: {
     id: "reka", name: "Reka AI",
-    website: "https://reka.ai", pricingUrl: "https://platform.reka.ai/pricing",
-    docsUrl: "https://platform.reka.ai/docs",
-    description: "Multimodal frontier models trained from scratch. Reka Core, Flash, Edge for vision + text.",
-    hq: "US", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
+    website: "https://reka.ai", pricingUrl: "https://reka.ai/pricing",
+    docsUrl: "https://docs.reka.ai",
+    description: "Multimodal frontier lab. Reka Core and Flash handle text, vision, and video understanding with a lean OpenAI-style API.",
+    hq: "US", tier: "mid", hasFreeTier: false, liveModels: true, lastUpdated: "2026-07-19",
     models: [
-      m("reka-core",  null, null, 128, { promo: true, promoLabel: "Multimodal" }),
-      m("reka-flash", null, null, 128, { promo: true, promoLabel: "Fast" }),
-      m("reka-edge",  null, null, 128),
+      m("reka-core",           2.00, 6.00, 128, { promo: true, promoLabel: "Flagship" }),
+      m("reka-flash",          0.80, 2.00, 128, { promo: true, promoLabel: "Fast" }),
+      m("reka-flash-research", null, null, 128),
+      m("reka-edge",           0.40, 1.00,  32),
     ],
   },
 
@@ -1524,7 +1539,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Switchpoint ───────���───────────────────────────────────────────────────────
+  // ── Switchpoint ─��─────���───────────────────────────────────────────────────────
   switchpoint: {
     id: "switchpoint", name: "Switchpoint",
     website: "https://switchpoint.ai", pricingUrl: "https://switchpoint.ai/pricing",
@@ -2398,7 +2413,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("deepseek-v3-2-volc",    0.30, 1.20, 128, { promo: true, promoLabel: "Reasoning",   promoLink: "https://dashboard.ceoweb3.dev/models" }),
       m("deepseek-v4-flash",     0.30, 1.20, 128),
       m("deepseek-v4-pro",       0.50, 2.00, 128),
-      // ── Google Gemini ──────────────────────────────────────────────────────
+      // ── Google Gemini ──��───────────────────────────────────────────────────
       m("gemini-2.5-flash",      0.50, 2.00, 128),
       m("gemini-2.5-pro",        0.50, 2.00, 128),
       m("gemini-3.0-flash",      0.50, 2.00, 128),
@@ -2457,9 +2472,61 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("qwen3.6-flash",    null, null, null, { promo: true, promoLabel: "Free",            promoLink: "https://freetokenfaucet.com" }),
     ],
   },
+
+  // ── Amazon Bedrock ──────────────────────────────────────────────────────────
+  bedrock: {
+    id: "bedrock",
+    name: "Amazon Bedrock",
+    website: "https://aws.amazon.com/bedrock",
+    pricingUrl: "https://aws.amazon.com/bedrock/pricing/",
+    docsUrl: "https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html",
+    statusUrl: "https://health.aws.amazon.com/health/status",
+    description: "AWS managed model hub. Claude, Nova, Llama, and Mistral behind a single OpenAI-compatible endpoint using Bedrock API keys.",
+    hq: "US",
+    tier: "frontier",
+    hasFreeTier: false,
+    liveModels: false,
+    lastUpdated: "2026-07-19",
+    models: [
+      m("anthropic.claude-3-5-sonnet-20241022-v2:0", 3.00, 15.00, 200, { promo: true, promoLabel: "Claude", promoLink: "https://aws.amazon.com/bedrock/pricing/" }),
+      m("anthropic.claude-3-5-haiku-20241022-v1:0",  0.80,  4.00, 200),
+      m("amazon.nova-pro-v1:0",                       0.80,  3.20, 300, { promo: true, promoLabel: "Amazon Nova", promoLink: "https://aws.amazon.com/bedrock/pricing/" }),
+      m("amazon.nova-lite-v1:0",                      0.06,  0.24, 300),
+      m("amazon.nova-micro-v1:0",                     0.035, 0.14, 128),
+      m("openai.gpt-oss-120b-1:0",                    0.15,  0.60, 131, { promo: true, promoLabel: "OpenAI OSS", promoLink: "https://aws.amazon.com/bedrock/pricing/" }),
+      m("openai.gpt-oss-20b-1:0",                     0.07,  0.30, 131),
+      m("meta.llama3-1-70b-instruct-v1:0",            0.99,  0.99, 128),
+      m("mistral.mistral-large-2407-v1:0",            2.00,  6.00, 128),
+    ],
+  },
+
+  // ── GitHub Models ────────────────────────────────────────────────────────────
+  github: {
+    id: "github",
+    name: "GitHub Models",
+    website: "https://github.com/marketplace/models",
+    pricingUrl: "https://docs.github.com/en/github-models/prototyping-with-ai-models#rate-limits",
+    docsUrl: "https://docs.github.com/en/github-models",
+    description: "Microsoft/GitHub's model playground. Free-tier rate-limited access to GPT, Llama, DeepSeek, Mistral, Phi, and Grok using a GitHub PAT.",
+    hq: "US",
+    tier: "gateway",
+    hasFreeTier: true,
+    liveModels: false,
+    lastUpdated: "2026-07-19",
+    models: [
+      m("openai/gpt-4o",                 null, null, 128, { promo: true, promoLabel: "Free tier", promoLink: "https://docs.github.com/en/github-models" }),
+      m("openai/gpt-4o-mini",            null, null, 128, { promo: true, promoLabel: "Free tier", promoLink: "https://docs.github.com/en/github-models" }),
+      m("meta/Llama-3.3-70B-Instruct",   null, null, 128),
+      m("deepseek/DeepSeek-R1",          null, null, 128),
+      m("mistral-ai/Mistral-Large-2411", null, null, 128),
+      m("microsoft/Phi-4",               null, null,  16),
+      m("xai/grok-3",                    null, null, 128),
+    ],
+  },
+
 }
 
-// ── Convenience helpers ───────────────────────────────────────────────────────
+// ── Convenience helpers ────────────────────────────────────────��──────────────
 
 /** All providers sorted: frontier → mid → budget → gateway → specialised, then alpha */
 export const PROVIDER_INFO_LIST: ProviderInfo[] = (() => {
