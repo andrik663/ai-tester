@@ -135,8 +135,16 @@
     background-size: 24px 24px;
   }
 
-  html {
+  /*
+   * Lock the document to the viewport so mobile browsers never scroll the
+   * page itself (which would drag fixed toolbars/headers out of view along
+   * with the content). App shells use h-dvh + overflow-hidden and manage
+   * their own internal scroll regions — this is the outer safety net.
+   */
+  html, body {
     @apply font-sans;
+    height: 100%;
+    overflow: hidden;
   }
 
   /* Thin scrollbar for sidebar panels */

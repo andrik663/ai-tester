@@ -858,7 +858,8 @@ export default function CodePreviewTab({
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar/40 flex-shrink-0">
+      {/* sticky + z-10: stays pinned above the scrolling code/chat output even if an ancestor ever scrolls */}
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar/95 backdrop-blur-sm flex-shrink-0">
 
         {/* Model selector */}
         {(workingModels.length > 0 || (presetModels && presetModels.length > 0)) && (
