@@ -1008,8 +1008,15 @@ export default function CodePreviewTab({
             <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 flex flex-col gap-3">
               {messages.length === 0 && !isStreaming && (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center select-none pointer-events-none">
-                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)]">
-                    <CodeIcon />
+                  {/* Empty-state mark — the Miuclaw cat mascot, matching the
+                      branding used on the production site (miuclaw.my.id),
+                      instead of a generic code glyph. */}
+                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)] overflow-hidden">
+                    <img
+                      src="/images/cat-mascot.png"
+                      alt="Miuclaw"
+                      className="w-9 h-9 rounded-lg object-cover"
+                    />
                   </div>
                   {activeSkillConfigs.length > 0 && (
                     <div>
@@ -1061,7 +1068,7 @@ export default function CodePreviewTab({
               <div ref={chatEndRef} />
             </div>
 
-            {/* ── Input bar ───────────────────────────────────────────────── */}
+            {/* ── Input bar ───────────────────────���───────────────────────── */}
             <div className="flex-shrink-0 border-t border-border/40 bg-sidebar/30 px-3 py-2">
               <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
                 <textarea
