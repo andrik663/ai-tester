@@ -124,7 +124,7 @@ function ScoreBar({ score, maxScore }: { score: number; maxScore: number }) {
   return (
     <div className="w-full h-1 rounded-full bg-secondary/60 overflow-hidden">
       <div
-        className="h-full rounded-full bg-[oklch(0.76_0.17_192_/_0.7)] transition-all duration-500"
+        className="h-full rounded-full bg-primary/70 transition-all duration-500"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -282,7 +282,7 @@ export default function LeaderboardPanel() {
         {/* Error state */}
         {error && !isLoading && (
           <div className="flex flex-col items-center justify-center h-40 gap-2 text-center px-6">
-            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-red-400/70" aria-hidden>
+            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-destructive/70" aria-hidden>
               <circle cx="10" cy="10" r="8.5" stroke="currentColor" strokeWidth="1.4"/>
               <path d="M10 6v5M10 13.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>

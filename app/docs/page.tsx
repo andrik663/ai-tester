@@ -249,7 +249,7 @@ export default function DocsPage() {
             <span className="text-[11px] font-mono text-muted-foreground hidden sm:block">
               {BASE_URL}/api/v1
             </span>
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" title="Gateway online" />
+            <span className="h-2 w-2 rounded-full bg-success shrink-0" title="Gateway online" />
           </div>
         </div>
       </header>

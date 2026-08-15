@@ -499,10 +499,10 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
       {!syncing && result && (() => {
         const isWarning = !result.ok && result.error?.startsWith("No local keys")
         const colorClass = result.ok
-          ? "border-green-500/25 bg-green-500/8 text-green-400"
+          ? "border-success/25 bg-success/8 text-success"
           : isWarning
           ? "border-yellow-500/25 bg-yellow-500/8 text-yellow-400"
-          : "border-red-500/25 bg-red-500/8 text-red-400"
+          : "border-destructive/25 bg-destructive/8 text-destructive"
         const icon = result.ok ? <CheckIcon /> : <XIcon />
         const message = result.ok
           ? `Synced ${result.totalSynced} key${(result.totalSynced ?? 0) !== 1 ? "s" : ""} — ${result.totalModels} models across ${result.totalProviders} providers. Gateway has ${result.totalInDb} keys ready.`

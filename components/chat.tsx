@@ -182,7 +182,7 @@ export default function Chat({ apiKey = "", model = GEMINI_CHAT_MODELS[0], tempe
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center gap-2">
-          <span className={`w-1.5 h-1.5 rounded-full ${hasKey ? "bg-green-400" : "bg-muted-foreground"}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${hasKey ? "bg-success" : "bg-muted-foreground"}`} />
           <span className="text-[11px] font-mono text-muted-foreground">{model}</span>
           {hasKey && tokenInfo && (
             <span className="text-[10px] font-mono text-muted-foreground/60 hidden sm:inline">

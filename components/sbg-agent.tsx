@@ -131,7 +131,7 @@ function ToolCallCard({ toolName, state, input, output }: {
     webSearch:  { label: "Web Search",  icon: <SearchIcon />, color: "text-sky-400 bg-sky-400/8 border-sky-400/20" },
     codeRunner: { label: "Code Runner", icon: <CodeIcon />,   color: "text-violet-400 bg-violet-400/8 border-violet-400/20" },
     readFile:   { label: "Read File",   icon: <FileIcon />,   color: "text-amber-400 bg-amber-400/8 border-amber-400/20" },
-    writeFile:  { label: "Write File",  icon: <FileIcon />,   color: "text-emerald-400 bg-emerald-400/8 border-emerald-400/20" },
+    writeFile:  { label: "Write File",  icon: <FileIcon />,   color: "text-success bg-success/8 border-success/20" },
   }
 
   const m = meta[toolName] ?? { label: toolName, icon: null, color: "text-muted-foreground bg-secondary/30 border-border" }
@@ -491,7 +491,7 @@ export default function SBGAgent({ openRouterApiKey = "" }: SBGAgentProps) {
                   <EyeIcon show={showKey} />
                 </button>
               </div>
-              {apiKey && <p className="text-[10px] text-emerald-400/80">Key set</p>}
+              {apiKey && <p className="text-[10px] text-success/80">Key set</p>}
             </div>
           )}
         </div>

@@ -47,8 +47,8 @@ export const TYPOGRAPHY = {
   
   // Helper text
   helperText: "text-xs text-muted-foreground",  // Form helper text
-  errorText: "text-xs text-red-400",            // Error messages
-  successText: "text-xs text-green-400",        // Success messages
+  errorText: "text-xs text-destructive",        // Error messages
+  successText: "text-xs text-success",          // Success messages
   
   // UI elements
   iconLabel: "text-xs",                      // Labels next to icons
@@ -85,10 +85,10 @@ export const TEXT_COLORS = {
   disabled: "text-muted-foreground/40",    // Disabled text
   
   // Semantic colors
-  success: "text-green-400",
+  success: "text-success",
   warning: "text-yellow-400",
-  error: "text-red-400",
-  info: "text-blue-400",
+  error: "text-destructive",
+  info: "text-info",
 } as const
 
 // ── Utility function to combine typography + color ─────────────────────

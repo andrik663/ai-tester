@@ -95,9 +95,9 @@ function relativeTime(tsMs: number): string {
 }
 
 function latencyColor(ms: number): string {
-  if (ms < 500)   return "text-green-400"
+  if (ms < 500)   return "text-success"
   if (ms < 1500)  return "text-yellow-400"
-  return "text-red-400"
+  return "text-destructive"
 }
 
 function successRate(total: number, success: number): number {
@@ -219,8 +219,8 @@ export default function GatewayLogsPanel() {
           {/* Live dot */}
           {autoRefresh && (
             <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[9px] text-green-400">live</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+              <span className="text-[9px] text-success">live</span>
             </div>
           )}
           {/* Auto-refresh toggle */}
@@ -228,7 +228,7 @@ export default function GatewayLogsPanel() {
             onClick={() => setAutoRefresh((v) => !v)}
             className={`px-2 h-5.5 rounded text-[9px] font-medium transition-all border ${
               autoRefresh
-                ? "border-green-500/30 bg-green-500/10 text-green-400"
+                ? "border-success/30 bg-success/10 text-success"
                 : "border-border/40 text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -247,7 +247,7 @@ export default function GatewayLogsPanel() {
 
       {/* Error */}
       {error && (
-        <div className="px-3 py-2 text-[10px] text-red-400 bg-red-500/8 border-b border-red-500/20 flex-shrink-0">
+        <div className="px-3 py-2 text-[10px] text-destructive bg-destructive/8 border-b border-destructive/20 flex-shrink-0">
           {error}
         </div>
       )}
@@ -269,7 +269,7 @@ export default function GatewayLogsPanel() {
                 <div key={row.id} className="flex items-start gap-2 px-3 py-2 hover:bg-secondary/15 transition-colors">
                   {/* Status icon */}
                   <div className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
-                    row.success ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
+                    row.success ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
                   }`}>
                     {row.success ? <IconCheck /> : <IconX />}
                   </div>
@@ -287,7 +287,7 @@ export default function GatewayLogsPanel() {
                       )}
                     </div>
                     {row.errorMessage && (
-                      <p className="text-[9px] text-red-400/80 mt-0.5 truncate">{row.errorMessage}</p>
+                      <p className="text-[9px] text-destructive/80 mt-0.5 truncate">{row.errorMessage}</p>
                     )}
                     {row.completionTokens > 0 && (
                       <p className="text-[8.5px] text-muted-foreground/40 mt-0.5">

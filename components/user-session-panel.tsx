@@ -290,7 +290,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
           </p>
         )}
         {session?.reason === "revoked" && (
-          <p className="text-[9px] text-red-400/80 px-2 py-1.5 rounded bg-red-400/10 border border-red-400/20">
+          <p className="text-[9px] text-destructive/80 px-2 py-1.5 rounded bg-destructive/10 border border-destructive/20">
             Session was revoked. Contact the developer if this is unexpected.
           </p>
         )}
@@ -319,7 +319,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
           <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
             isExpiring
               ? "text-amber-400 border-amber-400/20 bg-amber-400/10"
-              : "text-green-400 border-green-400/20 bg-green-400/10"
+              : "text-success border-success/20 bg-success/10"
           }`}>
             {countdown || `${session.remainingMin}m`}
           </span>
@@ -349,13 +349,13 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-[8px] uppercase tracking-widest text-muted-foreground/40">Remaining</span>
-              <span className={`text-[10px] font-mono font-semibold ${isExpiring ? "text-amber-400" : "text-green-400"}`}>
+              <span className={`text-[10px] font-mono font-semibold ${isExpiring ? "text-amber-400" : "text-success"}`}>
                 {countdown}
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-[8px] uppercase tracking-widest text-muted-foreground/40">Status</span>
-              <span className="text-[10px] text-green-400">Active</span>
+              <span className="text-[10px] text-success">Active</span>
             </div>
           </div>
 
@@ -386,7 +386,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
                     key={i}
                     className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-secondary/20 transition-colors"
                   >
-                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-success" />
                     <span className="text-[9px] font-semibold text-cyan-400/80 uppercase tracking-widest w-20 flex-shrink-0 truncate">
                       {r.providerName}
                     </span>
@@ -419,7 +419,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
           {/* End session */}
           <button
             onClick={handleEndSession}
-            className="text-[9px] text-muted-foreground/30 hover:text-red-400/70 transition-colors text-right"
+            className="text-[9px] text-muted-foreground/30 hover:text-destructive/70 transition-colors text-right"
           >
             End session early
           </button>

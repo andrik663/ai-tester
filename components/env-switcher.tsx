@@ -76,7 +76,7 @@ function VarRow({
       />
       <button
         onClick={onDelete}
-        className="flex-shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors p-1 rounded"
+        className="flex-shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors p-1 rounded"
       >
         <TrashIcon />
       </button>
@@ -179,7 +179,7 @@ function EnvDetail({
           </button>
           <button
             onClick={() => { if (!confirm(`Delete env "${env.name}"?`)) return; onDelete(env.id) }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-red-400 hover:bg-red-400/8 transition-colors"
+            className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
           >
             <TrashIcon />
           </button>

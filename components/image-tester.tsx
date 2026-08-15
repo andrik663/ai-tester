@@ -106,7 +106,7 @@ export default function ImageTester({
       <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2 border-b border-border bg-card">
         <div className="flex items-center gap-2 min-w-0">
           <span className={`w-1.5 h-1.5 flex-shrink-0 rounded-full ${
-            !isSupported ? "bg-yellow-400" : hasKey ? "bg-green-400" : "bg-muted-foreground/40"
+            !isSupported ? "bg-yellow-400" : hasKey ? "bg-success" : "bg-muted-foreground/40"
           }`} />
           <span className="text-[11px] font-mono text-muted-foreground truncate">
             {isSupported ? (currentModel?.label ?? activeModelId) : "Not supported"}
@@ -120,7 +120,7 @@ export default function ImageTester({
             <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
               result.error
                 ? "bg-destructive/10 border-destructive/30 text-destructive"
-                : "bg-green-400/10 border-green-400/30 text-green-400"
+                : "bg-success/10 border-success/30 text-success"
             }`}>
               {result.error ? "ERROR" : `${result.duration}ms`}
             </span>

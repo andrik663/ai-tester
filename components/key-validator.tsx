@@ -20,12 +20,12 @@ interface QuickProvider {
 }
 
 const QUICK_PROVIDERS: QuickProvider[] = [
-  { id: "openai",      name: "OpenAI",        testerLabel: "OpenAI API Key",           keyPrefix: "sk-",       keyExample: "sk-...",        color: "text-green-400",   dotColor: "bg-green-400"   },
+  { id: "openai",      name: "OpenAI",        testerLabel: "OpenAI API Key",           keyPrefix: "sk-",       keyExample: "sk-...",        color: "text-success",   dotColor: "bg-success"   },
   { id: "anthropic",   name: "Anthropic",     testerLabel: "Anthropic API Key",        keyPrefix: "sk-ant-",   keyExample: "sk-ant-...",    color: "text-orange-400",  dotColor: "bg-orange-400"  },
   { id: "google",      name: "Google Gemini", testerLabel: "Google Gemini Key",        keyPrefix: "AIza",      keyExample: "AIzaSy...",     color: "text-blue-400",    dotColor: "bg-blue-400"    },
   { id: "groq",        name: "Groq",          testerLabel: "Groq API Key",             keyPrefix: "gsk_",      keyExample: "gsk_...",       color: "text-cyan-400",    dotColor: "bg-cyan-400"    },
-  { id: "mistral",     name: "Mistral",       testerLabel: "Mistral API Key",          keyPrefix: undefined,   keyExample: "••••••••",      color: "text-red-400",     dotColor: "bg-red-400"     },
-  { id: "cohere",      name: "Cohere",        testerLabel: "Cohere API Key",           keyPrefix: undefined,   keyExample: "••••••••",      color: "text-emerald-400", dotColor: "bg-emerald-400" },
+  { id: "mistral",     name: "Mistral",       testerLabel: "Mistral API Key",          keyPrefix: undefined,   keyExample: "••••••••",      color: "text-destructive",     dotColor: "bg-destructive"     },
+  { id: "cohere",      name: "Cohere",        testerLabel: "Cohere API Key",           keyPrefix: undefined,   keyExample: "••••••••",      color: "text-success", dotColor: "bg-success" },
   { id: "huggingface", name: "HuggingFace",   testerLabel: "HuggingFace Token",        keyPrefix: "hf_",       keyExample: "hf_...",        color: "text-yellow-400",  dotColor: "bg-yellow-400"  },
   { id: "github",      name: "GitHub",        testerLabel: "GitHub Token",             keyPrefix: "ghp_",      keyExample: "ghp_...",       color: "text-foreground",  dotColor: "bg-foreground"  },
   { id: "stripe",      name: "Stripe",        testerLabel: "Stripe Secret Key",        keyPrefix: "sk_",       keyExample: "sk_live_...",   color: "text-violet-400",  dotColor: "bg-violet-400"  },
@@ -58,17 +58,17 @@ function detectProvider(key: string): QuickProvider | undefined {
 function StatusBadge({ valid, small = false }: { valid: boolean | null; small?: boolean }) {
   if (valid === null) return null
   const base = small ? "text-[10px] px-2 py-0.5 rounded-full font-semibold" : "text-xs px-3 py-1 rounded-full font-semibold"
-  if (valid) return <span className={`${base} bg-green-400/15 text-green-400 border border-green-400/30`}>Valid</span>
-  return <span className={`${base} bg-red-400/15 text-red-400 border border-red-400/30`}>Invalid</span>
+  if (valid) return <span className={`${base} bg-success/15 text-success border border-success/30`}>Valid</span>
+  return <span className={`${base} bg-destructive/15 text-destructive border border-destructive/30`}>Invalid</span>
 }
 
 // ── Metric chip ───────────────────────────────────────────────────────────────
 
 function MetricChip({ label, value, accent = "default" }: { label: string; value: string; accent?: "green" | "yellow" | "red" | "blue" | "default" }) {
   const colors = {
-    green:   "text-green-400",
+    green:   "text-success",
     yellow:  "text-yellow-400",
-    red:     "text-red-400",
+    red:     "text-destructive",
     blue:    "text-blue-400",
     default: "text-foreground",
   }
@@ -97,10 +97,10 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
     >
       {copied ? (
         <>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-green-400">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-success">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          <span className="text-green-400">Copied</span>
+          <span className="text-success">Copied</span>
         </>
       ) : (
         <>
@@ -431,9 +431,9 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
       {result && (
         <div className={`flex flex-col gap-3 rounded-xl border p-4 ${
           result.valid === true
-            ? "border-green-400/25 bg-green-400/5"
+            ? "border-success/25 bg-success/5"
             : result.valid === false
-            ? "border-red-400/25 bg-red-400/5"
+            ? "border-destructive/25 bg-destructive/5"
             : "border-border bg-card"
         }`}>
 
@@ -442,12 +442,12 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2">
                 {result.valid === true && (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-green-400 flex-shrink-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-success flex-shrink-0">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}
                 {result.valid === false && (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-red-400 flex-shrink-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-destructive flex-shrink-0">
                     <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
                   </svg>
                 )}
@@ -467,10 +467,10 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
               >
                 {copiedShare ? (
                   <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-green-400">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-success">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span className="text-green-400">Copied</span>
+                    <span className="text-success">Copied</span>
                   </>
                 ) : (
                   <>
@@ -594,8 +594,8 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
                     info: "text-muted-foreground",
                     req: "text-blue-400",
                     res: "text-yellow-400",
-                    ok: "text-green-400",
-                    err: "text-red-400",
+                    ok: "text-success",
+                    err: "text-destructive",
                     curl: "text-cyan-400",
                   }
                   const prefixes: Record<string, string> = {

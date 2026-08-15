@@ -163,13 +163,13 @@ function HQFlag({ code }: { code: string }) {
 // ── Promo badge ───────────────────────────────────��───────────────────────────
 const PROMO_COLOR: Record<string, string> = {
   "New":           "text-sky-400 bg-sky-400/10 border-sky-400/20",
-  "Free":          "text-green-400 bg-green-400/10 border-green-400/20",
-  "Free tier":     "text-green-400 bg-green-400/10 border-green-400/20",
+  "Free":          "text-success bg-success/10 border-success/20",
+  "Free tier":     "text-success bg-success/10 border-success/20",
   "Flagship":      "text-violet-400 bg-violet-400/10 border-violet-400/20",
   "Popular":       "text-amber-400 bg-amber-400/10 border-amber-400/20",
-  "Cheapest":      "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
-  "Best value":    "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
-  "Best price":    "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+  "Cheapest":      "text-success bg-success/10 border-success/20",
+  "Best value":    "text-success bg-success/10 border-success/20",
+  "Best price":    "text-success bg-success/10 border-success/20",
   "Reasoning":     "text-rose-400 bg-rose-400/10 border-rose-400/20",
   "Fastest":       "text-orange-400 bg-orange-400/10 border-orange-400/20",
   "Ultra-fast":    "text-orange-400 bg-orange-400/10 border-orange-400/20",
@@ -340,7 +340,7 @@ function ProviderCard({ provider, apiKey, defaultExpanded }: {
               {tierMeta.label}
             </span>
             {provider.hasFreeTier && (
-              <span className="text-xs font-semibold text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-1 rounded-full">
+              <span className="text-xs font-semibold text-success bg-success/10 border border-success/20 px-2 py-1 rounded-full">
                 Free tier
               </span>
             )}
@@ -610,7 +610,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
             onClick={() => setFreeOnly((v) => !v)}
             className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-medium border transition-all ${
               freeOnly
-                ? "text-green-400 bg-green-400/10 border-green-400/30"
+                ? "text-success bg-success/10 border-success/30"
                 : "text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
             }`}
           >
@@ -643,9 +643,9 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
               className={`flex-shrink-0 px-2.5 py-0.5 rounded text-[10px] font-medium border transition-all ${
                 priceSort === opt.id
                   ? opt.id === "free"
-                    ? "text-green-400 bg-green-400/10 border-green-400/30"
+                    ? "text-success bg-success/10 border-success/30"
                     : opt.id === "cheapest"
-                    ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/30"
+                    ? "text-success bg-success/10 border-success/30"
                     : opt.id === "expensive"
                     ? "text-rose-400 bg-rose-400/10 border-rose-400/30"
                     : "bg-foreground text-background border-foreground"
@@ -707,7 +707,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                   <div key={`${provider.id}:${model.id}`}
                     className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
                       hasDiscount
-                        ? "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/8"
+                        ? "border-success/20 bg-success/5 hover:bg-success/8"
                         : "border-border/50 bg-secondary/10 hover:bg-secondary/20"
                     }`}>
                     <div className="flex-1 min-w-0">
@@ -718,7 +718,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                           {TIER_META[provider.tier].label}
                         </span>
                         {hasDiscount && discountPct > 0 && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/15 text-success border border-success/25">
                             -{discountPct}%
                           </span>
                         )}
@@ -740,7 +740,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                                 {formatPrice(model.promoOriginalInputPer1M!)}
                               </span>
                             )}
-                            <span className={`text-[11px] font-mono font-semibold ${hasDiscount ? "text-emerald-400" : "text-foreground"}`}>
+                            <span className={`text-[11px] font-mono font-semibold ${hasDiscount ? "text-success" : "text-foreground"}`}>
                               {formatPrice(model.inputPer1M)}
                             </span>
                             <span className="text-muted-foreground/40 text-[9px]">in</span>
@@ -752,14 +752,14 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                                 {formatPrice(model.promoOriginalOutputPer1M ?? null)}
                               </span>
                             )}
-                            <span className={`text-[11px] font-mono ${hasDiscount ? "text-emerald-400/80" : "text-foreground"}`}>
+                            <span className={`text-[11px] font-mono ${hasDiscount ? "text-success/80" : "text-foreground"}`}>
                               {formatPrice(model.outputPer1M)}
                             </span>
                             <span className="text-muted-foreground/40 text-[9px]">out</span>
                           </div>
                         </>
                       ) : (
-                        <span className="text-[11px] font-mono text-green-400 font-semibold">Free</span>
+                        <span className="text-[11px] font-mono text-success font-semibold">Free</span>
                       )}
                       {model.contextK && (
                         <span className="text-[9px] font-mono text-muted-foreground/40">{model.contextK >= 1000 ? `${model.contextK / 1000}M` : `${model.contextK}K`} ctx</span>

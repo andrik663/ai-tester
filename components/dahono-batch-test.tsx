@@ -51,7 +51,7 @@ function CopyIcon() {
 // ── Tier badge ────────────────────────────────────────────────────────────────
 
 const TIER_COLORS: Record<string, string> = {
-  free:     "text-green-400  bg-green-400/10  border-green-400/25",
+  free:     "text-success  bg-success/10  border-success/25",
   starter:  "text-sky-400    bg-sky-400/10    border-sky-400/25",
   pro:      "text-violet-400 bg-violet-400/10 border-violet-400/25",
   business: "text-amber-400  bg-amber-400/10  border-amber-400/25",
@@ -90,7 +90,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
   }
 
   return (
-    <div className={`border-b border-border last:border-0 ${r.ok ? "" : "bg-red-950/10"}`}>
+    <div className={`border-b border-border last:border-0 ${r.ok ? "" : "bg-destructive/10"}`}>
       {/* Main row — click to expand */}
       <div
         className="flex items-start gap-2 px-3 py-2.5 cursor-pointer hover:bg-secondary/40 transition-colors"
@@ -102,8 +102,8 @@ function ResultRow({ r }: { r: BatchModelResult }) {
         {/* Status icon */}
         <span className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full border mt-0.5 ${
           r.ok
-            ? "text-green-400 border-green-400/30 bg-green-400/10"
-            : "text-red-400 border-red-400/30 bg-red-400/10"
+            ? "text-success border-success/30 bg-success/10"
+            : "text-destructive border-destructive/30 bg-destructive/10"
         }`}>
           {r.ok ? <CheckIcon /> : <XIcon />}
         </span>
@@ -117,7 +117,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0 ml-1">
           <div className="flex items-center gap-1.5">
             <TierBadge tier={r.tier} />
-            <span className={`text-[10px] font-mono ${r.ok ? "text-green-400" : "text-red-400"}`}>
+            <span className={`text-[10px] font-mono ${r.ok ? "text-success" : "text-destructive"}`}>
               {r.status > 0 ? r.status : "ERR"}
             </span>
           </div>
@@ -173,7 +173,7 @@ function ResultRow({ r }: { r: BatchModelResult }) {
           {!r.ok && r.errorMsg && (
             <div className="flex flex-col gap-1">
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Error</span>
-              <p className="text-[10px] font-mono text-red-400 bg-red-400/5 rounded px-2.5 py-2 border border-red-400/15 break-all">
+              <p className="text-[10px] font-mono text-destructive bg-destructive/5 rounded px-2.5 py-2 border border-destructive/15 break-all">
                 {r.errorMsg}
               </p>
             </div>
@@ -341,8 +341,8 @@ export default function DahonoBatchTest({ apiKey }: Props) {
 
       {/* Error state */}
       {error && (
-        <div className="rounded-md border border-red-400/20 bg-red-400/5 px-3 py-2">
-          <p className="text-[10px] font-mono text-red-400">{error}</p>
+        <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2">
+          <p className="text-[10px] font-mono text-destructive">{error}</p>
         </div>
       )}
 
@@ -374,10 +374,10 @@ export default function DahonoBatchTest({ apiKey }: Props) {
             <span className="text-[11px] font-semibold text-foreground">
               {data.total} models tested
             </span>
-            <span className="text-[11px] text-green-400 font-mono">
+            <span className="text-[11px] text-success font-mono">
               {passCount} passed
             </span>
-            <span className="text-[11px] text-red-400 font-mono">
+            <span className="text-[11px] text-destructive font-mono">
               {failCount} failed
             </span>
             <span className="text-[10px] text-muted-foreground font-mono ml-auto">
@@ -398,14 +398,14 @@ export default function DahonoBatchTest({ apiKey }: Props) {
               count={passCount}
               active={filter === "ok"}
               onClick={() => setFilter("ok")}
-              color="text-green-400 border-green-400/30 bg-green-400/10"
+              color="text-success border-success/30 bg-success/10"
             />
             <FilterTab
               label="Failed"
               count={failCount}
               active={filter === "fail"}
               onClick={() => setFilter("fail")}
-              color="text-red-400 border-red-400/30 bg-red-400/10"
+              color="text-destructive border-destructive/30 bg-destructive/10"
             />
           </div>
 

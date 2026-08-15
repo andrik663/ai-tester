@@ -182,7 +182,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://platform.openai.com/docs/api-reference/responses",
     createKeyUrl: "https://platform.openai.com/api-keys",
-    color: "text-green-400 bg-green-400/10 border-green-400/30",
+    color: "text-success bg-success/10 border-success/30",
   },
   {
     id: "google",
@@ -508,7 +508,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://community.sambanova.ai/t/supported-models/193",
     createKeyUrl: "https://cloud.sambanova.ai/apis",
-    color: "text-red-300 bg-red-300/10 border-red-300/30",
+    color: "text-destructive bg-destructive/10 border-destructive/30",
   },
   {
     id: "nvidia",
@@ -527,7 +527,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.api.nvidia.com/nim/reference/llm-apis",
     createKeyUrl: "https://build.nvidia.com/settings/api-keys",
-    color: "text-green-300 bg-green-300/10 border-green-300/30",
+    color: "text-success bg-success/10 border-success/30",
   },
   {
     id: "hyperbolic",
@@ -640,7 +640,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.mistral.ai/api/#tag/chat",
     createKeyUrl: "https://console.mistral.ai/api-keys/",
-    color: "text-red-400 bg-red-400/10 border-red-400/30",
+    color: "text-destructive bg-destructive/10 border-destructive/30",
   },
   {
     id: "cohere",
@@ -658,7 +658,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.cohere.com/reference/chat",
     createKeyUrl: "https://dashboard.cohere.com/api-keys",
-    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+    color: "text-success bg-success/10 border-success/30",
   },
   {
     id: "perplexity",
@@ -776,7 +776,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://platform.lingyiwanwu.com/docs",
     createKeyUrl: "https://platform.lingyiwanwu.com/apikeys",
-    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/30",
+    color: "text-success bg-success/10 border-success/30",
   },
   {
     id: "stepfun",
@@ -931,7 +931,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://www.volcengine.com/docs/82379/1399008",
     createKeyUrl: "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
-    color: "text-red-300 bg-red-300/10 border-red-300/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   {
     id: "recraft",
@@ -1129,7 +1129,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://jempol.in/tutorial.php",
     createKeyUrl: "https://jempol.in/dashboard",
-    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/20",
+    color: "text-success bg-success/10 border-success/20",
   },
   // ── Fal.ai ────────────────────────────────────────────────────────────────
   {
@@ -1486,7 +1486,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.friendli.ai/",
     createKeyUrl: "https://suite.friendli.ai/user-settings/tokens",
-    color: "text-green-300 bg-green-300/10 border-green-300/20",
+    color: "text-success bg-success/10 border-success/20",
   },
   // ── OpenRouter Providers (from OpenRouter API) ───────────────────────────
   // These providers route through OpenRouter — use your OpenRouter key.
@@ -1573,7 +1573,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "gryphe/mythomax-l2-13b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/gryphe",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-red-500 bg-red-500/10 border-red-500/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
 
   {
@@ -1617,7 +1617,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "kwaipilot/kat-coder-pro-v2", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/kwaipilot",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-red-400 bg-red-400/10 border-red-400/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   {
     id: "liquid",
@@ -1704,7 +1704,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "nex-agi/nex-n2-pro", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/nex-agi",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    color: "text-success bg-success/10 border-success/20",
   },
   {
     id: "nousresearch",
@@ -1933,7 +1933,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://router.marketku.id",
     createKeyUrl: "https://router.marketku.id",
-    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+    color: "text-success bg-success/10 border-success/30",
   },
 
   // ── OpenModel ─────────────────────────────────────────────────────────────
@@ -1980,7 +1980,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "/api/v1/models",
     createKeyUrl: "/keys",
-    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+    color: "text-success bg-success/10 border-success/30",
   },
 
   // ── Avian ─────────────────────────────────────────────────────────────────
@@ -2296,7 +2296,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/bytedance-seed",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-red-400 bg-red-400/10 border-red-400/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   {
     id: "eleutherai",
@@ -2311,7 +2311,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/eleutherai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-green-400 bg-green-400/10 border-green-400/20",
+    color: "text-success bg-success/10 border-success/20",
   },
   {
     id: "essentialai",
@@ -2363,7 +2363,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/kwaivgi",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-red-300 bg-red-300/10 border-red-300/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   {
     id: "leonardoai",
@@ -2592,7 +2592,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/wan-ai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/20",
+    color: "text-success bg-success/10 border-success/20",
   },
 
   // ── Bynara (NaraRouter) ──────────────────────────────────────────────────
@@ -2791,13 +2791,12 @@ const PRESETS: ProviderPreset[] = [
     id: "arceeai",
     name: "Arcee AI (Conductor, native)",
     country: "US",
-    endpoint: "https://models.arcee.ai/v1/chat/completions",
+    endpoint: "https://api.arcee.ai/api/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
-    // Models: auto, auto-tool, auto-reasoning, virtuoso-large, coder-large, maestro-reasoning, spotlight
     bodyTemplate: JSON.stringify({
       model: "auto",
       max_tokens: 1024,
@@ -2805,7 +2804,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.arcee.ai",
     createKeyUrl: "https://conductor.arcee.ai",
-    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+    color: "text-success bg-success/10 border-success/30",
     note: "\"auto\" lets Arcee Conductor route to the best model automatically.",
   },
   {
@@ -2888,7 +2887,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.publicai.co",
     createKeyUrl: "https://www.publicai.co",
-    color: "text-red-400 bg-red-400/10 border-red-400/30",
+    color: "text-destructive bg-destructive/10 border-destructive/30",
     note: "Free nonprofit inference utility for public open-weight models.",
   },
   {
@@ -3341,8 +3340,8 @@ const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
   req:  "text-blue-400",
   res:  "text-yellow-400",
-  ok:   "text-green-400",
-  err:  "text-red-400",
+  ok:   "text-success",
+  err:  "text-destructive",
   curl: "text-cyan-400",
 }
 
@@ -3395,7 +3394,7 @@ function HeaderEditor({
           />
           <button
             onClick={() => remove(row.id)}
-            className="flex-shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors p-1 rounded"
+            className="flex-shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors p-1 rounded"
           >
             <TrashIcon />
           </button>
@@ -4204,7 +4203,7 @@ export default function ManualKeyTester() {
         />
       )}
 
-      {/* ── LEFT: Config panel ─────────────────────────────────────────────── */}
+      {/* ── LEFT: Config panel ──────────────────────────────────────────���──── */}
       <aside className={`
         flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
@@ -4387,7 +4386,7 @@ export default function ManualKeyTester() {
               </svg>
             </button>
             {activeTab === "unified" && (unifiedSubTab === "vision" ? visionResult : result) && (
-              <span className={`text-[10px] font-mono flex-shrink-0 px-1.5 py-0.5 rounded border ${(unifiedSubTab === "vision" ? visionResult?.ok : result?.ok) ? "text-green-400 border-green-400/20 bg-green-400/8" : "text-red-400 border-red-400/20 bg-red-400/8"}`}>
+              <span className={`text-[10px] font-mono flex-shrink-0 px-1.5 py-0.5 rounded border ${(unifiedSubTab === "vision" ? visionResult?.ok : result?.ok) ? "text-success border-success/20 bg-success/8" : "text-destructive border-destructive/20 bg-destructive/8"}`}>
                 {(unifiedSubTab === "vision" ? visionResult?.status : result?.status)}&nbsp;·&nbsp;{(unifiedSubTab === "vision" ? visionResult?.durationMs : result?.durationMs)}ms
               </span>
             )}
@@ -4417,9 +4416,9 @@ export default function ManualKeyTester() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as typeof activeTab)}
-                  className={`px-3 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                  className={`px-3 h-7 rounded-md text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
                     activeTab === t.id || (t.id === "saved" && (activeTab === "history" || activeTab === "collections"))
-                      ? "bg-secondary text-foreground shadow-[inset_0_-2px_0_oklch(0.76_0.17_192_/_0.8)]"
+                      ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                   }`}
                 >
@@ -4430,12 +4429,12 @@ export default function ManualKeyTester() {
 
             {/* Icon-only utility buttons — right side */}
             <div className="flex items-center gap-0.5 flex-shrink-0">
-              <button onClick={() => setActiveTab("environments")} title="Environments" className={`w-7 h-7 flex items-center justify-center rounded transition-all ${activeTab === "environments" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"}`}>
+              <button onClick={() => setActiveTab("environments")} title="Environments" className={`w-7 h-7 flex items-center justify-center rounded-md transition-all ${activeTab === "environments" ? "bg-secondary text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"}`}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
               </button>
-              <a href="/docs" target="_blank" rel="noopener noreferrer" title="API Documentation" className="w-7 h-7 flex items-center justify-center rounded transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40">
+              <a href="/docs" target="_blank" rel="noopener noreferrer" title="API Documentation" className="w-7 h-7 flex items-center justify-center rounded-md transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
@@ -4443,12 +4442,12 @@ export default function ManualKeyTester() {
                   <polyline points="10 9 9 9 8 9" />
                 </svg>
               </a>
-              <button onClick={() => setActiveTab("info")} title="Pricing" className={`w-7 h-7 flex items-center justify-center rounded transition-all ${activeTab === "info" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"}`}>
+              <button onClick={() => setActiveTab("info")} title="Pricing" className={`w-7 h-7 flex items-center justify-center rounded-md transition-all ${activeTab === "info" ? "bg-secondary text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"}`}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
               </button>
-              <button title="Sign out" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login" }} className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all">
+              <button title="Sign out" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login" }} className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
@@ -4458,7 +4457,7 @@ export default function ManualKeyTester() {
 
             {/* Response status chip — desktop */}
             {activeTab === "unified" && (unifiedSubTab === "vision" ? visionResult : result) && (
-              <span className={`text-[10px] font-mono flex-shrink-0 ml-1 ${(unifiedSubTab === "vision" ? visionResult?.ok : result?.ok) ? "text-green-400" : "text-red-400"}`}>
+              <span className={`text-[10px] font-mono flex-shrink-0 ml-1 ${(unifiedSubTab === "vision" ? visionResult?.ok : result?.ok) ? "text-success" : "text-destructive"}`}>
                 {(unifiedSubTab === "vision" ? visionResult?.status : result?.status)}&nbsp;·&nbsp;{(unifiedSubTab === "vision" ? visionResult?.durationMs : result?.durationMs)}ms
               </span>
             )}
@@ -4492,7 +4491,7 @@ export default function ManualKeyTester() {
                   onClick={() => setActiveTab(t.id as typeof activeTab)}
                   className={`px-3.5 h-10 text-[12px] font-medium whitespace-nowrap flex-shrink-0 transition-all border-b-2 ${
                     activeTab === t.id || (t.id === "saved" && (activeTab === "history" || activeTab === "collections"))
-                      ? "border-primary text-primary"
+                      ? "border-primary text-primary bg-primary/5"
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -4757,15 +4756,15 @@ export default function ManualKeyTester() {
               {/* Result stats bar */}
               {result && (
                 <div className={`rounded-xl border overflow-hidden ${
-                  result.ok ? "border-green-500/25 bg-green-500/5" : "border-red-500/25 bg-red-500/5"
+                  result.ok ? "border-success/25 bg-success/5" : "border-destructive/25 bg-destructive/5"
                 }`}>
                   {/* Top status row */}
                   <div className={`flex items-center justify-between px-4 py-2.5 border-b ${
-                    result.ok ? "border-green-500/15" : "border-red-500/15"
+                    result.ok ? "border-success/15" : "border-destructive/15"
                   }`}>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${result.ok ? "bg-green-400" : "bg-red-400"}`} />
-                      <span className={`text-sm font-bold ${result.ok ? "text-green-400" : "text-red-400"}`}>
+                      <div className={`w-2 h-2 rounded-full ${result.ok ? "bg-success" : "bg-destructive"}`} />
+                      <span className={`text-sm font-bold ${result.ok ? "text-success" : "text-destructive"}`}>
                         HTTP {result.status} �� {result.ok ? "Success" : "Failed"}
                       </span>
                     </div>
@@ -4781,7 +4780,7 @@ export default function ManualKeyTester() {
                           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-border/50 bg-card/40 hover:bg-secondary transition-colors"
                         >
                           <CopyIcon />
-                          {copiedCurlFull ? <span className="text-green-400">Copied</span> : "cURL"}
+                          {copiedCurlFull ? <span className="text-success">Copied</span> : "cURL"}
                         </button>
                       )}
                     </div>
@@ -4791,15 +4790,15 @@ export default function ManualKeyTester() {
                     const exp = explainApiError(result.status, result.responseBody ?? result.statusText)
                     if (!exp) return null
                     return (
-                      <div className="flex flex-col gap-1 px-4 py-3 border-b border-red-500/10 bg-red-500/3">
+                      <div className="flex flex-col gap-1 px-4 py-3 border-b border-destructive/10 bg-destructive/3">
                         <div className="flex items-start gap-2">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-destructive flex-shrink-0 mt-0.5">
                             <circle cx="12" cy="12" r="10" />
                             <line x1="12" y1="8" x2="12" y2="12" />
                             <line x1="12" y1="16" x2="12.01" y2="16" />
                           </svg>
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-semibold text-red-300">{exp.cause}</span>
+                            <span className="text-[11px] font-semibold text-destructive">{exp.cause}</span>
                             <span className="text-[11px] text-muted-foreground leading-snug">{exp.suggestion}</span>
                           </div>
                         </div>
@@ -4852,9 +4851,9 @@ export default function ManualKeyTester() {
                     function pctAccent(rem?: string, lim?: string): string {
                       if (!rem || !lim) return "text-sky-400"
                       const pct = Math.round((parseInt(rem) / parseInt(lim)) * 100)
-                      if (pct > 60) return "text-green-400"
+                      if (pct > 60) return "text-success"
                       if (pct > 25) return "text-yellow-400"
-                      return "text-red-400"
+                      return "text-destructive"
                     }
 
                     const reqResetLabel = fmtReset(reqReset)
@@ -5093,7 +5092,7 @@ export default function ManualKeyTester() {
                   <span className="text-[10px] font-mono text-primary font-semibold">total: {visionResult.tokenUsage.totalTokens}</span>
                 )}
                 {visionResult.durationMs && (
-                  <span className={`text-[10px] font-mono ml-auto ${visionResult.ok ? "text-green-400" : "text-red-400"}`}>
+                  <span className={`text-[10px] font-mono ml-auto ${visionResult.ok ? "text-success" : "text-destructive"}`}>
                     HTTP {visionResult.status} · {visionResult.durationMs}ms
                   </span>
                 )}
@@ -5493,8 +5492,8 @@ export default function ManualKeyTester() {
                         {!res.loading && res.result && (
                           <>
                             {/* Status bar */}
-                            <div className={`flex items-center gap-2 text-xs font-semibold ${res.result.ok ? "text-green-400" : "text-red-400"}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${res.result.ok ? "bg-green-400" : "bg-red-400"}`} />
+                            <div className={`flex items-center gap-2 text-xs font-semibold ${res.result.ok ? "text-success" : "text-destructive"}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${res.result.ok ? "bg-success" : "bg-destructive"}`} />
                               HTTP {res.result.status}
                               {res.result.durationMs !== undefined && (
                                 <span className="text-muted-foreground font-normal ml-auto">{res.result.durationMs}ms</span>
@@ -5515,7 +5514,7 @@ export default function ManualKeyTester() {
                               </div>
                             )}
                             {!res.result.ok && (
-                              <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-[11px] text-red-400 leading-relaxed break-all">
+                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-[11px] text-destructive leading-relaxed break-all">
                                 {res.result.statusText || `HTTP ${res.result.status}`}
                               </div>
                             )}
@@ -5828,7 +5827,7 @@ export default function ManualKeyTester() {
                 {detectInput && (
                   <button
                     onClick={() => setDetectInput("")}
-                    className="flex items-center gap-1.5 self-start px-2.5 py-1.5 rounded-md text-[11px] font-medium text-red-400 bg-red-500/8 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/40 transition-all"
+                    className="flex items-center gap-1.5 self-start px-2.5 py-1.5 rounded-md text-[11px] font-medium text-destructive bg-destructive/8 hover:bg-destructive/15 border border-destructive/20 hover:border-destructive/40 transition-all"
                     aria-label="Delete key"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
@@ -5843,7 +5842,7 @@ export default function ManualKeyTester() {
               {/* Live result card */}
               {liveResult && (
                 <div className={`rounded-lg border p-4 flex flex-col gap-3 transition-all ${
-                  liveResult.confidence === "high"    ? "border-green-500/30 bg-green-500/5"
+                  liveResult.confidence === "high"    ? "border-success/30 bg-success/5"
                   : liveResult.confidence === "low"   ? "border-yellow-500/30 bg-yellow-500/5"
                   : "border-border bg-secondary/20"
                 }`}>
@@ -5858,7 +5857,7 @@ export default function ManualKeyTester() {
                       </span>
                     </div>
                     <span className={`flex-shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
-                      liveResult.confidence === "high"  ? "text-green-400 bg-green-400/10 border-green-400/30"
+                      liveResult.confidence === "high"  ? "text-success bg-success/10 border-success/30"
                       : liveResult.confidence === "low" ? "text-yellow-400 bg-yellow-400/10 border-yellow-400/30"
                       : "text-muted-foreground bg-secondary border-border"
                     }`}>
@@ -5945,7 +5944,7 @@ export default function ManualKeyTester() {
                                     <code className="text-muted-foreground font-mono text-[11px] bg-secondary/50 px-1.5 py-0.5 rounded">{p.example}</code>
                                   </td>
                                   <td className="px-3 py-2.5">
-                                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.confidence === "high" ? "text-green-400 bg-green-400/10 border border-green-400/20" : "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20"}`}>
+                                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.confidence === "high" ? "text-success bg-success/10 border border-success/20" : "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20"}`}>
                                       {p.confidence}
                                     </span>
                                   </td>

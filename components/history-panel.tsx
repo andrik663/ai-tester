@@ -29,7 +29,7 @@ function fmtDuration(ms?: number): string {
 function StatusDot({ ok }: { ok: boolean }) {
   return (
     <span
-      className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${ok ? "bg-green-400" : "bg-red-400"}`}
+      className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${ok ? "bg-success" : "bg-destructive"}`}
       aria-label={ok ? "success" : "error"}
     />
   )
@@ -90,7 +90,7 @@ function HistoryItem({
   }
 
   return (
-    <div className={`border rounded-lg overflow-hidden transition-colors ${entry.ok ? "border-border" : "border-red-500/20"}`}>
+    <div className={`border rounded-lg overflow-hidden transition-colors ${entry.ok ? "border-border" : "border-destructive/20"}`}>
       {/* Header row */}
       <button
         onClick={() => setExpanded((v) => !v)}
@@ -113,7 +113,7 @@ function HistoryItem({
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono">
             <span className="text-muted-foreground">provider: <span className="text-foreground">{entry.providerName}</span></span>
             {entry.model && <span className="text-muted-foreground">model: <span className="text-foreground">{entry.model}</span></span>}
-            <span className="text-muted-foreground">HTTP: <span className={entry.ok ? "text-green-400" : "text-red-400"}>{entry.status}</span></span>
+            <span className="text-muted-foreground">HTTP: <span className={entry.ok ? "text-success" : "text-destructive"}>{entry.status}</span></span>
             {entry.durationMs && <span className="text-muted-foreground">total: <span className="text-foreground">{fmtDuration(entry.durationMs)}</span></span>}
             {entry.ttftMs != null && <span className="text-muted-foreground">TTFT: <span className="text-cyan-400">{entry.ttftMs}ms</span></span>}
             {entry.tokenUsage?.totalTokens && <span className="text-muted-foreground">tokens: <span className="text-foreground">{entry.tokenUsage.totalTokens}</span></span>}
@@ -146,7 +146,7 @@ function HistoryItem({
             )}
             <button
               onClick={() => onDelete(entry.id)}
-              className="ml-auto flex items-center gap-1 text-[10px] px-2 py-1 rounded text-muted-foreground/50 hover:text-red-400 hover:bg-red-400/8 transition-colors border border-transparent hover:border-red-400/20"
+              className="ml-auto flex items-center gap-1 text-[10px] px-2 py-1 rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 transition-colors border border-transparent hover:border-destructive/20"
             >
               <TrashIcon /> Delete
             </button>
@@ -213,7 +213,7 @@ export default function HistoryPanel({ onRestore }: HistoryPanelProps) {
         {entries.length > 0 && (
           <button
             onClick={handleClearAll}
-            className="text-[10px] text-muted-foreground/50 hover:text-red-400 transition-colors px-1.5 py-1 rounded hover:bg-red-400/8 flex-shrink-0"
+            className="text-[10px] text-muted-foreground/50 hover:text-destructive transition-colors px-1.5 py-1 rounded hover:bg-destructive/8 flex-shrink-0"
           >
             Clear all
           </button>

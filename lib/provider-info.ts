@@ -228,7 +228,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Groq ─────────────────────────────────────────������───────────────────────
+  // ── Groq ─────────────────────────────────────────�������───────────────────────
   groq: {
     id: "groq",
     name: "Groq",
@@ -1736,7 +1736,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Parasail ──────────────────────────────────────────────────────────────────
+  // ── Parasail ─────────────────────��────────────────────────────────────────────
   parasail: {
     id: "parasail",
     name: "Parasail",
@@ -2567,9 +2567,10 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     description: "Small-language-model lab and router. Conductor auto-routes prompts across its own Virtuoso/Maestro models and third-party frontier models.",
     hq: "US", tier: "mid", hasFreeTier: true, liveModels: false, lastUpdated: "2026-08-15",
     models: [
-      m("auto",               null, null, 128, { promo: true, promoLabel: "Smart routing" }),
-      m("auto-tool",          null, null, 128),
-      m("auto-reasoning",     null, null, 128),
+      m("auto",                    null, null, 128, { promo: true, promoLabel: "Smart routing" }),
+      m("auto-tool",                null, null, 128),
+      m("auto-reasoning",           null, null, 128),
+      m("trinity-large-thinking",   null, null, 128, { promo: true, promoLabel: "Thinking" }),
       m("virtuoso-large",     0.75, 1.20, 128),
       m("coder-large",        0.50, 0.80,  64),
       m("maestro-reasoning",  2.00, 4.00, 128),

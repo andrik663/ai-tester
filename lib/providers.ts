@@ -959,7 +959,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
   },
 
-  // ── DeepInfra ─────────────────────────────────────���───────────────────────
+  // ── DeepInfra ─────────────────────────────────────���������───────────────────────
   deepinfra: {
     id: "deepinfra",
     models: [
@@ -1201,7 +1201,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       // ── Qwen3.7 ───────────────────────────────────────────────────────────
       "mk/qwen3.7-max",
       "mk/qwen3.7-plus",
-      // ── Qwen legacy ────────────────��────────────���─────────────────────────
+      // ── Qwen legacy ──────────��─��─��─��────────────���─────────────────────────
       "mk/qwen-max",
       "mk/qwen-plus",
       "mk/qwen-plus-latest",
@@ -1464,7 +1464,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   zenmux: {
     id: "zenmux",
     models: [
-      // ── New July 2026 ─────────────────────────────────────���────────────────
+      // ── New July 2026 ────────────────────────────���──���──���──���────────────────
       "openai/gpt-5.6-sol",
       "openai/gpt-5.6-terra-pro",
       "openai/gpt-5.6-luna",
@@ -1535,7 +1535,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "deepseek-v4-pro",
       "mimo-v2.5",
       "mimo-v2.5-pro-ultraspeed",
-      // ── Pro ────────────────�����────���─────────────────────────────────────────
+      // ── Pro ──────���────���────�������────���─────────────────────────────────────────
       "claude-opus-4.7",
       // ── Hermes / Mimo ───────────────────────────────────────────────��──��──
       "mimo-v2.5-hermes",
@@ -2107,7 +2107,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Nous Research (Nous Portal) ────────────────────────────────────────────
+  // ── Nous Research (Nous Portal) ─────────────���──────────────────────────────
   nousresearch: {
     id: "nousresearch",
     models: [
@@ -2172,12 +2172,13 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "auto",
       "auto-tool",
       "auto-reasoning",
+      "trinity-large-thinking",
       "virtuoso-large",
       "coder-large",
       "maestro-reasoning",
       "spotlight",
     ],
-    endpoint: "https://models.arcee.ai/v1/chat/completions",
+    endpoint: "https://api.arcee.ai/api/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
