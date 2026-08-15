@@ -958,16 +958,16 @@ export default function CodePreviewTab({
                   <div className="w-10 h-10 rounded-xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)]">
                     <CodeIcon />
                   </div>
-                  <div>
-                    <p className="text-[13px] font-medium text-foreground mb-0.5">
-                      {activeSkillConfigs.length > 0 ? `${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} active` : "Code Preview"}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
-                      {activeSkillConfigs.length > 0
-                        ? `System prompts from ${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} are composed and injected. Ask it to build something.`
-                        : "Ask the AI to build something — it generates live HTML, CSS & JS you can preview instantly."}
-                    </p>
-                  </div>
+                  {activeSkillConfigs.length > 0 && (
+                    <div>
+                      <p className="text-[13px] font-medium text-foreground mb-0.5">
+                        {`${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} active`}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
+                        {`System prompts from ${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} are composed and injected. Ask it to build something.`}
+                      </p>
+                    </div>
+                  )}
                   {activeSkillConfigs.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap justify-center">
                       {activeSkillConfigs.map((c) => (
@@ -982,24 +982,6 @@ export default function CodePreviewTab({
                       ))}
                     </div>
                   )}
-                  <div className="flex flex-col gap-1.5 w-full max-w-[220px]">
-                    {(() => {
-                      const ids = activeSkillConfigs.map((c) => c.skillId)
-                      if (ids.includes("algorithmic-art")) return ["Particle flow field with p5.js", "Cellular automata simulation", "Perlin noise landscape"]
-                      if (ids.includes("web-artifacts-builder") && ids.includes("theme-factory")) return ["Build a dashboard with Ocean Depths theme", "Create a themed shadcn/ui form", "Make a tech-themed analytics app"]
-                      if (ids.includes("web-artifacts-builder")) return ["Build a dashboard with charts", "Create a shadcn/ui form", "Make a multi-step wizard"]
-                      if (ids.includes("theme-factory")) return ["Apply Ocean Depths theme", "Generate a dark tech theme", "Create a warm golden theme"]
-                      return ["Build a todo app with dark mode", "Create an animated gradient clock", "Make a responsive pricing card"]
-                    })().map((ex) => (
-                      <button
-                        key={ex}
-                        onClick={() => { setInput(ex); textareaRef.current?.focus() }}
-                        className="pointer-events-auto text-left text-[11px] px-2.5 py-1.5 rounded-lg border border-border/50 bg-muted/20 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
-                      >
-                        {ex}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               )}
 
@@ -1075,7 +1057,7 @@ export default function CodePreviewTab({
             {/* Preview toolbar */}
             <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
               <span className="text-[10px] text-muted-foreground flex-1 text-center truncate">
-                {previewSrc ? "Preview" : "No output yet"}
+                {previewSrc ? "Preview" : ""}
               </span>
               {previewSrc && (
                 <button
