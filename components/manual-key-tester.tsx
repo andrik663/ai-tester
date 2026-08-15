@@ -3418,17 +3418,27 @@ interface ChatMessage {
   ts: string
 }
 
+// Default provider on load — Miuclaw Gateway (self-hosted aggregator), so a
+// fresh visit (no login, no saved key) lands ready to test via the gateway.
+const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "miuclaw") ?? PRESETS[0]
+
+// This dashboard (all providers, all tabs) is only ever rendered behind the
+// dev-login gate in app/page.tsx — public visitors get the standalone
+// PublicCodePreview component instead, so no per-preset gating is needed here.
 export default function ManualKeyTester() {
-  const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(PRESETS[0])
+  const visiblePresets = PRESETS_DEDUPED
+  const visibleComparePresets = PRESETS.filter((p) => p.id !== "custom")
+
+  const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(DEFAULT_PRESET)
   const [apiKey, setApiKey] = useState("")
   const [debouncedApiKey, setDebouncedApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
-  const [endpoint, setEndpoint] = useState(PRESETS[0].endpoint)
-  const [method, setMethod] = useState<"GET" | "POST" | "PUT" | "DELETE">(PRESETS[0].method)
+  const [endpoint, setEndpoint] = useState(DEFAULT_PRESET.endpoint)
+  const [method, setMethod] = useState<"GET" | "POST" | "PUT" | "DELETE">(DEFAULT_PRESET.method)
   const [headerRows, setHeaderRows] = useState<HeaderRow[]>(
-    Object.entries(PRESETS[0].headers).map(([key, value], i) => ({ key, value, id: i }))
+    Object.entries(DEFAULT_PRESET.headers).map(([key, value], i) => ({ key, value, id: i }))
   )
-  const [bodyTemplate, setBodyTemplate] = useState(PRESETS[0].bodyTemplate)
+  const [bodyTemplate, setBodyTemplate] = useState(DEFAULT_PRESET.bodyTemplate)
   const [prompt, setPrompt] = useState("")
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ManualTestResult | null>(null)
@@ -3791,7 +3801,7 @@ export default function ManualKeyTester() {
     }, null, 2))
   }
 
-  // ── Vision / OCR helpers ─���─���────────────────────────��─��────���────────────────
+  // ── Vision / OCR helpers ─���─���────────────────────────��─��────���──────���─────────
 
   function handleImageFile(
     file: File,
@@ -4203,7 +4213,7 @@ export default function ManualKeyTester() {
         />
       )}
 
-      {/* ── LEFT: Config panel ──────────────────────────────────────────���──── */}
+      {/* ── LEFT: Config panel ────────────────────────────���─────────────���──── */}
       <aside className={`
         flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
@@ -4223,7 +4233,7 @@ export default function ManualKeyTester() {
             </div>
             <div>
               <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Tester</p>
-                <p className="text-[10px] text-muted-foreground/60">{PRESETS_DEDUPED.length} providers</p>
+                <p className="text-[10px] text-muted-foreground/60">{visiblePresets.length} providers</p>
             </div>
           </div>
           <button
@@ -4274,7 +4284,7 @@ export default function ManualKeyTester() {
                 type="search"
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
-                placeholder={`Search ${PRESETS_DEDUPED.length} providers...`}
+                placeholder={`Search ${visiblePresets.length} providers...`}
                 className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
               />
               {sidebarSearch && (
@@ -4296,7 +4306,7 @@ export default function ManualKeyTester() {
           <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2 flex flex-col gap-px">
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
-              const matched = q ? PRESETS_DEDUPED.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : PRESETS_DEDUPED
+              const matched = q ? visiblePresets.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : visiblePresets
               // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
               const dahonoRow = matched.filter((p) => p.id === "dahono")
               const customRow = matched.filter((p) => p.id === "custom")
@@ -5004,7 +5014,7 @@ export default function ManualKeyTester() {
           </div>
         )}
 
-        {/* ── VISION TAB ───────────�����─────���────────��───────────────────����───��─ */}
+        {/* ── VISION TAB ───────────�����─────���────────��─���─────────────────����───��─ */}
         {activeTab === "unified" && unifiedSubTab === "vision" && (
           <>
             {/* Provider Header Bar */}
@@ -5461,7 +5471,7 @@ export default function ManualKeyTester() {
                             }}
                             className="flex-1 text-xs font-semibold bg-transparent text-foreground focus:outline-none cursor-pointer"
                           >
-                            {PRESETS.filter((p) => p.id !== "custom").map((p) => (
+                            {visibleComparePresets.map((p) => (
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>
