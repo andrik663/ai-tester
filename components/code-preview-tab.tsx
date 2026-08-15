@@ -716,7 +716,16 @@ export default function CodePreviewTab({
     const parts = msg.content.split(/(```[\s\S]*?```)/g)
 
     return (
-      <div key={i} className="flex flex-col gap-1.5">
+      <div key={i} className="flex items-start gap-2">
+        {/* Assistant avatar — the Miuclaw cat mascot, matching the icon used
+            on the production site (miuclaw.my.id), so replies are clearly
+            attributed to the brand rather than a generic bot glyph. */}
+        <img
+          src="/images/cat-mascot.png"
+          alt="Miuclaw AI"
+          className="w-6 h-6 rounded-full border border-border/50 flex-shrink-0 mt-0.5 object-cover"
+        />
+        <div className="flex-1 flex flex-col gap-1.5 min-w-0">
         <div className="flex flex-col gap-2">
           {/* Full-file action strip — shown once per turn when an edit was
               merged, so the merged document stays copy/downloadable without
@@ -845,6 +854,7 @@ export default function CodePreviewTab({
           })}
         </div>
         <span className="text-[10px] text-muted-foreground/70 ml-0.5">{msg.ts}</span>
+        </div>
       </div>
     )
   }
@@ -867,7 +877,21 @@ export default function CodePreviewTab({
           ancestor ends up scrolling (mobile browsers in particular can end
           up scrolling the outer page instead of just the inner message
           list, which would otherwise carry this toolbar off-screen). */}
-      <div className="sticky top-0 z-30 flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar flex-shrink-0">
+      <div className="sticky top-0 z-30 flex-shrink-0">
+
+        {/* Spacer bar — reserves one extra bar's worth of height (plus the
+            device's own safe-area inset) above the real toolbar. On mobile
+            web the browser chrome (URL bar) floats over the top of the page
+            and can visually cover the first bar of fixed/sticky content;
+            pushing the toolbar down by one bar keeps it clear of that
+            overlay instead of hiding behind it. */}
+        <div
+          className="w-full bg-sidebar border-b border-border/40 h-9"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          aria-hidden="true"
+        />
+
+        <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar">
 
         {/* Model selector */}
         {(workingModels.length > 0 || (presetModels && presetModels.length > 0)) && (
@@ -953,6 +977,7 @@ export default function CodePreviewTab({
             <RefreshIcon />
           </button>
         )}
+        </div>
       </div>
 
       {/* ── Main area ───────────────────────────────────────────────────────── */}
@@ -983,8 +1008,15 @@ export default function CodePreviewTab({
             <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 flex flex-col gap-3">
               {messages.length === 0 && !isStreaming && (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center select-none pointer-events-none">
-                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)]">
-                    <CodeIcon />
+                  {/* Empty-state mark — the Miuclaw cat mascot, matching the
+                      branding used on the production site (miuclaw.my.id),
+                      instead of a generic code glyph. */}
+                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)] overflow-hidden">
+                    <img
+                      src="/images/cat-mascot.png"
+                      alt="Miuclaw"
+                      className="w-9 h-9 rounded-lg object-cover"
+                    />
                   </div>
                   {activeSkillConfigs.length > 0 && (
                     <div>
@@ -1036,7 +1068,7 @@ export default function CodePreviewTab({
               <div ref={chatEndRef} />
             </div>
 
-            {/* ── Input bar ───────────────────────────────────────────────── */}
+            {/* ── Input bar ───────────────────────���───────────────────────── */}
             <div className="flex-shrink-0 border-t border-border/40 bg-sidebar/30 px-3 py-2">
               <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
                 <textarea
