@@ -1042,15 +1042,7 @@ export default function CodePreviewTab({
 
               {/* Streaming bubble */}
               {isStreaming && (
-                <div className="flex items-start gap-2">
-                  <img
-                    src="/images/cat-mascot.png"
-                    alt="Miuclaw AI"
-                    className={`w-6 h-6 rounded-full border border-border/50 flex-shrink-0 mt-0.5 object-cover ${
-                      !streamingText ? "animate-pulse" : ""
-                    }`}
-                  />
-                  <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                <div className="flex flex-col gap-1.5">
                   <div className="text-[12px] text-foreground/90 leading-relaxed whitespace-pre-wrap">
                     {streamingText || (
                       <span className="flex items-center gap-1.5 text-muted-foreground text-[11px]">
@@ -1062,7 +1054,6 @@ export default function CodePreviewTab({
                         Generating
                       </span>
                     )}
-                  </div>
                   </div>
                 </div>
               )}
