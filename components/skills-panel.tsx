@@ -522,7 +522,7 @@ function SkillCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[11px] font-semibold text-foreground/90">{skill.name}</span>
-            <span className="text-[8px] font-mono text-muted-foreground/40">{skill.installs} installs</span>
+            <span className="text-[8px] font-mono text-muted-foreground/60">{skill.installs} installs</span>
             {skill.category === "Coding" && (
               <span className="text-[8px] px-1.5 py-0.5 rounded border border-sky-400/30 bg-sky-400/10 text-sky-400 font-semibold flex items-center gap-0.5">
                 <CodeIcon />
@@ -543,7 +543,7 @@ function SkillCard({
               {skill.registrySlug}
             </span>
             {skill.tags.slice(0, 3).map((t) => (
-              <span key={t} className="text-[8px] px-1 py-0.5 rounded border border-border text-muted-foreground/40">
+              <span key={t} className="text-[8px] px-1 py-0.5 rounded border border-border text-muted-foreground/60">
                 {t}
               </span>
             ))}
@@ -557,7 +557,7 @@ function SkillCard({
           stroke="currentColor"
           strokeWidth="1.5"
           strokeLinecap="round"
-          className={`w-3 h-3 flex-shrink-0 text-muted-foreground/40 mt-1 transition-transform ${expanded ? "rotate-180" : ""}`}
+          className={`w-3 h-3 flex-shrink-0 text-muted-foreground/60 mt-1 transition-transform ${expanded ? "rotate-180" : ""}`}
         >
           <path d="M4 6l4 4 4-4" />
         </svg>
@@ -568,7 +568,7 @@ function SkillCard({
         <div className="border-t border-border/50 bg-background/20 flex flex-col gap-3 p-3">
           {/* Install command */}
           <div>
-            <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50 mb-1.5 font-semibold">
+            <p className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5 font-semibold">
               Install
             </p>
             <div className="flex items-center gap-2 bg-secondary/40 rounded-lg px-3 py-2 border border-border/50">
@@ -583,7 +583,7 @@ function SkillCard({
                 className={`flex-shrink-0 flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors ${
                   copiedInstall
                     ? "border-success/40 bg-success/10 text-success"
-                    : "border-border text-muted-foreground/50 hover:text-foreground hover:border-primary/40"
+                    : "border-border text-muted-foreground/70 hover:text-foreground hover:border-primary/40"
                 }`}
               >
                 {copiedInstall ? <CheckIcon /> : <CopyIcon />}
@@ -595,7 +595,7 @@ function SkillCard({
           {/* System prompt preview */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">
                 System Prompt (injected when active)
               </p>
               <button
@@ -603,7 +603,7 @@ function SkillCard({
                 className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded border transition-colors ${
                   copiedPrompt
                     ? "border-success/40 bg-success/10 text-success"
-                    : "border-border text-muted-foreground/50 hover:text-foreground"
+                    : "border-border text-muted-foreground/70 hover:text-foreground"
                 }`}
               >
                 {copiedPrompt ? <CheckIcon /> : <CopyIcon />}
@@ -620,7 +620,7 @@ function SkillCard({
             href={`https://skills.sh/${skill.registrySlug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-[9px] text-muted-foreground/50 hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 text-[9px] text-muted-foreground/70 hover:text-primary transition-colors"
           >
             <LinkIcon />
             View on skills.sh/{skill.registrySlug}
@@ -667,7 +667,7 @@ function StackCard({
               </span>
             )}
             {partiallyApplied && (
-              <span className="text-[8px] text-muted-foreground/50">partial</span>
+              <span className="text-[8px] text-muted-foreground/70">partial</span>
             )}
           </div>
           <p className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed">{stack.description}</p>
@@ -678,7 +678,7 @@ function StackCard({
               const active = activeSkillIds.has(id)
               return (
                 <span key={id} className={`text-[8px] px-1.5 py-0.5 rounded border font-mono transition-colors ${
-                  active ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground/50"
+                  active ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground/70"
                 }`}>
                   {s?.name ?? id}
                 </span>
@@ -768,7 +768,7 @@ function ActiveSkillsBanner({
 
       {/* Composed system prompt preview */}
       <div>
-        <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold">
+        <span className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold">
           Composed system prompt ({activeSkills.length} skill{activeSkills.length !== 1 ? "s" : ""} merged)
         </span>
         <pre className="mt-1.5 text-[9px] text-muted-foreground/60 bg-secondary/40 rounded-lg p-2.5 border border-border/50 overflow-auto max-h-24 leading-relaxed whitespace-pre-wrap font-mono">
@@ -931,7 +931,7 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
           href="https://skills.sh"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[9px] text-muted-foreground/50 hover:text-primary transition-colors"
+          className="flex items-center gap-1 text-[9px] text-muted-foreground/70 hover:text-primary transition-colors"
         >
           <LinkIcon />
           skills.sh
@@ -957,7 +957,7 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
 
       {/* Preset stacks */}
       <div>
-        <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold mb-2">
+        <p className="text-[9px] uppercase tracking-widest text-muted-foreground/70 font-semibold mb-2">
           Preset Stacks
         </p>
         <div className="flex flex-col gap-2">
@@ -982,7 +982,7 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
             className={`text-[8px] px-2 py-0.5 rounded-full border transition-colors ${
               filterRegistry === r.id
                 ? "border-primary/50 bg-primary/10 text-primary"
-                : "border-border text-muted-foreground/50 hover:bg-secondary"
+                : "border-border text-muted-foreground/70 hover:bg-secondary"
             }`}
           >
             {r.label}
@@ -997,7 +997,7 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
           className={`text-[8px] px-2 py-0.5 rounded-full border transition-colors ${
             filterCategory === "all"
               ? "border-primary/50 bg-primary/10 text-primary"
-              : "border-border text-muted-foreground/50 hover:bg-secondary"
+              : "border-border text-muted-foreground/70 hover:bg-secondary"
           }`}
         >
           All
@@ -1009,7 +1009,7 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
             className={`text-[8px] px-2 py-0.5 rounded-full border transition-colors ${
               filterCategory === cat
                 ? "border-primary/50 bg-primary/10 text-primary"
-                : "border-border text-muted-foreground/50 hover:bg-secondary"
+                : "border-border text-muted-foreground/70 hover:bg-secondary"
             }`}
           >
             {cat}
@@ -1019,7 +1019,7 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
 
       {/* Search */}
       <div className="relative">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/40 pointer-events-none">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/60 pointer-events-none">
           <circle cx="6.5" cy="6.5" r="4" />
           <path d="M11 11l3 3" />
         </svg>
@@ -1028,14 +1028,14 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search skills..."
-          className="w-full pl-7 pr-3 py-1.5 text-[10px] bg-secondary/40 border border-border/60 rounded-lg focus:outline-none focus:border-primary/40 text-foreground placeholder:text-muted-foreground/40"
+          className="w-full pl-7 pr-3 py-1.5 text-[10px] bg-secondary/40 border border-border/60 rounded-lg focus:outline-none focus:border-primary/40 text-foreground placeholder:text-muted-foreground/60"
         />
       </div>
 
       {/* Skill list */}
       <div className="flex flex-col gap-2">
         {filtered.length === 0 ? (
-          <p className="text-[10px] text-muted-foreground/50 text-center py-4">No skills match your filters.</p>
+          <p className="text-[10px] text-muted-foreground/70 text-center py-4">No skills match your filters.</p>
         ) : (
           filtered.map((skill) => (
             <SkillCard

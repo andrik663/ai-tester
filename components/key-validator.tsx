@@ -367,7 +367,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
               placeholder={effectiveProvider?.keyExample ?? "Paste key — / to focus, Ctrl+Enter to test"}
               autoComplete="off"
               spellCheck={false}
-              className="w-full rounded-md border border-border bg-card text-foreground text-[11px] font-mono px-3 py-2 pr-9 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/30 transition-colors"
+              className="w-full rounded-md border border-border bg-card text-foreground text-[11px] font-mono px-3 py-2 pr-9 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/55 transition-colors"
             />
             <button
               onClick={() => setShowKey((v) => !v)}
@@ -413,7 +413,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
           </button>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-[9px] text-muted-foreground/40">
+          <p className="text-[9px] text-muted-foreground/60">
             {apiKey.length >= 4 && !effectiveProvider
               ? <span className="text-yellow-400/70">Select a provider above</span>
               : apiKey.length >= 4
@@ -603,7 +603,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
                   }
                   return (
                     <div key={i} className={`text-[10px] font-mono ${colors[log.level] ?? "text-muted-foreground"} flex gap-1.5`}>
-                      <span className="text-muted-foreground/40 flex-shrink-0 w-10 text-right">{log.ts}ms</span>
+                      <span className="text-muted-foreground/60 flex-shrink-0 w-10 text-right">{log.ts}ms</span>
                       <span className="opacity-60 flex-shrink-0">{prefixes[log.level] ?? "  "}</span>
                       <span className="break-all">{log.text}</span>
                     </div>

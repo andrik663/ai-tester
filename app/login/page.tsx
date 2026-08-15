@@ -101,13 +101,13 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   autoFocus
                   disabled={loading}
-                  className="w-full rounded-xl border border-border bg-background text-foreground text-sm font-mono px-3.5 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/60 placeholder:text-muted-foreground/40 disabled:opacity-50 transition-colors"
+                  className="w-full rounded-xl border border-border bg-background text-foreground text-sm font-mono px-3.5 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/60 placeholder:text-muted-foreground/60 disabled:opacity-50 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -165,7 +165,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[11px] text-muted-foreground/40 mt-6">
+        <p className="text-center text-[11px] text-muted-foreground/60 mt-6">
           API Key Tester &mdash; internal developer tool
         </p>
       </div>

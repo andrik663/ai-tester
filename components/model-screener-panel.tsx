@@ -156,11 +156,11 @@ function ModelRow({ result, probing }: { result: ScreenerModelResult; probing: b
         {/* Meta: latency + key + last checked */}
         <div className="flex items-center gap-3 mt-1 flex-wrap">
           {result.latencyMs !== null && (
-            <span className="text-[8px] font-mono text-muted-foreground/50">{result.latencyMs}ms</span>
+            <span className="text-[8px] font-mono text-muted-foreground/70">{result.latencyMs}ms</span>
           )}
           <span className="text-[8px] font-mono text-muted-foreground/35">{result.apiKeyMasked}</span>
           {!probing && (
-            <span className="text-[8px] text-muted-foreground/30 flex items-center gap-0.5">
+            <span className="text-[8px] text-muted-foreground/55 flex items-center gap-0.5">
               <ClockIcon />
               {new Date(result.lastCheckedAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
             </span>
@@ -362,7 +362,7 @@ export default function ModelScreenerPanel() {
 
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-6">
-        <span className="w-12 h-12 rounded-xl border border-border flex items-center justify-center text-muted-foreground/40">
+        <span className="w-12 h-12 rounded-xl border border-border flex items-center justify-center text-muted-foreground/60">
           <ScanIcon />
         </span>
         <div>
@@ -414,7 +414,7 @@ export default function ModelScreenerPanel() {
           <div className="flex items-center gap-2">
             {/* Countdown */}
             {results.length > 0 && !scanning && (
-              <span className="text-[9px] font-mono text-muted-foreground/40 flex items-center gap-1">
+              <span className="text-[9px] font-mono text-muted-foreground/60 flex items-center gap-1">
                 <ClockIcon />
                 next: {formatCountdown(countdown)}
               </span>
@@ -441,7 +441,7 @@ export default function ModelScreenerPanel() {
             {results.length > 0 && !scanning && (
               <button
                 onClick={() => { clearScreenerResults(); setResults([]) }}
-                className="text-[9px] text-muted-foreground/30 hover:text-destructive transition-colors px-1.5"
+                className="text-[9px] text-muted-foreground/55 hover:text-destructive transition-colors px-1.5"
                 title="Clear all screener results"
               >
                 Clear
@@ -472,7 +472,7 @@ export default function ModelScreenerPanel() {
                   ? s === "on"  ? "border-success/50 bg-success/10 text-success"
                     : s === "off" ? "border-destructive/50 bg-destructive/10 text-destructive"
                     : "border-primary/50 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground/50 hover:bg-secondary"
+                  : "border-border text-muted-foreground/70 hover:bg-secondary"
               }`}
             >
               {s === "all" ? `All (${results.length})` : s === "on" ? `ON (${onCount})` : `OFF (${offCount})`}
@@ -486,7 +486,7 @@ export default function ModelScreenerPanel() {
           <button
             onClick={() => setFilterCap("all")}
             className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
-              filterCap === "all" ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground/50 hover:bg-secondary"
+              filterCap === "all" ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground/70 hover:bg-secondary"
             }`}
           >
             All types
@@ -500,7 +500,7 @@ export default function ModelScreenerPanel() {
                 key={cap}
                 onClick={() => setFilterCap(cap)}
                 className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
-                  filterCap === cap ? meta.color : "border-border text-muted-foreground/50 hover:bg-secondary"
+                  filterCap === cap ? meta.color : "border-border text-muted-foreground/70 hover:bg-secondary"
                 }`}
               >
                 {meta.label} ({count})
@@ -517,7 +517,7 @@ export default function ModelScreenerPanel() {
               <button
                 onClick={() => setFilterProvider("all")}
                 className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
-                  filterProvider === "all" ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground/50 hover:bg-secondary"
+                  filterProvider === "all" ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground/70 hover:bg-secondary"
                 }`}
               >
                 All providers
@@ -530,7 +530,7 @@ export default function ModelScreenerPanel() {
                     key={pid}
                     onClick={() => setFilterProvider(pid)}
                     className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
-                      filterProvider === pid ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400" : "border-border text-muted-foreground/50 hover:bg-secondary"
+                      filterProvider === pid ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400" : "border-border text-muted-foreground/70 hover:bg-secondary"
                     }`}
                   >
                     {name} ({cnt})
@@ -546,7 +546,7 @@ export default function ModelScreenerPanel() {
       <div className="flex-1 min-h-0 overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="flex items-center justify-center py-10">
-            <p className="text-[11px] text-muted-foreground/50">No models match current filters.</p>
+            <p className="text-[11px] text-muted-foreground/70">No models match current filters.</p>
           </div>
         ) : (
           <div className="rounded-none">
@@ -580,7 +580,7 @@ export default function ModelScreenerPanel() {
         )}
 
         {/* Footer note */}
-        <p className="text-[9px] text-muted-foreground/30 text-center py-3 px-4">
+        <p className="text-[9px] text-muted-foreground/55 text-center py-3 px-4">
           Auto-refresh every 24h. Results cached in browser storage.
         </p>
       </div>

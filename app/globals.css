@@ -58,15 +58,15 @@
   color-scheme: dark;
 
   /* ── Base surfaces ──────────────────────────────────────────────── */
-  /* Neutral charcoal canvas — Eesee reference */
-  --background:         #1c1d1f;
-  --foreground:         #f4f5f6;
+  /* Near-black canvas — deep, professional, low-glare */
+  --background:         #0a0a0b;
+  --foreground:         #f7f8f8;
 
   /* Cards: clearly elevated above background */
-  --card:               #232528;
-  --card-foreground:    #f4f5f6;
-  --popover:            #232528;
-  --popover-foreground: #f4f5f6;
+  --card:               #151618;
+  --card-foreground:    #f7f8f8;
+  --popover:            #17181a;
+  --popover-foreground: #f7f8f8;
 
   /* ── Brand / Primary ────────────────────────────────────────────── */
   /* Signature neon lime — CTAs, active states, focus rings */
@@ -75,10 +75,10 @@
   --primary-foreground: #0d0e0f;
 
   /* ── Secondary / Muted surfaces ────────────────────────────────── */
-  --secondary:           #2b2d31;
-  --secondary-foreground:#f4f5f6;
-  --muted:               #2b2d31;
-  --muted-foreground:    #9aa0a6;
+  --secondary:           #1c1d20;
+  --secondary-foreground:#f7f8f8;
+  --muted:               #1c1d20;
+  --muted-foreground:    #b6bac0;
 
   /* ── Accent = primary ───────────────────────────────────────────── */
   --accent:              #afeb00;
@@ -93,9 +93,9 @@
   --info-foreground:     #0d0e0f;
 
   /* ── Borders & inputs ───────────────────────────────────────────── */
-  /* Stronger borders so panel edges are visible */
-  --border:              oklch(1 0 0 / 11%);
-  --input:               oklch(1 0 0 / 13%);
+  /* Stronger borders so panel edges stay visible on a near-black canvas */
+  --border:              oklch(1 0 0 / 14%);
+  --input:               oklch(1 0 0 / 16%);
   --ring:                #afeb00;
 
   /* ── Charts ─────────────────────────────────────────────────────── */
@@ -109,13 +109,13 @@
   --radius: 0.625rem;
 
   /* ── Sidebar — clearly distinct from main background ────────────── */
-  --sidebar:                #1a1b1d;
-  --sidebar-foreground:     #f4f5f6;
+  --sidebar:                #060606;
+  --sidebar-foreground:     #f7f8f8;
   --sidebar-primary:        #afeb00;
   --sidebar-primary-foreground: #0d0e0f;
-  --sidebar-accent:         #2b2d31;
-  --sidebar-accent-foreground: #f4f5f6;
-  --sidebar-border:         oklch(1 0 0 / 11%);
+  --sidebar-accent:         #1c1d20;
+  --sidebar-accent-foreground: #f7f8f8;
+  --sidebar-border:         oklch(1 0 0 / 14%);
   --sidebar-ring:           #afeb00;
 }
 

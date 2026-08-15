@@ -64,19 +64,19 @@ function VarRow({
         value={row.key}
         onChange={(e) => onChange(e.target.value, row.value)}
         placeholder="VARIABLE_NAME"
-        className="w-32 text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
+        className="w-32 text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
       />
-      <span className="text-muted-foreground/40 text-[10px] flex-shrink-0">=</span>
+      <span className="text-muted-foreground/60 text-[10px] flex-shrink-0">=</span>
       <input
         value={row.value}
         onChange={(e) => onChange(row.key, e.target.value)}
         placeholder="value"
         type="password"
-        className="flex-1 min-w-0 text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
+        className="flex-1 min-w-0 text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
       />
       <button
         onClick={onDelete}
-        className="flex-shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors p-1 rounded"
+        className="flex-shrink-0 text-muted-foreground/60 hover:text-destructive transition-colors p-1 rounded"
       >
         <TrashIcon />
       </button>
@@ -161,7 +161,7 @@ function EnvDetail({
           ) : (
             <span className={`text-[11px] font-semibold truncate flex-1 min-w-0 ${isActive ? "text-primary" : "text-foreground"}`}>{env.name}</span>
           )}
-          <span className="text-[9px] text-muted-foreground/40 flex-shrink-0">{env.vars.length} vars</span>
+          <span className="text-[9px] text-muted-foreground/60 flex-shrink-0">{env.vars.length} vars</span>
         </button>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
@@ -174,12 +174,12 @@ function EnvDetail({
           >
             {isActive ? "Deactivate" : "Activate"}
           </button>
-          <button onClick={() => setEditName(true)} className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-colors">
+          <button onClick={() => setEditName(true)} className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-secondary/60 transition-colors">
             <EditIcon />
           </button>
           <button
             onClick={() => { if (!confirm(`Delete env "${env.name}"?`)) return; onDelete(env.id) }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
+            className="p-1 rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/8 transition-colors"
           >
             <TrashIcon />
           </button>
@@ -189,7 +189,7 @@ function EnvDetail({
       {/* Vars editor */}
       {open && (
         <div className="px-3 py-2.5 flex flex-col gap-1.5">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/40 mb-1">Variables · use {`{{VARIABLE_NAME}}`} in headers/body</p>
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">Variables · use {`{{VARIABLE_NAME}}`} in headers/body</p>
           {rows.map((row) => (
             <VarRow
               key={row._id}
@@ -276,7 +276,7 @@ export default function EnvSwitcher({ onEnvChange }: EnvSwitcherProps) {
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setCreating(false); setNewName("") } }}
             placeholder="Environment name (e.g. Development)"
-            className="flex-1 text-[11px] bg-background border border-border rounded-md px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 text-[11px] bg-background border border-border rounded-md px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-ring"
           />
           <button onClick={handleCreate} className="text-[11px] px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
             Create
@@ -292,13 +292,13 @@ export default function EnvSwitcher({ onEnvChange }: EnvSwitcherProps) {
         {envs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
             <div className="w-8 h-8 rounded-lg bg-secondary/60 border border-border flex items-center justify-center">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground/50" aria-hidden>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground/70" aria-hidden>
                 <rect x="2" y="3" width="12" height="10" rx="1.5" />
                 <path d="M5 7h6M5 10h3" />
               </svg>
             </div>
-            <p className="text-[11px] text-muted-foreground/50">No environments</p>
-            <p className="text-[10px] text-muted-foreground/40 max-w-[200px]">
+            <p className="text-[11px] text-muted-foreground/70">No environments</p>
+            <p className="text-[10px] text-muted-foreground/60 max-w-[200px]">
               Create environments to store API keys and variables. Use {`{{VAR}}`} in headers and body templates.
             </p>
             <button onClick={() => setCreating(true)} className="text-[10px] text-primary hover:underline mt-1">

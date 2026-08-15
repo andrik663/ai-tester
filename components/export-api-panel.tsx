@@ -261,7 +261,7 @@ console.log(res.choices[0].message.content)`,
           {agent.snippets.map((s) => (
             <div key={s.label} className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="text-[8.5px] text-muted-foreground/50 uppercase tracking-wider">{s.label}</span>
+                <span className="text-[8.5px] text-muted-foreground/70 uppercase tracking-wider">{s.label}</span>
                 <button
                   onClick={() => copy(s.code, `${agent.id}-${s.label}`)}
                   className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"

@@ -840,7 +840,7 @@ export default function CodePreviewTab({
             </div>
           )}
         </div>
-        <span className="text-[10px] text-muted-foreground/50 ml-0.5">{msg.ts}</span>
+        <span className="text-[10px] text-muted-foreground/70 ml-0.5">{msg.ts}</span>
       </div>
     )
   }
@@ -1053,13 +1053,13 @@ export default function CodePreviewTab({
                       ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
                       : input.trim() && !noKey
                       ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
-                      : "bg-muted/30 text-muted-foreground/40 cursor-not-allowed"
+                      : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
                   }`}
                 >
                   {isStreaming ? <StopIcon /> : <SendIcon />}
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground/40 mt-1.5 ml-1">
+              <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
                 Shift+Enter for new line · powered by {providerName}
               </p>
             </div>
@@ -1079,7 +1079,7 @@ export default function CodePreviewTab({
                 <span className="text-[10px] text-muted-foreground flex-1 text-center truncate">Preview</span>
                 <button
                   onClick={refreshPreview}
-                  className="text-muted-foreground/50 hover:text-foreground transition-colors"
+                  className="text-muted-foreground/70 hover:text-foreground transition-colors"
                 >
                   <RefreshIcon />
                 </button>
@@ -1098,13 +1098,13 @@ export default function CodePreviewTab({
                   onError={() => setIframeError(true)}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-4 bg-[#0f0f0f] select-none px-6">
+                <div className="flex flex-col items-center justify-center h-full gap-4 bg-sidebar select-none px-6">
                   <div className="w-14 h-14 rounded-2xl border border-dashed border-border/40 bg-muted/10 flex items-center justify-center">
                     <PreviewIcon />
                   </div>
                   <div className="text-center">
                     <p className="text-[13px] font-medium text-foreground/70 mb-1">Live Preview</p>
-                    <p className="text-[11px] text-muted-foreground/50 max-w-[200px] leading-relaxed">
+                    <p className="text-[11px] text-muted-foreground/70 max-w-[200px] leading-relaxed">
                       Your generated app will render here once the AI finishes building it.
                     </p>
                   </div>

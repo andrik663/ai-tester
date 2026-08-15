@@ -264,7 +264,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
         </p>
 
         <div className="flex items-center gap-2">
-          <label className="text-[9px] text-muted-foreground/50 flex-shrink-0">TTL (min)</label>
+          <label className="text-[9px] text-muted-foreground/70 flex-shrink-0">TTL (min)</label>
           <input
             type="number"
             min={5}
@@ -329,7 +329,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
             </span>
           )}
         </div>
-        <span className={`text-muted-foreground/40 transition-transform ${open ? "" : "rotate-180"}`}>
+        <span className={`text-muted-foreground/60 transition-transform ${open ? "" : "rotate-180"}`}>
           <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden>
             <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -342,19 +342,19 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
           {/* Session meta */}
           <div className="flex flex-wrap gap-3 pt-2">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[8px] uppercase tracking-widest text-muted-foreground/40">Expires</span>
+              <span className="text-[8px] uppercase tracking-widest text-muted-foreground/60">Expires</span>
               <span className="text-[10px] font-mono text-foreground/70">
                 {new Date(session.expiresAt!).toLocaleTimeString()}
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[8px] uppercase tracking-widest text-muted-foreground/40">Remaining</span>
+              <span className="text-[8px] uppercase tracking-widest text-muted-foreground/60">Remaining</span>
               <span className={`text-[10px] font-mono font-semibold ${isExpiring ? "text-amber-400" : "text-success"}`}>
                 {countdown}
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[8px] uppercase tracking-widest text-muted-foreground/40">Status</span>
+              <span className="text-[8px] uppercase tracking-widest text-muted-foreground/60">Status</span>
               <span className="text-[10px] text-success">Active</span>
             </div>
           </div>
@@ -378,7 +378,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
                 <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                   Working Keys ({results.length})
                 </span>
-                <span className="text-[8px] text-muted-foreground/40">· masked only · raw key never stored</span>
+                <span className="text-[8px] text-muted-foreground/60">· masked only · raw key never stored</span>
               </div>
               <div className="rounded-lg border border-border overflow-hidden">
                 {results.map((r, i) => (
@@ -391,9 +391,9 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
                       {r.providerName}
                     </span>
                     <span className="flex-1 text-[9px] font-mono text-foreground/70 truncate">{r.modelId}</span>
-                    <span className="text-[8px] font-mono text-muted-foreground/40 flex-shrink-0">{r.apiKeyMasked}</span>
+                    <span className="text-[8px] font-mono text-muted-foreground/60 flex-shrink-0">{r.apiKeyMasked}</span>
                     {r.latencyMs && (
-                      <span className="text-[8px] text-muted-foreground/40 flex-shrink-0">{r.latencyMs}ms</span>
+                      <span className="text-[8px] text-muted-foreground/60 flex-shrink-0">{r.latencyMs}ms</span>
                     )}
                   </div>
                 ))}
@@ -405,13 +405,13 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
           )}
 
           {session.batchRan && results.length === 0 && (
-            <p className="text-[9px] text-muted-foreground/50 text-center py-2">
+            <p className="text-[9px] text-muted-foreground/70 text-center py-2">
               No working keys found in your batch run.
             </p>
           )}
 
           {!session.batchRan && (
-            <p className="text-[9px] text-muted-foreground/50 text-center py-2">
+            <p className="text-[9px] text-muted-foreground/70 text-center py-2">
               Run a batch test — working keys will be saved here automatically.
             </p>
           )}
@@ -419,7 +419,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
           {/* End session */}
           <button
             onClick={handleEndSession}
-            className="text-[9px] text-muted-foreground/30 hover:text-destructive/70 transition-colors text-right"
+            className="text-[9px] text-muted-foreground/55 hover:text-destructive/70 transition-colors text-right"
           >
             End session early
           </button>

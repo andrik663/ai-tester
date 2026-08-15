@@ -236,12 +236,12 @@ function ModelRow({ model }: { model: ModelPricing }) {
         </div>
       </td>
       <td className="px-3 py-2 text-right whitespace-nowrap">
-        <span className={`text-sm font-mono font-semibold ${model.inputPer1M === null ? "text-muted-foreground/50" : "text-foreground"}`}>
+        <span className={`text-sm font-mono font-semibold ${model.inputPer1M === null ? "text-muted-foreground/70" : "text-foreground"}`}>
           {formatPrice(model.inputPer1M)}
         </span>
       </td>
       <td className="px-3 py-2 text-right whitespace-nowrap">
-        <span className={`text-sm font-mono font-semibold ${model.outputPer1M === null ? "text-muted-foreground/50" : "text-foreground"}`}>
+        <span className={`text-sm font-mono font-semibold ${model.outputPer1M === null ? "text-muted-foreground/70" : "text-foreground"}`}>
           {formatPrice(model.outputPer1M)}
         </span>
       </td>
@@ -277,12 +277,12 @@ function LiveModelBadge({ providerId, apiKey }: { providerId: string; apiKey?: s
   useEffect(() => { refresh() }, [refresh])
 
   if (!data) return (
-    <span className="text-[9px] text-muted-foreground/40 font-mono">{loading ? "loading…" : ""}</span>
+    <span className="text-[9px] text-muted-foreground/60 font-mono">{loading ? "loading…" : ""}</span>
   )
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className={`text-[10px] font-mono font-semibold ${data.source === "live" ? "text-sky-400" : "text-muted-foreground/50"}`}>
+      <span className={`text-[10px] font-mono font-semibold ${data.source === "live" ? "text-sky-400" : "text-muted-foreground/70"}`}>
         {data.models.length} models
       </span>
       {data.source === "live" && !data.fallback && (
@@ -298,7 +298,7 @@ function LiveModelBadge({ providerId, apiKey }: { providerId: string; apiKey?: s
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); refresh() } }}
         aria-label="Refresh model count"
         aria-disabled={loading}
-        className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
+        className="text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer"
       >
         <RefreshIcon spinning={loading} />
       </span>
@@ -376,7 +376,7 @@ function ProviderCard({ provider, apiKey, defaultExpanded }: {
             <QuickLink href={provider.docsUrl}      label="Docs" />
             <QuickLink href={provider.changelogUrl} label="Changelog" />
             <QuickLink href={provider.statusUrl}    label="Status" />
-            <span className="text-[10px] text-muted-foreground/30 font-mono ml-auto hidden sm:block">
+            <span className="text-[10px] text-muted-foreground/55 font-mono ml-auto hidden sm:block">
               HQ: {provider.hq}
             </span>
           </div>
@@ -553,18 +553,18 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
         {/* Search */}
         <div className="relative">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" aria-hidden>
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" aria-hidden>
             <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" />
           </svg>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search providers, models…"
-            className="w-full bg-secondary/40 border border-border rounded-md pl-9 pr-9 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+            className="w-full bg-secondary/40 border border-border rounded-md pl-9 pr-9 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
           />
           {search && (
             <button onClick={() => setSearch("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
               aria-label="Clear search">
               <Icon d="M18 6L6 18M6 6l12 12" className="w-3 h-3" />
             </button>
@@ -620,7 +620,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
           {/* Expand all — push to end */}
           <button
             onClick={() => setExpandAll((v) => !v)}
-            className="ml-auto flex-shrink-0 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors whitespace-nowrap"
+            className="ml-auto flex-shrink-0 text-[10px] text-muted-foreground/70 hover:text-muted-foreground transition-colors whitespace-nowrap"
           >
             {expandAll ? "Collapse all" : "Expand all"}
           </button>
@@ -628,7 +628,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
 
         {/* Price sort row */}
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 flex-shrink-0 pr-1">
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 flex-shrink-0 pr-1">
             Price
           </span>
           {([
@@ -675,7 +675,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
           <div className="flex flex-col gap-3">
             {/* Promo sub-filter row */}
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-[10px] text-muted-foreground/50 flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground/70 flex-1 min-w-0">
                 Featured, new, or discounted models — updated {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}.
               </p>
               <div className="flex items-center gap-1 bg-secondary/30 rounded-md p-0.5 border border-border/40 flex-shrink-0">
@@ -743,7 +743,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                             <span className={`text-[11px] font-mono font-semibold ${hasDiscount ? "text-success" : "text-foreground"}`}>
                               {formatPrice(model.inputPer1M)}
                             </span>
-                            <span className="text-muted-foreground/40 text-[9px]">in</span>
+                            <span className="text-muted-foreground/60 text-[9px]">in</span>
                           </div>
                           {/* Output price row */}
                           <div className="flex items-baseline gap-1.5">
@@ -755,14 +755,14 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                             <span className={`text-[11px] font-mono ${hasDiscount ? "text-success/80" : "text-foreground"}`}>
                               {formatPrice(model.outputPer1M)}
                             </span>
-                            <span className="text-muted-foreground/40 text-[9px]">out</span>
+                            <span className="text-muted-foreground/60 text-[9px]">out</span>
                           </div>
                         </>
                       ) : (
                         <span className="text-[11px] font-mono text-success font-semibold">Free</span>
                       )}
                       {model.contextK && (
-                        <span className="text-[9px] font-mono text-muted-foreground/40">{model.contextK >= 1000 ? `${model.contextK / 1000}M` : `${model.contextK}K`} ctx</span>
+                        <span className="text-[9px] font-mono text-muted-foreground/60">{model.contextK >= 1000 ? `${model.contextK / 1000}M` : `${model.contextK}K`} ctx</span>
                       )}
                       {model.promoLink && (
                         <a href={model.promoLink} target="_blank" rel="noopener noreferrer"
@@ -783,7 +783,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
         {view === "providers" && (
           <>
             {filtered.length === 0 ? (
-              <div className="flex items-center justify-center py-12 text-[11px] text-muted-foreground/40">
+              <div className="flex items-center justify-center py-12 text-[11px] text-muted-foreground/60">
                 No providers match your filters.
               </div>
             ) : (

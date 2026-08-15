@@ -142,7 +142,7 @@ function CollectionSection({
           ) : (
             <span className="text-[11px] font-semibold text-foreground truncate flex-1 min-w-0">{col.name}</span>
           )}
-          <span className="text-[9px] text-muted-foreground/40 flex-shrink-0">{col.requests.length}</span>
+          <span className="text-[9px] text-muted-foreground/60 flex-shrink-0">{col.requests.length}</span>
         </button>
 
         <div className="flex items-center gap-1 flex-shrink-0">
@@ -150,14 +150,14 @@ function CollectionSection({
             <button
               onClick={() => onSaveCurrent(col.id)}
               title="Save current request here"
-              className="p-1 rounded text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors"
+              className="p-1 rounded text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors"
             >
               <SaveIcon />
             </button>
           )}
           <button
             onClick={() => setEditing(true)}
-            className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-colors"
+            className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-secondary/60 transition-colors"
           >
             <EditIcon />
           </button>
@@ -166,7 +166,7 @@ function CollectionSection({
               if (!confirm(`Delete "${col.name}" and all its requests?`)) return
               onDelete(col.id)
             }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
+            className="p-1 rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/8 transition-colors"
           >
             <TrashIcon />
           </button>
@@ -177,7 +177,7 @@ function CollectionSection({
       {open && (
         <div className="flex flex-col">
           {col.requests.length === 0 ? (
-            <p className="text-[10px] text-muted-foreground/40 px-3 py-2.5 italic">
+            <p className="text-[10px] text-muted-foreground/60 px-3 py-2.5 italic">
               No saved requests. Click the save icon above to add one.
             </p>
           ) : (
@@ -189,7 +189,7 @@ function CollectionSection({
                 <MethodBadge method={req.method} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-foreground truncate">{req.name}</p>
-                  <p className="text-[9px] text-muted-foreground/50 truncate">{req.providerName} · {fmtDate(req.createdAt)}</p>
+                  <p className="text-[9px] text-muted-foreground/70 truncate">{req.providerName} · {fmtDate(req.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {onLoad && (
@@ -202,7 +202,7 @@ function CollectionSection({
                   )}
                   <button
                     onClick={() => onDeleteRequest(col.id, req.id)}
-                    className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
+                    className="p-1 rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/8 transition-colors"
                   >
                     <TrashIcon />
                   </button>
@@ -260,7 +260,7 @@ export default function CollectionsPanel({ onLoad, currentRequest }: Collections
               onChange={(e) => setSaveAs(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") commitSave(); if (e.key === "Escape") setSaveToColId(null) }}
               placeholder="Request name..."
-              className="text-[11px] bg-background border border-border rounded-md px-2.5 py-2 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+              className="text-[11px] bg-background border border-border rounded-md px-2.5 py-2 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <div className="flex gap-2">
               <button
@@ -300,7 +300,7 @@ export default function CollectionsPanel({ onLoad, currentRequest }: Collections
             onChange={(e) => setNewColName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setCreating(false); setNewColName("") } }}
             placeholder="Collection name..."
-            className="flex-1 text-[11px] bg-background border border-border rounded-md px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 text-[11px] bg-background border border-border rounded-md px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-ring"
           />
           <button onClick={handleCreate} className="text-[11px] px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
             Create
@@ -318,7 +318,7 @@ export default function CollectionsPanel({ onLoad, currentRequest }: Collections
             <div className="w-8 h-8 rounded-lg bg-secondary/60 border border-border flex items-center justify-center">
               <FolderIcon open={false} />
             </div>
-            <p className="text-[11px] text-muted-foreground/50">No collections yet</p>
+            <p className="text-[11px] text-muted-foreground/70">No collections yet</p>
             <button
               onClick={() => setCreating(true)}
               className="text-[10px] text-primary hover:underline"

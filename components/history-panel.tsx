@@ -98,11 +98,11 @@ function HistoryItem({
       >
         <StatusDot ok={entry.ok} />
         <span className="text-[11px] font-medium text-foreground truncate flex-1 min-w-0">{entry.prompt}</span>
-        <span className="text-[9px] text-muted-foreground/50 flex-shrink-0 hidden sm:block">{entry.providerName}</span>
+        <span className="text-[9px] text-muted-foreground/70 flex-shrink-0 hidden sm:block">{entry.providerName}</span>
         {entry.durationMs && (
           <span className="text-[9px] font-mono text-muted-foreground/60 flex-shrink-0">{fmtDuration(entry.durationMs)}</span>
         )}
-        <span className="text-[9px] text-muted-foreground/40 flex-shrink-0">{fmtRelative(entry.ts)}</span>
+        <span className="text-[9px] text-muted-foreground/60 flex-shrink-0">{fmtRelative(entry.ts)}</span>
         <ExpandIcon open={expanded} />
       </button>
 
@@ -146,7 +146,7 @@ function HistoryItem({
             )}
             <button
               onClick={() => onDelete(entry.id)}
-              className="ml-auto flex items-center gap-1 text-[10px] px-2 py-1 rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 transition-colors border border-transparent hover:border-destructive/20"
+              className="ml-auto flex items-center gap-1 text-[10px] px-2 py-1 rounded text-muted-foreground/70 hover:text-destructive hover:bg-destructive/8 transition-colors border border-transparent hover:border-destructive/20"
             >
               <TrashIcon /> Delete
             </button>
@@ -199,7 +199,7 @@ export default function HistoryPanel({ onRestore }: HistoryPanelProps) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search history..."
-          className="flex-1 min-w-0 text-[11px] bg-secondary/40 border border-border rounded-md px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+          className="flex-1 min-w-0 text-[11px] bg-secondary/40 border border-border rounded-md px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-ring"
         />
         <select
           value={filterOk}
@@ -213,7 +213,7 @@ export default function HistoryPanel({ onRestore }: HistoryPanelProps) {
         {entries.length > 0 && (
           <button
             onClick={handleClearAll}
-            className="text-[10px] text-muted-foreground/50 hover:text-destructive transition-colors px-1.5 py-1 rounded hover:bg-destructive/8 flex-shrink-0"
+            className="text-[10px] text-muted-foreground/70 hover:text-destructive transition-colors px-1.5 py-1 rounded hover:bg-destructive/8 flex-shrink-0"
           >
             Clear all
           </button>
@@ -225,12 +225,12 @@ export default function HistoryPanel({ onRestore }: HistoryPanelProps) {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
             <div className="w-8 h-8 rounded-lg bg-secondary/60 border border-border flex items-center justify-center">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground/50" aria-hidden>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground/70" aria-hidden>
                 <circle cx="8" cy="8" r="6" />
                 <path d="M8 5v3l2 1.5" />
               </svg>
             </div>
-            <p className="text-[11px] text-muted-foreground/50">
+            <p className="text-[11px] text-muted-foreground/70">
               {entries.length === 0 ? "No requests yet — send a message to see history" : "No results match your filter"}
             </p>
           </div>
@@ -248,7 +248,7 @@ export default function HistoryPanel({ onRestore }: HistoryPanelProps) {
 
       {entries.length > 0 && (
         <div className="px-3 py-2 border-t border-border flex-shrink-0">
-          <p className="text-[9px] text-muted-foreground/40">{entries.length} entries · last 100 kept</p>
+          <p className="text-[9px] text-muted-foreground/60">{entries.length} entries · last 100 kept</p>
         </div>
       )}
     </div>

@@ -112,7 +112,7 @@ export default function ImageTester({
             {isSupported ? (currentModel?.label ?? activeModelId) : "Not supported"}
           </span>
           {isSupported && (
-            <span className="text-[10px] font-mono text-muted-foreground/50 hidden sm:inline">{aspectRatio}</span>
+            <span className="text-[10px] font-mono text-muted-foreground/70 hidden sm:inline">{aspectRatio}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
