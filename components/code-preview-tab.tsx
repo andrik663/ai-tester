@@ -1055,19 +1055,17 @@ export default function CodePreviewTab({
             }`}
           >
             {/* Preview toolbar */}
-            <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
-              <span className="text-[10px] text-muted-foreground flex-1 text-center truncate">
-                {previewSrc ? "Preview" : ""}
-              </span>
-              {previewSrc && (
+            {previewSrc && (
+              <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
+                <span className="text-[10px] text-muted-foreground flex-1 text-center truncate">Preview</span>
                 <button
                   onClick={refreshPreview}
                   className="text-muted-foreground/50 hover:text-foreground transition-colors"
                 >
                   <RefreshIcon />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* iframe */}
             <div className="flex-1 min-h-0 relative bg-white">
