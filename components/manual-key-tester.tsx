@@ -417,7 +417,7 @@ const PRESETS: ProviderPreset[] = [
       { id: "deepseek/deepseek-v3",                              label: "DeepSeek V3 (Turbo)",         tag: "DeepSeek",   ctx: "64K ctx",  in: "$0.4/Mt",   out: "$1.3/Mt",   cache: "" },
       { id: "deepseek/deepseek-prover-v2-671b",                  label: "DeepSeek Prover V2 671B",     tag: "DeepSeek",   ctx: "160K ctx", in: "$0.7/Mt",   out: "$2.5/Mt",   cache: "" },
       { id: "deepseek/deepseek-ocr-2",                           label: "DeepSeek-OCR 2",              tag: "DeepSeek",   ctx: "8K ctx",   in: "$0.03/Mt",  out: "$0.03/Mt",  cache: "" },
-      // ── Qwen ─────────────────────────────────────────────────────────────
+      // ── Qwen ─────────────────────────────────────��───────────────────────
       { id: "qwen/qwen3-7-max",                                  label: "Qwen3.7-Max",                 tag: "Qwen",       ctx: "977K ctx", in: "$1.25/Mt",  out: "$3.75/Mt",  cache: "$0.25/Mt" },
       { id: "qwen/qwen3-6-27b",                                  label: "Qwen3.6-27B (New)",           tag: "Qwen",       ctx: "256K ctx", in: "$0.6/Mt",   out: "$3.6/Mt",   cache: "" },
       { id: "qwen/qwen3-5-27b",                                  label: "Qwen3.5-27B",                 tag: "Qwen",       ctx: "256K ctx", in: "$0.3/Mt",   out: "$2.4/Mt",   cache: "" },
@@ -2705,7 +2705,7 @@ const PRESETS: ProviderPreset[] = [
   },
   {
     id: "reka",
-    name: "Reka AI",
+    name: "Reka AI (native)",
     country: "US",
     endpoint: "https://api.reka.ai/v1/chat/completions",
     method: "POST",
@@ -2743,6 +2743,173 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://portal.nousresearch.com",
     color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
     note: "Key is generated from a Nous Portal subscription.",
+  },
+  {
+    id: "scaleway",
+    name: "Scaleway",
+    country: "FR",
+    endpoint: "https://api.scaleway.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: llama-3.3-70b-instruct, llama-3.1-8b-instruct, qwen2.5-coder-32b-instruct,
+    //   deepseek-r1-distill-llama-70b, mistral-nemo-instruct-2407, gemma-3-27b-it, pixtral-12b-2409
+    bodyTemplate: JSON.stringify({
+      model: "llama-3.3-70b-instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://www.scaleway.com/en/docs/generative-apis/",
+    createKeyUrl: "https://console.scaleway.com/iam/api-keys",
+    color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
+    note: "EU-hosted (Paris). Use a Scaleway secret API key.",
+  },
+  {
+    id: "crusoe",
+    name: "Crusoe Cloud",
+    country: "US",
+    endpoint: "https://api.inference.crusoecloud.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: meta-llama/Llama-3.3-70B-Instruct, meta-llama/Llama-3.1-8B-Instruct,
+    //   deepseek-ai/DeepSeek-R1, Qwen/Qwen2.5-72B-Instruct
+    bodyTemplate: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.crusoecloud.com",
+    createKeyUrl: "https://console.crusoecloud.com",
+    color: "text-lime-400 bg-lime-400/10 border-lime-400/30",
+  },
+  {
+    id: "arceeai",
+    name: "Arcee AI (Conductor, native)",
+    country: "US",
+    endpoint: "https://models.arcee.ai/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: auto, auto-tool, auto-reasoning, virtuoso-large, coder-large, maestro-reasoning, spotlight
+    bodyTemplate: JSON.stringify({
+      model: "auto",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.arcee.ai",
+    createKeyUrl: "https://conductor.arcee.ai",
+    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+    note: "\"auto\" lets Arcee Conductor route to the best model automatically.",
+  },
+  {
+    id: "alibabacloud",
+    name: "Alibaba Cloud",
+    country: "CN",
+    endpoint: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: qwen3-max, qwen-max, qwen-plus, qwen-turbo, qwen3-coder-plus, qwen-vl-max
+    bodyTemplate: JSON.stringify({
+      model: "qwen-plus",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://www.alibabacloud.com/help/en/model-studio/",
+    createKeyUrl: "https://bailian.console.aliyun.com",
+    color: "text-orange-400 bg-orange-400/10 border-orange-400/30",
+    note: "Uses the international (Singapore) DashScope endpoint. Mainland keys may need the CN endpoint instead.",
+  },
+  {
+    id: "thinkingmachines",
+    name: "Thinking Machines (Tinker)",
+    country: "US",
+    endpoint: "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Model must be a tinker:// path to a checkpoint you trained or were given access to
+    bodyTemplate: JSON.stringify({
+      model: "tinker://your-model-path",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://tinker-docs.thinkingmachines.ai",
+    createKeyUrl: "https://thinkingmachines.ai",
+    color: "text-neutral-300 bg-neutral-300/10 border-neutral-300/30",
+    note: "Replace the model with your own tinker:// checkpoint path from the Tinker console.",
+  },
+  {
+    id: "blackboxai",
+    name: "Blackbox AI",
+    country: "US",
+    endpoint: "https://api.blackbox.ai/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: blackboxai/openai/gpt-5.1, blackboxai/anthropic/claude-opus-4.5,
+    //   blackboxai/deepseek/deepseek-chat, blackboxai/google/gemini-2.5-pro
+    bodyTemplate: JSON.stringify({
+      model: "blackboxai/openai/gpt-5.1",
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.blackbox.ai",
+    createKeyUrl: "https://www.blackbox.ai/dashboard",
+    color: "text-zinc-300 bg-zinc-300/10 border-zinc-300/30",
+  },
+  {
+    id: "publicai",
+    name: "Public AI",
+    country: "CH",
+    endpoint: "https://api.publicai.co/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+      "User-Agent": "AI-Tester/1.0",
+    },
+    // Models: swiss-ai/apertus-70b-instruct, swiss-ai/apertus-v1.5-8b, meta-llama/llama-3.3-70b-instruct
+    bodyTemplate: JSON.stringify({
+      model: "swiss-ai/apertus-70b-instruct",
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://docs.publicai.co",
+    createKeyUrl: "https://www.publicai.co",
+    color: "text-red-400 bg-red-400/10 border-red-400/30",
+    note: "Free nonprofit inference utility for public open-weight models.",
+  },
+  {
+    id: "inclusionai",
+    name: "InclusionAI (Ant Ling)",
+    country: "CN",
+    endpoint: "https://api.ant-ling.com/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    // Models: Ling-2.6-1T, Ling-flash-2.0, Ling-mini-2.0, Ring-1T
+    bodyTemplate: JSON.stringify({
+      model: "Ling-flash-2.0",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    docsUrl: "https://api.ant-ling.com",
+    createKeyUrl: "https://www.inclusionai.ai",
+    color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   },
   {
     id: "custom",

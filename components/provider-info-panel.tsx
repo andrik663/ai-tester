@@ -86,6 +86,9 @@ const PROVIDER_DOMAIN_MAP: Record<string, string> = {
   tngtech:"tngtech.com", opengvlab:"openrouter.ai",
   wanai:"openrouter.ai", rundiffusion:"rundiffusion.com",
   bedrock:"aws.amazon.com", github:"github.com",
+  scaleway:"scaleway.com", arceeai:"arcee.ai", alibabacloud:"alibabacloud.com",
+  thinkingmachines:"thinkingmachines.ai", blackboxai:"blackbox.ai",
+  publicai:"publicai.co", inclusionai:"inclusionai.ai",
 }
 
 function providerBgColor(name: string): string {

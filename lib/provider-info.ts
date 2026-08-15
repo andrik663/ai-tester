@@ -228,7 +228,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Groq ─────────────────────────────────────────�����───────────────────────
+  // ── Groq ─────────────────────────────────────────������───────────────────────
   groq: {
     id: "groq",
     name: "Groq",
@@ -1235,14 +1235,19 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Crusoe ────────────────────────────────────────────────────────────────────
+  // ── Crusoe Cloud ──────────────────────────────────────────────────────────────
   crusoe: {
-    id: "crusoe", name: "Crusoe",
-    website: "https://crusoe.ai", pricingUrl: "https://crusoe.ai/cloud/pricing",
-    docsUrl: "https://docs.crusoe.ai",
-    description: "Carbon-neutral GPU cloud. Runs sustainable AI workloads on stranded energy.",
-    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
-    models: [ m("llama-3.1-405b-instruct", null, null, 128, { promo: true, promoLabel: "Eco" }) ],
+    id: "crusoe", name: "Crusoe Cloud",
+    website: "https://www.crusoe.ai", pricingUrl: "https://www.crusoe.ai/products/inference",
+    docsUrl: "https://docs.crusoecloud.com",
+    description: "Vertically-integrated AI cloud running on stranded and clean energy. Managed inference with an OpenAI-compatible endpoint for open models.",
+    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-08-15",
+    models: [
+      m("meta-llama/Llama-3.3-70B-Instruct", 0.60, 0.60, 128, { promo: true, promoLabel: "Popular" }),
+      m("meta-llama/Llama-3.1-8B-Instruct",  0.10, 0.10, 128),
+      m("deepseek-ai/DeepSeek-R1",           2.00, 6.00, 128),
+      m("Qwen/Qwen2.5-72B-Instruct",         0.60, 0.60, 128),
+    ],
   },
 
   // ── DeepInfra ─────────────────────────────────────────────────────────────────
@@ -1577,13 +1582,18 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [ m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "MLOps" }) ],
   },
 
-  // ── Xiaomi ────────────────────────────────────────────────────────────────────
+  // ── Xiaomi (MiMo) ─────────────────────────────────────────────────────────────
   xiaomi: {
-    id: "xiaomi", name: "Xiaomi AI",
-    website: "https://ai.xiaomi.com", pricingUrl: "https://ai.xiaomi.com/api",
-    description: "Xiaomi's AI research arm. MiMo series of reasoning models trained on math and code.",
-    hq: "CN", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-24",
-    models: [ m("mimo-7b", null, null, 128, { promo: true, promoLabel: "Reasoning" }) ],
+    id: "xiaomi", name: "Xiaomi",
+    website: "https://xiaomimimo.com", pricingUrl: "https://xiaomimimo.com/pricing",
+    docsUrl: "https://xiaomimimo.com/docs",
+    description: "Xiaomi's MiMo model family. OpenAI-compatible endpoint for its reasoning-tuned LLMs, built for on-device and cloud deployment.",
+    hq: "CN", tier: "mid", hasFreeTier: false, liveModels: false, lastUpdated: "2026-08-15",
+    models: [
+      m("mimo-v2.5-pro",   1.00, 3.00, 128, { promo: true, promoLabel: "Flagship" }),
+      m("mimo-v2.5-flash", 0.20, 0.60, 128),
+      m("mimo-7b-rl",      null, null,  32),
+    ],
   },
 
   // ── Marketku Router ───────────────────────────────────────────────────────────
@@ -2167,12 +2177,19 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
+  // ── InclusionAI (Ant Ling) ───────────────────────────────────────────────────
   inclusionai: {
-    id: "inclusionai", name: "Inclusion AI",
-    website: "https://openrouter.ai", pricingUrl: "https://openrouter.ai/models?q=inclusion",
-    description: "Aya-Vision multilingual multimodal models from Cohere for AI, via OpenRouter.",
-    hq: "US", tier: "budget", hasFreeTier: false, liveModels: false, lastUpdated: "2026-06-30",
-    models: [ m("inclusion/aya-vision-32b", null, null, 16) ],
+    id: "inclusionai", name: "InclusionAI",
+    website: "https://www.inclusionai.ai", pricingUrl: "https://www.inclusionai.ai",
+    docsUrl: "https://api.ant-ling.com",
+    description: "Ant Group's open-model research org. Ling and Ring MoE model families, OpenAI-compatible endpoint for the native API.",
+    hq: "CN", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-08-15",
+    models: [
+      m("Ling-2.6-1T",    null, null, 128, { promo: true, promoLabel: "Flagship" }),
+      m("Ling-flash-2.0", null, null, 128),
+      m("Ling-mini-2.0",  null, null, 128),
+      m("Ring-1T",        null, null, 128, { promo: true, promoLabel: "Reasoning" }),
+    ],
   },
 
   kling: {
@@ -2307,7 +2324,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
   },
 
   rekaai: {
-    id: "rekaai", name: "Reka AI",
+    id: "rekaai", name: "Reka AI (via OpenRouter)",
     website: "https://reka.ai", pricingUrl: "https://reka.ai/pricing",
     docsUrl: "https://docs.reka.ai",
     description: "Reka Core and Flash — multimodal models with video, image, and audio understanding.",
@@ -2521,6 +2538,101 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("mistral-ai/Mistral-Large-2411", null, null, 128),
       m("microsoft/Phi-4",               null, null,  16),
       m("xai/grok-3",                    null, null, 128),
+    ],
+  },
+
+  // ── Scaleway (Generative APIs) ──────────────────────────────────────────────
+  scaleway: {
+    id: "scaleway", name: "Scaleway",
+    website: "https://www.scaleway.com/en/generative-apis/", pricingUrl: "https://www.scaleway.com/en/pricing/generative-apis/",
+    docsUrl: "https://www.scaleway.com/en/docs/generative-apis/",
+    description: "French cloud provider's serverless GenAI endpoint. OpenAI-compatible access to open-weight Llama, Qwen, Mistral, and Gemma models, EU-hosted.",
+    hq: "FR", tier: "budget", hasFreeTier: true, liveModels: true, lastUpdated: "2026-08-15",
+    models: [
+      m("llama-3.3-70b-instruct",         0.90, 0.90, 128, { promo: true, promoLabel: "Popular" }),
+      m("llama-3.1-8b-instruct",          0.20, 0.20, 128, { promo: true, promoLabel: "Free tier" }),
+      m("qwen2.5-coder-32b-instruct",      0.90, 0.90,  32),
+      m("deepseek-r1-distill-llama-70b",   0.90, 0.90, 128),
+      m("mistral-nemo-instruct-2407",      0.20, 0.20, 128),
+      m("gemma-3-27b-it",                  0.35, 0.35, 128),
+      m("pixtral-12b-2409",                0.30, 0.30, 128),
+    ],
+  },
+
+  // ── Arcee AI (Conductor, native API) ─────────────────────────────────────────
+  arceeai: {
+    id: "arceeai", name: "Arcee AI (Conductor)",
+    website: "https://www.arcee.ai", pricingUrl: "https://www.arcee.ai/pricing",
+    docsUrl: "https://docs.arcee.ai",
+    description: "Small-language-model lab and router. Conductor auto-routes prompts across its own Virtuoso/Maestro models and third-party frontier models.",
+    hq: "US", tier: "mid", hasFreeTier: true, liveModels: false, lastUpdated: "2026-08-15",
+    models: [
+      m("auto",               null, null, 128, { promo: true, promoLabel: "Smart routing" }),
+      m("auto-tool",          null, null, 128),
+      m("auto-reasoning",     null, null, 128),
+      m("virtuoso-large",     0.75, 1.20, 128),
+      m("coder-large",        0.50, 0.80,  64),
+      m("maestro-reasoning",  2.00, 4.00, 128),
+      m("spotlight",          0.15, 0.20,  32),
+    ],
+  },
+
+  // ── Alibaba Cloud (Model Studio) ──────────────────────────────────────────────
+  alibabacloud: {
+    id: "alibabacloud", name: "Alibaba Cloud",
+    website: "https://www.alibabacloud.com/en/product/modelstudio", pricingUrl: "https://www.alibabacloud.com/en/product/modelstudio/pricing",
+    docsUrl: "https://www.alibabacloud.com/help/en/model-studio/",
+    description: "Alibaba's enterprise AI cloud (Model Studio / DashScope). OpenAI-compatible endpoint for Qwen3 flagship and vision-language models.",
+    hq: "CN", tier: "mid", hasFreeTier: true, liveModels: true, lastUpdated: "2026-08-15",
+    models: [
+      m("qwen3-max",         1.20, 6.00, 256, { promo: true, promoLabel: "Flagship" }),
+      m("qwen-max",          1.60, 6.40, 32),
+      m("qwen-plus",         0.40, 1.20, 128),
+      m("qwen-turbo",        0.05, 0.20, 128, { promo: true, promoLabel: "Free tier" }),
+      m("qwen3-coder-plus",  1.00, 5.00, 256),
+      m("qwen-vl-max",       1.60, 6.40,  32),
+    ],
+  },
+
+  // ── Thinking Machines Lab (Tinker) ───────────────────────────────────────────
+  thinkingmachines: {
+    id: "thinkingmachines", name: "Thinking Machines",
+    website: "https://thinkingmachines.ai", pricingUrl: "https://tinker-docs.thinkingmachines.ai/pricing",
+    docsUrl: "https://tinker-docs.thinkingmachines.ai",
+    description: "Mira Murati's frontier AI lab. Tinker is its low-level fine-tuning and inference API, serving custom-trained model checkpoints via an OpenAI-style endpoint.",
+    hq: "US", tier: "specialised", hasFreeTier: false, liveModels: false, lastUpdated: "2026-08-15",
+    models: [
+      m("tinker://meta-llama/Llama-3.1-8B-Instruct", null, null, 128, { promo: true, promoLabel: "Fine-tuned" }),
+      m("tinker://Qwen/Qwen3-8B",                     null, null, 128),
+    ],
+  },
+
+  // ── Blackbox AI ───────────────────────────────────────────────────────────────
+  blackboxai: {
+    id: "blackboxai", name: "Blackbox AI",
+    website: "https://www.blackbox.ai", pricingUrl: "https://www.blackbox.ai/pricing",
+    docsUrl: "https://docs.blackbox.ai",
+    description: "AI coding assistant platform with a unified API gateway. Routes model IDs across GPT, Claude, DeepSeek, and Gemini behind one key.",
+    hq: "US", tier: "gateway", hasFreeTier: true, liveModels: false, lastUpdated: "2026-08-15",
+    models: [
+      m("blackboxai/openai/gpt-5.1",            null, null, 128, { promo: true, promoLabel: "Free tier" }),
+      m("blackboxai/anthropic/claude-opus-4.5", null, null, 200),
+      m("blackboxai/deepseek/deepseek-chat",    null, null, 128),
+      m("blackboxai/google/gemini-2.5-pro",     null, null, 1000),
+    ],
+  },
+
+  // ── Public AI ─────────────────────────────────────────────────────────────────
+  publicai: {
+    id: "publicai", name: "Public AI",
+    website: "https://www.publicai.co", pricingUrl: "https://www.publicai.co",
+    docsUrl: "https://docs.publicai.co",
+    description: "Nonprofit inference utility for public and sovereign open-weight models (e.g. Swiss AI's Apertus), free to use via an OpenAI-compatible API.",
+    hq: "CH", tier: "specialised", hasFreeTier: true, liveModels: false, lastUpdated: "2026-08-15",
+    models: [
+      m("swiss-ai/apertus-70b-instruct",       null, null, 64, { promo: true, promoLabel: "Free" }),
+      m("swiss-ai/apertus-v1.5-8b",             null, null, 64, { promo: true, promoLabel: "Free" }),
+      m("meta-llama/llama-3.3-70b-instruct",    null, null, 128, { promo: true, promoLabel: "Free" }),
     ],
   },
 
