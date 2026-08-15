@@ -46,7 +46,7 @@ export default function PublicCodePreview() {
   }, [])
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground font-sans overflow-hidden">
+    <div className="flex flex-col h-dvh bg-background text-foreground font-sans overflow-hidden">
       <CodePreviewTab
         provider="miuclaw"
         providerName="Miuclaw Gateway"

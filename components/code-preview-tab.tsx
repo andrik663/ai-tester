@@ -862,7 +862,12 @@ export default function CodePreviewTab({
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar/40 flex-shrink-0">
+      {/* Sticky + solid background + high z-index so the model selector and
+          Code/Split/Preview switcher stay reachable no matter which
+          ancestor ends up scrolling (mobile browsers in particular can end
+          up scrolling the outer page instead of just the inner message
+          list, which would otherwise carry this toolbar off-screen). */}
+      <div className="sticky top-0 z-30 flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar flex-shrink-0">
 
         {/* Model selector */}
         {(workingModels.length > 0 || (presetModels && presetModels.length > 0)) && (
