@@ -716,7 +716,16 @@ export default function CodePreviewTab({
     const parts = msg.content.split(/(```[\s\S]*?```)/g)
 
     return (
-      <div key={i} className="flex flex-col gap-1.5">
+      <div key={i} className="flex items-start gap-2">
+        {/* Assistant avatar — the Miuclaw cat mascot, matching the icon used
+            on the production site (miuclaw.my.id), so replies are clearly
+            attributed to the brand rather than a generic bot glyph. */}
+        <img
+          src="/images/cat-mascot.png"
+          alt="Miuclaw AI"
+          className="w-6 h-6 rounded-full border border-border/50 flex-shrink-0 mt-0.5 object-cover"
+        />
+        <div className="flex-1 flex flex-col gap-1.5 min-w-0">
         <div className="flex flex-col gap-2">
           {/* Full-file action strip — shown once per turn when an edit was
               merged, so the merged document stays copy/downloadable without
@@ -845,6 +854,7 @@ export default function CodePreviewTab({
           })}
         </div>
         <span className="text-[10px] text-muted-foreground/70 ml-0.5">{msg.ts}</span>
+        </div>
       </div>
     )
   }
@@ -1032,7 +1042,15 @@ export default function CodePreviewTab({
 
               {/* Streaming bubble */}
               {isStreaming && (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex items-start gap-2">
+                  <img
+                    src="/images/cat-mascot.png"
+                    alt="Miuclaw AI"
+                    className={`w-6 h-6 rounded-full border border-border/50 flex-shrink-0 mt-0.5 object-cover ${
+                      !streamingText ? "animate-pulse" : ""
+                    }`}
+                  />
+                  <div className="flex-1 flex flex-col gap-1.5 min-w-0">
                   <div className="text-[12px] text-foreground/90 leading-relaxed whitespace-pre-wrap">
                     {streamingText || (
                       <span className="flex items-center gap-1.5 text-muted-foreground text-[11px]">
@@ -1044,6 +1062,7 @@ export default function CodePreviewTab({
                         Generating
                       </span>
                     )}
+                  </div>
                   </div>
                 </div>
               )}
