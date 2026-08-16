@@ -420,6 +420,41 @@ function ArrowRightIcon() {
   )
 }
 
+function WandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h0M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5 flex-shrink-0">
+      <path d="M12 2l2.6 6.6L21.5 9l-5.4 4.5L17.8 21 12 17.1 6.2 21l1.7-7.5L2.5 9l6.9-.4L12 2z" />
+    </svg>
+  )
+}
+
+/** 17 Agustus 1945 — pesan motivasi kemerdekaan untuk marquee di top bar.
+ *  Ditulis dalam array bertema agar mudah ditambah/diedit tanpa menyentuh
+ *  markup marquee-nya. */
+const INDEPENDENCE_MESSAGES = [
+  "Dirgahayu Republik Indonesia ke-81",
+  "Merdeka! Satu bangsa, satu semangat, satu tujuan",
+  "Terus melangkah, terus berkarya untuk Indonesia",
+  "Kemerdekaan adalah amanah — isi dengan karya nyata",
+  "Dari Sabang sampai Merauke, bersatu membangun negeri",
+]
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CodePreviewTab({
@@ -482,11 +517,32 @@ export default function CodePreviewTab({
    *  be included in the next prompt sent to the model. */
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
+  /** Model-generated follow-ups for the CURRENT turn, produced by a hidden
+   *  chain-of-thought reasoning pass (see `refreshAiSuggestions`). `null`
+   *  means "not ready yet" — the static `getFollowUpSuggestions()` list is
+   *  shown as instant filler in that gap so the UI is never empty while the
+   *  reasoning call is in flight. */
+  const [aiSuggestions, setAiSuggestions] = useState<string[] | null>(null)
+  /** When on (default), every prompt is first sent to the model to fix
+   *  grammar/clarity/typos — but the result is only ever a SUGGESTION the
+   *  user must approve; nothing is auto-sent. */
+  const [improveEnabled, setImproveEnabled] = useState(true)
+  /** While true, the input is locked and a spinner shows in place of the
+   *  send button — the brief window where the refine call is in flight. */
+  const [isRefiningPrompt, setIsRefiningPrompt] = useState(false)
+  /** Pending approval: the user's original text vs. the model's rewrite.
+   *  `null` means no review is currently pending. `edited` starts equal to
+   *  `suggested` but the user can tweak it before approving. */
+  const [promptReview, setPromptReview] = useState<{ original: string; suggested: string; edited: string } | null>(null)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef      = useRef<AbortController | null>(null)
   const fileInputRef  = useRef<HTMLInputElement>(null)
+  /** Every follow-up suggestion (AI or static fallback) already shown this
+   *  session, so the same phrase is never offered twice in one chat — this
+   *  is what fixes the "same suggestion block repeats every turn" bug. */
+  const shownSuggestionsRef = useRef<Set<string>>(new Set())
   /** Web Speech API instance for voice-to-text prompt input. Typed as `any`
    *  since SpeechRecognition isn't in the standard TS DOM lib yet. */
   const recognitionRef = useRef<any>(null)
@@ -507,6 +563,16 @@ export default function CodePreviewTab({
     ta.style.height = "auto"
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px"
   }, [input])
+
+  // Once a turn finishes and the AI-reasoned suggestions haven't landed yet,
+  // register whatever the static fallback is currently showing so it also
+  // rotates instead of repeating once the effect re-runs on the next turn.
+  useEffect(() => {
+    if (isStreaming || aiSuggestions !== null) return
+    if (lastFullHtml.trim().length === 0) return
+    getFollowUpSuggestions().forEach((s) => shownSuggestionsRef.current.add(s))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, isStreaming])
 
   // Set up the Web Speech API recognizer once, if the browser supports it.
   // Chrome/Edge only expose it under the `webkit` prefix.
@@ -646,6 +712,9 @@ export default function CodePreviewTab({
     setInput("")
     setIsStreaming(true)
     setStreamingText("")
+    // Clear last turn's AI suggestions — the follow-ups block is hidden
+    // while `isStreaming` anyway, so this can't cause a visible flicker.
+    setAiSuggestions(null)
 
     // If a .md file is attached, prepend its full contents ahead of the
     // instruction so the model reads it first before acting on the prompt.
@@ -780,7 +849,235 @@ export default function CodePreviewTab({
     setStreamingText("")
     setIsStreaming(false)
     abortRef.current = null
+
+    // Fire-and-forget: reason about a better set of follow-ups for the NEW
+    // state of the document. Never awaited, so it can't slow down or block
+    // the reply from appearing.
+    const codeForSuggestions = fullHtml ?? lastFullHtml
+    if (codeForSuggestions.trim().length > 0) {
+      void refreshAiSuggestions(text, codeForSuggestions)
+    }
   }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml, attachedFile])
+
+  /**
+   * Asks the model to reason step-by-step (hidden chain-of-thought) about
+   * what kind of app this is, what it already has, and what single class of
+   * improvement is most valuable next — then emit ONLY a JSON array of 3
+   * short, varied Indonesian follow-up phrases. This replaces the static
+   * keyword table as the primary suggestion source; the table is now just
+   * instant filler while this call is in flight, and it's what actually
+   * fixes suggestions repeating turn after turn, since each pass reasons
+   * fresh over the latest code and explicitly avoids anything already shown.
+   * Fire-and-forget from `sendMessage` — any failure just leaves the
+   * fallback list on screen, so this can never break the main chat flow.
+   */
+  async function refreshAiSuggestions(userGoal: string, code: string) {
+    if (!apiKey.trim() || !code.trim()) return
+    const already = Array.from(shownSuggestionsRef.current)
+    const reasoningPrompt = `You are reasoning silently about what to suggest next for a web project — the user will only see your final answer, never your reasoning.
+
+Think step by step (to yourself, not in the output):
+1. What kind of app/page is this, based on the user's goal and the HTML/CSS/JS below?
+2. What features does the code already implement?
+3. What single class of improvement would be most valuable to offer next — pick a DIFFERENT kind each time (a new feature, a UX/visual polish, more content, or robustness/error-handling) rather than always defaulting to the same category.
+4. Draft 3 short, concrete, varied Indonesian action phrases (max ~6 words each, e.g. "Tambahkan halaman checkout") that match that reasoning.
+
+Then output ONLY a raw JSON array of exactly those 3 strings — no markdown, no code fence, no explanation, no reasoning text. Example output:
+["Tambahkan filter kategori","Tambahkan animasi hover pada kartu","Tambahkan penanganan error saat submit"]
+
+Rules:
+- Never repeat any of these already-suggested phrases (case-insensitive): ${already.length > 0 ? already.join(" | ") : "(none yet)"}
+- Never suggest something that already clearly exists in the code below.
+- The 3 phrases must each represent a different category of improvement.
+- Output nothing but the JSON array.
+
+User's original goal: ${userGoal}
+
+Current code (reference only):
+${code.slice(0, 6000)}`
+
+    try {
+      const res = await fetch("/api/manual-test/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          apiKey: apiKey.trim(),
+          endpoint,
+          headers,
+          messages: [{ role: "user", content: reasoningPrompt }],
+          systemPrompt: "Reply with only a raw JSON array of strings — nothing else.",
+          model: model.trim() || undefined,
+        }),
+      })
+      const reader = res.body?.getReader()
+      if (!reader) return
+      const dec = new TextDecoder()
+      let buf = ""
+      let currentEvent = "token"
+      let acc = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split("\n")
+        buf = lines.pop() ?? ""
+        for (const rawLine of lines) {
+          const line = rawLine.trim()
+          if (!line) { currentEvent = "token"; continue }
+          if (line.startsWith("event:")) { currentEvent = line.slice(6).trim(); continue }
+          if (!line.startsWith("data:")) continue
+          const dataStr = line.slice(5).trim()
+          if (!dataStr || dataStr === "[DONE]") continue
+          try {
+            const parsed = JSON.parse(dataStr) as Record<string, unknown>
+            if (currentEvent === "token") acc += (parsed.text as string) ?? ""
+          } catch { /* skip */ }
+        }
+      }
+      reader.releaseLock()
+
+      const match = acc.match(/\[[\s\S]*\]/)
+      if (!match) return
+      const parsedArr = JSON.parse(match[0])
+      if (!Array.isArray(parsedArr)) return
+
+      const picks: string[] = []
+      for (const item of parsedArr) {
+        if (typeof item !== "string") continue
+        const clean = item.trim()
+        if (!clean || shownSuggestionsRef.current.has(clean)) continue
+        picks.push(clean)
+        if (picks.length >= 3) break
+      }
+      if (picks.length === 0) return
+      picks.forEach((p) => shownSuggestionsRef.current.add(p))
+      setAiSuggestions(picks)
+    } catch {
+      // Silent — the static fallback list stays on screen.
+    }
+  }
+
+  /**
+   * Asks the model to clean up the user's raw prompt — fix typos, grammar,
+   * and vague wording — WITHOUT changing what is being asked for or adding
+   * new requirements. Returns `null` on any failure/empty result so the
+   * caller can fall back to sending the original text untouched.
+   */
+  async function refinePromptText(raw: string): Promise<string | null> {
+    if (!apiKey.trim() || !raw.trim()) return null
+    const refinePrompt = `Perbaiki teks permintaan pengguna berikut ini: rapikan tata bahasa, ejaan, dan kejelasan kalimatnya, tapi JANGAN mengubah maksud, JANGAN menambah permintaan/fitur baru yang tidak disebutkan, dan JANGAN mengubah bahasa yang dipakai (kalau aslinya Indonesia, hasilnya juga Indonesia; kalau Inggris, tetap Inggris).
+
+Jika teksnya sudah jelas dan rapi, kembalikan teks itu sama persis tanpa perubahan.
+
+Balas HANYA dengan teks hasil perbaikan — tanpa tanda kutip, tanpa penjelasan, tanpa awalan seperti "Berikut" atau "Versi perbaikan:".
+
+Teks asli:
+${raw}`
+
+    try {
+      const res = await fetch("/api/manual-test/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          apiKey: apiKey.trim(),
+          endpoint,
+          headers,
+          messages: [{ role: "user", content: refinePrompt }],
+          systemPrompt: "Reply with only the corrected prompt text — nothing else, no quotes, no explanation.",
+          model: model.trim() || undefined,
+        }),
+      })
+      const reader = res.body?.getReader()
+      if (!reader) return null
+      const dec = new TextDecoder()
+      let buf = ""
+      let currentEvent = "token"
+      let acc = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split("\n")
+        buf = lines.pop() ?? ""
+        for (const rawLine of lines) {
+          const line = rawLine.trim()
+          if (!line) { currentEvent = "token"; continue }
+          if (line.startsWith("event:")) { currentEvent = line.slice(6).trim(); continue }
+          if (!line.startsWith("data:")) continue
+          const dataStr = line.slice(5).trim()
+          if (!dataStr || dataStr === "[DONE]") continue
+          try {
+            const parsed = JSON.parse(dataStr) as Record<string, unknown>
+            if (currentEvent === "token") acc += (parsed.text as string) ?? ""
+          } catch { /* skip */ }
+        }
+      }
+      reader.releaseLock()
+
+      // Strip a wrapping code fence or quotes the model might add anyway.
+      const cleaned = acc
+        .trim()
+        .replace(/^```[a-z]*\n?/i, "")
+        .replace(/```$/, "")
+        .replace(/^"([\s\S]*)"$/, "$1")
+        .trim()
+      return cleaned.length > 0 ? cleaned : null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Entry point for both the Enter key and the send button. When prompt
+   * refinement is enabled, this NEVER sends anything itself — it only ever
+   * populates `promptReview` for the user to approve, edit, or reject.
+   * Approval always happens through `approvePromptReview` /
+   * `sendOriginalPrompt`, never automatically.
+   */
+  async function requestSend() {
+    const text = input.trim()
+    if (!text || isStreaming || isRefiningPrompt || !apiKey.trim()) return
+
+    if (!improveEnabled) {
+      sendMessage()
+      return
+    }
+
+    setIsRefiningPrompt(true)
+    const suggested = await refinePromptText(text)
+    setIsRefiningPrompt(false)
+
+    // Nothing to improve, or the refine call failed — just send as-is
+    // rather than blocking the user on a no-op approval step.
+    if (!suggested || suggested.trim() === text) {
+      sendMessage()
+      return
+    }
+
+    setPromptReview({ original: text, suggested, edited: suggested })
+  }
+
+  function approvePromptReview() {
+    if (!promptReview) return
+    const finalText = promptReview.edited.trim()
+    setPromptReview(null)
+    if (finalText) sendMessage(finalText)
+  }
+
+  function sendOriginalPrompt() {
+    if (!promptReview) return
+    const original = promptReview.original
+    setPromptReview(null)
+    sendMessage(original)
+  }
+
+  function cancelPromptReview() {
+    setPromptReview(null)
+    // Leave the original text in the input box so the user can edit it
+    // further or try sending again.
+  }
 
   function stopStreaming() {
     abortRef.current?.abort()
@@ -1126,9 +1423,19 @@ export default function CodePreviewTab({
     const picks: string[] = []
     for (const c of candidates) {
       if (picks.length >= count) break
-      if (seen.has(c) || alreadyPresent(c)) continue
+      if (seen.has(c) || alreadyPresent(c) || shownSuggestionsRef.current.has(c)) continue
       seen.add(c)
       picks.push(c)
+    }
+    // If every candidate has already been shown this session, allow repeats
+    // rather than showing nothing — better than an empty follow-ups block.
+    if (picks.length === 0) {
+      for (const c of candidates) {
+        if (picks.length >= count) break
+        if (seen.has(c) || alreadyPresent(c)) continue
+        seen.add(c)
+        picks.push(c)
+      }
     }
     return picks
   }
@@ -1153,17 +1460,37 @@ export default function CodePreviewTab({
           list, which would otherwise carry this toolbar off-screen). */}
       <div className="sticky top-0 z-30 flex-shrink-0">
 
-        {/* Spacer bar — reserves one extra bar's worth of height (plus the
-            device's own safe-area inset) above the real toolbar. On mobile
-            web the browser chrome (URL bar) floats over the top of the page
-            and can visually cover the first bar of fixed/sticky content;
-            pushing the toolbar down by one bar keeps it clear of that
-            overlay instead of hiding behind it. */}
+        {/* Top strip — still reserves one bar's worth of height (plus the
+            device's own safe-area inset) above the real toolbar, so mobile
+            browser chrome (URL bar) never covers the toolbar underneath.
+            That reserved space now carries a scrolling Independence Day
+            message instead of sitting empty. The track is rendered twice
+            back-to-back and translated by exactly -50% so the loop has no
+            visible seam. */}
         <div
-          className="w-full bg-sidebar border-b border-border/40 h-9"
+          className="w-full h-9 bg-sidebar border-b border-border/40 overflow-hidden flex items-center"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-          aria-hidden="true"
-        />
+        >
+          <div
+            className="flex items-center gap-10 whitespace-nowrap animate-marquee will-change-transform"
+            aria-hidden="true"
+          >
+            {[0, 1].map((rep) => (
+              <div key={rep} className="flex items-center gap-10 shrink-0">
+                {INDEPENDENCE_MESSAGES.map((msg, i) => (
+                  <span
+                    key={`${rep}-${i}`}
+                    className="flex items-center gap-2 text-[11px] font-medium text-primary shrink-0"
+                  >
+                    <StarIcon />
+                    {msg}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+          <span className="sr-only">Dirgahayu Republik Indonesia — Merdeka!</span>
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar">
 
@@ -1318,7 +1645,7 @@ export default function CodePreviewTab({
                 <div className="flex flex-col gap-2 pt-1 pl-8">
                   <span className="text-[11px] text-muted-foreground/60">Suggested follow-ups</span>
                   <div className="flex flex-col gap-1.5 items-start">
-                    {getFollowUpSuggestions().map((s) => (
+                    {(aiSuggestions && aiSuggestions.length > 0 ? aiSuggestions : getFollowUpSuggestions()).map((s) => (
                       <button
                         key={s}
                         onClick={() => sendMessage(s)}
@@ -1380,6 +1707,51 @@ export default function CodePreviewTab({
   {fileError && (
   <p className="text-[10px] text-destructive mb-1.5 ml-1">{fileError}</p>
   )}
+
+  {/* Prompt-refinement approval card — appears only after the user tries
+      to send while "improve prompt" is on and the model actually proposed
+      a change. Nothing is sent until the user explicitly approves. */}
+  {promptReview && (
+    <div className="flex flex-col gap-2 mb-1.5 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-primary">
+        <WandIcon />
+        <span>Saran perbaikan prompt — periksa dulu sebelum kirim</span>
+      </div>
+      <div className="rounded-md bg-muted/30 px-2.5 py-1.5">
+        <p className="text-[9px] uppercase tracking-wide text-muted-foreground/70 mb-0.5">Teks asli</p>
+        <p className="text-[11px] text-muted-foreground line-clamp-3">{promptReview.original}</p>
+      </div>
+      <textarea
+        value={promptReview.edited}
+        onChange={(e) => setPromptReview((prev) => (prev ? { ...prev, edited: e.target.value } : prev))}
+        rows={3}
+        className="w-full resize-none rounded-md border border-primary/20 bg-background/80 px-2.5 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary/50 leading-relaxed"
+      />
+      <div className="flex items-center gap-2">
+        <button
+          onClick={approvePromptReview}
+          className="flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <CheckIcon />
+          Gunakan &amp; kirim
+        </button>
+        <button
+          onClick={sendOriginalPrompt}
+          className="rounded-lg bg-muted/40 px-2.5 py-1.5 text-[11px] text-foreground hover:bg-muted/60 transition-colors"
+        >
+          Kirim versi asli
+        </button>
+        <button
+          onClick={cancelPromptReview}
+          className="ml-auto flex items-center justify-center w-6 h-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          title="Batal"
+        >
+          <XIcon />
+        </button>
+      </div>
+    </div>
+  )}
+
   <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
   <button
   onClick={() => fileInputRef.current?.click()}
@@ -1389,6 +1761,18 @@ export default function CodePreviewTab({
   >
   <PaperclipIcon />
   </button>
+  <button
+  onClick={() => setImproveEnabled((v) => !v)}
+  disabled={noKey || isStreaming}
+  title={improveEnabled ? "Perbaikan prompt: aktif (klik untuk matikan)" : "Perbaikan prompt: nonaktif (klik untuk aktifkan)"}
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+    improveEnabled
+      ? "bg-primary/15 text-primary hover:bg-primary/25"
+      : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+  }`}
+  >
+  <WandIcon />
+  </button>
   <textarea
   ref={textareaRef}
   value={input}
@@ -1396,18 +1780,18 @@ export default function CodePreviewTab({
   onKeyDown={(e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !(e.keyCode === 229)) {
   e.preventDefault()
-  sendMessage()
+  requestSend()
   }
   }}
-  placeholder={noKey ? "Add API key first…" : "Describe what to build… (Enter to send)"}
-  disabled={noKey}
+  placeholder={noKey ? "Add API key first…" : isRefiningPrompt ? "Menyempurnakan prompt…" : "Describe what to build… (Enter to send)"}
+  disabled={noKey || isRefiningPrompt}
   rows={1}
   className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
   />
   {voiceSupported && (
   <button
   onClick={toggleRecording}
-  disabled={noKey || isStreaming}
+  disabled={noKey || isStreaming || isRefiningPrompt}
   title={isRecording ? "Stop recording" : "Voice input"}
   className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
   isRecording
@@ -1419,11 +1803,13 @@ export default function CodePreviewTab({
   </button>
   )}
   <button
-  onClick={() => (isStreaming ? stopStreaming() : sendMessage())}
-  disabled={!isStreaming && (!input.trim() || noKey)}
+  onClick={() => (isStreaming ? stopStreaming() : requestSend())}
+  disabled={!isStreaming && (!input.trim() || noKey || isRefiningPrompt)}
   className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
   isStreaming
   ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
+  : isRefiningPrompt
+  ? "bg-muted/30 text-muted-foreground/60 cursor-not-allowed animate-pulse"
   : input.trim() && !noKey
   ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
   : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
@@ -1433,7 +1819,11 @@ export default function CodePreviewTab({
   </button>
   </div>
   <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
-  {isRecording ? "Listening… tap mic to stop" : "Shift+Enter for new line · powered by " + providerName}
+  {isRecording
+    ? "Listening… tap mic to stop"
+    : isRefiningPrompt
+    ? "Menyempurnakan prompt sebelum dikirim…"
+    : "Shift+Enter for new line · powered by " + providerName}
   </p>
   </div>
           </div>
