@@ -63,6 +63,23 @@ interface Props {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Pool of generic, always-relevant follow-up prompts shown under the last
+ * assistant turn once a project already exists, so the user can keep
+ * iterating with one tap instead of typing a new request every time.
+ * Rotated by conversation length so the same three don't repeat every turn.
+ */
+const FOLLOWUP_SUGGESTIONS = [
+  "Ganti tema warna",
+  "Tambahkan halaman login",
+  "Pakai React/Next.js",
+  "Buat responsive di mobile",
+  "Tambahkan animasi",
+  "Ubah ke mode gelap",
+  "Tambahkan form kontak",
+  "Rapikan tata letak (layout)",
+]
+
 const CODE_SYSTEM_PROMPT = `You are an expert web developer. When the user asks you to build or create something, respond with a SINGLE complete, self-contained HTML document that includes all CSS and JavaScript inline. Always output code in a fenced code block with the \`\`\`html language tag.
 
 CRITICAL RULES — you MUST follow ALL of them:
@@ -309,9 +326,18 @@ function DownloadIcon() {
 
 function ChevronDownIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+  <polyline points="6 9 12 15 18 9" />
+  </svg>
+  )
+}
+
+function ArrowRightIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+  <line x1="5" y1="12" x2="19" y2="12" />
+  <polyline points="12 5 19 12 12 19" />
+  </svg>
   )
 }
 
@@ -411,8 +437,8 @@ export default function CodePreviewTab({
   }, [messages, isStreaming])
 
   // ── Send message ─────────────────────────────────────────────────────────────
-  const sendMessage = useCallback(async () => {
-    const text = input.trim()
+  const sendMessage = useCallback(async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim()
     if (!text || isStreaming) return
     if (!apiKey.trim()) return
 
@@ -859,6 +885,17 @@ export default function CodePreviewTab({
     )
   }
 
+  /** Rotates through the suggestion pool by conversation length so the same
+   *  three prompts don't repeat every single turn. */
+  function getFollowUpSuggestions(count = 3): string[] {
+    const offset = messages.length % FOLLOWUP_SUGGESTIONS.length
+    const picks: string[] = []
+    for (let k = 0; k < count; k++) {
+      picks.push(FOLLOWUP_SUGGESTIONS[(offset + k) % FOLLOWUP_SUGGESTIONS.length])
+    }
+    return picks
+  }
+
   // ── Layout ───────────────────────────────────────────────────────────────────
 
   // On mobile there is no room for a real side-by-side split, so "split"
@@ -1037,6 +1074,28 @@ export default function CodePreviewTab({
 
               {messages.map((msg, i) => renderMessage(msg, i))}
 
+              {/* Suggested follow-ups — shown after the latest reply once a
+                  project already exists, so the user can keep iterating with
+                  one tap instead of typing a new request every turn. */}
+              {!isStreaming && lastFullHtml.trim().length > 0 && (
+                <div className="flex flex-col gap-2 pt-1 pl-8">
+                  <span className="text-[11px] text-muted-foreground/60">Suggested follow-ups</span>
+                  <div className="flex flex-col gap-1.5 items-start">
+                    {getFollowUpSuggestions().map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => sendMessage(s)}
+                        disabled={noKey}
+                        className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-primary disabled:opacity-40 disabled:hover:text-muted-foreground transition-colors"
+                      >
+                        <ArrowRightIcon />
+                        <span>{s}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Streaming bubble */}
               {isStreaming && (
                 <div className="flex flex-col gap-1.5">
@@ -1058,7 +1117,7 @@ export default function CodePreviewTab({
               <div ref={chatEndRef} />
             </div>
 
-            {/* ── Input bar ───────────────────────���───────────────────────── */}
+            {/* ── Input bar ──────────────────────�����───────────────────────── */}
             <div className="flex-shrink-0 border-t border-border/40 bg-sidebar/30 px-3 py-2">
               <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
                 <textarea
@@ -1077,7 +1136,7 @@ export default function CodePreviewTab({
                   className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
                 />
                 <button
-                  onClick={isStreaming ? stopStreaming : sendMessage}
+                  onClick={() => (isStreaming ? stopStreaming() : sendMessage())}
                   disabled={!isStreaming && (!input.trim() || noKey)}
                   className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
                     isStreaming
