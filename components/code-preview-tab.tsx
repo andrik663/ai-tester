@@ -1429,8 +1429,6 @@ export default function CodePreviewTab({
   {isRecording ? "Listening… tap mic to stop" : "Shift+Enter for new line · powered by " + providerName}
   </p>
   </div>
-  )}
-            </div>
           </div>
         )}
 
