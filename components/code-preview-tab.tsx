@@ -436,6 +436,25 @@ function CheckIcon() {
   )
 }
 
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5 flex-shrink-0">
+      <path d="M12 2l2.6 6.6L21.5 9l-5.4 4.5L17.8 21 12 17.1 6.2 21l1.7-7.5L2.5 9l6.9-.4L12 2z" />
+    </svg>
+  )
+}
+
+/** 17 Agustus 1945 — pesan motivasi kemerdekaan untuk marquee di top bar.
+ *  Ditulis dalam array bertema agar mudah ditambah/diedit tanpa menyentuh
+ *  markup marquee-nya. */
+const INDEPENDENCE_MESSAGES = [
+  "Dirgahayu Republik Indonesia ke-81",
+  "Merdeka! Satu bangsa, satu semangat, satu tujuan",
+  "Terus melangkah, terus berkarya untuk Indonesia",
+  "Kemerdekaan adalah amanah — isi dengan karya nyata",
+  "Dari Sabang sampai Merauke, bersatu membangun negeri",
+]
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CodePreviewTab({
@@ -1441,17 +1460,37 @@ ${raw}`
           list, which would otherwise carry this toolbar off-screen). */}
       <div className="sticky top-0 z-30 flex-shrink-0">
 
-        {/* Spacer bar — reserves one extra bar's worth of height (plus the
-            device's own safe-area inset) above the real toolbar. On mobile
-            web the browser chrome (URL bar) floats over the top of the page
-            and can visually cover the first bar of fixed/sticky content;
-            pushing the toolbar down by one bar keeps it clear of that
-            overlay instead of hiding behind it. */}
+        {/* Top strip — still reserves one bar's worth of height (plus the
+            device's own safe-area inset) above the real toolbar, so mobile
+            browser chrome (URL bar) never covers the toolbar underneath.
+            That reserved space now carries a scrolling Independence Day
+            message instead of sitting empty. The track is rendered twice
+            back-to-back and translated by exactly -50% so the loop has no
+            visible seam. */}
         <div
-          className="w-full bg-sidebar border-b border-border/40 h-9"
+          className="w-full h-9 bg-sidebar border-b border-border/40 overflow-hidden flex items-center"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-          aria-hidden="true"
-        />
+        >
+          <div
+            className="flex items-center gap-10 whitespace-nowrap animate-marquee will-change-transform"
+            aria-hidden="true"
+          >
+            {[0, 1].map((rep) => (
+              <div key={rep} className="flex items-center gap-10 shrink-0">
+                {INDEPENDENCE_MESSAGES.map((msg, i) => (
+                  <span
+                    key={`${rep}-${i}`}
+                    className="flex items-center gap-2 text-[11px] font-medium text-primary shrink-0"
+                  >
+                    <StarIcon />
+                    {msg}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+          <span className="sr-only">Dirgahayu Republik Indonesia — Merdeka!</span>
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar">
 

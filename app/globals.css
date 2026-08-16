@@ -180,4 +180,20 @@
       0 0 0 1px var(--primary),
       0 0 20px -6px var(--primary);
   }
+
+  /* Top-bar marquee — continuous right-to-left scroll for the Independence
+     Day message strip. The track is duplicated in the markup so this single
+     -50% translate loops seamlessly with no visible seam or reset-jump. */
+  @keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee-scroll 22s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none;
+    }
+  }
 }
