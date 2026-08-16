@@ -5,6 +5,7 @@ import * as lockedKeysSchema from "./locked-keys-schema"
 import * as userSessionsSchema from "./user-sessions-schema"
 import * as gatewaySchema from "./gateway-schema"
 import * as gatewayLogsSchema from "./gateway-logs-schema"
+import * as commentsSchema from "./comments-schema"
 
 // DATABASE_URL is optional — gateway-cache catches DB errors gracefully.
 // Throwing at module load time crashes every route that imports this file,
@@ -13,5 +14,5 @@ const connectionString = process.env.DATABASE_URL ?? "postgres://placeholder:pla
 
 export const pool = new Pool({ connectionString })
 
-const schema = { ...apiKeySchema, ...lockedKeysSchema, ...userSessionsSchema, ...gatewaySchema, ...gatewayLogsSchema }
+const schema = { ...apiKeySchema, ...lockedKeysSchema, ...userSessionsSchema, ...gatewaySchema, ...gatewayLogsSchema, ...commentsSchema }
 export const db = drizzle(pool, { schema })

@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
+import CommentMarquee from "@/components/comment-marquee"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -444,24 +445,6 @@ function CheckIcon() {
   )
 }
 
-function StarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5 flex-shrink-0">
-      <path d="M12 2l2.6 6.6L21.5 9l-5.4 4.5L17.8 21 12 17.1 6.2 21l1.7-7.5L2.5 9l6.9-.4L12 2z" />
-    </svg>
-  )
-}
-
-/** 17 Agustus 1945 — pesan motivasi kemerdekaan untuk marquee di top bar.
- *  Ditulis dalam array bertema agar mudah ditambah/diedit tanpa menyentuh
- *  markup marquee-nya. */
-const INDEPENDENCE_MESSAGES = [
-  "Dirgahayu Republik Indonesia ke-81",
-  "Merdeka! Satu bangsa, satu semangat, satu tujuan",
-  "Terus melangkah, terus berkarya untuk Indonesia",
-  "Kemerdekaan adalah amanah — isi dengan karya nyata",
-  "Dari Sabang sampai Merauke, bersatu membangun negeri",
-]
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -1068,9 +1051,13 @@ ${code.slice(0, 6000)}`
   }
 
   /**
-   * Asks the model to clean up the user's raw prompt — fix typos, grammar,
-   * and vague wording — WITHOUT changing what is being asked for or adding
-   * new requirements.
+   * Asks the model to rewrite the user's raw prompt into an expert,
+   * production-grade version — the kind a senior developer would hand off
+   * to another engineer or to an AI code-gen tool. This goes beyond typo/
+   * grammar cleanup: it adds the technical specificity, structure, and
+   * implied best practices (responsiveness, validation, error handling,
+   * edge cases, etc.) a professional would naturally include, WITHOUT
+   * inventing unrelated features or changing the original intent/scope.
    *
    * Returns a discriminated result rather than a bare `string | null` so the
    * caller can tell "nothing needed changing" apart from "the refine call
@@ -1082,13 +1069,21 @@ ${code.slice(0, 6000)}`
     raw: string,
   ): Promise<{ status: "ok"; text: string } | { status: "unchanged" } | { status: "error" }> {
     if (!apiKey.trim() || !raw.trim()) return { status: "unchanged" }
-    const refinePrompt = `Perbaiki teks permintaan pengguna berikut ini: rapikan tata bahasa, ejaan, dan kejelasan kalimatnya, tapi JANGAN mengubah maksud, JANGAN menambah permintaan/fitur baru yang tidak disebutkan, dan JANGAN mengubah bahasa yang dipakai (kalau aslinya Indonesia, hasilnya juga Indonesia; kalau Inggris, tetap Inggris).
+    const refinePrompt = `Kamu adalah senior software engineer & prompt engineer profesional. Tulis ulang permintaan pengguna berikut menjadi prompt level-expert yang siap dipakai untuk code-generation — seperti yang akan ditulis oleh developer profesional, bukan sekadar memperbaiki typo.
 
-Jika teksnya sudah jelas dan rapi, kembalikan teks itu sama persis tanpa perubahan.
+Lakukan ini:
+- Perjelas maksud, ruang lingkup, dan hasil akhir yang diharapkan dengan bahasa yang tegas dan spesifik
+- Tambahkan detail teknis yang wajar tersirat dari permintaan aslinya (contoh: struktur/komponen, responsivitas, accessibility, validasi input, penanganan error/edge case, performa) HANYA jika itu relevan dan tidak mengubah cakupan permintaan
+- Rapikan tata bahasa, ejaan, dan struktur kalimat supaya terbaca profesional dan actionable
+- JANGAN menambahkan fitur besar atau permintaan baru yang sama sekali tidak disebutkan/tidak tersirat
+- JANGAN mengubah maksud inti permintaan
+- JANGAN mengubah bahasa yang dipakai (kalau aslinya Indonesia, hasilnya juga Indonesia; kalau Inggris, tetap Inggris)
 
-Balas HANYA dengan teks hasil perbaikan — tanpa tanda kutip, tanpa penjelasan, tanpa awalan seperti "Berikut" atau "Versi perbaikan:".
+Jika teks aslinya sudah sangat jelas, detail, dan setara level profesional, kembalikan teks itu sama persis tanpa perubahan.
 
-Teks asli:
+Balas HANYA dengan teks prompt hasil penyempurnaan — tanpa tanda kutip, tanpa penjelasan, tanpa awalan seperti "Berikut" atau "Versi perbaikan:".
+
+Permintaan asli:
 ${raw}`
 
     try {
@@ -1101,7 +1096,8 @@ ${raw}`
           endpoint,
           headers,
           messages: [{ role: "user", content: refinePrompt }],
-          systemPrompt: "Reply with only the corrected prompt text — nothing else, no quotes, no explanation.",
+          systemPrompt:
+            "You are an expert senior software engineer rewriting prompts to a professional, production-ready standard. Reply with only the improved prompt text — nothing else, no quotes, no explanation.",
           model: model.trim() || undefined,
         }),
       })
@@ -1166,6 +1162,16 @@ ${raw}`
 
     if (!improveEnabled) {
       sendMessage()
+      return
+    }
+
+    // Prompt refinement runs through the model selected in the dropdown —
+    // there is no separate "refine model", so without one picked there is
+    // nothing to actually call. Block here instead of silently falling back
+    // to some default model the user never chose.
+    if (!model.trim()) {
+      setRefineNotice("Pilih model AI dari selector dulu untuk memakai Perbaikan Prompt")
+      setTimeout(() => setRefineNotice(null), 3500)
       return
     }
 
@@ -1342,7 +1348,7 @@ ${raw}`
     setDownloadOpenIdx(null)
   }
 
-  // ── ZIP helpers ─────────────────────────────────────────────────────────────
+  // ── ZIP helpers ────────────���────────────────────────────────────────────────
   function u32le(n: number): number[] {
     return [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >> 24) & 0xff]
   }
@@ -1597,36 +1603,11 @@ ${raw}`
         {/* Top strip — still reserves one bar's worth of height (plus the
             device's own safe-area inset) above the real toolbar, so mobile
             browser chrome (URL bar) never covers the toolbar underneath.
-            That reserved space now carries a scrolling Independence Day
-            message instead of sitting empty. The track is rendered twice
-            back-to-back and translated by exactly -50% so the loop has no
-            visible seam. */}
-        <div
-          className="id-flag-banner id-flag-sheen relative w-full h-9 border-b border-border/40 overflow-hidden flex items-center"
-          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-        >
-          <div
-            className="relative flex items-center gap-10 whitespace-nowrap animate-marquee will-change-transform"
-            aria-hidden="true"
-          >
-            {[0, 1].map((rep) => (
-              <div key={rep} className="flex items-center gap-10 shrink-0">
-                {INDEPENDENCE_MESSAGES.map((msg, i) => (
-                  <span
-                    key={`${rep}-${i}`}
-                    className="flex items-center gap-2 text-[11px] font-semibold tracking-wide text-id-banner-fg shrink-0"
-                  >
-                    <span className="text-id-banner-accent">
-                      <StarIcon />
-                    </span>
-                    {msg}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-          <span className="sr-only">Dirgahayu Republik Indonesia — Merdeka!</span>
-        </div>
+            Carries a live ticker of public feedback comments (Neon-backed,
+            polls for updates) plus a "Feedback" button to post a new one.
+            Every 3 minutes it briefly switches to the Independence Day
+            message instead. See components/comment-marquee.tsx. */}
+        <CommentMarquee />
 
         <div className="flex flex-wrap items-center gap-2 px-3 py-2 md:h-9 md:py-0 border-b border-border/40 bg-sidebar">
 
@@ -1933,9 +1914,17 @@ ${raw}`
   <button
   onClick={() => setImproveEnabled((v) => !v)}
   disabled={noKey || isStreaming}
-  title={improveEnabled ? "Perbaikan prompt: aktif (klik untuk matikan)" : "Perbaikan prompt: nonaktif (klik untuk aktifkan)"}
-  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+  title={
     improveEnabled
+      ? model.trim()
+        ? "Perbaikan prompt: aktif (klik untuk matikan)"
+        : "Perbaikan prompt: aktif — pilih model AI dari selector dulu"
+      : "Perbaikan prompt: nonaktif (klik untuk aktifkan)"
+  }
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+    improveEnabled && !model.trim()
+      ? "bg-destructive/15 text-destructive ring-1 ring-destructive/40 hover:bg-destructive/25"
+      : improveEnabled
       ? "bg-primary/15 text-primary hover:bg-primary/25"
       : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
   }`}
@@ -1973,13 +1962,13 @@ ${raw}`
   )}
   <button
   onClick={() => (isStreaming ? stopStreaming() : requestSend())}
-  disabled={!isStreaming && (!input.trim() || noKey || isRefiningPrompt)}
+  disabled={!isStreaming && (!input.trim() || noKey || isRefiningPrompt || (improveEnabled && !model.trim()))}
   className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
   isStreaming
   ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
   : isRefiningPrompt
   ? "bg-muted/30 text-muted-foreground/60 cursor-not-allowed animate-pulse"
-  : input.trim() && !noKey
+  : input.trim() && !noKey && !(improveEnabled && !model.trim())
   ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
   : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
   }`}
@@ -1994,6 +1983,8 @@ ${raw}`
     ? "Listening… tap mic to stop"
     : isRefiningPrompt
     ? "Menyempurnakan prompt sebelum dikirim…"
+    : improveEnabled && !model.trim()
+    ? "Perbaikan Prompt aktif — pilih model AI dari selector dulu"
     : "Shift+Enter for new line · powered by " + providerName}
   </p>
   </div>

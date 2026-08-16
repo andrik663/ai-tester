@@ -16,6 +16,7 @@ const PUBLIC_PREFIXES = [
   '/api/batch-test',  // Batch model tester — auth is the provider API key supplied in the request body
   '/api/manual-test', // Manual single request tester — same pattern
   '/api/fetch-models', // Live model list fetcher — same pattern
+  '/api/comments',    // Public feedback ticker — read/post, no dev login required
 ]
 
 function isPublic(pathname: string): boolean {
