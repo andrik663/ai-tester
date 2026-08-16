@@ -525,17 +525,24 @@ export default function CodePreviewTab({
     recognition.lang = typeof navigator !== "undefined" ? navigator.language || "id-ID" : "id-ID"
 
     recognition.onresult = (event: any) => {
+      // Recompute the FULL transcript for this recording session from
+      // scratch on every event, starting at index 0 rather than
+      // `event.resultIndex`. The browser's `results` list already contains
+      // every result spoken so far in the session (it's cumulative), so
+      // re-adding only "new" entries on top of a running total double-counts
+      // text whenever the engine re-sends earlier results — which some
+      // mobile browsers do on brief pauses — producing the repeated-phrase
+      // duplication bug (e.g. "buat buat toko buat toko online").
       let finalText = ""
       let interimText = ""
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript
         if (event.results[i].isFinal) finalText += transcript
         else interimText += transcript
       }
       const base = voiceBaseTextRef.current
-      const separator = base && !base.endsWith(" ") ? " " : ""
+      const separator = base && !base.endsWith(" ") && (finalText || interimText) ? " " : ""
       setInput(base + separator + finalText + interimText)
-      if (finalText) voiceBaseTextRef.current = base + separator + finalText
     }
     recognition.onerror = () => setIsRecording(false)
     recognition.onend = () => setIsRecording(false)
