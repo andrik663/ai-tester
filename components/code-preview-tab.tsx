@@ -723,7 +723,7 @@ export default function CodePreviewTab({
         <img
           src="/images/cat-mascot.png"
           alt="Miuclaw AI"
-          className="w-6 h-6 rounded-full border border-border/50 flex-shrink-0 mt-0.5 object-cover"
+          className="w-6 h-6 rounded-full flex-shrink-0 mt-0.5 object-cover"
         />
         <div className="flex-1 flex flex-col gap-1.5 min-w-0">
         <div className="flex flex-col gap-2">
@@ -1009,25 +1009,27 @@ export default function CodePreviewTab({
               {messages.length === 0 && !isStreaming && (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center select-none pointer-events-none">
                   {/* Empty-state mark — the Miuclaw cat mascot, matching the
-                      branding used on the production site (miuclaw.my.id),
-                      instead of a generic code glyph. */}
-                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)] overflow-hidden">
-                    <img
-                      src="/images/cat-mascot.png"
-                      alt="Miuclaw"
-                      className="w-9 h-9 rounded-lg object-cover"
-                    />
+                      branding used on the production site (miuclaw.my.id).
+                      Shown plain — no border, background box, or padding —
+                      so it reads as a mark, not a clickable/hoverable UI
+                      element. */}
+                  <img
+                    src="/images/cat-mascot.png"
+                    alt="Miuclaw"
+                    className="w-14 h-14 rounded-2xl object-cover"
+                  />
+                  <div>
+                    <p className="text-[13px] font-medium text-foreground mb-0.5">
+                      {activeSkillConfigs.length > 0
+                        ? `${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} active`
+                        : "Start a conversation"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[220px]">
+                      {activeSkillConfigs.length > 0
+                        ? `System prompts from ${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} are composed and injected. Ask it to build something.`
+                        : "Describe what you want to build and Miuclaw will generate it for you."}
+                    </p>
                   </div>
-                  {activeSkillConfigs.length > 0 && (
-                    <div>
-                      <p className="text-[13px] font-medium text-foreground mb-0.5">
-                        {`${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} active`}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
-                        {`System prompts from ${activeSkillConfigs.length} skill${activeSkillConfigs.length > 1 ? "s" : ""} are composed and injected. Ask it to build something.`}
-                      </p>
-                    </div>
-                  )}
                   {activeSkillConfigs.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap justify-center">
                       {activeSkillConfigs.map((c) => (
