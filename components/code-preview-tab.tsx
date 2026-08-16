@@ -1165,6 +1165,16 @@ ${raw}`
       return
     }
 
+    // Prompt refinement runs through the model selected in the dropdown —
+    // there is no separate "refine model", so without one picked there is
+    // nothing to actually call. Block here instead of silently falling back
+    // to some default model the user never chose.
+    if (!model.trim()) {
+      setRefineNotice("Pilih model AI dari selector dulu untuk memakai Perbaikan Prompt")
+      setTimeout(() => setRefineNotice(null), 3500)
+      return
+    }
+
     setIsRefiningPrompt(true)
     const result = await refinePromptText(text)
     setIsRefiningPrompt(false)
@@ -1904,9 +1914,17 @@ ${raw}`
   <button
   onClick={() => setImproveEnabled((v) => !v)}
   disabled={noKey || isStreaming}
-  title={improveEnabled ? "Perbaikan prompt: aktif (klik untuk matikan)" : "Perbaikan prompt: nonaktif (klik untuk aktifkan)"}
-  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+  title={
     improveEnabled
+      ? model.trim()
+        ? "Perbaikan prompt: aktif (klik untuk matikan)"
+        : "Perbaikan prompt: aktif — pilih model AI dari selector dulu"
+      : "Perbaikan prompt: nonaktif (klik untuk aktifkan)"
+  }
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+    improveEnabled && !model.trim()
+      ? "bg-destructive/15 text-destructive ring-1 ring-destructive/40 hover:bg-destructive/25"
+      : improveEnabled
       ? "bg-primary/15 text-primary hover:bg-primary/25"
       : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
   }`}
@@ -1944,13 +1962,13 @@ ${raw}`
   )}
   <button
   onClick={() => (isStreaming ? stopStreaming() : requestSend())}
-  disabled={!isStreaming && (!input.trim() || noKey || isRefiningPrompt)}
+  disabled={!isStreaming && (!input.trim() || noKey || isRefiningPrompt || (improveEnabled && !model.trim()))}
   className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
   isStreaming
   ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
   : isRefiningPrompt
   ? "bg-muted/30 text-muted-foreground/60 cursor-not-allowed animate-pulse"
-  : input.trim() && !noKey
+  : input.trim() && !noKey && !(improveEnabled && !model.trim())
   ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
   : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
   }`}
@@ -1965,6 +1983,8 @@ ${raw}`
     ? "Listening… tap mic to stop"
     : isRefiningPrompt
     ? "Menyempurnakan prompt sebelum dikirim…"
+    : improveEnabled && !model.trim()
+    ? "Perbaikan Prompt aktif — pilih model AI dari selector dulu"
     : "Shift+Enter for new line · powered by " + providerName}
   </p>
   </div>
