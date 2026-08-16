@@ -342,15 +342,26 @@ function CopyIcon() {
   )
 }
 
-function StopIcon() {
+  function StopIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-    </svg>
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+  <rect x="4" y="4" width="16" height="16" rx="2" />
+  </svg>
   )
-}
+  }
 
-function DownloadIcon() {
+  function MicIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" />
+  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+  <line x1="12" y1="19" x2="12" y2="23" />
+  <line x1="8" y1="23" x2="16" y2="23" />
+  </svg>
+  )
+  }
+
+  function DownloadIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -433,10 +444,19 @@ export default function CodePreviewTab({
    *  what gets fed back to the model on each follow-up so it can locate
    *  exact snippets, without ever having to re-display the whole file. */
   const [lastFullHtml, setLastFullHtml] = useState("")
+  const [isRecording, setIsRecording]   = useState(false)
+  const [voiceSupported, setVoiceSupported] = useState(true)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef      = useRef<AbortController | null>(null)
+  /** Web Speech API instance for voice-to-text prompt input. Typed as `any`
+   *  since SpeechRecognition isn't in the standard TS DOM lib yet. */
+  const recognitionRef = useRef<any>(null)
+  /** Input text captured before this recording session started, so
+   *  interim/final voice transcripts are appended rather than overwriting
+   *  anything the user already typed. */
+  const voiceBaseTextRef = useRef("")
 
   // Auto-scroll chat
   useEffect(() => {
@@ -450,6 +470,66 @@ export default function CodePreviewTab({
     ta.style.height = "auto"
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px"
   }, [input])
+
+  // Set up the Web Speech API recognizer once, if the browser supports it.
+  // Chrome/Edge only expose it under the `webkit` prefix.
+  useEffect(() => {
+    const SpeechRecognitionCtor =
+      typeof window !== "undefined"
+        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        : null
+    if (!SpeechRecognitionCtor) {
+      setVoiceSupported(false)
+      return
+    }
+    const recognition = new SpeechRecognitionCtor()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = typeof navigator !== "undefined" ? navigator.language || "id-ID" : "id-ID"
+
+    recognition.onresult = (event: any) => {
+      let finalText = ""
+      let interimText = ""
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript
+        if (event.results[i].isFinal) finalText += transcript
+        else interimText += transcript
+      }
+      const base = voiceBaseTextRef.current
+      const separator = base && !base.endsWith(" ") ? " " : ""
+      setInput(base + separator + finalText + interimText)
+      if (finalText) voiceBaseTextRef.current = base + separator + finalText
+    }
+    recognition.onerror = () => setIsRecording(false)
+    recognition.onend = () => setIsRecording(false)
+
+    recognitionRef.current = recognition
+    return () => {
+      recognition.onresult = null
+      recognition.onerror = null
+      recognition.onend = null
+      try {
+        recognition.stop()
+      } catch {}
+    }
+  }, [])
+
+  const toggleRecording = useCallback(() => {
+    const recognition = recognitionRef.current
+    if (!recognition) return
+    if (isRecording) {
+      recognition.stop()
+      setIsRecording(false)
+      return
+    }
+    voiceBaseTextRef.current = input
+    try {
+      recognition.start()
+      setIsRecording(true)
+    } catch {
+      // Already started or mic permission denied — ignore, onerror covers it.
+    }
+  }, [isRecording, input])
 
   // When streaming finishes, extract latest code and update preview.
   // `fullHtml` (set for both fresh generations and applied edits) always
@@ -1078,7 +1158,7 @@ export default function CodePreviewTab({
         return (
       <div className={`flex-1 min-h-0 flex overflow-hidden ${isSplitActive ? "flex-row" : "flex-col"}`}>
 
-        {/* ── LEFT: Code / Chat panel ──────────────────────────────────────── */}
+        {/* ── LEFT: Code / Chat panel ───────────────────────────────────────��� */}
         {showCode && (
           <div
             className={`flex flex-col min-h-0 overflow-hidden ${
@@ -1196,25 +1276,39 @@ export default function CodePreviewTab({
                   placeholder={noKey ? "Add API key first…" : "Describe what to build… (Enter to send)"}
                   disabled={noKey}
                   rows={1}
-                  className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
-                />
-                <button
-                  onClick={() => (isStreaming ? stopStreaming() : sendMessage())}
-                  disabled={!isStreaming && (!input.trim() || noKey)}
-                  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
-                    isStreaming
-                      ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
-                      : input.trim() && !noKey
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
-                      : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
-                  }`}
-                >
-                  {isStreaming ? <StopIcon /> : <SendIcon />}
-                </button>
-              </div>
-              <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
-                Shift+Enter for new line · powered by {providerName}
-              </p>
+  className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
+  />
+  {voiceSupported && (
+  <button
+  onClick={toggleRecording}
+  disabled={noKey || isStreaming}
+  title={isRecording ? "Stop recording" : "Voice input"}
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+  isRecording
+  ? "bg-destructive/20 text-destructive animate-pulse"
+  : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+  }`}
+  >
+  <MicIcon />
+  </button>
+  )}
+  <button
+  onClick={() => (isStreaming ? stopStreaming() : sendMessage())}
+  disabled={!isStreaming && (!input.trim() || noKey)}
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
+  isStreaming
+  ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
+  : input.trim() && !noKey
+  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
+  : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
+  }`}
+  >
+  {isStreaming ? <StopIcon /> : <SendIcon />}
+  </button>
+  </div>
+  <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
+  {isRecording ? "Listening… tap mic to stop" : "Shift+Enter for new line · powered by " + providerName}
+  </p>
             </div>
           </div>
         )}
