@@ -320,6 +320,27 @@ function PreviewIcon() {
   )
 }
 
+/** Monitor glyph — used for the "view as Desktop" preview-device toggle. */
+function DesktopIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <rect x="1" y="2" width="14" height="9" rx="1" />
+      <line x1="5.5" y1="14" x2="10.5" y2="14" />
+      <line x1="8" y1="11" x2="8" y2="14" />
+    </svg>
+  )
+}
+
+/** Phone glyph — the default/"actual" viewport, paired with DesktopIcon. */
+function MobileIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <rect x="4.5" y="1" width="7" height="14" rx="1.5" />
+      <line x1="7" y1="12.2" x2="9" y2="12.2" />
+    </svg>
+  )
+}
+
 function RefreshIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
@@ -496,6 +517,27 @@ export default function CodePreviewTab({
   const [previewKey, setPreviewKey]     = useState(0)
   const [copyFeedback, setCopyFeedback]       = useState<number | null>(null)
   const [iframeError, setIframeError]         = useState(false)
+  /** Preview device toggle — lets a user browsing the tool itself on a
+   *  phone still preview the generated app as it would render on a
+   *  desktop, instead of always seeing the generated app's own mobile
+   *  layout. "mobile" here means "match the real viewport" (default). */
+  const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile")
+  const previewFrameRef = useRef<HTMLDivElement>(null)
+  const [previewFrameSize, setPreviewFrameSize] = useState({ width: 0, height: 0 })
+
+  // Measure the actual preview pane so the fixed 1280px "desktop" canvas can
+  // be scaled down (like Chrome DevTools' device toolbar) to fit whatever
+  // sliver of screen is actually available on a phone.
+  useEffect(() => {
+    const el = previewFrameRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      setPreviewFrameSize({ width, height })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const [downloadOpenIdx, setDownloadOpenIdx] = useState<number | null>(null)
   /** Ground-truth full HTML document, kept up to date after every turn
    *  (either a fresh generation or an applied SEARCH/REPLACE edit). This is
@@ -2001,21 +2043,83 @@ ${raw}`
             {/* Preview toolbar */}
             {previewSrc && (
               <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
+                {/* Desktop-view toggle — only meaningful on a narrow/mobile
+                    viewport, where the generated app would otherwise always
+                    render in its own mobile layout with no way to check the
+                    desktop layout without leaving the tool. */}
+                {isMobile ? (
+                  <div className="flex items-center gap-0.5 rounded-md border border-border/50 bg-muted/30 p-0.5">
+                    {(
+                      [
+                        { id: "mobile" as const, icon: <MobileIcon />, label: "Mobile" },
+                        { id: "desktop" as const, icon: <DesktopIcon />, label: "Desktop" },
+                      ]
+                    ).map((d) => (
+                      <button
+                        key={d.id}
+                        onClick={() => setPreviewDevice(d.id)}
+                        title={`Lihat sebagai ${d.label}`}
+                        className={`flex items-center justify-center w-6 h-5 rounded transition-all ${
+                          previewDevice === d.id
+                            ? "bg-primary/20 text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {d.icon}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="w-6" />
+                )}
                 <span className="text-[10px] text-muted-foreground flex-1 text-center truncate">Preview</span>
+                <div className="w-6" />
               </div>
             )}
 
             {/* iframe */}
-            <div className="flex-1 min-h-0 relative bg-white">
+            <div ref={previewFrameRef} className="flex-1 min-h-0 relative bg-white overflow-auto">
               {previewSrc ? (
-                <iframe
-                  key={previewKey}
-                  srcDoc={previewSrc}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
-                  className="w-full h-full border-0"
-                  title="Code preview"
-                  onError={() => setIframeError(true)}
-                />
+                previewDevice === "desktop" ? (
+                  // Render the generated app at a fixed 1280px desktop width,
+                  // then scale the whole canvas down to fit the available
+                  // (narrow, mobile) space — the same "device toolbar" trick
+                  // browsers use, rather than actually shrinking the page's
+                  // own layout (which would just show mobile CSS again).
+                  (() => {
+                    const DESKTOP_WIDTH = 1280
+                    const scale = previewFrameSize.width > 0 ? Math.min(1, previewFrameSize.width / DESKTOP_WIDTH) : 1
+                    const frameHeight = scale > 0 ? previewFrameSize.height / scale : previewFrameSize.height
+                    return (
+                      <div
+                        style={{
+                          width: DESKTOP_WIDTH,
+                          height: frameHeight || "100%",
+                          transform: `scale(${scale})`,
+                          transformOrigin: "top left",
+                        }}
+                      >
+                        <iframe
+                          key={`${previewKey}-desktop`}
+                          srcDoc={previewSrc}
+                          sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+                          className="w-full h-full border-0"
+                          title="Code preview (desktop)"
+                          onError={() => setIframeError(true)}
+                        />
+                      </div>
+                    )
+                  })()
+                ) : (
+                  <iframe
+                    key={previewKey}
+                    srcDoc={previewSrc}
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+                    className="w-full h-full border-0"
+                    title="Code preview"
+                    onError={() => setIframeError(true)}
+                  />
+                )
               ) : (
                 <div className="flex flex-col items-center justify-center h-full gap-4 bg-sidebar select-none px-6">
                   <div className="w-14 h-14 rounded-2xl border border-dashed border-border/40 bg-muted/10 flex items-center justify-center">
