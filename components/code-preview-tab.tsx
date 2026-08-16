@@ -420,6 +420,22 @@ function ArrowRightIcon() {
   )
 }
 
+function WandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h0M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CodePreviewTab({
@@ -488,6 +504,17 @@ export default function CodePreviewTab({
    *  shown as instant filler in that gap so the UI is never empty while the
    *  reasoning call is in flight. */
   const [aiSuggestions, setAiSuggestions] = useState<string[] | null>(null)
+  /** When on (default), every prompt is first sent to the model to fix
+   *  grammar/clarity/typos — but the result is only ever a SUGGESTION the
+   *  user must approve; nothing is auto-sent. */
+  const [improveEnabled, setImproveEnabled] = useState(true)
+  /** While true, the input is locked and a spinner shows in place of the
+   *  send button — the brief window where the refine call is in flight. */
+  const [isRefiningPrompt, setIsRefiningPrompt] = useState(false)
+  /** Pending approval: the user's original text vs. the model's rewrite.
+   *  `null` means no review is currently pending. `edited` starts equal to
+   *  `suggested` but the user can tweak it before approving. */
+  const [promptReview, setPromptReview] = useState<{ original: string; suggested: string; edited: string } | null>(null)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
@@ -910,6 +937,127 @@ ${code.slice(0, 6000)}`
     } catch {
       // Silent — the static fallback list stays on screen.
     }
+  }
+
+  /**
+   * Asks the model to clean up the user's raw prompt — fix typos, grammar,
+   * and vague wording — WITHOUT changing what is being asked for or adding
+   * new requirements. Returns `null` on any failure/empty result so the
+   * caller can fall back to sending the original text untouched.
+   */
+  async function refinePromptText(raw: string): Promise<string | null> {
+    if (!apiKey.trim() || !raw.trim()) return null
+    const refinePrompt = `Perbaiki teks permintaan pengguna berikut ini: rapikan tata bahasa, ejaan, dan kejelasan kalimatnya, tapi JANGAN mengubah maksud, JANGAN menambah permintaan/fitur baru yang tidak disebutkan, dan JANGAN mengubah bahasa yang dipakai (kalau aslinya Indonesia, hasilnya juga Indonesia; kalau Inggris, tetap Inggris).
+
+Jika teksnya sudah jelas dan rapi, kembalikan teks itu sama persis tanpa perubahan.
+
+Balas HANYA dengan teks hasil perbaikan — tanpa tanda kutip, tanpa penjelasan, tanpa awalan seperti "Berikut" atau "Versi perbaikan:".
+
+Teks asli:
+${raw}`
+
+    try {
+      const res = await fetch("/api/manual-test/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          apiKey: apiKey.trim(),
+          endpoint,
+          headers,
+          messages: [{ role: "user", content: refinePrompt }],
+          systemPrompt: "Reply with only the corrected prompt text — nothing else, no quotes, no explanation.",
+          model: model.trim() || undefined,
+        }),
+      })
+      const reader = res.body?.getReader()
+      if (!reader) return null
+      const dec = new TextDecoder()
+      let buf = ""
+      let currentEvent = "token"
+      let acc = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split("\n")
+        buf = lines.pop() ?? ""
+        for (const rawLine of lines) {
+          const line = rawLine.trim()
+          if (!line) { currentEvent = "token"; continue }
+          if (line.startsWith("event:")) { currentEvent = line.slice(6).trim(); continue }
+          if (!line.startsWith("data:")) continue
+          const dataStr = line.slice(5).trim()
+          if (!dataStr || dataStr === "[DONE]") continue
+          try {
+            const parsed = JSON.parse(dataStr) as Record<string, unknown>
+            if (currentEvent === "token") acc += (parsed.text as string) ?? ""
+          } catch { /* skip */ }
+        }
+      }
+      reader.releaseLock()
+
+      // Strip a wrapping code fence or quotes the model might add anyway.
+      const cleaned = acc
+        .trim()
+        .replace(/^```[a-z]*\n?/i, "")
+        .replace(/```$/, "")
+        .replace(/^"([\s\S]*)"$/, "$1")
+        .trim()
+      return cleaned.length > 0 ? cleaned : null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Entry point for both the Enter key and the send button. When prompt
+   * refinement is enabled, this NEVER sends anything itself — it only ever
+   * populates `promptReview` for the user to approve, edit, or reject.
+   * Approval always happens through `approvePromptReview` /
+   * `sendOriginalPrompt`, never automatically.
+   */
+  async function requestSend() {
+    const text = input.trim()
+    if (!text || isStreaming || isRefiningPrompt || !apiKey.trim()) return
+
+    if (!improveEnabled) {
+      sendMessage()
+      return
+    }
+
+    setIsRefiningPrompt(true)
+    const suggested = await refinePromptText(text)
+    setIsRefiningPrompt(false)
+
+    // Nothing to improve, or the refine call failed — just send as-is
+    // rather than blocking the user on a no-op approval step.
+    if (!suggested || suggested.trim() === text) {
+      sendMessage()
+      return
+    }
+
+    setPromptReview({ original: text, suggested, edited: suggested })
+  }
+
+  function approvePromptReview() {
+    if (!promptReview) return
+    const finalText = promptReview.edited.trim()
+    setPromptReview(null)
+    if (finalText) sendMessage(finalText)
+  }
+
+  function sendOriginalPrompt() {
+    if (!promptReview) return
+    const original = promptReview.original
+    setPromptReview(null)
+    sendMessage(original)
+  }
+
+  function cancelPromptReview() {
+    setPromptReview(null)
+    // Leave the original text in the input box so the user can edit it
+    // further or try sending again.
   }
 
   function stopStreaming() {
@@ -1520,6 +1668,51 @@ ${code.slice(0, 6000)}`
   {fileError && (
   <p className="text-[10px] text-destructive mb-1.5 ml-1">{fileError}</p>
   )}
+
+  {/* Prompt-refinement approval card — appears only after the user tries
+      to send while "improve prompt" is on and the model actually proposed
+      a change. Nothing is sent until the user explicitly approves. */}
+  {promptReview && (
+    <div className="flex flex-col gap-2 mb-1.5 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-primary">
+        <WandIcon />
+        <span>Saran perbaikan prompt — periksa dulu sebelum kirim</span>
+      </div>
+      <div className="rounded-md bg-muted/30 px-2.5 py-1.5">
+        <p className="text-[9px] uppercase tracking-wide text-muted-foreground/70 mb-0.5">Teks asli</p>
+        <p className="text-[11px] text-muted-foreground line-clamp-3">{promptReview.original}</p>
+      </div>
+      <textarea
+        value={promptReview.edited}
+        onChange={(e) => setPromptReview((prev) => (prev ? { ...prev, edited: e.target.value } : prev))}
+        rows={3}
+        className="w-full resize-none rounded-md border border-primary/20 bg-background/80 px-2.5 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary/50 leading-relaxed"
+      />
+      <div className="flex items-center gap-2">
+        <button
+          onClick={approvePromptReview}
+          className="flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <CheckIcon />
+          Gunakan &amp; kirim
+        </button>
+        <button
+          onClick={sendOriginalPrompt}
+          className="rounded-lg bg-muted/40 px-2.5 py-1.5 text-[11px] text-foreground hover:bg-muted/60 transition-colors"
+        >
+          Kirim versi asli
+        </button>
+        <button
+          onClick={cancelPromptReview}
+          className="ml-auto flex items-center justify-center w-6 h-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          title="Batal"
+        >
+          <XIcon />
+        </button>
+      </div>
+    </div>
+  )}
+
   <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
   <button
   onClick={() => fileInputRef.current?.click()}
@@ -1529,6 +1722,18 @@ ${code.slice(0, 6000)}`
   >
   <PaperclipIcon />
   </button>
+  <button
+  onClick={() => setImproveEnabled((v) => !v)}
+  disabled={noKey || isStreaming}
+  title={improveEnabled ? "Perbaikan prompt: aktif (klik untuk matikan)" : "Perbaikan prompt: nonaktif (klik untuk aktifkan)"}
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+    improveEnabled
+      ? "bg-primary/15 text-primary hover:bg-primary/25"
+      : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+  }`}
+  >
+  <WandIcon />
+  </button>
   <textarea
   ref={textareaRef}
   value={input}
@@ -1536,18 +1741,18 @@ ${code.slice(0, 6000)}`
   onKeyDown={(e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !(e.keyCode === 229)) {
   e.preventDefault()
-  sendMessage()
+  requestSend()
   }
   }}
-  placeholder={noKey ? "Add API key first…" : "Describe what to build… (Enter to send)"}
-  disabled={noKey}
+  placeholder={noKey ? "Add API key first…" : isRefiningPrompt ? "Menyempurnakan prompt…" : "Describe what to build… (Enter to send)"}
+  disabled={noKey || isRefiningPrompt}
   rows={1}
   className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
   />
   {voiceSupported && (
   <button
   onClick={toggleRecording}
-  disabled={noKey || isStreaming}
+  disabled={noKey || isStreaming || isRefiningPrompt}
   title={isRecording ? "Stop recording" : "Voice input"}
   className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
   isRecording
@@ -1559,11 +1764,13 @@ ${code.slice(0, 6000)}`
   </button>
   )}
   <button
-  onClick={() => (isStreaming ? stopStreaming() : sendMessage())}
-  disabled={!isStreaming && (!input.trim() || noKey)}
+  onClick={() => (isStreaming ? stopStreaming() : requestSend())}
+  disabled={!isStreaming && (!input.trim() || noKey || isRefiningPrompt)}
   className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
   isStreaming
   ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
+  : isRefiningPrompt
+  ? "bg-muted/30 text-muted-foreground/60 cursor-not-allowed animate-pulse"
   : input.trim() && !noKey
   ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
   : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
@@ -1573,7 +1780,11 @@ ${code.slice(0, 6000)}`
   </button>
   </div>
   <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
-  {isRecording ? "Listening… tap mic to stop" : "Shift+Enter for new line · powered by " + providerName}
+  {isRecording
+    ? "Listening… tap mic to stop"
+    : isRefiningPrompt
+    ? "Menyempurnakan prompt sebelum dikirim…"
+    : "Shift+Enter for new line · powered by " + providerName}
   </p>
   </div>
           </div>
