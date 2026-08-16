@@ -482,11 +482,21 @@ export default function CodePreviewTab({
    *  be included in the next prompt sent to the model. */
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
+  /** Model-generated follow-ups for the CURRENT turn, produced by a hidden
+   *  chain-of-thought reasoning pass (see `refreshAiSuggestions`). `null`
+   *  means "not ready yet" — the static `getFollowUpSuggestions()` list is
+   *  shown as instant filler in that gap so the UI is never empty while the
+   *  reasoning call is in flight. */
+  const [aiSuggestions, setAiSuggestions] = useState<string[] | null>(null)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef      = useRef<AbortController | null>(null)
   const fileInputRef  = useRef<HTMLInputElement>(null)
+  /** Every follow-up suggestion (AI or static fallback) already shown this
+   *  session, so the same phrase is never offered twice in one chat — this
+   *  is what fixes the "same suggestion block repeats every turn" bug. */
+  const shownSuggestionsRef = useRef<Set<string>>(new Set())
   /** Web Speech API instance for voice-to-text prompt input. Typed as `any`
    *  since SpeechRecognition isn't in the standard TS DOM lib yet. */
   const recognitionRef = useRef<any>(null)
@@ -507,6 +517,16 @@ export default function CodePreviewTab({
     ta.style.height = "auto"
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px"
   }, [input])
+
+  // Once a turn finishes and the AI-reasoned suggestions haven't landed yet,
+  // register whatever the static fallback is currently showing so it also
+  // rotates instead of repeating once the effect re-runs on the next turn.
+  useEffect(() => {
+    if (isStreaming || aiSuggestions !== null) return
+    if (lastFullHtml.trim().length === 0) return
+    getFollowUpSuggestions().forEach((s) => shownSuggestionsRef.current.add(s))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, isStreaming])
 
   // Set up the Web Speech API recognizer once, if the browser supports it.
   // Chrome/Edge only expose it under the `webkit` prefix.
@@ -646,6 +666,9 @@ export default function CodePreviewTab({
     setInput("")
     setIsStreaming(true)
     setStreamingText("")
+    // Clear last turn's AI suggestions — the follow-ups block is hidden
+    // while `isStreaming` anyway, so this can't cause a visible flicker.
+    setAiSuggestions(null)
 
     // If a .md file is attached, prepend its full contents ahead of the
     // instruction so the model reads it first before acting on the prompt.
@@ -780,7 +803,114 @@ export default function CodePreviewTab({
     setStreamingText("")
     setIsStreaming(false)
     abortRef.current = null
+
+    // Fire-and-forget: reason about a better set of follow-ups for the NEW
+    // state of the document. Never awaited, so it can't slow down or block
+    // the reply from appearing.
+    const codeForSuggestions = fullHtml ?? lastFullHtml
+    if (codeForSuggestions.trim().length > 0) {
+      void refreshAiSuggestions(text, codeForSuggestions)
+    }
   }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml, attachedFile])
+
+  /**
+   * Asks the model to reason step-by-step (hidden chain-of-thought) about
+   * what kind of app this is, what it already has, and what single class of
+   * improvement is most valuable next — then emit ONLY a JSON array of 3
+   * short, varied Indonesian follow-up phrases. This replaces the static
+   * keyword table as the primary suggestion source; the table is now just
+   * instant filler while this call is in flight, and it's what actually
+   * fixes suggestions repeating turn after turn, since each pass reasons
+   * fresh over the latest code and explicitly avoids anything already shown.
+   * Fire-and-forget from `sendMessage` — any failure just leaves the
+   * fallback list on screen, so this can never break the main chat flow.
+   */
+  async function refreshAiSuggestions(userGoal: string, code: string) {
+    if (!apiKey.trim() || !code.trim()) return
+    const already = Array.from(shownSuggestionsRef.current)
+    const reasoningPrompt = `You are reasoning silently about what to suggest next for a web project — the user will only see your final answer, never your reasoning.
+
+Think step by step (to yourself, not in the output):
+1. What kind of app/page is this, based on the user's goal and the HTML/CSS/JS below?
+2. What features does the code already implement?
+3. What single class of improvement would be most valuable to offer next — pick a DIFFERENT kind each time (a new feature, a UX/visual polish, more content, or robustness/error-handling) rather than always defaulting to the same category.
+4. Draft 3 short, concrete, varied Indonesian action phrases (max ~6 words each, e.g. "Tambahkan halaman checkout") that match that reasoning.
+
+Then output ONLY a raw JSON array of exactly those 3 strings — no markdown, no code fence, no explanation, no reasoning text. Example output:
+["Tambahkan filter kategori","Tambahkan animasi hover pada kartu","Tambahkan penanganan error saat submit"]
+
+Rules:
+- Never repeat any of these already-suggested phrases (case-insensitive): ${already.length > 0 ? already.join(" | ") : "(none yet)"}
+- Never suggest something that already clearly exists in the code below.
+- The 3 phrases must each represent a different category of improvement.
+- Output nothing but the JSON array.
+
+User's original goal: ${userGoal}
+
+Current code (reference only):
+${code.slice(0, 6000)}`
+
+    try {
+      const res = await fetch("/api/manual-test/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          apiKey: apiKey.trim(),
+          endpoint,
+          headers,
+          messages: [{ role: "user", content: reasoningPrompt }],
+          systemPrompt: "Reply with only a raw JSON array of strings — nothing else.",
+          model: model.trim() || undefined,
+        }),
+      })
+      const reader = res.body?.getReader()
+      if (!reader) return
+      const dec = new TextDecoder()
+      let buf = ""
+      let currentEvent = "token"
+      let acc = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split("\n")
+        buf = lines.pop() ?? ""
+        for (const rawLine of lines) {
+          const line = rawLine.trim()
+          if (!line) { currentEvent = "token"; continue }
+          if (line.startsWith("event:")) { currentEvent = line.slice(6).trim(); continue }
+          if (!line.startsWith("data:")) continue
+          const dataStr = line.slice(5).trim()
+          if (!dataStr || dataStr === "[DONE]") continue
+          try {
+            const parsed = JSON.parse(dataStr) as Record<string, unknown>
+            if (currentEvent === "token") acc += (parsed.text as string) ?? ""
+          } catch { /* skip */ }
+        }
+      }
+      reader.releaseLock()
+
+      const match = acc.match(/\[[\s\S]*\]/)
+      if (!match) return
+      const parsedArr = JSON.parse(match[0])
+      if (!Array.isArray(parsedArr)) return
+
+      const picks: string[] = []
+      for (const item of parsedArr) {
+        if (typeof item !== "string") continue
+        const clean = item.trim()
+        if (!clean || shownSuggestionsRef.current.has(clean)) continue
+        picks.push(clean)
+        if (picks.length >= 3) break
+      }
+      if (picks.length === 0) return
+      picks.forEach((p) => shownSuggestionsRef.current.add(p))
+      setAiSuggestions(picks)
+    } catch {
+      // Silent — the static fallback list stays on screen.
+    }
+  }
 
   function stopStreaming() {
     abortRef.current?.abort()
@@ -1126,9 +1256,19 @@ export default function CodePreviewTab({
     const picks: string[] = []
     for (const c of candidates) {
       if (picks.length >= count) break
-      if (seen.has(c) || alreadyPresent(c)) continue
+      if (seen.has(c) || alreadyPresent(c) || shownSuggestionsRef.current.has(c)) continue
       seen.add(c)
       picks.push(c)
+    }
+    // If every candidate has already been shown this session, allow repeats
+    // rather than showing nothing — better than an empty follow-ups block.
+    if (picks.length === 0) {
+      for (const c of candidates) {
+        if (picks.length >= count) break
+        if (seen.has(c) || alreadyPresent(c)) continue
+        seen.add(c)
+        picks.push(c)
+      }
     }
     return picks
   }
@@ -1318,7 +1458,7 @@ export default function CodePreviewTab({
                 <div className="flex flex-col gap-2 pt-1 pl-8">
                   <span className="text-[11px] text-muted-foreground/60">Suggested follow-ups</span>
                   <div className="flex flex-col gap-1.5 items-start">
-                    {getFollowUpSuggestions().map((s) => (
+                    {(aiSuggestions && aiSuggestions.length > 0 ? aiSuggestions : getFollowUpSuggestions()).map((s) => (
                       <button
                         key={s}
                         onClick={() => sendMessage(s)}
