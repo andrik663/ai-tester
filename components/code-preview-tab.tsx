@@ -64,20 +64,56 @@ interface Props {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Pool of generic, always-relevant follow-up prompts shown under the last
- * assistant turn once a project already exists, so the user can keep
- * iterating with one tap instead of typing a new request every time.
- * Rotated by conversation length so the same three don't repeat every turn.
+ * Keyword → candidate follow-ups. Each entry is only offered when the last
+ * user prompt mentions the keyword, so suggestions stay relevant to what was
+ * actually asked for (e.g. a landing page gets "Tambahkan testimoni", not
+ * "Tambahkan level" which only makes sense for a game).
  */
-const FOLLOWUP_SUGGESTIONS = [
+const CONTEXTUAL_FOLLOWUPS: { keywords: string[]; suggestions: string[] }[] = [
+  {
+    keywords: ["landing", "promosi", "produk", "bisnis", "company", "profil"],
+    suggestions: ["Tambahkan bagian testimoni", "Tambahkan bagian FAQ", "Tambahkan section harga (pricing)"],
+  },
+  {
+    keywords: ["game", "permainan", "score", "level"],
+    suggestions: ["Tambahkan efek suara", "Tambahkan sistem skor", "Tambahkan level kesulitan"],
+  },
+  {
+    keywords: ["login", "daftar", "register", "akun", "form"],
+    suggestions: ["Tambahkan validasi input", "Tambahkan pesan error", "Tambahkan tombol lupa password"],
+  },
+  {
+    keywords: ["toko", "belanja", "produk", "ecommerce", "cart", "keranjang"],
+    suggestions: ["Tambahkan keranjang belanja", "Tambahkan filter kategori", "Tambahkan halaman checkout"],
+  },
+  {
+    keywords: ["portofolio", "cv", "resume", "profil"],
+    suggestions: ["Tambahkan bagian pengalaman kerja", "Tambahkan galeri proyek", "Tambahkan tombol unduh CV"],
+  },
+  {
+    keywords: ["dashboard", "admin", "panel"],
+    suggestions: ["Tambahkan grafik statistik", "Tambahkan tabel data", "Tambahkan sidebar navigasi"],
+  },
+  {
+    keywords: ["3d", "particle", "webgl", "three.js", "animasi"],
+    suggestions: ["Tambahkan interaksi mouse", "Ubah warna partikel", "Tambahkan efek transisi"],
+  },
+  {
+    keywords: ["blog", "artikel", "berita"],
+    suggestions: ["Tambahkan halaman detail artikel", "Tambahkan kolom komentar", "Tambahkan kategori artikel"],
+  },
+]
+
+/** Generic fallbacks used to top up the list when the prompt doesn't match
+ *  any known context, or to fill in slots left by features already present
+ *  in the generated code (e.g. skip "dark mode" if it's already dark). */
+const GENERIC_FOLLOWUPS = [
   "Ganti tema warna",
-  "Tambahkan halaman login",
-  "Pakai React/Next.js",
-  "Buat responsive di mobile",
   "Tambahkan animasi",
   "Ubah ke mode gelap",
-  "Tambahkan form kontak",
   "Rapikan tata letak (layout)",
+  "Buat lebih responsive di mobile",
+  "Tambahkan footer",
 ]
 
 const CODE_SYSTEM_PROMPT = `You are an expert web developer. When the user asks you to build or create something, respond with a SINGLE complete, self-contained HTML document that includes all CSS and JavaScript inline. Always output code in a fenced code block with the \`\`\`html language tag.
@@ -397,20 +433,6 @@ export default function CodePreviewTab({
    *  what gets fed back to the model on each follow-up so it can locate
    *  exact snippets, without ever having to re-display the whole file. */
   const [lastFullHtml, setLastFullHtml] = useState("")
-
-  // TEMP DEBUG: seed a fake completed turn via ?debugseed=1 to visually verify
-  // the follow-up suggestions UI without needing a real API key. Remove after verification.
-  useEffect(() => {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debugseed") === "1") {
-      console.log("[v0] seeding debug turn for follow-up suggestions verification")
-      setMessages([
-        { role: "user", content: "buat halaman landing sederhana", ts: "10:00" } as ChatMessage,
-        { role: "assistant", content: "Landing page dibuat.", ts: "10:00" } as ChatMessage,
-      ])
-      setLastFullHtml("<html><body><h1>Hello</h1></body></html>")
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
@@ -899,13 +921,40 @@ export default function CodePreviewTab({
     )
   }
 
-  /** Rotates through the suggestion pool by conversation length so the same
-   *  three prompts don't repeat every single turn. */
+  /** Builds follow-ups from what was actually asked for and what the last
+   *  generated page already contains, instead of a fixed rotating pool —
+   *  e.g. a landing page prompt surfaces "Tambahkan testimoni", and
+   *  "Ubah ke mode gelap" is skipped once the page is already dark. */
   function getFollowUpSuggestions(count = 3): string[] {
-    const offset = messages.length % FOLLOWUP_SUGGESTIONS.length
+    const lastUserPrompt = [...messages].reverse().find((m) => m.role === "user")?.content?.toLowerCase() ?? ""
+    const html = lastFullHtml.toLowerCase()
+
+    const candidates: string[] = []
+    for (const group of CONTEXTUAL_FOLLOWUPS) {
+      if (group.keywords.some((kw) => lastUserPrompt.includes(kw))) {
+        candidates.push(...group.suggestions)
+      }
+    }
+    candidates.push(...GENERIC_FOLLOWUPS)
+
+    // Skip suggestions for features the code already appears to have.
+    const alreadyPresent = (s: string) => {
+      const lower = s.toLowerCase()
+      if (lower.includes("mode gelap") && (html.includes("dark") || html.includes("#000") || html.includes("prefers-color-scheme"))) return true
+      if (lower.includes("animasi") && (html.includes("@keyframes") || html.includes("animation:") || html.includes("transition"))) return true
+      if (lower.includes("responsive") && html.includes("@media")) return true
+      if (lower.includes("footer") && html.includes("<footer")) return true
+      if (lower.includes("form kontak") && html.includes("<form")) return true
+      return false
+    }
+
+    const seen = new Set<string>()
     const picks: string[] = []
-    for (let k = 0; k < count; k++) {
-      picks.push(FOLLOWUP_SUGGESTIONS[(offset + k) % FOLLOWUP_SUGGESTIONS.length])
+    for (const c of candidates) {
+      if (picks.length >= count) break
+      if (seen.has(c) || alreadyPresent(c)) continue
+      seen.add(c)
+      picks.push(c)
     }
     return picks
   }
@@ -922,7 +971,7 @@ export default function CodePreviewTab({
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-      {/* ── Toolbar ───────────────���─────────────────────────────────────────── */}
+      {/* ── Toolbar ────────────��──���─────────────────────────────────────────── */}
       {/* Sticky + solid background + high z-index so the model selector and
           Code/Split/Preview switcher stay reachable no matter which
           ancestor ends up scrolling (mobile browsers in particular can end
