@@ -398,6 +398,20 @@ export default function CodePreviewTab({
    *  exact snippets, without ever having to re-display the whole file. */
   const [lastFullHtml, setLastFullHtml] = useState("")
 
+  // TEMP DEBUG: seed a fake completed turn via ?debugseed=1 to visually verify
+  // the follow-up suggestions UI without needing a real API key. Remove after verification.
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debugseed") === "1") {
+      console.log("[v0] seeding debug turn for follow-up suggestions verification")
+      setMessages([
+        { role: "user", content: "buat halaman landing sederhana", ts: "10:00" } as ChatMessage,
+        { role: "assistant", content: "Landing page dibuat.", ts: "10:00" } as ChatMessage,
+      ])
+      setLastFullHtml("<html><body><h1>Hello</h1></body></html>")
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef      = useRef<AbortController | null>(null)
