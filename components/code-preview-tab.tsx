@@ -967,16 +967,6 @@ export default function CodePreviewTab({
           ))}
         </div>
 
-        {/* Refresh preview button */}
-        {previewSrc && (
-          <button
-            onClick={refreshPreview}
-            title="Reload preview"
-            className="flex items-center justify-center w-7 h-7 md:w-6 md:h-6 rounded text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary/50"
-          >
-            <RefreshIcon />
-          </button>
-        )}
         </div>
       </div>
 
