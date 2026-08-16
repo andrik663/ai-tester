@@ -411,6 +411,14 @@ function ChevronDownIcon() {
   )
 }
 
+function ChevronUpIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+  <polyline points="18 15 12 9 6 15" />
+  </svg>
+  )
+}
+
 function ArrowRightIcon() {
   return (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
@@ -540,6 +548,16 @@ export default function CodePreviewTab({
   const [promptReview, setPromptReview] = useState<{ original: string; suggested: string; edited: string } | null>(null)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
+  /** The scrollable chat-messages container itself (not just the bottom
+   *  marker) — needed so the up/down nav helper buttons can scroll it
+   *  programmatically and so we can track scroll position to enable/disable
+   *  each button. */
+  const chatScrollRef = useRef<HTMLDivElement>(null)
+  /** Whether the chat panel currently has room to scroll up / down, used to
+   *  show the slim scroll-nav helper only when it's actually useful and to
+   *  dim whichever direction is already at its limit. */
+  const [canScrollUp, setCanScrollUp] = useState(false)
+  const [canScrollDown, setCanScrollDown] = useState(false)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef      = useRef<AbortController | null>(null)
   const fileInputRef  = useRef<HTMLInputElement>(null)
@@ -573,6 +591,46 @@ export default function CodePreviewTab({
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, streamingText])
+
+  /** Recomputes whether the chat panel can still scroll up/down from its
+   *  current position — drives the up/down nav helper's enabled state and
+   *  whether it's shown at all (only when content actually overflows). */
+  const updateChatScrollState = useCallback(() => {
+    const el = chatScrollRef.current
+    if (!el) return
+    const { scrollTop, scrollHeight, clientHeight } = el
+    setCanScrollUp(scrollTop > 4)
+    setCanScrollDown(scrollTop + clientHeight < scrollHeight - 4)
+  }, [])
+
+  // Keep the nav-helper's up/down availability in sync with new messages,
+  // streaming text growing the panel, and manual scrolling.
+  useEffect(() => {
+    updateChatScrollState()
+  }, [messages, streamingText, updateChatScrollState])
+
+  useEffect(() => {
+    const el = chatScrollRef.current
+    if (!el) return
+    updateChatScrollState()
+    el.addEventListener("scroll", updateChatScrollState, { passive: true })
+    const resizeObserver = new ResizeObserver(updateChatScrollState)
+    resizeObserver.observe(el)
+    return () => {
+      el.removeEventListener("scroll", updateChatScrollState)
+      resizeObserver.disconnect()
+    }
+  }, [updateChatScrollState])
+
+  /** Scrolls the chat panel up/down by ~80% of its visible height — used by
+   *  the slim nav-helper buttons so users can page through long
+   *  conversations without hunting for a trackpad/touch scroll gesture. */
+  const scrollChatByPage = useCallback((direction: "up" | "down") => {
+    const el = chatScrollRef.current
+    if (!el) return
+    const amount = el.clientHeight * 0.8 * (direction === "up" ? -1 : 1)
+    el.scrollBy({ top: amount, behavior: "smooth" })
+  }, [])
 
   // Auto-resize textarea
   useEffect(() => {
@@ -1528,7 +1586,7 @@ ${raw}`
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-      {/* ── Toolbar ────────────��──���─────────────────────────────────────────── */}
+      {/* ── Toolbar ───────��────��──���─────────────────────────────────────────── */}
       {/* Sticky + solid background + high z-index so the model selector and
           Code/Split/Preview switcher stay reachable no matter which
           ancestor ends up scrolling (mobile browsers in particular can end
@@ -1673,8 +1731,12 @@ ${raw}`
               </div>
             )}
 
-            {/* Chat messages */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 flex flex-col gap-3">
+            {/* Chat messages — wrapped in its own relative container (scoped
+                to just this scrollable area, not the whole panel) so the
+                scroll-nav helper below stays anchored inside the messages
+                area and never overlaps the input bar underneath it. */}
+            <div className="relative flex-1 min-h-0">
+            <div ref={chatScrollRef} className="absolute inset-0 overflow-y-auto px-3 py-3 flex flex-col gap-3">
               {messages.length === 0 && !isStreaming && (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center select-none pointer-events-none">
                   {/* Empty-state mark — the Miuclaw cat mascot, matching the
@@ -1757,6 +1819,35 @@ ${raw}`
               )}
 
               <div ref={chatEndRef} />
+            </div>
+
+            {/* Slim scroll-nav helper — only appears once the conversation
+                actually overflows the panel, so short chats stay clean.
+                Lets users page up/down through long threads without
+                hunting for a trackpad/touch scroll gesture. */}
+            {(canScrollUp || canScrollDown) && (
+              <div className="absolute right-2.5 bottom-3 z-10 flex flex-col rounded-full border border-border/50 bg-sidebar/85 backdrop-blur-sm shadow-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => scrollChatByPage("up")}
+                  disabled={!canScrollUp}
+                  aria-label="Gulir ke atas"
+                  className="flex items-center justify-center w-7 h-7 text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground transition-colors"
+                >
+                  <ChevronUpIcon />
+                </button>
+                <div className="h-px bg-border/50" />
+                <button
+                  type="button"
+                  onClick={() => scrollChatByPage("down")}
+                  disabled={!canScrollDown}
+                  aria-label="Gulir ke bawah"
+                  className="flex items-center justify-center w-7 h-7 text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground transition-colors"
+                >
+                  <ChevronDownIcon />
+                </button>
+              </div>
+            )}
             </div>
 
   {/* ── Input bar ──────────────────────────────────────────────────── */}
