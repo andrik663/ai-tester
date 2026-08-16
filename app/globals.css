@@ -117,6 +117,12 @@
   --sidebar-accent-foreground: #f7f8f8;
   --sidebar-border:         oklch(1 0 0 / 14%);
   --sidebar-ring:           #afeb00;
+
+  /* ── Independence Day banner — Merah Putih, isolated to the top strip ── */
+  --id-banner-bg-start:  #6e0f1c;
+  --id-banner-bg-mid:    #d6202f;
+  --id-banner-fg:        #fdfaf5;
+  --id-banner-accent:    #ffd873;
 }
 
 @layer base {
@@ -191,8 +197,63 @@
   .animate-marquee {
     animation: marquee-scroll 22s linear infinite;
   }
+
+  /* Merah-Putih banner backdrop — a slow drifting red gradient (echoes a
+     wind-stirred flag) plus a soft diagonal sheen that sweeps across every
+     few seconds. Kept to this one strip so the rest of the app stays on the
+     lime brand palette. */
+  @keyframes id-flag-drift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  @keyframes id-flag-sheen {
+    0%   { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+    12%  { opacity: 1; }
+    45%  { opacity: 1; }
+    60%  { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+    100% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+  }
+  .id-flag-banner {
+    background: linear-gradient(
+      115deg,
+      var(--id-banner-bg-start) 0%,
+      var(--id-banner-bg-mid) 35%,
+      var(--id-banner-bg-mid) 55%,
+      var(--id-banner-bg-start) 100%
+    );
+    background-size: 200% 100%;
+    animation: id-flag-drift 12s ease-in-out infinite;
+  }
+  .id-flag-sheen::before {
+    content: "";
+    position: absolute;
+    top: -20%;
+    bottom: -20%;
+    left: 0;
+    width: 30%;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      oklch(1 0 0 / 22%) 50%,
+      transparent 100%
+    );
+    animation: id-flag-sheen 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .text-id-banner-fg {
+    color: var(--id-banner-fg);
+  }
+  .text-id-banner-accent {
+    color: var(--id-banner-accent);
+  }
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee {
+      animation: none;
+    }
+    .id-flag-banner {
+      animation: none;
+    }
+    .id-flag-sheen::before {
       animation: none;
     }
   }

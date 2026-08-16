@@ -530,6 +530,10 @@ export default function CodePreviewTab({
   /** While true, the input is locked and a spinner shows in place of the
    *  send button — the brief window where the refine call is in flight. */
   const [isRefiningPrompt, setIsRefiningPrompt] = useState(false)
+  /** Brief inline notice shown when the "Perbaikan prompt" refine call
+   *  itself fails, so falling back to the un-refined text reads as an
+   *  explained failure rather than the button silently doing nothing. */
+  const [refineNotice, setRefineNotice] = useState<string | null>(null)
   /** Pending approval: the user's original text vs. the model's rewrite.
    *  `null` means no review is currently pending. `edited` starts equal to
    *  `suggested` but the user can tweak it before approving. */
@@ -550,6 +554,20 @@ export default function CodePreviewTab({
    *  interim/final voice transcripts are appended rather than overwriting
    *  anything the user already typed. */
   const voiceBaseTextRef = useRef("")
+  /** Finalized phrases recognized so far in the CURRENT voice-input session
+   *  (from tap-to-start to tap-to-stop). Kept as an array of already-final
+   *  segments so it only ever grows — this is what makes the transcript
+   *  survive silent engine restarts without repeating any phrase. */
+  const finalSegmentsRef = useRef<string[]>([])
+  /** How many entries of the underlying engine's `event.results` list have
+   *  already been folded into `finalSegmentsRef`. Resets to 0 every time the
+   *  engine starts a fresh internal session, since `results` indices are
+   *  local to that session — reusing a stale count from a previous session
+   *  is what caused finalized phrases to be re-added and duplicated. */
+  const processedResultCountRef = useRef(0)
+  /** Mirrors `isRecording` for the `onend` handler, which is registered once
+   *  and would otherwise only ever see the value from that first render. */
+  const isRecordingRef = useRef(false)
 
   // Auto-scroll chat
   useEffect(() => {
@@ -591,27 +609,54 @@ export default function CodePreviewTab({
     recognition.lang = typeof navigator !== "undefined" ? navigator.language || "id-ID" : "id-ID"
 
     recognition.onresult = (event: any) => {
-      // Recompute the FULL transcript for this recording session from
-      // scratch on every event, starting at index 0 rather than
-      // `event.resultIndex`. The browser's `results` list already contains
-      // every result spoken so far in the session (it's cumulative), so
-      // re-adding only "new" entries on top of a running total double-counts
-      // text whenever the engine re-sends earlier results — which some
-      // mobile browsers do on brief pauses — producing the repeated-phrase
-      // duplication bug (e.g. "buat buat toko buat toko online").
-      let finalText = ""
+      // Only walk NEW entries since the last processed index of THIS engine
+      // session, and commit each finalized one exactly once into
+      // `finalSegmentsRef` (never re-summed from scratch). This is what
+      // prevents the repeated-phrase bug (e.g. "buat buat toko buat toko
+      // online") that happened when some mobile browsers silently restart
+      // their internal recognition session and re-emit earlier phrases —
+      // recomputing the whole transcript from index 0 on every event used to
+      // double-count that resent text.
       let interimText = ""
-      for (let i = 0; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript
-        if (event.results[i].isFinal) finalText += transcript
-        else interimText += transcript
+      for (let i = processedResultCountRef.current; i < event.results.length; i++) {
+        const result = event.results[i]
+        const transcript = (result[0]?.transcript ?? "").trim()
+        if (result.isFinal) {
+          if (transcript) finalSegmentsRef.current.push(transcript)
+          processedResultCountRef.current = i + 1
+        } else {
+          interimText += transcript
+        }
       }
-      const base = voiceBaseTextRef.current
-      const separator = base && !base.endsWith(" ") && (finalText || interimText) ? " " : ""
-      setInput(base + separator + finalText + interimText)
+      const combined = [voiceBaseTextRef.current, ...finalSegmentsRef.current, interimText]
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(" ")
+      setInput(combined)
     }
-    recognition.onerror = () => setIsRecording(false)
-    recognition.onend = () => setIsRecording(false)
+    recognition.onerror = () => {
+      isRecordingRef.current = false
+      setIsRecording(false)
+    }
+    recognition.onend = () => {
+      // `continuous: true` should keep listening indefinitely, but several
+      // mobile browsers silently end the underlying session after a brief
+      // pause anyway. If the user hasn't explicitly tapped stop, transparently
+      // restart so speech keeps flowing into the same transcript instead of
+      // requiring another tap — and reset only the per-session index, since
+      // `finalSegmentsRef` must survive the restart to avoid losing text.
+      if (isRecordingRef.current) {
+        processedResultCountRef.current = 0
+        try {
+          recognition.start()
+          return
+        } catch {
+          // Restart failed (e.g. mic revoked) — fall through to stopping.
+        }
+      }
+      isRecordingRef.current = false
+      setIsRecording(false)
+    }
 
     recognitionRef.current = recognition
     return () => {
@@ -628,17 +673,23 @@ export default function CodePreviewTab({
     const recognition = recognitionRef.current
     if (!recognition) return
     if (isRecording) {
+      // Flip the ref first so the `onend` handler this triggers treats it as
+      // a deliberate stop rather than auto-restarting.
+      isRecordingRef.current = false
       recognition.stop()
       setIsRecording(false)
       return
     }
     voiceBaseTextRef.current = input
+    finalSegmentsRef.current = []
+    processedResultCountRef.current = 0
     try {
       recognition.start()
+      isRecordingRef.current = true
       setIsRecording(true)
-  } catch {
-  // Already started or mic permission denied — ignore, onerror covers it.
-  }
+    } catch {
+      // Already started or mic permission denied — ignore, onerror covers it.
+    }
   }, [isRecording, input])
 
   const MAX_MD_FILE_SIZE = 300 * 1024 // 300KB — plenty for a markdown doc, keeps the prompt payload sane
@@ -961,11 +1012,18 @@ ${code.slice(0, 6000)}`
   /**
    * Asks the model to clean up the user's raw prompt — fix typos, grammar,
    * and vague wording — WITHOUT changing what is being asked for or adding
-   * new requirements. Returns `null` on any failure/empty result so the
-   * caller can fall back to sending the original text untouched.
+   * new requirements.
+   *
+   * Returns a discriminated result rather than a bare `string | null` so the
+   * caller can tell "nothing needed changing" apart from "the refine call
+   * itself failed" — previously both collapsed into the same `null`, so a
+   * genuine API/network error silently sent the un-refined prompt with zero
+   * indication to the user that "Perbaikan prompt" had actually failed.
    */
-  async function refinePromptText(raw: string): Promise<string | null> {
-    if (!apiKey.trim() || !raw.trim()) return null
+  async function refinePromptText(
+    raw: string,
+  ): Promise<{ status: "ok"; text: string } | { status: "unchanged" } | { status: "error" }> {
+    if (!apiKey.trim() || !raw.trim()) return { status: "unchanged" }
     const refinePrompt = `Perbaiki teks permintaan pengguna berikut ini: rapikan tata bahasa, ejaan, dan kejelasan kalimatnya, tapi JANGAN mengubah maksud, JANGAN menambah permintaan/fitur baru yang tidak disebutkan, dan JANGAN mengubah bahasa yang dipakai (kalau aslinya Indonesia, hasilnya juga Indonesia; kalau Inggris, tetap Inggris).
 
 Jika teksnya sudah jelas dan rapi, kembalikan teks itu sama persis tanpa perubahan.
@@ -989,12 +1047,17 @@ ${raw}`
           model: model.trim() || undefined,
         }),
       })
+      // A non-2xx response (bad model, invalid key, upstream 4xx/5xx) has no
+      // SSE stream to read — treat it as a real failure instead of falling
+      // through to an empty accumulator that looks like "no change needed".
+      if (!res.ok) return { status: "error" }
       const reader = res.body?.getReader()
-      if (!reader) return null
+      if (!reader) return { status: "error" }
       const dec = new TextDecoder()
       let buf = ""
       let currentEvent = "token"
       let acc = ""
+      let sawErrorEvent = false
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
@@ -1011,10 +1074,12 @@ ${raw}`
           try {
             const parsed = JSON.parse(dataStr) as Record<string, unknown>
             if (currentEvent === "token") acc += (parsed.text as string) ?? ""
+            if (currentEvent === "error") sawErrorEvent = true
           } catch { /* skip */ }
         }
       }
       reader.releaseLock()
+      if (sawErrorEvent) return { status: "error" }
 
       // Strip a wrapping code fence or quotes the model might add anyway.
       const cleaned = acc
@@ -1023,9 +1088,10 @@ ${raw}`
         .replace(/```$/, "")
         .replace(/^"([\s\S]*)"$/, "$1")
         .trim()
-      return cleaned.length > 0 ? cleaned : null
+      if (cleaned.length === 0) return { status: "error" }
+      return cleaned === raw.trim() ? { status: "unchanged" } : { status: "ok", text: cleaned }
     } catch {
-      return null
+      return { status: "error" }
     }
   }
 
@@ -1046,17 +1112,27 @@ ${raw}`
     }
 
     setIsRefiningPrompt(true)
-    const suggested = await refinePromptText(text)
+    const result = await refinePromptText(text)
     setIsRefiningPrompt(false)
 
-    // Nothing to improve, or the refine call failed — just send as-is
-    // rather than blocking the user on a no-op approval step.
-    if (!suggested || suggested.trim() === text) {
+    if (result.status === "error") {
+      // The refine call itself failed (bad key/model, network, upstream
+      // error) — tell the user plainly instead of silently sending the
+      // untouched prompt, which looked like the button "did nothing".
+      setRefineNotice("Perbaikan prompt gagal — mengirim teks asli")
+      setTimeout(() => setRefineNotice(null), 3500)
       sendMessage()
       return
     }
 
-    setPromptReview({ original: text, suggested, edited: suggested })
+    // Nothing needed improving — just send as-is rather than blocking the
+    // user on a no-op approval step.
+    if (result.status === "unchanged") {
+      sendMessage()
+      return
+    }
+
+    setPromptReview({ original: text, suggested: result.text, edited: result.text })
   }
 
   function approvePromptReview() {
@@ -1468,11 +1544,11 @@ ${raw}`
             back-to-back and translated by exactly -50% so the loop has no
             visible seam. */}
         <div
-          className="w-full h-9 bg-sidebar border-b border-border/40 overflow-hidden flex items-center"
+          className="id-flag-banner id-flag-sheen relative w-full h-9 border-b border-border/40 overflow-hidden flex items-center"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
           <div
-            className="flex items-center gap-10 whitespace-nowrap animate-marquee will-change-transform"
+            className="relative flex items-center gap-10 whitespace-nowrap animate-marquee will-change-transform"
             aria-hidden="true"
           >
             {[0, 1].map((rep) => (
@@ -1480,9 +1556,11 @@ ${raw}`
                 {INDEPENDENCE_MESSAGES.map((msg, i) => (
                   <span
                     key={`${rep}-${i}`}
-                    className="flex items-center gap-2 text-[11px] font-medium text-primary shrink-0"
+                    className="flex items-center gap-2 text-[11px] font-semibold tracking-wide text-id-banner-fg shrink-0"
                   >
-                    <StarIcon />
+                    <span className="text-id-banner-accent">
+                      <StarIcon />
+                    </span>
                     {msg}
                   </span>
                 ))}
@@ -1818,8 +1896,10 @@ ${raw}`
   {isStreaming ? <StopIcon /> : <SendIcon />}
   </button>
   </div>
-  <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
-  {isRecording
+  <p className={`text-[10px] mt-1.5 ml-1 ${refineNotice ? "text-destructive" : "text-muted-foreground/60"}`}>
+  {refineNotice
+    ? refineNotice
+    : isRecording
     ? "Listening… tap mic to stop"
     : isRefiningPrompt
     ? "Menyempurnakan prompt sebelum dikirim…"
