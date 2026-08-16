@@ -13,9 +13,13 @@ interface ChatMessage {
    *  preview/download without re-displaying the whole file in the chat. */
   fullHtml?: string
   /** Set when this turn's edit request could not locate every SEARCH
-   *  snippet exactly, so one or more requested changes were skipped. */
+  *  snippet exactly, so one or more requested changes were skipped. */
   failedEdits?: number
-}
+  /** Name of a .md file attached to this (user) turn, shown as a small
+  *  badge under the message. The file's contents were sent to the model
+  *  alongside the prompt text for this turn. */
+  attachedFileName?: string
+  }
 
 interface ExtractedCode {
   lang: string
@@ -361,6 +365,34 @@ function CopyIcon() {
   )
   }
 
+  function PaperclipIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+  </svg>
+  )
+  }
+
+  function FileTextIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <line x1="8" y1="13" x2="16" y2="13" />
+  <line x1="8" y1="17" x2="13" y2="17" />
+  </svg>
+  )
+  }
+
+  function XIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+  <line x1="18" y1="6" x2="6" y2="18" />
+  <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+  )
+  }
+
   function DownloadIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
@@ -446,10 +478,15 @@ export default function CodePreviewTab({
   const [lastFullHtml, setLastFullHtml] = useState("")
   const [isRecording, setIsRecording]   = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(true)
+  /** Currently attached .md file, read into memory as plain text so it can
+   *  be included in the next prompt sent to the model. */
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef      = useRef<AbortController | null>(null)
+  const fileInputRef  = useRef<HTMLInputElement>(null)
   /** Web Speech API instance for voice-to-text prompt input. Typed as `any`
    *  since SpeechRecognition isn't in the standard TS DOM lib yet. */
   const recognitionRef = useRef<any>(null)
@@ -526,10 +563,45 @@ export default function CodePreviewTab({
     try {
       recognition.start()
       setIsRecording(true)
-    } catch {
-      // Already started or mic permission denied — ignore, onerror covers it.
-    }
+  } catch {
+  // Already started or mic permission denied — ignore, onerror covers it.
+  }
   }, [isRecording, input])
+
+  const MAX_MD_FILE_SIZE = 300 * 1024 // 300KB — plenty for a markdown doc, keeps the prompt payload sane
+
+  /** Reads a selected .md file as plain text into `attachedFile` so its
+   *  content can be sent to the model along with the next prompt. Validates
+   *  extension and size before touching the file contents. */
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = "" // allow re-selecting the same file later
+    if (!file) return
+
+    const isMarkdown = /\.(md|markdown)$/i.test(file.name)
+    if (!isMarkdown) {
+      setFileError("Only .md files are supported")
+      return
+    }
+    if (file.size > MAX_MD_FILE_SIZE) {
+      setFileError("File is too large (max 300KB)")
+      return
+    }
+
+    setFileError(null)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const content = typeof reader.result === "string" ? reader.result : ""
+      setAttachedFile({ name: file.name, content })
+    }
+    reader.onerror = () => setFileError("Could not read file")
+    reader.readAsText(file)
+  }
+
+  function removeAttachedFile() {
+    setAttachedFile(null)
+    setFileError(null)
+  }
 
   // When streaming finishes, extract latest code and update preview.
   // `fullHtml` (set for both fresh generations and applied edits) always
@@ -559,15 +631,24 @@ export default function CodePreviewTab({
     if (!apiKey.trim()) return
 
     const ts = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-    const userMsg: ChatMessage = { role: "user", content: text, ts }
+    // Keep the chat bubble showing only what the user typed — the file's
+    // contents are shown as a small badge instead of flooding the thread.
+    const userMsg: ChatMessage = { role: "user", content: text, ts, attachedFileName: attachedFile?.name }
 
     setMessages((prev) => [...prev, userMsg])
     setInput("")
     setIsStreaming(true)
     setStreamingText("")
 
+    // If a .md file is attached, prepend its full contents ahead of the
+    // instruction so the model reads it first before acting on the prompt.
+    const contentForModel = attachedFile
+      ? `Attached file "${attachedFile.name}":\n\n${attachedFile.content}\n\n---\n\nUser instruction: ${text}`
+      : text
+
     const prevMessages = messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
-    const allMessages  = [...prevMessages, { role: "user" as const, content: text }]
+    const allMessages  = [...prevMessages, { role: "user" as const, content: contentForModel }]
+    setAttachedFile(null)
 
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -692,7 +773,7 @@ export default function CodePreviewTab({
     setStreamingText("")
     setIsStreaming(false)
     abortRef.current = null
-  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml])
+  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml, attachedFile])
 
   function stopStreaming() {
     abortRef.current?.abort()
@@ -846,7 +927,13 @@ export default function CodePreviewTab({
 
     if (isUser) {
       return (
-        <div key={i} className="flex justify-end">
+        <div key={i} className="flex flex-col items-end gap-1">
+          {msg.attachedFileName && (
+            <div className="flex items-center gap-1.5 max-w-[75%] rounded-lg border border-primary/25 bg-primary/10 px-2 py-1 text-[10px] text-muted-foreground">
+              <FileTextIcon />
+              <span className="truncate">{msg.attachedFileName}</span>
+            </div>
+          )}
           <div className="max-w-[75%] rounded-xl rounded-tr-sm bg-primary/15 border border-primary/25 px-3 py-2 text-[12px] text-foreground leading-relaxed">
             {msg.content}
           </div>
@@ -1260,22 +1347,54 @@ export default function CodePreviewTab({
               <div ref={chatEndRef} />
             </div>
 
-            {/* ── Input bar ──────────────────────�����───────────────────────── */}
-            <div className="flex-shrink-0 border-t border-border/40 bg-sidebar/30 px-3 py-2">
-              <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !(e.keyCode === 229)) {
-                      e.preventDefault()
-                      sendMessage()
-                    }
-                  }}
-                  placeholder={noKey ? "Add API key first…" : "Describe what to build… (Enter to send)"}
-                  disabled={noKey}
-                  rows={1}
+  {/* ── Input bar ──────────────────────────────────────────────────── */}
+  <div className="flex-shrink-0 border-t border-border/40 bg-sidebar/30 px-3 py-2">
+  <input
+  ref={fileInputRef}
+  type="file"
+  accept=".md,.markdown,text/markdown"
+  onChange={handleFileSelect}
+  className="hidden"
+  />
+  {attachedFile && (
+  <div className="flex items-center gap-2 mb-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1.5">
+  <FileTextIcon />
+  <span className="flex-1 text-[11px] text-foreground truncate">{attachedFile.name}</span>
+  <span className="text-[10px] text-muted-foreground/70">{(attachedFile.content.length / 1024).toFixed(1)}KB</span>
+  <button
+  onClick={removeAttachedFile}
+  title="Remove file"
+  className="flex items-center justify-center w-4 h-4 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+  >
+  <XIcon />
+  </button>
+  </div>
+  )}
+  {fileError && (
+  <p className="text-[10px] text-destructive mb-1.5 ml-1">{fileError}</p>
+  )}
+  <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
+  <button
+  onClick={() => fileInputRef.current?.click()}
+  disabled={noKey || isStreaming}
+  title="Attach .md file"
+  className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+  >
+  <PaperclipIcon />
+  </button>
+  <textarea
+  ref={textareaRef}
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={(e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !(e.keyCode === 229)) {
+  e.preventDefault()
+  sendMessage()
+  }
+  }}
+  placeholder={noKey ? "Add API key first…" : "Describe what to build… (Enter to send)"}
+  disabled={noKey}
+  rows={1}
   className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
   />
   {voiceSupported && (
@@ -1309,6 +1428,8 @@ export default function CodePreviewTab({
   <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
   {isRecording ? "Listening… tap mic to stop" : "Shift+Enter for new line · powered by " + providerName}
   </p>
+  </div>
+  )}
             </div>
           </div>
         )}
