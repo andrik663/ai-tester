@@ -45,8 +45,33 @@ const fetcher = (url: string) => fetch(url).then((res) => {
   return res.json()
 })
 
+// Wide, saturated palettes for both the background wash and the identicon
+// glyph itself. DiceBear picks pseudo-randomly *within* whatever list you
+// give it per seed — the previous URL supplied neither `backgroundColor`
+// nor `rowColor`, so every avatar fell back to the same default pair and
+// only the seed's shape differed, reading as "monotone". Two long, hue-
+// spread lists (never adjacent) make each commenter visibly distinct.
+const AVATAR_BG_COLORS = [
+  "f87171", "fb923c", "fbbf24", "a3e635", "4ade80",
+  "34d399", "2dd4bf", "22d3ee", "38bdf8", "60a5fa",
+  "818cf8", "a78bfa", "c084fc", "e879f9", "f472b6",
+]
+const AVATAR_ROW_COLORS = [
+  "7f1d1d", "78350f", "713f12", "365314", "064e3b",
+  "134e4a", "164e63", "1e3a8a", "312e81", "4a044e",
+  "581c87", "831843", "9d174d", "1e293b", "052e16",
+]
+
 function avatarUrl(seed: string): string {
-  return `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`
+  const params = new URLSearchParams({
+    seed,
+    backgroundType: "gradientLinear",
+    backgroundColor: AVATAR_BG_COLORS.join(","),
+    backgroundColorOrder: "random",
+    rowColor: AVATAR_ROW_COLORS.join(","),
+    rowColorOrder: "random",
+  })
+  return `https://api.dicebear.com/9.x/identicon/svg?${params.toString()}`
 }
 
 function MessageIcon() {
@@ -133,20 +158,22 @@ export default function CommentMarquee() {
   return (
     <>
       <div
-        className={`relative w-full h-9 border-b overflow-hidden flex items-center transition-colors duration-300 ${
-          inIndependenceMode
-            ? "id-flag-banner id-flag-sheen border-border/40"
-            : "feedback-ticker-bg feedback-sheen border-feedback-accent/25"
-        }`}
+        className="relative w-full h-9 border-b border-border/40 overflow-hidden flex items-center"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        {inIndependenceMode ? (
-          // Independence Day state — patriotic Merah Putih theme, gold star
-          // accent. Kept visually unmistakable from the feedback ticker below.
-          <div
-            className="relative flex items-center gap-10 whitespace-nowrap animate-marquee will-change-transform"
-            aria-hidden="true"
-          >
+        {/* Both states stay mounted and marqueeing at all times, stacked on
+            top of each other, and cross-fade via opacity — swapping the
+            layer's whole class list on toggle (as before) snapped instantly
+            because the two backgrounds are gradients, not a single
+            background-color Tailwind's `transition-colors` can tween. This
+            way the outgoing state visibly dissolves into the incoming one. */}
+        <div
+          className={`absolute inset-0 flex items-center id-flag-banner id-flag-sheen transition-opacity duration-[900ms] ease-in-out ${
+            inIndependenceMode ? "opacity-100" : "opacity-0"
+          }`}
+          aria-hidden={!inIndependenceMode}
+        >
+          <div className="relative flex items-center gap-10 whitespace-nowrap animate-marquee will-change-transform">
             {[0, 1].map((rep) => (
               <div key={rep} className="flex items-center gap-10 shrink-0">
                 {Array.from({ length: hasComments ? 1 : 3 }).map((_, i) => (
@@ -161,15 +188,19 @@ export default function CommentMarquee() {
               </div>
             ))}
           </div>
-        ) : (
-          // Feedback state — near-black + neon lime "live feed" theme, each
-          // comment rendered as its own pill with avatar, name, and a
-          // pulsing LIVE badge leading the track for an at-a-glance cue that
-          // this is real people's feedback, not the flag banner.
-          <div
-            className="relative flex items-center gap-3 whitespace-nowrap animate-marquee will-change-transform"
-            aria-hidden="true"
-          >
+        </div>
+
+        <div
+          className={`absolute inset-0 flex items-center feedback-ticker-bg feedback-sheen transition-opacity duration-[900ms] ease-in-out ${
+            inIndependenceMode ? "opacity-0" : "opacity-100"
+          }`}
+          aria-hidden={inIndependenceMode}
+        >
+          {/* Feedback state — near-black + neon lime "live feed" theme, each
+              comment rendered as its own pill with avatar, name, and a
+              pulsing LIVE badge leading the track for an at-a-glance cue
+              that this is real people's feedback, not the flag banner. */}
+          <div className="relative flex items-center gap-3 whitespace-nowrap animate-marquee will-change-transform">
             {[0, 1].map((rep) => (
               <div key={rep} className="flex items-center gap-3 shrink-0">
                 <span className="flex items-center gap-1.5 shrink-0 rounded-full bg-feedback-accent/15 px-2 py-0.5">
@@ -197,23 +228,28 @@ export default function CommentMarquee() {
               </div>
             ))}
           </div>
-        )}
+        </div>
 
         <span className="sr-only">
           {inIndependenceMode ? independenceText : "Komentar dan feedback publik"}
         </span>
 
-        {/* Fade + pinned feedback trigger, sits above the scrolling track */}
-        <div
-          className={`absolute right-0 top-0 h-full flex items-center pl-6 pr-1.5 bg-gradient-to-l to-transparent ${
-            inIndependenceMode
-              ? "from-[var(--id-banner-bg-start)] via-[var(--id-banner-bg-start)]/90"
-              : "from-[var(--feedback-bg-start)] via-[var(--feedback-bg-start)]/90"
-          }`}
-        >
+        {/* Fade + pinned feedback trigger, sits above both layers and
+            cross-fades the same way so its backdrop never snaps either. */}
+        <div className="absolute right-0 top-0 h-full flex items-center pl-6 pr-1.5 z-10">
+          <div
+            className={`absolute inset-0 bg-gradient-to-l from-[var(--id-banner-bg-start)] via-[var(--id-banner-bg-start)]/90 to-transparent transition-opacity duration-[900ms] ease-in-out ${
+              inIndependenceMode ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <div
+            className={`absolute inset-0 bg-gradient-to-l from-[var(--feedback-bg-start)] via-[var(--feedback-bg-start)]/90 to-transparent transition-opacity duration-[900ms] ease-in-out ${
+              inIndependenceMode ? "opacity-0" : "opacity-100"
+            }`}
+          />
           <button
             onClick={() => setIsModalOpen(true)}
-            className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors ${
+            className={`relative flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors duration-500 ${
               inIndependenceMode
                 ? "border-id-banner-accent/50 bg-black/15 text-id-banner-fg hover:bg-black/25"
                 : "border-feedback-accent/50 bg-black/25 text-feedback-fg hover:bg-black/40"
