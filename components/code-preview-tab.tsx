@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import CommentMarquee from "@/components/comment-marquee"
+import SandboxFilePreview, { type SandboxStatus } from "@/components/sandbox-file-preview"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -164,6 +165,88 @@ CURRENT FILE (reference only, to locate exact snippets from — do not repeat it
 \`\`\`html
 ${currentHtml}
 \`\`\``
+}
+
+/**
+ * System prompt for "Full Project" mode — a real multi-file Vite + React +
+ * TypeScript + Tailwind project that runs in an actual Vercel Sandbox VM
+ * (real `npm install` + `vite dev`), instead of a single self-contained
+ * HTML document. Used for the FIRST turn of a Full Project conversation;
+ * follow-up turns use {@link buildFullProjectEditSystemPrompt} so the model
+ * only resends the files that actually changed.
+ */
+const FULL_PROJECT_SYSTEM_PROMPT = `You are an expert React developer working inside an existing Vite + React 18 + TypeScript + Tailwind CSS v4 project template. The template already provides working "package.json", "vite.config.ts", "index.html", "tsconfig.json", "src/main.tsx", and "src/index.css" — do NOT recreate those unless the user's request specifically requires changing them (e.g. adding a new npm dependency to package.json).
+
+When the user asks you to build or create something, respond with one or more files, EACH in its own fenced code block, using this exact header format (the language tag AND the file path on the same info-string, separated by a space):
+
+\`\`\`tsx file="src/App.tsx"
+export default function App() {
+  return <div>...</div>
+}
+\`\`\`
+
+CRITICAL RULES — you MUST follow ALL of them:
+- Every file block's first line after the opening \`\`\` must be exactly: <language> file="<relative/path>" — e.g. \`\`\`tsx file="src/components/Header.tsx" or \`\`\`css file="src/index.css".
+- Paths are relative to the project root, always inside "src/" for app code (e.g. "src/App.tsx", "src/components/Button.tsx"). Never use absolute paths or "..".
+- Always include a complete "src/App.tsx" as the root component that is rendered by the existing "src/main.tsx" — do not modify "src/main.tsx" unless truly necessary.
+- Split non-trivial UI into multiple components under "src/components/" instead of one giant App.tsx, and import them normally with ES module imports.
+- Use Tailwind CSS utility classes for styling (Tailwind v4 is already configured). Only add custom CSS to "src/index.css" when Tailwind utilities aren't enough.
+- If a new npm package is required, output an updated "package.json" file block that adds it to "dependencies", in addition to the code that imports it.
+- Never truncate a file. Each file block must be complete and syntactically valid on its own.
+- If the user asks a question instead of requesting code, answer concisely in plain text with no file blocks at all.`
+
+/**
+ * Follow-up system prompt for Full Project mode once files already exist.
+ * The model is told exactly which files currently exist (but not their full
+ * contents, to keep the prompt small) and must resend ONLY the files it is
+ * adding or changing, using the same \`\`\`lang file="path" format.
+ */
+function buildFullProjectEditSystemPrompt(existingPaths: string[], skillPrompt: string | null): string {
+  return `You are continuing work on an existing Vite + React 18 + TypeScript + Tailwind CSS v4 project running live in a sandbox preview. The user will ask for a specific change or addition.
+
+Respond with ONLY the files that are new or need to change, each in its own fenced code block using this exact format:
+
+\`\`\`tsx file="src/components/Example.tsx"
+...full new contents of this file...
+\`\`\`
+
+CRITICAL RULES:
+1. Never resend a file that isn't changing. Only include files you are adding or modifying.
+2. Each included file block must contain that file's COMPLETE new contents (not a diff, not a snippet) — the sandbox overwrites the file with exactly what you send.
+3. Paths are relative to the project root (e.g. "src/App.tsx", "src/components/Header.tsx"). Never use absolute paths or "..".
+4. If a new npm package is required, include an updated "package.json" file block.
+5. If the user asks a question instead of requesting a change, just answer in plain text — no file blocks at all.
+${skillPrompt ? `\nAdditional style guidance to apply to any new code:\n${skillPrompt}\n` : ""}
+Files that currently exist in this project (contents omitted — resend only what changes):
+${existingPaths.map((p) => `- ${p}`).join("\n")}`
+}
+
+/**
+ * Extract \`\`\`<lang> file="<path>" ... \`\`\` blocks from a Full Project
+ * response. Blocks missing a file="..." attribute are ignored (they're
+ * either explanatory snippets or the model not following the format).
+ */
+function extractFileBlocks(text: string): { path: string; code: string }[] {
+  const results: { path: string; code: string }[] = []
+  const regex = /```[\w-]*\s+file="([^"]+)"\s*\n([\s\S]*?)```/g
+  let match
+  while ((match = regex.exec(text)) !== null) {
+    const path = match[1].trim()
+    const code = match[2].replace(/\n$/, "")
+    if (path.length > 0) {
+      results.push({ path, code })
+    }
+  }
+  return results
+}
+
+/**
+ * Strips fenced \`\`\`...file="..."\`\`\` blocks out of a Full Project reply so
+ * the chat bubble only shows the model's prose explanation, matching how the
+ * Instant HTML mode never re-displays the whole file inline either.
+ */
+function stripFileBlocks(text: string): string {
+  return text.replace(/```[\w-]*\s+file="[^"]+"\s*\n[\s\S]*?```/g, "").trim()
 }
 
 /**
@@ -544,6 +627,24 @@ export default function CodePreviewTab({
    *  what gets fed back to the model on each follow-up so it can locate
    *  exact snippets, without ever having to re-display the whole file. */
   const [lastFullHtml, setLastFullHtml] = useState("")
+
+  /** "html" (default) = single self-contained HTML doc rendered instantly
+   *  in an iframe, no boot time. "sandbox" = "Full Project (Beta)": a real
+   *  multi-file Vite + React project running in a live Vercel Sandbox VM,
+   *  with a real file tree, at the cost of a one-time boot delay. Locked
+   *  once the conversation has started so a mid-thread switch can't mix the
+   *  two very different code formats together. */
+  const [previewMode, setPreviewMode] = useState<"html" | "sandbox">("html")
+  /** Full contents of every file in the current sandbox project, keyed by
+   *  path relative to the project root (e.g. "src/App.tsx"). This is the
+   *  client-held source of truth used to recreate the sandbox from scratch
+   *  if it idle-times-out. */
+  const [sandboxFiles, setSandboxFiles] = useState<Record<string, string>>({})
+  const [sandboxId, setSandboxId] = useState<string | null>(null)
+  const [sandboxPreviewUrl, setSandboxPreviewUrl] = useState("")
+  const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>("idle")
+  const [sandboxError, setSandboxError] = useState<string | undefined>(undefined)
+
   const [isRecording, setIsRecording]   = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(true)
   /** Currently attached .md file, read into memory as plain text so it can
@@ -831,8 +932,87 @@ export default function CodePreviewTab({
     }
   }, [messages, isStreaming])
 
-  // ── Send message ─────────────────────────────────────────────────────────────
-  const sendMessage = useCallback(async (overrideText?: string) => {
+ // ── Full Project sandbox helpers ───────────────────────────────────────────
+  /**
+   * Sends the full current file map to /api/sandbox/create, starting a
+   * brand new sandbox VM. Used for the first turn of a Full Project
+   * conversation, and to recreate a sandbox that idle-timed-out.
+   */
+  const bootSandbox = useCallback(async (files: Record<string, string>) => {
+    setSandboxStatus("booting")
+    setSandboxError(undefined)
+    try {
+      const res = await fetch("/api/sandbox/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || "Failed to start sandbox.")
+      setSandboxId(data.sandboxId)
+      setSandboxPreviewUrl(data.previewUrl)
+      setSandboxStatus("ready")
+    } catch (err) {
+      setSandboxStatus("error")
+      setSandboxError(err instanceof Error ? err.message : "Failed to start sandbox.")
+    }
+  }, [])
+
+  /**
+   * Pushes only the changed files to the already-running sandbox. If the
+   * sandbox expired (idle-timeout), transparently recreates it from the
+   * full `sandboxFiles` map instead of surfacing an error to the user.
+   */
+  const syncSandbox = useCallback(async (changedFiles: Record<string, string>, fullFileMap: Record<string, string>) => {
+    if (!sandboxId) {
+      await bootSandbox(fullFileMap)
+      return
+    }
+    setSandboxStatus("installing")
+    setSandboxError(undefined)
+    try {
+      const res = await fetch("/api/sandbox/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sandboxId, files: changedFiles }),
+      })
+      const data = await res.json()
+      if (res.status === 409 && data?.expired) {
+        // Sandbox idle-timed-out — recreate it from the client-held file map.
+        await bootSandbox(fullFileMap)
+        return
+      }
+      if (!res.ok) throw new Error(data?.error || "Failed to update sandbox.")
+      setSandboxPreviewUrl(data.previewUrl)
+      setSandboxStatus("ready")
+    } catch (err) {
+      setSandboxStatus("error")
+      setSandboxError(err instanceof Error ? err.message : "Failed to update sandbox.")
+    }
+  }, [sandboxId, bootSandbox])
+
+  /** Manual "Restart" button in the error banner — recreates the sandbox
+   *  from the full file map currently held on the client. */
+  const restartSandbox = useCallback(() => {
+    void bootSandbox(sandboxFiles)
+  }, [bootSandbox, sandboxFiles])
+
+  // Best-effort: stop the sandbox VM when the user navigates away, so it
+  // doesn't keep running (and billing) until the 10-minute idle timeout.
+  useEffect(() => {
+    if (!sandboxId) return
+    const handleUnload = () => {
+      navigator.sendBeacon?.(
+        "/api/sandbox/stop",
+        new Blob([JSON.stringify({ sandboxId })], { type: "application/json" })
+      )
+    }
+    window.addEventListener("pagehide", handleUnload)
+    return () => window.removeEventListener("pagehide", handleUnload)
+  }, [sandboxId])
+
+ // ── Send message ─────────────────────────────────────────────────────────────
+ const sendMessage = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? input).trim()
     if (!text || isStreaming) return
     if (!apiKey.trim()) return
@@ -867,9 +1047,15 @@ export default function CodePreviewTab({
     // is told to return only SEARCH/REPLACE blocks against the current file
     // instead of resending the whole HTML on every follow-up.
     const isEditTurn = lastFullHtml.trim().length > 0
-    const systemPromptToUse = isEditTurn
-      ? buildEditSystemPrompt(lastFullHtml, composedSkillPrompt)
-      : (composedSkillPrompt ?? CODE_SYSTEM_PROMPT)
+    const isSandboxMode = previewMode === "sandbox"
+    const isFirstSandboxTurn = Object.keys(sandboxFiles).length === 0
+    const systemPromptToUse = isSandboxMode
+      ? (isFirstSandboxTurn
+          ? (composedSkillPrompt ? `${FULL_PROJECT_SYSTEM_PROMPT}\n\n---\n\nAdditional style guidance:\n${composedSkillPrompt}` : FULL_PROJECT_SYSTEM_PROMPT)
+          : buildFullProjectEditSystemPrompt(Object.keys(sandboxFiles), composedSkillPrompt))
+      : isEditTurn
+        ? buildEditSystemPrompt(lastFullHtml, composedSkillPrompt)
+        : (composedSkillPrompt ?? CODE_SYSTEM_PROMPT)
 
     let accumulated = ""
 
@@ -934,6 +1120,39 @@ export default function CodePreviewTab({
       }
     }
 
+    if (isSandboxMode) {
+      // Full Project mode: parse ```lang file="path" blocks, merge them into
+      // the client-held file map, and push to the sandbox (creating it on
+      // the first turn, syncing only the changed files on every follow-up).
+      const fileBlocks = extractFileBlocks(accumulated)
+      const changedFiles: Record<string, string> = {}
+      for (const b of fileBlocks) changedFiles[b.path] = b.code
+      const mergedFiles = { ...sandboxFiles, ...changedFiles }
+
+      if (Object.keys(changedFiles).length > 0) {
+        setSandboxFiles(mergedFiles)
+        if (isFirstSandboxTurn) {
+          void bootSandbox(mergedFiles)
+        } else {
+          void syncSandbox(changedFiles, mergedFiles)
+        }
+      }
+
+      const prose = stripFileBlocks(accumulated)
+      const finalContent =
+        prose ||
+        (Object.keys(changedFiles).length > 0
+          ? `Updated ${Object.keys(changedFiles).length} file${Object.keys(changedFiles).length > 1 ? "s" : ""}.`
+          : "(empty response)")
+
+      const replyTs = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+      setMessages((prev) => [...prev, { role: "assistant", content: finalContent, ts: replyTs }])
+      setStreamingText("")
+      setIsStreaming(false)
+      abortRef.current = null
+      return
+    }
+
     let codeBlocks   = extractCodeBlocks(accumulated)
     let fullHtml: string | undefined
     let failedEdits: number | undefined
@@ -991,7 +1210,7 @@ export default function CodePreviewTab({
     if (codeForSuggestions.trim().length > 0) {
       void refreshAiSuggestions(text, codeForSuggestions)
     }
-  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml, attachedFile])
+  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml, attachedFile, previewMode, sandboxFiles, bootSandbox, syncSandbox])
 
   /**
    * Asks the model to reason step-by-step (hidden chain-of-thought) about
@@ -1703,10 +1922,37 @@ ${raw}`
           </div>
         )}
 
-        <div className="hidden md:block flex-1" />
+  <div className="hidden md:block flex-1" />
 
-        {/* View mode toggle — "Split" only makes sense once there's room for two panes */}
-        <div className="flex items-center gap-0.5 rounded-md border border-border/50 bg-muted/30 p-0.5 ml-auto">
+  {/* Preview mode toggle — locked once the conversation has started so a
+      mid-thread switch can't mix Instant HTML and Full Project file
+      formats together. */}
+  <div
+    className="flex items-center gap-0.5 rounded-md border border-border/50 bg-muted/30 p-0.5"
+    title={messages.length > 0 ? "Locked for this conversation — start a new chat to switch modes" : undefined}
+  >
+    {([
+      { id: "html" as const, label: "Instant HTML" },
+      { id: "sandbox" as const, label: "Full Project" },
+    ]).map((m) => (
+      <button
+        key={m.id}
+        onClick={() => messages.length === 0 && setPreviewMode(m.id)}
+        disabled={messages.length > 0}
+        className={`flex items-center justify-center px-2 h-6 rounded text-[10px] font-medium transition-all disabled:cursor-not-allowed ${
+          previewMode === m.id
+            ? "bg-primary/20 text-primary"
+            : "text-muted-foreground hover:text-foreground disabled:hover:text-muted-foreground"
+        }`}
+      >
+        {m.label}
+        {m.id === "sandbox" && <span className="ml-1 opacity-60">(Beta)</span>}
+      </button>
+    ))}
+  </div>
+
+  {/* View mode toggle — "Split" only makes sense once there's room for two panes */}
+  <div className="flex items-center gap-0.5 rounded-md border border-border/50 bg-muted/30 p-0.5 ml-auto">
           {([
             { id: "code"    as const, icon: <CodeIcon />,    label: "Code"    },
             ...(isMobile ? [] : [{ id: "split" as const, icon: <SplitIcon />, label: "Split" }]),
@@ -2033,8 +2279,26 @@ ${raw}`
           </div>
         )}
 
+        {/* ── RIGHT: Full Project file tree + preview (Beta) ─────────────────── */}
+        {previewMode === "sandbox" && showPreview && (
+          <div
+            className={`flex flex-col min-h-0 overflow-hidden ${
+              isSplitActive ? "w-1/2" : "flex-1"
+            }`}
+          >
+            <SandboxFilePreview
+              files={sandboxFiles}
+              viewMode="split"
+              status={sandboxStatus}
+              errorMessage={sandboxError}
+              previewUrl={sandboxPreviewUrl}
+              onRestart={restartSandbox}
+            />
+          </div>
+        )}
+
         {/* ── RIGHT: Preview panel ─────────────────────────────────────────── */}
-        {showPreview && (
+        {previewMode === "html" && showPreview && (
           <div
             className={`flex flex-col min-h-0 overflow-hidden ${
               isSplitActive ? "w-1/2" : "flex-1"
