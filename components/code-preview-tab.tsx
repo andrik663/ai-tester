@@ -1051,9 +1051,13 @@ ${code.slice(0, 6000)}`
   }
 
   /**
-   * Asks the model to clean up the user's raw prompt — fix typos, grammar,
-   * and vague wording — WITHOUT changing what is being asked for or adding
-   * new requirements.
+   * Asks the model to rewrite the user's raw prompt into an expert,
+   * production-grade version — the kind a senior developer would hand off
+   * to another engineer or to an AI code-gen tool. This goes beyond typo/
+   * grammar cleanup: it adds the technical specificity, structure, and
+   * implied best practices (responsiveness, validation, error handling,
+   * edge cases, etc.) a professional would naturally include, WITHOUT
+   * inventing unrelated features or changing the original intent/scope.
    *
    * Returns a discriminated result rather than a bare `string | null` so the
    * caller can tell "nothing needed changing" apart from "the refine call
@@ -1065,13 +1069,21 @@ ${code.slice(0, 6000)}`
     raw: string,
   ): Promise<{ status: "ok"; text: string } | { status: "unchanged" } | { status: "error" }> {
     if (!apiKey.trim() || !raw.trim()) return { status: "unchanged" }
-    const refinePrompt = `Perbaiki teks permintaan pengguna berikut ini: rapikan tata bahasa, ejaan, dan kejelasan kalimatnya, tapi JANGAN mengubah maksud, JANGAN menambah permintaan/fitur baru yang tidak disebutkan, dan JANGAN mengubah bahasa yang dipakai (kalau aslinya Indonesia, hasilnya juga Indonesia; kalau Inggris, tetap Inggris).
+    const refinePrompt = `Kamu adalah senior software engineer & prompt engineer profesional. Tulis ulang permintaan pengguna berikut menjadi prompt level-expert yang siap dipakai untuk code-generation — seperti yang akan ditulis oleh developer profesional, bukan sekadar memperbaiki typo.
 
-Jika teksnya sudah jelas dan rapi, kembalikan teks itu sama persis tanpa perubahan.
+Lakukan ini:
+- Perjelas maksud, ruang lingkup, dan hasil akhir yang diharapkan dengan bahasa yang tegas dan spesifik
+- Tambahkan detail teknis yang wajar tersirat dari permintaan aslinya (contoh: struktur/komponen, responsivitas, accessibility, validasi input, penanganan error/edge case, performa) HANYA jika itu relevan dan tidak mengubah cakupan permintaan
+- Rapikan tata bahasa, ejaan, dan struktur kalimat supaya terbaca profesional dan actionable
+- JANGAN menambahkan fitur besar atau permintaan baru yang sama sekali tidak disebutkan/tidak tersirat
+- JANGAN mengubah maksud inti permintaan
+- JANGAN mengubah bahasa yang dipakai (kalau aslinya Indonesia, hasilnya juga Indonesia; kalau Inggris, tetap Inggris)
 
-Balas HANYA dengan teks hasil perbaikan — tanpa tanda kutip, tanpa penjelasan, tanpa awalan seperti "Berikut" atau "Versi perbaikan:".
+Jika teks aslinya sudah sangat jelas, detail, dan setara level profesional, kembalikan teks itu sama persis tanpa perubahan.
 
-Teks asli:
+Balas HANYA dengan teks prompt hasil penyempurnaan — tanpa tanda kutip, tanpa penjelasan, tanpa awalan seperti "Berikut" atau "Versi perbaikan:".
+
+Permintaan asli:
 ${raw}`
 
     try {
@@ -1084,7 +1096,8 @@ ${raw}`
           endpoint,
           headers,
           messages: [{ role: "user", content: refinePrompt }],
-          systemPrompt: "Reply with only the corrected prompt text — nothing else, no quotes, no explanation.",
+          systemPrompt:
+            "You are an expert senior software engineer rewriting prompts to a professional, production-ready standard. Reply with only the improved prompt text — nothing else, no quotes, no explanation.",
           model: model.trim() || undefined,
         }),
       })
@@ -1325,7 +1338,7 @@ ${raw}`
     setDownloadOpenIdx(null)
   }
 
-  // ── ZIP helpers ─────────────────────────────────────────────────────────────
+  // ── ZIP helpers ────────────���────────────────────────────────────────────────
   function u32le(n: number): number[] {
     return [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >> 24) & 0xff]
   }
