@@ -13,9 +13,13 @@ interface ChatMessage {
    *  preview/download without re-displaying the whole file in the chat. */
   fullHtml?: string
   /** Set when this turn's edit request could not locate every SEARCH
-   *  snippet exactly, so one or more requested changes were skipped. */
+  *  snippet exactly, so one or more requested changes were skipped. */
   failedEdits?: number
-}
+  /** Name of a .md file attached to this (user) turn, shown as a small
+  *  badge under the message. The file's contents were sent to the model
+  *  alongside the prompt text for this turn. */
+  attachedFileName?: string
+  }
 
 interface ExtractedCode {
   lang: string
@@ -64,20 +68,56 @@ interface Props {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Pool of generic, always-relevant follow-up prompts shown under the last
- * assistant turn once a project already exists, so the user can keep
- * iterating with one tap instead of typing a new request every time.
- * Rotated by conversation length so the same three don't repeat every turn.
+ * Keyword → candidate follow-ups. Each entry is only offered when the last
+ * user prompt mentions the keyword, so suggestions stay relevant to what was
+ * actually asked for (e.g. a landing page gets "Tambahkan testimoni", not
+ * "Tambahkan level" which only makes sense for a game).
  */
-const FOLLOWUP_SUGGESTIONS = [
+const CONTEXTUAL_FOLLOWUPS: { keywords: string[]; suggestions: string[] }[] = [
+  {
+    keywords: ["landing", "promosi", "produk", "bisnis", "company", "profil"],
+    suggestions: ["Tambahkan bagian testimoni", "Tambahkan bagian FAQ", "Tambahkan section harga (pricing)"],
+  },
+  {
+    keywords: ["game", "permainan", "score", "level"],
+    suggestions: ["Tambahkan efek suara", "Tambahkan sistem skor", "Tambahkan level kesulitan"],
+  },
+  {
+    keywords: ["login", "daftar", "register", "akun", "form"],
+    suggestions: ["Tambahkan validasi input", "Tambahkan pesan error", "Tambahkan tombol lupa password"],
+  },
+  {
+    keywords: ["toko", "belanja", "produk", "ecommerce", "cart", "keranjang"],
+    suggestions: ["Tambahkan keranjang belanja", "Tambahkan filter kategori", "Tambahkan halaman checkout"],
+  },
+  {
+    keywords: ["portofolio", "cv", "resume", "profil"],
+    suggestions: ["Tambahkan bagian pengalaman kerja", "Tambahkan galeri proyek", "Tambahkan tombol unduh CV"],
+  },
+  {
+    keywords: ["dashboard", "admin", "panel"],
+    suggestions: ["Tambahkan grafik statistik", "Tambahkan tabel data", "Tambahkan sidebar navigasi"],
+  },
+  {
+    keywords: ["3d", "particle", "webgl", "three.js", "animasi"],
+    suggestions: ["Tambahkan interaksi mouse", "Ubah warna partikel", "Tambahkan efek transisi"],
+  },
+  {
+    keywords: ["blog", "artikel", "berita"],
+    suggestions: ["Tambahkan halaman detail artikel", "Tambahkan kolom komentar", "Tambahkan kategori artikel"],
+  },
+]
+
+/** Generic fallbacks used to top up the list when the prompt doesn't match
+ *  any known context, or to fill in slots left by features already present
+ *  in the generated code (e.g. skip "dark mode" if it's already dark). */
+const GENERIC_FOLLOWUPS = [
   "Ganti tema warna",
-  "Tambahkan halaman login",
-  "Pakai React/Next.js",
-  "Buat responsive di mobile",
   "Tambahkan animasi",
   "Ubah ke mode gelap",
-  "Tambahkan form kontak",
   "Rapikan tata letak (layout)",
+  "Buat lebih responsive di mobile",
+  "Tambahkan footer",
 ]
 
 const CODE_SYSTEM_PROMPT = `You are an expert web developer. When the user asks you to build or create something, respond with a SINGLE complete, self-contained HTML document that includes all CSS and JavaScript inline. Always output code in a fenced code block with the \`\`\`html language tag.
@@ -306,15 +346,54 @@ function CopyIcon() {
   )
 }
 
-function StopIcon() {
+  function StopIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-    </svg>
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+  <rect x="4" y="4" width="16" height="16" rx="2" />
+  </svg>
   )
-}
+  }
 
-function DownloadIcon() {
+  function MicIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" />
+  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+  <line x1="12" y1="19" x2="12" y2="23" />
+  <line x1="8" y1="23" x2="16" y2="23" />
+  </svg>
+  )
+  }
+
+  function PaperclipIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+  </svg>
+  )
+  }
+
+  function FileTextIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <line x1="8" y1="13" x2="16" y2="13" />
+  <line x1="8" y1="17" x2="13" y2="17" />
+  </svg>
+  )
+  }
+
+  function XIcon() {
+  return (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+  <line x1="18" y1="6" x2="6" y2="18" />
+  <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+  )
+  }
+
+  function DownloadIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -397,24 +476,24 @@ export default function CodePreviewTab({
    *  what gets fed back to the model on each follow-up so it can locate
    *  exact snippets, without ever having to re-display the whole file. */
   const [lastFullHtml, setLastFullHtml] = useState("")
-
-  // TEMP DEBUG: seed a fake completed turn via ?debugseed=1 to visually verify
-  // the follow-up suggestions UI without needing a real API key. Remove after verification.
-  useEffect(() => {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debugseed") === "1") {
-      console.log("[v0] seeding debug turn for follow-up suggestions verification")
-      setMessages([
-        { role: "user", content: "buat halaman landing sederhana", ts: "10:00" } as ChatMessage,
-        { role: "assistant", content: "Landing page dibuat.", ts: "10:00" } as ChatMessage,
-      ])
-      setLastFullHtml("<html><body><h1>Hello</h1></body></html>")
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const [isRecording, setIsRecording]   = useState(false)
+  const [voiceSupported, setVoiceSupported] = useState(true)
+  /** Currently attached .md file, read into memory as plain text so it can
+   *  be included in the next prompt sent to the model. */
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
 
   const chatEndRef    = useRef<HTMLDivElement>(null)
   const textareaRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef      = useRef<AbortController | null>(null)
+  const fileInputRef  = useRef<HTMLInputElement>(null)
+  /** Web Speech API instance for voice-to-text prompt input. Typed as `any`
+   *  since SpeechRecognition isn't in the standard TS DOM lib yet. */
+  const recognitionRef = useRef<any>(null)
+  /** Input text captured before this recording session started, so
+   *  interim/final voice transcripts are appended rather than overwriting
+   *  anything the user already typed. */
+  const voiceBaseTextRef = useRef("")
 
   // Auto-scroll chat
   useEffect(() => {
@@ -428,6 +507,101 @@ export default function CodePreviewTab({
     ta.style.height = "auto"
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px"
   }, [input])
+
+  // Set up the Web Speech API recognizer once, if the browser supports it.
+  // Chrome/Edge only expose it under the `webkit` prefix.
+  useEffect(() => {
+    const SpeechRecognitionCtor =
+      typeof window !== "undefined"
+        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        : null
+    if (!SpeechRecognitionCtor) {
+      setVoiceSupported(false)
+      return
+    }
+    const recognition = new SpeechRecognitionCtor()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = typeof navigator !== "undefined" ? navigator.language || "id-ID" : "id-ID"
+
+    recognition.onresult = (event: any) => {
+      let finalText = ""
+      let interimText = ""
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript
+        if (event.results[i].isFinal) finalText += transcript
+        else interimText += transcript
+      }
+      const base = voiceBaseTextRef.current
+      const separator = base && !base.endsWith(" ") ? " " : ""
+      setInput(base + separator + finalText + interimText)
+      if (finalText) voiceBaseTextRef.current = base + separator + finalText
+    }
+    recognition.onerror = () => setIsRecording(false)
+    recognition.onend = () => setIsRecording(false)
+
+    recognitionRef.current = recognition
+    return () => {
+      recognition.onresult = null
+      recognition.onerror = null
+      recognition.onend = null
+      try {
+        recognition.stop()
+      } catch {}
+    }
+  }, [])
+
+  const toggleRecording = useCallback(() => {
+    const recognition = recognitionRef.current
+    if (!recognition) return
+    if (isRecording) {
+      recognition.stop()
+      setIsRecording(false)
+      return
+    }
+    voiceBaseTextRef.current = input
+    try {
+      recognition.start()
+      setIsRecording(true)
+  } catch {
+  // Already started or mic permission denied — ignore, onerror covers it.
+  }
+  }, [isRecording, input])
+
+  const MAX_MD_FILE_SIZE = 300 * 1024 // 300KB — plenty for a markdown doc, keeps the prompt payload sane
+
+  /** Reads a selected .md file as plain text into `attachedFile` so its
+   *  content can be sent to the model along with the next prompt. Validates
+   *  extension and size before touching the file contents. */
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = "" // allow re-selecting the same file later
+    if (!file) return
+
+    const isMarkdown = /\.(md|markdown)$/i.test(file.name)
+    if (!isMarkdown) {
+      setFileError("Only .md files are supported")
+      return
+    }
+    if (file.size > MAX_MD_FILE_SIZE) {
+      setFileError("File is too large (max 300KB)")
+      return
+    }
+
+    setFileError(null)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const content = typeof reader.result === "string" ? reader.result : ""
+      setAttachedFile({ name: file.name, content })
+    }
+    reader.onerror = () => setFileError("Could not read file")
+    reader.readAsText(file)
+  }
+
+  function removeAttachedFile() {
+    setAttachedFile(null)
+    setFileError(null)
+  }
 
   // When streaming finishes, extract latest code and update preview.
   // `fullHtml` (set for both fresh generations and applied edits) always
@@ -457,15 +631,24 @@ export default function CodePreviewTab({
     if (!apiKey.trim()) return
 
     const ts = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-    const userMsg: ChatMessage = { role: "user", content: text, ts }
+    // Keep the chat bubble showing only what the user typed — the file's
+    // contents are shown as a small badge instead of flooding the thread.
+    const userMsg: ChatMessage = { role: "user", content: text, ts, attachedFileName: attachedFile?.name }
 
     setMessages((prev) => [...prev, userMsg])
     setInput("")
     setIsStreaming(true)
     setStreamingText("")
 
+    // If a .md file is attached, prepend its full contents ahead of the
+    // instruction so the model reads it first before acting on the prompt.
+    const contentForModel = attachedFile
+      ? `Attached file "${attachedFile.name}":\n\n${attachedFile.content}\n\n---\n\nUser instruction: ${text}`
+      : text
+
     const prevMessages = messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
-    const allMessages  = [...prevMessages, { role: "user" as const, content: text }]
+    const allMessages  = [...prevMessages, { role: "user" as const, content: contentForModel }]
+    setAttachedFile(null)
 
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -590,7 +773,7 @@ export default function CodePreviewTab({
     setStreamingText("")
     setIsStreaming(false)
     abortRef.current = null
-  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml])
+  }, [input, isStreaming, messages, apiKey, provider, endpoint, headers, model, composedSkillPrompt, lastFullHtml, attachedFile])
 
   function stopStreaming() {
     abortRef.current?.abort()
@@ -744,7 +927,13 @@ export default function CodePreviewTab({
 
     if (isUser) {
       return (
-        <div key={i} className="flex justify-end">
+        <div key={i} className="flex flex-col items-end gap-1">
+          {msg.attachedFileName && (
+            <div className="flex items-center gap-1.5 max-w-[75%] rounded-lg border border-primary/25 bg-primary/10 px-2 py-1 text-[10px] text-muted-foreground">
+              <FileTextIcon />
+              <span className="truncate">{msg.attachedFileName}</span>
+            </div>
+          )}
           <div className="max-w-[75%] rounded-xl rounded-tr-sm bg-primary/15 border border-primary/25 px-3 py-2 text-[12px] text-foreground leading-relaxed">
             {msg.content}
           </div>
@@ -899,13 +1088,40 @@ export default function CodePreviewTab({
     )
   }
 
-  /** Rotates through the suggestion pool by conversation length so the same
-   *  three prompts don't repeat every single turn. */
+  /** Builds follow-ups from what was actually asked for and what the last
+   *  generated page already contains, instead of a fixed rotating pool —
+   *  e.g. a landing page prompt surfaces "Tambahkan testimoni", and
+   *  "Ubah ke mode gelap" is skipped once the page is already dark. */
   function getFollowUpSuggestions(count = 3): string[] {
-    const offset = messages.length % FOLLOWUP_SUGGESTIONS.length
+    const lastUserPrompt = [...messages].reverse().find((m) => m.role === "user")?.content?.toLowerCase() ?? ""
+    const html = lastFullHtml.toLowerCase()
+
+    const candidates: string[] = []
+    for (const group of CONTEXTUAL_FOLLOWUPS) {
+      if (group.keywords.some((kw) => lastUserPrompt.includes(kw))) {
+        candidates.push(...group.suggestions)
+      }
+    }
+    candidates.push(...GENERIC_FOLLOWUPS)
+
+    // Skip suggestions for features the code already appears to have.
+    const alreadyPresent = (s: string) => {
+      const lower = s.toLowerCase()
+      if (lower.includes("mode gelap") && (html.includes("dark") || html.includes("#000") || html.includes("prefers-color-scheme"))) return true
+      if (lower.includes("animasi") && (html.includes("@keyframes") || html.includes("animation:") || html.includes("transition"))) return true
+      if (lower.includes("responsive") && html.includes("@media")) return true
+      if (lower.includes("footer") && html.includes("<footer")) return true
+      if (lower.includes("form kontak") && html.includes("<form")) return true
+      return false
+    }
+
+    const seen = new Set<string>()
     const picks: string[] = []
-    for (let k = 0; k < count; k++) {
-      picks.push(FOLLOWUP_SUGGESTIONS[(offset + k) % FOLLOWUP_SUGGESTIONS.length])
+    for (const c of candidates) {
+      if (picks.length >= count) break
+      if (seen.has(c) || alreadyPresent(c)) continue
+      seen.add(c)
+      picks.push(c)
     }
     return picks
   }
@@ -922,7 +1138,7 @@ export default function CodePreviewTab({
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-      {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
+      {/* ── Toolbar ────────────��──���─────────────────────────────────────────── */}
       {/* Sticky + solid background + high z-index so the model selector and
           Code/Split/Preview switcher stay reachable no matter which
           ancestor ends up scrolling (mobile browsers in particular can end
@@ -1029,7 +1245,7 @@ export default function CodePreviewTab({
         return (
       <div className={`flex-1 min-h-0 flex overflow-hidden ${isSplitActive ? "flex-row" : "flex-col"}`}>
 
-        {/* ── LEFT: Code / Chat panel ──────────────────────────────────────── */}
+        {/* ── LEFT: Code / Chat panel ───────────────────────────────────────��� */}
         {showCode && (
           <div
             className={`flex flex-col min-h-0 overflow-hidden ${
@@ -1131,41 +1347,89 @@ export default function CodePreviewTab({
               <div ref={chatEndRef} />
             </div>
 
-            {/* ── Input bar ──────────────────────�����───────────────────────── */}
-            <div className="flex-shrink-0 border-t border-border/40 bg-sidebar/30 px-3 py-2">
-              <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !(e.keyCode === 229)) {
-                      e.preventDefault()
-                      sendMessage()
-                    }
-                  }}
-                  placeholder={noKey ? "Add API key first…" : "Describe what to build… (Enter to send)"}
-                  disabled={noKey}
-                  rows={1}
-                  className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
-                />
-                <button
-                  onClick={() => (isStreaming ? stopStreaming() : sendMessage())}
-                  disabled={!isStreaming && (!input.trim() || noKey)}
-                  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
-                    isStreaming
-                      ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
-                      : input.trim() && !noKey
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
-                      : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
-                  }`}
-                >
-                  {isStreaming ? <StopIcon /> : <SendIcon />}
-                </button>
-              </div>
-              <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
-                Shift+Enter for new line · powered by {providerName}
-              </p>
+  {/* ── Input bar ──────────────────────────────────────────────────── */}
+  <div className="flex-shrink-0 border-t border-border/40 bg-sidebar/30 px-3 py-2">
+  <input
+  ref={fileInputRef}
+  type="file"
+  accept=".md,.markdown,text/markdown"
+  onChange={handleFileSelect}
+  className="hidden"
+  />
+  {attachedFile && (
+  <div className="flex items-center gap-2 mb-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1.5">
+  <FileTextIcon />
+  <span className="flex-1 text-[11px] text-foreground truncate">{attachedFile.name}</span>
+  <span className="text-[10px] text-muted-foreground/70">{(attachedFile.content.length / 1024).toFixed(1)}KB</span>
+  <button
+  onClick={removeAttachedFile}
+  title="Remove file"
+  className="flex items-center justify-center w-4 h-4 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+  >
+  <XIcon />
+  </button>
+  </div>
+  )}
+  {fileError && (
+  <p className="text-[10px] text-destructive mb-1.5 ml-1">{fileError}</p>
+  )}
+  <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-primary/40 transition-colors">
+  <button
+  onClick={() => fileInputRef.current?.click()}
+  disabled={noKey || isStreaming}
+  title="Attach .md file"
+  className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+  >
+  <PaperclipIcon />
+  </button>
+  <textarea
+  ref={textareaRef}
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={(e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !(e.keyCode === 229)) {
+  e.preventDefault()
+  sendMessage()
+  }
+  }}
+  placeholder={noKey ? "Add API key first…" : "Describe what to build… (Enter to send)"}
+  disabled={noKey}
+  rows={1}
+  className="flex-1 min-h-[20px] max-h-[140px] resize-none bg-transparent text-[12px] text-foreground placeholder-muted-foreground/50 focus:outline-none leading-relaxed"
+  />
+  {voiceSupported && (
+  <button
+  onClick={toggleRecording}
+  disabled={noKey || isStreaming}
+  title={isRecording ? "Stop recording" : "Voice input"}
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+  isRecording
+  ? "bg-destructive/20 text-destructive animate-pulse"
+  : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+  }`}
+  >
+  <MicIcon />
+  </button>
+  )}
+  <button
+  onClick={() => (isStreaming ? stopStreaming() : sendMessage())}
+  disabled={!isStreaming && (!input.trim() || noKey)}
+  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all ${
+  isStreaming
+  ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
+  : input.trim() && !noKey
+  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
+  : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
+  }`}
+  >
+  {isStreaming ? <StopIcon /> : <SendIcon />}
+  </button>
+  </div>
+  <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">
+  {isRecording ? "Listening… tap mic to stop" : "Shift+Enter for new line · powered by " + providerName}
+  </p>
+  </div>
+  )}
             </div>
           </div>
         )}
@@ -1181,12 +1445,6 @@ export default function CodePreviewTab({
             {previewSrc && (
               <div className="flex items-center gap-2 px-3 h-8 border-b border-border/40 bg-sidebar/20 flex-shrink-0">
                 <span className="text-[10px] text-muted-foreground flex-1 text-center truncate">Preview</span>
-                <button
-                  onClick={refreshPreview}
-                  className="text-muted-foreground/70 hover:text-foreground transition-colors"
-                >
-                  <RefreshIcon />
-                </button>
               </div>
             )}
 
