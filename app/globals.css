@@ -123,6 +123,13 @@
   --id-banner-bg-mid:    #d6202f;
   --id-banner-fg:        #fdfaf5;
   --id-banner-accent:    #ffd873;
+
+  /* ── Feedback ticker — deliberately NOT red/white, so it never reads as
+     the Independence Day banner. Near-black + brand neon lime instead. ── */
+  --feedback-bg-start:   #0a0d06;
+  --feedback-bg-mid:     #16200a;
+  --feedback-fg:         #eef7e0;
+  --feedback-accent:     #c8ff4d;
 }
 
 @layer base {
@@ -246,6 +253,63 @@
   .text-id-banner-accent {
     color: var(--id-banner-accent);
   }
+
+  /* Feedback ticker backdrop — deliberately near-black + neon lime, the
+     opposite palette from the red/white Independence banner above, so the
+     two states are never mistaken for one another at a glance. Same drift
+     + sheen choreography, recolored to the brand accent for a "live feed"
+     feel instead of a patriotic one. */
+  @keyframes feedback-glow-drift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  @keyframes feedback-sheen {
+    0%   { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+    12%  { opacity: 1; }
+    45%  { opacity: 1; }
+    60%  { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+    100% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+  }
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.45; transform: scale(0.8); }
+  }
+  .feedback-ticker-bg {
+    background: linear-gradient(
+      115deg,
+      var(--feedback-bg-start) 0%,
+      var(--feedback-bg-mid) 35%,
+      var(--feedback-bg-mid) 55%,
+      var(--feedback-bg-start) 100%
+    );
+    background-size: 200% 100%;
+    animation: feedback-glow-drift 12s ease-in-out infinite;
+  }
+  .feedback-sheen::before {
+    content: "";
+    position: absolute;
+    top: -20%;
+    bottom: -20%;
+    left: 0;
+    width: 30%;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      oklch(0.9 0.25 128 / 16%) 50%,
+      transparent 100%
+    );
+    animation: feedback-sheen 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .text-feedback-fg {
+    color: var(--feedback-fg);
+  }
+  .text-feedback-accent {
+    color: var(--feedback-accent);
+  }
+  .animate-live-pulse {
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee {
       animation: none;
@@ -254,6 +318,15 @@
       animation: none;
     }
     .id-flag-sheen::before {
+      animation: none;
+    }
+    .feedback-ticker-bg {
+      animation: none;
+    }
+    .feedback-sheen::before {
+      animation: none;
+    }
+    .animate-live-pulse {
       animation: none;
     }
   }
