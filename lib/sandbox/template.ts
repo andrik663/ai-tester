@@ -36,9 +36,9 @@ export const PROJECT_TEMPLATE_FILES: Record<string, string> = {
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 
-// Sandbox preview domains are proxied through a dynamic *.vercel.run
-// hostname, so Vite's dev-server host check must be disabled or the
-// preview will be rejected with "Blocked request".
+// The WebContainer preview is served from a dynamic
+// *.webcontainer-api.io hostname, so Vite's dev-server host check must be
+// disabled or the preview will be rejected with "Blocked request".
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {

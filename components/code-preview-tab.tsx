@@ -3,6 +3,13 @@
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import CommentMarquee from "@/components/comment-marquee"
 import SandboxFilePreview, { type SandboxStatus } from "@/components/sandbox-file-preview"
+import {
+  createProjectWebContainer,
+  syncWebContainerFiles,
+  teardownProjectWebContainer,
+  isCrossOriginIsolated,
+  SandboxExpiredError,
+} from "@/lib/webcontainer"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -167,11 +174,12 @@ ${currentHtml}
 \`\`\``
 }
 
-/**
- * System prompt for "Full Project" mode — a real multi-file Vite + React +
- * TypeScript + Tailwind project that runs in an actual Vercel Sandbox VM
- * (real `npm install` + `vite dev`), instead of a single self-contained
- * HTML document. Used for the FIRST turn of a Full Project conversation;
+  /**
+  * System prompt for "Full Project" mode — a real multi-file Vite + React +
+  * TypeScript + Tailwind project that runs in an in-browser WebContainer
+  * (real `npm install` + `vite dev`, no server round trip), instead of a
+  * single self-contained HTML document. Used for the FIRST turn of a Full
+  * Project conversation;
  * follow-up turns use {@link buildFullProjectEditSystemPrompt} so the model
  * only resends the files that actually changed.
  */
@@ -630,7 +638,7 @@ export default function CodePreviewTab({
 
   /** "html" (default) = single self-contained HTML doc rendered instantly
    *  in an iframe, no boot time. "sandbox" = "Full Project (Beta)": a real
-   *  multi-file Vite + React project running in a live Vercel Sandbox VM,
+   *  multi-file Vite + React project running in an in-browser WebContainer,
    *  with a real file tree, at the cost of a one-time boot delay. Locked
    *  once the conversation has started so a mid-thread switch can't mix the
    *  two very different code formats together. */
@@ -640,7 +648,11 @@ export default function CodePreviewTab({
    *  client-held source of truth used to recreate the sandbox from scratch
    *  if it idle-times-out. */
   const [sandboxFiles, setSandboxFiles] = useState<Record<string, string>>({})
-  const [sandboxId, setSandboxId] = useState<string | null>(null)
+  /** Whether the in-browser WebContainer has been booted at least once this
+   *  session. WebContainer has no server-side identity to track (unlike the
+   *  old Vercel Sandbox VM), so this simple flag replaces the old
+   *  `sandboxId` — it's just "do we need to boot, or can we sync?". */
+  const [sandboxBooted, setSandboxBooted] = useState(false)
   const [sandboxPreviewUrl, setSandboxPreviewUrl] = useState("")
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>("idle")
   const [sandboxError, setSandboxError] = useState<string | undefined>(undefined)
@@ -933,24 +945,28 @@ export default function CodePreviewTab({
   }, [messages, isStreaming])
 
  // ── Full Project sandbox helpers ───────────────────────────────────────────
+  // Runs entirely in-browser via WebContainer (see lib/webcontainer.ts) — no
+  // Vercel Sandbox VM, no server round trip, no auth tokens required.
   /**
-   * Sends the full current file map to /api/sandbox/create, starting a
-   * brand new sandbox VM. Used for the first turn of a Full Project
-   * conversation, and to recreate a sandbox that idle-timed-out.
+   * Boots (or reuses) the in-browser WebContainer, mounts the full current
+   * file map, installs dependencies, and starts the dev server. Used for
+   * the first turn of a Full Project conversation and to recover from a
+   * broken container.
    */
   const bootSandbox = useCallback(async (files: Record<string, string>) => {
+    if (!isCrossOriginIsolated()) {
+      setSandboxStatus("error")
+      setSandboxError(
+        "This preview isn't cross-origin isolated (missing COOP/COEP headers), so the in-browser sandbox can't boot here."
+      )
+      return
+    }
     setSandboxStatus("booting")
     setSandboxError(undefined)
     try {
-      const res = await fetch("/api/sandbox/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ files }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || "Failed to start sandbox.")
-      setSandboxId(data.sandboxId)
-      setSandboxPreviewUrl(data.previewUrl)
+      const { previewUrl } = await createProjectWebContainer(files)
+      setSandboxBooted(true)
+      setSandboxPreviewUrl(previewUrl)
       setSandboxStatus("ready")
     } catch (err) {
       setSandboxStatus("error")
@@ -959,57 +975,43 @@ export default function CodePreviewTab({
   }, [])
 
   /**
-   * Pushes only the changed files to the already-running sandbox. If the
-   * sandbox expired (idle-timeout), transparently recreates it from the
-   * full `sandboxFiles` map instead of surfacing an error to the user.
+   * Writes only the changed files into the already-booted container. If no
+   * container has been booted yet in this tab, transparently boots one from
+   * the full `sandboxFiles` map instead of surfacing an error to the user.
    */
   const syncSandbox = useCallback(async (changedFiles: Record<string, string>, fullFileMap: Record<string, string>) => {
-    if (!sandboxId) {
+    if (!sandboxBooted) {
       await bootSandbox(fullFileMap)
       return
     }
     setSandboxStatus("installing")
     setSandboxError(undefined)
     try {
-      const res = await fetch("/api/sandbox/files", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sandboxId, files: changedFiles }),
-      })
-      const data = await res.json()
-      if (res.status === 409 && data?.expired) {
-        // Sandbox idle-timed-out — recreate it from the client-held file map.
+      const result = await syncWebContainerFiles(changedFiles)
+      if (result.previewUrl) setSandboxPreviewUrl(result.previewUrl)
+      setSandboxStatus("ready")
+    } catch (err) {
+      if (err instanceof SandboxExpiredError) {
+        // No container booted in this tab (e.g. fresh reload) — boot one
+        // from the client-held file map instead of surfacing an error.
         await bootSandbox(fullFileMap)
         return
       }
-      if (!res.ok) throw new Error(data?.error || "Failed to update sandbox.")
-      setSandboxPreviewUrl(data.previewUrl)
-      setSandboxStatus("ready")
-    } catch (err) {
       setSandboxStatus("error")
       setSandboxError(err instanceof Error ? err.message : "Failed to update sandbox.")
     }
-  }, [sandboxId, bootSandbox])
+  }, [sandboxBooted, bootSandbox])
 
-  /** Manual "Restart" button in the error banner — recreates the sandbox
-   *  from the full file map currently held on the client. */
+  /** Manual "Restart" button in the error banner — tears down the current
+   *  container (if any) and boots a fresh one from the full file map
+   *  currently held on the client. */
   const restartSandbox = useCallback(() => {
-    void bootSandbox(sandboxFiles)
+    void (async () => {
+      await teardownProjectWebContainer()
+      setSandboxBooted(false)
+      await bootSandbox(sandboxFiles)
+    })()
   }, [bootSandbox, sandboxFiles])
-
-  // Best-effort: stop the sandbox VM when the user navigates away, so it
-  // doesn't keep running (and billing) until the 10-minute idle timeout.
-  useEffect(() => {
-    if (!sandboxId) return
-    const handleUnload = () => {
-      navigator.sendBeacon?.(
-        "/api/sandbox/stop",
-        new Blob([JSON.stringify({ sandboxId })], { type: "application/json" })
-      )
-    }
-    window.addEventListener("pagehide", handleUnload)
-    return () => window.removeEventListener("pagehide", handleUnload)
-  }, [sandboxId])
 
  // ── Send message ─────────────────────────────────────────────────────────────
  const sendMessage = useCallback(async (overrideText?: string) => {
