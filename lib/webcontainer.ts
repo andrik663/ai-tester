@@ -95,7 +95,19 @@ async function getContainer(): Promise<WebContainer> {
 }
 
 async function runInstall(instance: WebContainer, onOutput?: (chunk: string) => void) {
-  const install = await instance.spawn("npm", ["install"])
+  // --no-audit and --no-fund each skip an extra round trip to the npm
+  // registry (security-advisory bulk lookup / funding-info lookup) that
+  // npm normally fires after resolving the tree — neither is useful inside
+  // an ephemeral WebContainer sandbox, and every network hop here is
+  // meaningfully slower than a real install due to the virtualized network.
+  // --loglevel=error trims the output piped into the UI down to what's
+  // actually actionable (warnings/progress spam were burying real errors).
+  const install = await instance.spawn("npm", [
+    "install",
+    "--no-audit",
+    "--no-fund",
+    "--loglevel=error",
+  ])
   let tail = ""
   install.output.pipeTo(
     new WritableStream({

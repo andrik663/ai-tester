@@ -18,13 +18,18 @@ export const PROJECT_TEMPLATE_FILES: Record<string, string> = {
         react: "^18.3.1",
         "react-dom": "^18.3.1",
       },
+      // NOTE: no "typescript" or "@types/*" packages here on purpose. The dev
+      // server never runs a type-check (the "dev"/"build" scripts below only
+      // invoke Vite, never `tsc`), and Vite's esbuild transform strips
+      // TypeScript syntax from .tsx files without needing the "typescript"
+      // package installed at all. Skipping it cuts one of the single
+      // heaviest packages out of every fresh WebContainer `npm install`
+      // (typescript's unpacked size alone rivals the rest of this list
+      // combined) with zero effect on what actually runs in the preview.
       devDependencies: {
         "@tailwindcss/vite": "^4.0.0",
-        "@types/react": "^18.3.3",
-        "@types/react-dom": "^18.3.0",
         "@vitejs/plugin-react": "^4.3.1",
         tailwindcss: "^4.0.0",
-        typescript: "^5.5.4",
         vite: "^5.4.8",
       },
     },

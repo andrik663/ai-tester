@@ -118,6 +118,20 @@ async function resolveProvider(token: string, modelId: string): Promise<GatewayK
   const byModel = await pickAnyKey(token, modelId)
   if (byModel) return byModel
 
+  // 1.5. "miuclaw/auto" is the virtual router model — it always means "pick
+  // whatever working key is fastest", regardless of what that key's actual
+  // provider/model is. It must be resolved here, before the provider-prefix
+  // heuristics below, because "miuclaw/auto" itself contains a "/" and would
+  // otherwise be (wrongly) treated as an explicit "provider/model" reference
+  // with no matching provider hint — which made auto-routing always fail
+  // with "No working key available" even when keys were synced.
+  if (modelId.toLowerCase() === "miuclaw/auto") {
+    const store = await getGatewayStore(token)
+    if (!store || store.keys.length === 0) return null
+    const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
+    return sorted[0]
+  }
+
   // 2. Infer provider from model ID prefix (e.g. "gpt-4o" → openai, "claude" → anthropic)
   // Then pick the fastest key for that provider
   const store = await getGatewayStore(token)
@@ -319,12 +333,21 @@ export async function POST(req: NextRequest) {
   let lastProvider = primaryKey.providerId
   let attemptCount = 0
 
+  const isAutoModel = body.model.toLowerCase() === "miuclaw/auto"
+
   for (const key of candidates) {
-    const endpoint = buildEndpoint(key.providerId, body.model, key.apiKey)
+    // "miuclaw/auto" is a virtual router model with no meaning to the actual
+    // upstream provider — each candidate key must forward its own real model
+    // (the one it was confirmed working with) instead of the literal string
+    // "miuclaw/auto", or the provider will reject the request outright.
+    const requestModel = isAutoModel ? key.modelIds[0] ?? body.model : body.model
+    const forwardRequest = isAutoModel ? { ...body, model: requestModel } : body
+
+    const endpoint = buildEndpoint(key.providerId, requestModel, key.apiKey)
     if (!endpoint) continue // skip providers needing extra config
 
     const headers = buildProviderHeaders(key.providerId, key.apiKey)
-    const forwardBody = buildForwardBody(key.providerId, body)
+    const forwardBody = buildForwardBody(key.providerId, forwardRequest)
     attemptCount++
     const t0 = Date.now()
 
