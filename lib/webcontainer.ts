@@ -14,7 +14,31 @@ import type { FileSystemTree, WebContainer, WebContainerProcess } from "@webcont
 import { PROJECT_TEMPLATE_FILES } from "./sandbox/template"
 
 const DEV_PORT = 5173
-const DEV_SERVER_READY_TIMEOUT_MS = 60 * 1000
+// `npm install` inside a WebContainer has no persistent node_modules cache
+// across tabs/reloads — every boot re-downloads the full dependency tree
+// (Vite, React, Tailwind, TypeScript, etc.) from the npm registry over the
+// sandbox's virtual network, which is meaningfully slower and more
+// network-variance-prone than a real npm install. 60s was cutting it close
+// even for a single-page project; 120s gives realistic headroom.
+const DEV_SERVER_READY_TIMEOUT_MS = 120 * 1000
+
+/** Strips ANSI escape codes (color codes, cursor moves) from npm/vite CLI
+ *  output so progress lines are readable as plain text in the UI. */
+function stripAnsi(input: string): string {
+  // eslint-disable-next-line no-control-regex
+  return input.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
+}
+
+/** Picks the last non-empty, human-readable line out of a raw output chunk
+ *  — used to surface a live "what's happening" line under the boot
+ *  spinner instead of a static "Booting sandbox…" the whole time. */
+export function lastMeaningfulLine(chunk: string): string | undefined {
+  const lines = stripAnsi(chunk)
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+  return lines.at(-1)
+}
 
 export type SandboxFileMap = Record<string, string>
 
