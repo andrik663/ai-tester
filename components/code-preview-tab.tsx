@@ -8,6 +8,7 @@ import {
   syncWebContainerFiles,
   teardownProjectWebContainer,
   isCrossOriginIsolated,
+  lastMeaningfulLine,
   SandboxExpiredError,
 } from "@/lib/webcontainer"
 
@@ -656,6 +657,11 @@ export default function CodePreviewTab({
   const [sandboxPreviewUrl, setSandboxPreviewUrl] = useState("")
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>("idle")
   const [sandboxError, setSandboxError] = useState<string | undefined>(undefined)
+  /** Last meaningful line of live `npm install`/`vite dev` output, shown
+   *  under the boot spinner so a slow-but-healthy install (which can take
+   *  well over a minute inside a WebContainer — there's no persistent
+   *  node_modules cache across tabs) reads as progress, not a hang. */
+  const [sandboxLogLine, setSandboxLogLine] = useState<string | undefined>(undefined)
 
   const [isRecording, setIsRecording]   = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(true)
@@ -963,11 +969,16 @@ export default function CodePreviewTab({
     }
     setSandboxStatus("booting")
     setSandboxError(undefined)
+    setSandboxLogLine(undefined)
     try {
-      const { previewUrl } = await createProjectWebContainer(files)
+      const { previewUrl } = await createProjectWebContainer(files, (chunk) => {
+        const line = lastMeaningfulLine(chunk)
+        if (line) setSandboxLogLine(line)
+      })
       setSandboxBooted(true)
       setSandboxPreviewUrl(previewUrl)
       setSandboxStatus("ready")
+      setSandboxLogLine(undefined)
     } catch (err) {
       setSandboxStatus("error")
       setSandboxError(err instanceof Error ? err.message : "Failed to start sandbox.")
@@ -986,10 +997,15 @@ export default function CodePreviewTab({
     }
     setSandboxStatus("installing")
     setSandboxError(undefined)
+    setSandboxLogLine(undefined)
     try {
-      const result = await syncWebContainerFiles(changedFiles)
+      const result = await syncWebContainerFiles(changedFiles, (chunk) => {
+        const line = lastMeaningfulLine(chunk)
+        if (line) setSandboxLogLine(line)
+      })
       if (result.previewUrl) setSandboxPreviewUrl(result.previewUrl)
       setSandboxStatus("ready")
+      setSandboxLogLine(undefined)
     } catch (err) {
       if (err instanceof SandboxExpiredError) {
         // No container booted in this tab (e.g. fresh reload) — boot one
