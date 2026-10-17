@@ -233,6 +233,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     id: "google",
     concurrencyLimit: 2,
     models: [
+      "gemini-4-argon",
       "gemini-3.5-flash",
       "gemini-3-flash",
       "gemini-3.1-pro",
@@ -1535,7 +1536,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "deepseek-v4-pro",
       "mimo-v2.5",
       "mimo-v2.5-pro-ultraspeed",
-      // ── Pro ──────���────���────�������────���─────────────────────────────────────────
+      // ─��� Pro ──────���────���────�������────���─────────────────────────────────────────
       "claude-opus-4.7",
       // ── Hermes / Mimo ───────────────────────────────────────────────��──��──
       "mimo-v2.5-hermes",
@@ -1937,6 +1938,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       "deepseek-v4-flash",
       "deepseek-v4-pro",
       // ── Google Gemini ──────────────────────────────────────────────────────
+      "gemini-4-argon",
       "gemini-2.5-flash",
       "gemini-2.5-pro",
       "gemini-3.0-flash",
@@ -2107,7 +2109,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Nous Research (Nous Portal) ─────────────���──────────────────────────────
+  // ── Nous Research (Nous Portal) ──��──────────���──────────────────────────────
   nousresearch: {
     id: "nousresearch",
     models: [

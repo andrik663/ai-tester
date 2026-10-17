@@ -152,6 +152,8 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: false,
     lastUpdated: "2026-06-23",
     models: [
+      // ── Gemini 4.x ─────────────────────────────────────────────────────────
+      m("gemini-4-argon",              null,  null, 1000, { promo: true, promoLabel: "New" }),
       // ── Gemini 3.x ─────────────────────────────────────────────────────────
       m("gemini-3.5-flash",           null,  null, 1000, { promo: true, promoLabel: "Newest",    promoLink: "https://ai.google.dev/gemini-api/docs/models/gemini#gemini-3.5-flash" }),
       m("gemini-3.1-pro",             null,  null, 1000, { promo: true, promoLabel: "Pro",        promoLink: "https://ai.google.dev/gemini-api/docs/models/gemini#gemini-3.1-pro" }),
@@ -2457,7 +2459,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("kimi-k2.6",             0.40, 1.50, 128, { promo: true, promoLabel: "Vision" }),
       m("kimi-k2.7",             0.50, 2.00, 128, { promo: true, promoLabel: "Vision" }),
       m("kimi-k3",               0.50, 2.00, 128),
-      // ── MiniMax ───────────────────────────────────────────────────────────
+      // ── MiniMax ──────────────────────────────────────────────��────────────
       m("minimax-m2.7",          0.30, 1.20, 128, { promo: true, promoLabel: "Reasoning" }),
       m("minimax-m3",            0.40, 1.60, 128, { promo: true, promoLabel: "Vision" }),
       // ── Muse ──────────────────────────────────────────────────────────────

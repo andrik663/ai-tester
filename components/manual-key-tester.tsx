@@ -138,7 +138,7 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://router.dahono.com",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   },
-  // ── Tier 1: Major providers ──────────────��──�����─────────────��─────���─────────
+  // ���─ Tier 1: Major providers ──────────────��──�����─────────────��─────���─────────
   {
     id: "anthropic",
     name: "Claude (Anthropic)",
@@ -191,6 +191,7 @@ const PRESETS: ProviderPreset[] = [
     endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={{API_KEY}}",
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    // Models (Gemini 4.x): gemini-4-argon
     // Models (Gemini 3.x): gemini-3.5-flash, gemini-3.1-pro, gemini-3-flash,
     //   gemini-3.1-flash-lite, gemini-3.1-flash-live
     // Models (Gemini 2.5.x): gemini-2.5-pro, gemini-2.5-flash, gemini-2.5-flash-lite
@@ -1426,6 +1427,7 @@ const PRESETS: ProviderPreset[] = [
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     models: [
+      { id: "gemini-4-argon",        label: "Gemini 4 Argon",         tag: "Google",    ctx: "1M",   in: "",      out: "",      cache: "" },
       { id: "deepseek-v3-2-volc",    label: "DeepSeek V3.2 Volc",    tag: "DeepSeek",  ctx: "128K", in: "$0.30", out: "$1.20", cache: "" },
       { id: "deepseek-v4-flash",     label: "DeepSeek V4 Flash",     tag: "DeepSeek",  ctx: "128K", in: "$0.30", out: "$1.20", cache: "" },
       { id: "deepseek-v4-pro",       label: "DeepSeek V4 Pro",       tag: "DeepSeek",  ctx: "128K", in: "$0.50", out: "$2.00", cache: "" },
@@ -4204,7 +4206,7 @@ export default function ManualKeyTester() {
   return (
     <div className="flex h-full bg-background text-foreground font-sans overflow-hidden relative antialiased">
 
-      {/* ── Mobile config overlay backdrop ────────────────────────────────── */}
+      {/* ─�� Mobile config overlay backdrop ────────────────────────────────── */}
       {configOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-30 md:hidden"
