@@ -7,11 +7,6 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -57,7 +52,7 @@ export default function LoginPage() {
       />
 
       <div
-        className={`relative w-full max-w-sm transition-all duration-500 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`}
+        className="relative w-full max-w-sm login-enter"
       >
         {/* Lock icon */}
         <div className="flex justify-center mb-8">
