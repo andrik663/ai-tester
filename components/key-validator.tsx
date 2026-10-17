@@ -328,7 +328,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
                 }}
                 className={`flex items-center gap-1 text-[10px] font-medium px-2 py-[3px] rounded border transition-all ${
                   isActive
-                    ? "border-primary/60 bg-primary/12 text-primary shadow-[0_0_0_1px_oklch(0.76_0.17_192_/_0.2)]"
+                    ? "border-primary/60 bg-primary/12 text-primary"
                     : "border-border/60 text-muted-foreground/70 hover:border-border hover:text-foreground bg-secondary/20"
                 }`}
               >
@@ -392,7 +392,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
             onClick={runTestWithCurrent}
             disabled={!apiKey.trim() || loading}
             title={!effectiveProvider ? "Select a provider above first" : "Test key (Enter)"}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-bold tracking-wide transition-all hover:brightness-110 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed flex-shrink-0 shadow-[0_0_12px_oklch(0.76_0.17_192_/_0.25)]"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-bold tracking-wide transition-all hover:bg-primary-hover active:brightness-95 disabled:opacity-35 disabled:cursor-not-allowed flex-shrink-0"
           >
             {loading ? (
               <>

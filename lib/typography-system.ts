@@ -7,18 +7,18 @@
 // ── Page Titles & Headers ───────────────────────────────────────────────
 export const TYPOGRAPHY = {
   // Page/Tab titles
-  pageTitle: "text-2xl font-bold",           // "Provider Catalog", "API Key Tester"
+  pageTitle: "text-2xl font-semibold tracking-tight",           // "Provider Catalog", "API Key Tester"
   
   // Section headers (within tabs)
-  sectionTitle: "text-lg font-bold",         // "Model Pricing", "Featured Models"
+  sectionTitle: "text-lg font-semibold tracking-tight",         // "Model Pricing", "Featured Models"
   sectionSubtitle: "text-sm font-semibold",  // Stats, descriptions
   
   // Subsection headers
-  subsectionTitle: "text-sm font-bold",      // Column headers, form labels
+  subsectionTitle: "text-sm font-semibold",      // Column headers, form labels
   subsectionLabel: "text-xs font-semibold uppercase tracking-wide", // "Pricing", "Status"
   
   // Card/item titles
-  cardTitle: "text-base font-bold",          // Provider names, key names
+  cardTitle: "text-base font-semibold",          // Provider names, key names
   cardSubtitle: "text-sm font-semibold",     // Secondary info in cards
   
   // Body text & descriptions
@@ -119,7 +119,7 @@ export const DASHBOARD_TYPOGRAPHY = {
   emptyDescription: "text-sm text-muted-foreground",
   
   // Modals/cards
-  modalTitle: "text-lg font-bold",
+  modalTitle: "text-lg font-semibold tracking-tight",
   modalDescription: "text-sm text-muted-foreground",
 } as const
 

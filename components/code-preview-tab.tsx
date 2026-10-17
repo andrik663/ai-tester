@@ -2029,7 +2029,7 @@ ${raw}`
                   {/* Empty-state mark — the Miuclaw cat mascot, matching the
                       branding used on the production site (miuclaw.my.id),
                       instead of a generic code glyph. */}
-                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center shadow-[0_0_18px_oklch(0.76_0.17_192_/_0.10)] overflow-hidden">
+                  <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center overflow-hidden">
                     <img
                       src="/images/cat-mascot.png"
                       alt="Miuclaw"
@@ -2275,7 +2275,7 @@ ${raw}`
   : isRefiningPrompt
   ? "bg-muted/30 text-muted-foreground/60 cursor-not-allowed animate-pulse"
   : input.trim() && !noKey && !(improveEnabled && !model.trim())
-  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_oklch(0.76_0.17_192_/_0.25)]"
+  ? "bg-primary text-primary-foreground hover:bg-primary-hover"
   : "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
   }`}
   >

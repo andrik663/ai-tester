@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-inter), 'Inter Fallback', system-ui, sans-serif;
-  --font-sans: var(--font-inter), 'Inter Fallback', system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono Fallback', 'Courier New', monospace;
+  --font-heading: var(--font-geist-sans), system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), 'SF Mono', 'Cascadia Code', monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -57,79 +57,82 @@
 :root {
   color-scheme: dark;
 
-  /* ── Base surfaces ──────────────────────────────────────────────── */
-  /* Near-black canvas — deep, professional, low-glare */
-  --background:         #0a0a0b;
-  --foreground:         #f7f8f8;
+  /* ── Base surfaces ────────────────────────────────────────────────
+     Warm graphite, deliberately flat. No glow, no texture — hierarchy
+     comes from elevation steps of the same neutral, the way a designer
+     layers greys, not from saturated tints. */
+  --background:         #121214;
+  --foreground:         #e9e9eb;
 
-  /* Cards: clearly elevated above background */
-  --card:               #151618;
-  --card-foreground:    #f7f8f8;
-  --popover:            #17181a;
-  --popover-foreground: #f7f8f8;
+  --card:               #1a1a1d;
+  --card-foreground:    #e9e9eb;
+  --popover:            #1e1e22;
+  --popover-foreground: #e9e9eb;
 
-  /* ── Brand / Primary ────────────────────────────────────────────── */
-  /* Signature neon lime — CTAs, active states, focus rings */
-  --primary:            #afeb00;
-  --primary-hover:      #c8ff4d;
-  --primary-foreground: #0d0e0f;
+  /* ── Primary ──────────────────────────────────────────────────────
+     Monochrome: the primary action is simply the lightest surface on
+     screen. Color is reserved for status, never for decoration. */
+  --primary:            #ececee;
+  --primary-hover:      #ffffff;
+  --primary-foreground: #131315;
 
-  /* ── Secondary / Muted surfaces ────────────────────────────────── */
-  --secondary:           #1c1d20;
-  --secondary-foreground:#f7f8f8;
-  --muted:               #1c1d20;
-  --muted-foreground:    #b6bac0;
+  /* ── Secondary / muted surfaces ─────────────────────────────────── */
+  --secondary:           #232327;
+  --secondary-foreground:#e9e9eb;
+  --muted:               #232327;
+  --muted-foreground:    #a3a3ac;
 
-  /* ── Accent = primary ───────────────────────────────────────────── */
-  --accent:              #afeb00;
-  --accent-foreground:   #0d0e0f;
+  /* Accent doubles as the hover surface; kept neutral on purpose. */
+  --accent:              #26262b;
+  --accent-foreground:   #e9e9eb;
 
-  /* ── Status ─────────────────────────────────────────────────────── */
-  --destructive:         #ff5c7a;
-  --destructive-foreground: #0d0e0f;
-  --success:             #31e58a;
-  --success-foreground:  #0d0e0f;
-  --info:                #25d6c7;
-  --info-foreground:     #0d0e0f;
+  /* ── Status (desaturated, readable on dark) ─────────────────────── */
+  --destructive:         #e5484d;
+  --destructive-foreground: #ffffff;
+  --success:             #46a758;
+  --success-foreground:  #ffffff;
+  --info:                #4c8fc4;
+  --info-foreground:     #ffffff;
 
-  /* ── Borders & inputs ───────────────────────────────────────────── */
-  /* Stronger borders so panel edges stay visible on a near-black canvas */
-  --border:              oklch(1 0 0 / 14%);
-  --input:               oklch(1 0 0 / 16%);
-  --ring:                #afeb00;
+  /* ── Borders & inputs ─────────────────────────────────────────────
+     Hairline borders — just enough to separate, never to outline. */
+  --border:              oklch(1 0 0 / 8%);
+  --input:               oklch(1 0 0 / 10%);
+  --ring:                #6f6f7a;
 
   /* ── Charts ─────────────────────────────────────────────────────── */
-  --chart-1: #afeb00;
-  --chart-2: #31e58a;
-  --chart-3: #25d6c7;
-  --chart-4: #ff5c7a;
-  --chart-5: #9aa0a6;
+  --chart-1: #8e8e99;
+  --chart-2: #46a758;
+  --chart-3: #4c8fc4;
+  --chart-4: #e5484d;
+  --chart-5: #b08d57;
 
-  /* ── Radius ─────────────────────────────────────────────────────── */
-  --radius: 0.625rem;
+  /* ── Radius ───────────────────────────────────────────────────────
+     Tighter corners read as engineered, not inflated. */
+  --radius: 0.5rem;
 
-  /* ── Sidebar — clearly distinct from main background ────────────── */
-  --sidebar:                #060606;
-  --sidebar-foreground:     #f7f8f8;
-  --sidebar-primary:        #afeb00;
-  --sidebar-primary-foreground: #0d0e0f;
-  --sidebar-accent:         #1c1d20;
-  --sidebar-accent-foreground: #f7f8f8;
-  --sidebar-border:         oklch(1 0 0 / 14%);
-  --sidebar-ring:           #afeb00;
+  /* ── Sidebar — one step below the main canvas ───────────────────── */
+  --sidebar:                #0e0e10;
+  --sidebar-foreground:     #e9e9eb;
+  --sidebar-primary:        #ececee;
+  --sidebar-primary-foreground: #131315;
+  --sidebar-accent:         #232327;
+  --sidebar-accent-foreground: #e9e9eb;
+  --sidebar-border:         oklch(1 0 0 / 8%);
+  --sidebar-ring:           #6f6f7a;
 
-  /* ── Independence Day banner — Merah Putih, isolated to the top strip ── */
-  --id-banner-bg-start:  #6e0f1c;
-  --id-banner-bg-mid:    #d6202f;
-  --id-banner-fg:        #fdfaf5;
-  --id-banner-accent:    #ffd873;
+  /* ── Top ticker strips (feedback / notices) ───────────────────────
+     Both render as the same quiet dark strip; content differs, chrome
+     does not shout. */
+  --id-banner-bg-start:  #161618;
+  --id-banner-bg-mid:    #1b1b1e;
+  --id-banner-fg:        #c9c9cf;
+  --id-banner-accent:    #8f8f9a;
 
-  /* ── Feedback ticker — deliberately NOT red/white, so it never reads as
-     the Independence Day banner. Near-black + brand neon lime instead. ── */
-  --feedback-bg-start:   #0a0d06;
-  --feedback-bg-mid:     #16200a;
-  --feedback-fg:         #eef7e0;
-  --feedback-accent:     #c8ff4d;
+  --feedback-bg-start:   #161618;
+  --feedback-bg-mid:     #1b1b1e;
+  --feedback-fg:         #c9c9cf;
+  --feedback-accent:     #a3a3ac;
 }
 
 @layer base {
@@ -139,13 +142,6 @@
 
   body {
     @apply bg-background text-foreground;
-    /* Subtle dot-grid texture for depth */
-    background-image: radial-gradient(
-      circle,
-      oklch(1 0 0 / 3.5%) 1px,
-      transparent 1px
-    );
-    background-size: 24px 24px;
     height: 100%;
     overflow: hidden;
   }
@@ -163,20 +159,20 @@
     overflow: hidden;
   }
 
-  /* Thin scrollbar for sidebar panels */
+  /* Quiet, native-feeling scrollbars */
   ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: oklch(1 0 0 / 12%);
+    background: oklch(1 0 0 / 10%);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(1 0 0 / 22%);
+    background: oklch(1 0 0 / 18%);
   }
 
   /* Hide scrollbar but keep scrolling (tab bar) */
@@ -187,65 +183,32 @@
     display: none;
   }
 
-  /* Signature lime glow — active tabs, primary CTAs */
+  /* Focus affordance kept to a soft ring, no glow. */
   .glow-primary {
-    box-shadow:
-      0 0 0 1px var(--primary),
-      0 0 20px -6px var(--primary);
+    box-shadow: 0 0 0 1px oklch(1 0 0 / 22%);
   }
 
-  /* Top-bar marquee — continuous right-to-left scroll for the Independence
-     Day message strip. The track is duplicated in the markup so this single
-     -50% translate loops seamlessly with no visible seam or reset-jump. */
+  /* Top-bar marquee — continuous right-to-left scroll. The track is
+     duplicated in the markup so this single -50% translate loops
+     seamlessly. Slowed down: it should feel ambient, not busy. */
   @keyframes marquee-scroll {
     from { transform: translateX(0); }
     to   { transform: translateX(-50%); }
   }
   .animate-marquee {
-    animation: marquee-scroll 22s linear infinite;
+    animation: marquee-scroll 40s linear infinite;
   }
 
-  /* Merah-Putih banner backdrop — a slow drifting red gradient (echoes a
-     wind-stirred flag) plus a soft diagonal sheen that sweeps across every
-     few seconds. Kept to this one strip so the rest of the app stays on the
-     lime brand palette. */
-  @keyframes id-flag-drift {
-    0%, 100% { background-position: 0% 50%; }
-    50%      { background-position: 100% 50%; }
-  }
-  @keyframes id-flag-sheen {
-    0%   { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
-    12%  { opacity: 1; }
-    45%  { opacity: 1; }
-    60%  { transform: translateX(240%) skewX(-18deg); opacity: 0; }
-    100% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
-  }
+  /* Ticker strip — flat, calm, no drifting gradients or sheen sweeps. */
   .id-flag-banner {
     background: linear-gradient(
-      115deg,
+      90deg,
       var(--id-banner-bg-start) 0%,
-      var(--id-banner-bg-mid) 35%,
-      var(--id-banner-bg-mid) 55%,
-      var(--id-banner-bg-start) 100%
+      var(--id-banner-bg-mid) 100%
     );
-    background-size: 200% 100%;
-    animation: id-flag-drift 12s ease-in-out infinite;
   }
   .id-flag-sheen::before {
-    content: "";
-    position: absolute;
-    top: -20%;
-    bottom: -20%;
-    left: 0;
-    width: 30%;
-    background: linear-gradient(
-      100deg,
-      transparent 0%,
-      oklch(1 0 0 / 22%) 50%,
-      transparent 100%
-    );
-    animation: id-flag-sheen 6s ease-in-out infinite;
-    pointer-events: none;
+    content: none;
   }
   .text-id-banner-fg {
     color: var(--id-banner-fg);
@@ -254,52 +217,15 @@
     color: var(--id-banner-accent);
   }
 
-  /* Feedback ticker backdrop — deliberately near-black + neon lime, the
-     opposite palette from the red/white Independence banner above, so the
-     two states are never mistaken for one another at a glance. Same drift
-     + sheen choreography, recolored to the brand accent for a "live feed"
-     feel instead of a patriotic one. */
-  @keyframes feedback-glow-drift {
-    0%, 100% { background-position: 0% 50%; }
-    50%      { background-position: 100% 50%; }
-  }
-  @keyframes feedback-sheen {
-    0%   { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
-    12%  { opacity: 1; }
-    45%  { opacity: 1; }
-    60%  { transform: translateX(240%) skewX(-18deg); opacity: 0; }
-    100% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
-  }
-  @keyframes live-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.45; transform: scale(0.8); }
-  }
   .feedback-ticker-bg {
     background: linear-gradient(
-      115deg,
+      90deg,
       var(--feedback-bg-start) 0%,
-      var(--feedback-bg-mid) 35%,
-      var(--feedback-bg-mid) 55%,
-      var(--feedback-bg-start) 100%
+      var(--feedback-bg-mid) 100%
     );
-    background-size: 200% 100%;
-    animation: feedback-glow-drift 12s ease-in-out infinite;
   }
   .feedback-sheen::before {
-    content: "";
-    position: absolute;
-    top: -20%;
-    bottom: -20%;
-    left: 0;
-    width: 30%;
-    background: linear-gradient(
-      100deg,
-      transparent 0%,
-      oklch(0.9 0.25 128 / 16%) 50%,
-      transparent 100%
-    );
-    animation: feedback-sheen 6s ease-in-out infinite;
-    pointer-events: none;
+    content: none;
   }
   .text-feedback-fg {
     color: var(--feedback-fg);
@@ -307,23 +233,16 @@
   .text-feedback-accent {
     color: var(--feedback-accent);
   }
+
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
   .animate-live-pulse {
-    animation: live-pulse 1.6s ease-in-out infinite;
+    animation: live-pulse 2.4s ease-in-out infinite;
   }
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee {
-      animation: none;
-    }
-    .id-flag-banner {
-      animation: none;
-    }
-    .id-flag-sheen::before {
-      animation: none;
-    }
-    .feedback-ticker-bg {
-      animation: none;
-    }
-    .feedback-sheen::before {
       animation: none;
     }
     .animate-live-pulse {

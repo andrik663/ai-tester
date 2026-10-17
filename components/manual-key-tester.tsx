@@ -4227,7 +4227,7 @@ export default function ManualKeyTester() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/12 border border-primary/25 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_oklch(0.76_0.17_192_/_0.2)]">
+            <div className="w-8 h-8 rounded-lg bg-primary/12 border border-primary/25 flex items-center justify-center flex-shrink-0">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-primary">
                 <circle cx="7" cy="12" r="4" />
                 <path d="M11 12h9M17 10v4" />
@@ -4686,7 +4686,7 @@ export default function ManualKeyTester() {
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4 flex flex-col gap-3">
               {chatHistory.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full gap-4 text-center max-w-sm mx-auto w-full">
-                  <div className="w-12 h-12 rounded-xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_oklch(0.76_0.17_192_/_0.12)]">
+                  <div className="w-12 h-12 rounded-xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0">
                     <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-6 h-6" />
                   </div>
                   <div>

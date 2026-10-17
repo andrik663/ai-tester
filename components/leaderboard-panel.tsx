@@ -224,7 +224,7 @@ export default function LeaderboardPanel() {
             onClick={() => handleCategoryChange(cat)}
             className={`inline-flex items-center gap-1.5 px-2.5 h-6 rounded text-[11px] font-medium whitespace-nowrap transition-all flex-shrink-0 ${
               activeCategory === cat
-                ? "bg-secondary text-foreground shadow-[inset_0_-2px_0_oklch(0.76_0.17_192_/_0.8)]"
+                ? "bg-secondary text-foreground shadow-[inset_0_-2px_0_oklch(0.93_0_0)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
             }`}
           >
