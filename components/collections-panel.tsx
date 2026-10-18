@@ -76,8 +76,8 @@ function EditIcon() {
 function MethodBadge({ method }: { method: string }) {
   const colors: Record<string, string> = {
     GET: "bg-success/12 text-success",
-    POST: "bg-blue-500/12 text-blue-400",
-    PUT: "bg-yellow-500/12 text-yellow-400",
+    POST: "bg-info/12 text-info",
+    PUT: "bg-warning/12 text-warning",
     DELETE: "bg-destructive/12 text-destructive",
   }
   return (

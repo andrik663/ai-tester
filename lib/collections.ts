@@ -35,12 +35,12 @@ const KEY = "ai_tester_collections_v1"
  * The palette cycles when more than 6 collections exist.
  */
 const DEFAULT_COLORS = [
-  "bg-blue-500/15 text-blue-400 border-blue-500/25",
-  "bg-purple-500/15 text-purple-400 border-purple-500/25",
-  "bg-green-500/15 text-green-400 border-green-500/25",
-  "bg-orange-500/15 text-orange-400 border-orange-500/25",
-  "bg-pink-500/15 text-pink-400 border-pink-500/25",
-  "bg-cyan-500/15 text-cyan-400 border-cyan-500/25",
+  "bg-info/15 text-info border-info/25",
+  "bg-secondary/15 text-foreground border-border",
+  "bg-success/15 text-success border-success/25",
+  "bg-warning/15 text-warning border-warning/25",
+  "bg-secondary/15 text-foreground border-border",
+  "bg-info/15 text-info border-info/25",
 ]
 
 /**

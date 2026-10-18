@@ -86,7 +86,7 @@ export const TEXT_COLORS = {
   
   // Semantic colors
   success: "text-success",
-  warning: "text-yellow-400",
+  warning: "text-warning",
   error: "text-destructive",
   info: "text-info",
 } as const

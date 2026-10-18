@@ -196,10 +196,11 @@ export default function CommentMarquee() {
           }`}
           aria-hidden={inIndependenceMode}
         >
-          {/* Feedback state — near-black + neon lime "live feed" theme, each
-              comment rendered as its own pill with avatar, name, and a
-              pulsing LIVE badge leading the track for an at-a-glance cue
-              that this is real people's feedback, not the flag banner. */}
+          {/* Feedback state — quiet dark strip on the shared banner
+              gradient vars, each comment rendered as its own pill with
+              avatar, name, and a subtle pulsing LIVE badge leading the
+              track for an at-a-glance cue that this is real people's
+              feedback, not the flag banner. */}
           <div className="relative flex items-center gap-3 whitespace-nowrap animate-marquee will-change-transform">
             {[0, 1].map((rep) => (
               <div key={rep} className="flex items-center gap-3 shrink-0">

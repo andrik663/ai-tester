@@ -285,7 +285,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
         </div>
 
         {session?.reason === "expired" && (
-          <p className="text-[9px] text-amber-400/80 px-2 py-1.5 rounded bg-amber-400/10 border border-amber-400/20">
+          <p className="text-[9px] text-warning/80 px-2 py-1.5 rounded bg-warning/10 border border-warning/20">
             Previous session expired. Start a new one to access results.
           </p>
         )}
@@ -304,7 +304,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
 
   return (
     <div className={`rounded-xl border flex flex-col gap-0 overflow-hidden transition-colors ${
-      isExpiring ? "border-amber-400/30" : "border-border"
+      isExpiring ? "border-warning/30" : "border-border"
     }`}>
       {/* Header */}
       <button
@@ -318,13 +318,13 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
           </span>
           <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
             isExpiring
-              ? "text-amber-400 border-amber-400/20 bg-amber-400/10"
+              ? "text-warning border-warning/20 bg-warning/10"
               : "text-success border-success/20 bg-success/10"
           }`}>
             {countdown || `${session.remainingMin}m`}
           </span>
           {session.batchRan && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded border text-cyan-400 border-cyan-400/20 bg-cyan-400/10">
+            <span className="text-[9px] px-1.5 py-0.5 rounded border text-info border-info/20 bg-info/10">
               {session.workingKeysCount} keys saved
             </span>
           )}
@@ -349,7 +349,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-[8px] uppercase tracking-widest text-muted-foreground/60">Remaining</span>
-              <span className={`text-[10px] font-mono font-semibold ${isExpiring ? "text-amber-400" : "text-success"}`}>
+              <span className={`text-[10px] font-mono font-semibold ${isExpiring ? "text-warning" : "text-success"}`}>
                 {countdown}
               </span>
             </div>
@@ -364,7 +364,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
             <p className="text-[9px] text-muted-foreground/60 animate-pulse">Saving results to session...</p>
           )}
           {saveMsg && !saving && (
-            <div className="flex items-center gap-1.5 text-[9px] px-2 py-1.5 rounded bg-cyan-400/10 border border-cyan-400/20 text-cyan-400">
+            <div className="flex items-center gap-1.5 text-[9px] px-2 py-1.5 rounded bg-info/10 border border-info/20 text-info">
               <CheckIcon />
               {saveMsg}
             </div>
@@ -387,7 +387,7 @@ export default function UserSessionPanel({ pendingKeys, onSessionToken }: Props)
                     className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-secondary/20 transition-colors"
                   >
                     <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-success" />
-                    <span className="text-[9px] font-semibold text-cyan-400/80 uppercase tracking-widest w-20 flex-shrink-0 truncate">
+                    <span className="text-[9px] font-semibold text-info/80 uppercase tracking-widest w-20 flex-shrink-0 truncate">
                       {r.providerName}
                     </span>
                     <span className="flex-1 text-[9px] font-mono text-foreground/70 truncate">{r.modelId}</span>

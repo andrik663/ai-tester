@@ -2668,11 +2668,11 @@ export const ALL_PROMO_MODELS: Array<{ provider: ProviderInfo; model: ModelPrici
 
 /** Tier badge colours for use in components */
 export const TIER_META: Record<ProviderInfo["tier"], { label: string; className: string }> = {
-  frontier:   { label: "Frontier",   className: "text-violet-400 bg-violet-400/10 border-violet-400/20" },
-  mid:        { label: "Mid-tier",   className: "text-sky-400 bg-sky-400/10 border-sky-400/20" },
-  budget:     { label: "Budget",     className: "text-green-400 bg-green-400/10 border-green-400/20" },
-  gateway:    { label: "Gateway",    className: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
-  specialised:{ label: "Specialised",className: "text-rose-400 bg-rose-400/10 border-rose-400/20" },
+  frontier:   { label: "Frontier",   className: "text-foreground bg-secondary/10 border-border" },
+  mid:        { label: "Mid-tier",   className: "text-info bg-info/10 border-info/20" },
+  budget:     { label: "Budget",     className: "text-success bg-success/10 border-success/20" },
+  gateway:    { label: "Gateway",    className: "text-warning bg-warning/10 border-warning/20" },
+  specialised:{ label: "Specialised",className: "text-destructive bg-destructive/10 border-destructive/20" },
 }
 
 /** Format price: "$0.270" or "Free" or "—" */

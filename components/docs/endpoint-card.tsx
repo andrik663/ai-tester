@@ -9,9 +9,9 @@ interface EndpointCardProps {
 const METHOD_COLORS: Record<string, string> = {
   GET:    "text-success bg-success/10 border-success/30",
   POST:   "text-primary bg-primary/10 border-primary/30",
-  PUT:    "text-amber-400 bg-amber-400/10 border-amber-400/30",
+  PUT:    "text-warning bg-warning/10 border-warning/30",
   DELETE: "text-destructive bg-destructive/10 border-destructive/30",
-  PATCH:  "text-orange-400 bg-orange-400/10 border-orange-400/30",
+  PATCH:  "text-warning bg-warning/10 border-warning/30",
 }
 
 export function EndpointCard({ method, path, description, auth = true, badge }: EndpointCardProps) {

@@ -96,7 +96,7 @@ function relativeTime(tsMs: number): string {
 
 function latencyColor(ms: number): string {
   if (ms < 500)   return "text-success"
-  if (ms < 1500)  return "text-yellow-400"
+  if (ms < 1500)  return "text-warning"
   return "text-destructive"
 }
 
@@ -280,10 +280,10 @@ export default function GatewayLogsPanel() {
                       <span className="text-[10px] font-mono text-foreground/90 truncate max-w-[130px]">{row.model}</span>
                       <span className="text-[8.5px] text-muted-foreground/70 px-1 py-0.5 rounded bg-secondary/30 flex-shrink-0">{row.providerId}</span>
                       {row.streaming && (
-                        <span className="text-blue-400 flex-shrink-0" title="Streaming"><IconStream /></span>
+                        <span className="text-info flex-shrink-0" title="Streaming"><IconStream /></span>
                       )}
                       {row.fallbackUsed && (
-                        <span className="text-yellow-400 flex-shrink-0" title={`Fallback used (${row.attemptCount} attempts)`}><IconFallback /></span>
+                        <span className="text-warning flex-shrink-0" title={`Fallback used (${row.attemptCount} attempts)`}><IconFallback /></span>
                       )}
                     </div>
                     {row.errorMessage && (

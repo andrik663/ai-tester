@@ -326,9 +326,9 @@ export default function DocsPage() {
               language="bash"
               code={`Authorization: Bearer YOUR_TOKEN`}
             />
-            <div className="mt-4 p-3.5 rounded-lg border border-amber-500/25 bg-amber-500/8">
-              <p className="text-[12px] text-amber-400/90 leading-relaxed">
-                <strong className="text-amber-300">Note:</strong> The <code className="font-mono text-[11px]">/api/v1/gateway/push</code> endpoint
+            <div className="mt-4 p-3.5 rounded-lg border border-warning/25 bg-warning/8">
+              <p className="text-[12px] text-warning/90 leading-relaxed">
+                <strong className="text-warning">Note:</strong> The <code className="font-mono text-[11px]">/api/v1/gateway/push</code> endpoint
                 does not require a bearer token — it is protected by server environment access only.
                 Do not expose this endpoint publicly without additional firewall rules.
               </p>

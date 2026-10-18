@@ -284,7 +284,9 @@ When building futuristic/animated websites:
 - Use Three.js (via CDN) for 3D scenes: rotating geometry, particle fields, holographic grids
 - Use GSAP (via CDN) for smooth timeline animations, text reveals, and scroll effects
 - Use particles.js or tsParticles (via CDN) for ambient particle backgrounds
-- Apply a dark theme with neon accent colors (cyan #00ffff, electric blue #0080ff, green #00ff88)
+- Apply a dark graphite theme with restrained, desaturated accent colors
+  (greys for surfaces and text; reserve saturated color for status only —
+  errors, success, warnings, live/running indicators — never decoration)
 - Add scanline overlays, glitch effects, and CRT flicker using CSS keyframes
 - Use CSS custom properties for the color palette and glow effects (box-shadow, text-shadow)
 - Include a pulsing HUD-style UI: progress bars, status indicators, data readouts
@@ -349,14 +351,14 @@ const SKILL_STACKS: SkillStack[] = [
     label: "v0 Stack",
     description: "Web Artifacts Builder + Theme Factory + Frontend Design — the same combination that powers Vercel v0's artifact generation.",
     skillIds: ["web-artifacts-builder", "theme-factory", "frontend-design"],
-    color: "text-violet-400 border-violet-400/30 bg-violet-400/10",
+    color: "text-foreground border-border bg-secondary/10",
   },
   {
     id: "art-stack",
     label: "Art Stack",
     description: "Algorithmic Art + Theme Factory + Canvas Design — for generative graphics and creative coding.",
     skillIds: ["algorithmic-art", "theme-factory", "canvas-design"],
-    color: "text-sky-400 border-sky-400/30 bg-sky-400/10",
+    color: "text-info border-info/30 bg-info/10",
   },
   {
     id: "full-coding",
@@ -370,14 +372,14 @@ const SKILL_STACKS: SkillStack[] = [
     label: "Futuristic Stack",
     description: "Futuristic Web Builder + Complete Code Writer — generates complete animated sci-fi/futuristic websites without truncation.",
     skillIds: ["futuristic-web-builder", "complete-code-writer"],
-    color: "text-cyan-400 border-cyan-400/30 bg-cyan-400/10",
+    color: "text-info border-info/30 bg-info/10",
   },
   {
     id: "no-truncate-stack",
     label: "No-Truncate Stack",
     description: "Complete Code Writer + Code Completer + Web Artifacts Builder — maximises output completeness for any code generation task.",
     skillIds: ["complete-code-writer", "code-completer", "web-artifacts-builder"],
-    color: "text-orange-400 border-orange-400/30 bg-orange-400/10",
+    color: "text-warning border-warning/30 bg-warning/10",
   },
 ]
 
@@ -490,7 +492,7 @@ function SkillCard({
 
   const repoColor =
     skill.registrySlug === "anthropics/skills"
-      ? "border-amber-400/30 text-amber-400/70"
+      ? "border-warning/30 text-warning/70"
       : skill.registrySlug === "vercel-labs/agent-skills"
       ? "border-primary/30 text-primary/60"
       : "border-success/30 text-success/70"
@@ -524,7 +526,7 @@ function SkillCard({
             <span className="text-[11px] font-semibold text-foreground/90">{skill.name}</span>
             <span className="text-[8px] font-mono text-muted-foreground/60">{skill.installs} installs</span>
             {skill.category === "Coding" && (
-              <span className="text-[8px] px-1.5 py-0.5 rounded border border-sky-400/30 bg-sky-400/10 text-sky-400 font-semibold flex items-center gap-0.5">
+              <span className="text-[8px] px-1.5 py-0.5 rounded border border-info/30 bg-info/10 text-info font-semibold flex items-center gap-0.5">
                 <CodeIcon />
                 Code tab
               </span>
@@ -950,7 +952,7 @@ export default function SkillsPanel({ onActiveSkillChange }: SkillsPanelProps) {
 
       {/* No working keys notice */}
       {workingKeys.length === 0 && (
-        <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 px-3 py-2.5 text-[10px] text-amber-400/80">
+        <div className="rounded-xl border border-warning/30 bg-warning/5 px-3 py-2.5 text-[10px] text-warning/80">
           No working keys saved yet. Run a batch test first — skills will be integrated with all working keys.
         </div>
       )}

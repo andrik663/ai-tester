@@ -300,7 +300,7 @@ function GroupedKeyCard({
           groupScreenerCounts.off > 0 && groupScreenerCounts.on === 0
             ? "bg-destructive"
             : groupScreenerCounts.off > 0
-            ? "bg-yellow-400"
+            ? "bg-warning"
             : "bg-success"
         }`} />
 
@@ -344,10 +344,10 @@ function GroupedKeyCard({
             disabled={locking || lockStatus === "ok"}
             className={`flex items-center gap-1 px-2 py-1.5 rounded-md border text-[9px] transition-all disabled:opacity-60 ${
               lockStatus === "ok"
-                ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
+                ? "border-info/50 bg-info/10 text-info"
                 : lockStatus === "error"
                 ? "border-destructive/50 bg-destructive/10 text-destructive"
-                : "border-border text-muted-foreground/60 hover:border-cyan-400/30 hover:text-cyan-400 hover:bg-cyan-400/5"
+                : "border-border text-muted-foreground/60 hover:border-info/30 hover:text-info hover:bg-info/5"
             }`}
             title={lockStatus === "ok" ? "Locked" : lockStatus === "error" ? lockError : "Lock to DB"}
           >
@@ -409,12 +409,12 @@ function GroupedKeyCard({
                 {(() => {
                   const caps = inferCapabilities(r.modelId).filter((c) => c !== "text")
                   const CAP_TAG_COLORS: Record<string, string> = {
-                    flagship: "text-yellow-400/80 border-yellow-400/20 bg-yellow-400/5",
+                    flagship: "text-warning/80 border-warning/20 bg-warning/5",
                     agent:    "text-success/80 border-success/20 bg-success/5",
-                    coding:   "text-violet-400/80 border-violet-400/20 bg-violet-400/5",
-                    document: "text-orange-400/80 border-orange-400/20 bg-orange-400/5",
-                    image:    "text-amber-400/80 border-amber-400/20 bg-amber-400/5",
-                    video:    "text-rose-400/80 border-rose-400/20 bg-rose-400/5",
+                    coding:   "text-foreground/80 border-border bg-secondary/5",
+                    document: "text-warning/80 border-warning/20 bg-warning/5",
+                    image:    "text-warning/80 border-warning/20 bg-warning/5",
+                    video:    "text-destructive/80 border-destructive/20 bg-destructive/5",
                   }
                   const CAP_TAG_LABELS: Record<string, string> = {
                     flagship: "flagship", agent: "agent", coding: "code",
@@ -558,7 +558,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
             Locked Keys
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-info/10 text-info border border-info/20">
             {locked.length} permanent
           </span>
         </div>
@@ -566,7 +566,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
           <button
             onClick={(e) => { e.stopPropagation(); handleRunNow() }}
             disabled={running}
-            className="flex items-center gap-1 text-[9px] px-2 py-1 rounded border border-border text-muted-foreground/70 hover:text-cyan-400 hover:border-cyan-400/40 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1 text-[9px] px-2 py-1 rounded border border-border text-muted-foreground/70 hover:text-info hover:border-info/40 transition-colors disabled:opacity-40"
           >
             <RefreshIcon />
             {running ? "Testing..." : "Run now"}
@@ -580,7 +580,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
       </button>
 
       {runResult && (
-        <div className="text-[9px] px-2 py-1 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+        <div className="text-[9px] px-2 py-1 rounded bg-info/10 text-info border border-info/20">
           Refreshed {runResult.tested} keys — {runResult.changed} changed status
         </div>
       )}
@@ -599,7 +599,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
                     <span className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${row.isWorking ? "bg-success" : "bg-destructive"}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[9px] uppercase tracking-widest font-semibold text-cyan-400/80 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded">
+                        <span className="text-[9px] uppercase tracking-widest font-semibold text-info/80 bg-info/10 border border-info/20 px-1.5 py-0.5 rounded">
                           {row.providerName}
                         </span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded border ${row.isWorking ? "text-success border-success/20 bg-success/10" : "text-destructive border-destructive/20 bg-destructive/10"}`}>
@@ -834,12 +834,12 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
           const ACTIVE_COLORS: Record<string, string> = {
             all:      "border-primary/50 bg-primary/10 text-primary",
             agent:    "border-success/50 bg-success/10 text-success",
-            coding:   "border-violet-400/50 bg-violet-400/10 text-violet-400",
-            document: "border-orange-400/50 bg-orange-400/10 text-orange-400",
-            text:     "border-sky-400/50 bg-sky-400/10 text-sky-400",
-            image:    "border-amber-400/50 bg-amber-400/10 text-amber-400",
-            video:    "border-rose-400/50 bg-rose-400/10 text-rose-400",
-            flagship: "border-yellow-400/50 bg-yellow-400/10 text-yellow-400",
+            coding:   "border-border bg-secondary/10 text-foreground",
+            document: "border-warning/50 bg-warning/10 text-warning",
+            text:     "border-info/50 bg-info/10 text-info",
+            image:    "border-warning/50 bg-warning/10 text-warning",
+            video:    "border-destructive/50 bg-destructive/10 text-destructive",
+            flagship: "border-warning/50 bg-warning/10 text-warning",
           }
 
           const isActive = filterCap === cap
@@ -916,7 +916,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
                 onClick={() => setFilterProvider(pid)}
                 className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
                   filterProvider === pid
-                    ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
+                    ? "border-info/50 bg-info/10 text-info"
                     : "border-border/50 text-muted-foreground/70 hover:bg-secondary"
                 }`}
               >

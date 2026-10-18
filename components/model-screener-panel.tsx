@@ -22,13 +22,13 @@ const COUNTDOWN_TICK_MS   = 1_000                 // 1 s UI update
 // ── Capability pill meta ──────────────────────────────────────────────────────
 
 const CAP_META: Record<CapabilityTag, { label: string; color: string }> = {
-  coding:   { label: "Coding",    color: "text-violet-400 bg-violet-400/10 border-violet-400/25" },
-  text:     { label: "Text",      color: "text-sky-400 bg-sky-400/10 border-sky-400/25" },
-  image:    { label: "Image",     color: "text-amber-400 bg-amber-400/10 border-amber-400/25" },
-  video:    { label: "Video",     color: "text-rose-400 bg-rose-400/10 border-rose-400/25" },
+  coding:   { label: "Coding",    color: "text-foreground bg-secondary/10 border-border" },
+  text:     { label: "Text",      color: "text-info bg-info/10 border-info/25" },
+  image:    { label: "Image",     color: "text-warning bg-warning/10 border-warning/25" },
+  video:    { label: "Video",     color: "text-destructive bg-destructive/10 border-destructive/25" },
   flagship: { label: "Flagship",  color: "text-primary bg-primary/10 border-primary/25" },
   agent:    { label: "Agent",     color: "text-success bg-success/10 border-success/25" },
-  document: { label: "Document",  color: "text-orange-400 bg-orange-400/10 border-orange-400/25" },
+  document: { label: "Document",  color: "text-warning bg-warning/10 border-warning/25" },
 }
 
 const ALL_CAPS: CapabilityTag[] = ["flagship", "agent", "coding", "document", "text", "image", "video"]
@@ -110,18 +110,18 @@ function ModelRow({ result, probing }: { result: ScreenerModelResult; probing: b
     }`}>
       {/* Status dot */}
       <span className={`flex-shrink-0 mt-1.5 w-2 h-2 rounded-full ${
-        probing ? "bg-yellow-400/60 animate-pulse" : result.isOn ? "bg-success" : "bg-destructive"
+        probing ? "bg-warning/60 animate-pulse" : result.isOn ? "bg-success" : "bg-destructive"
       }`} />
 
       <div className="flex-1 min-w-0">
         {/* Top: provider + model ID */}
         <div className="flex items-start gap-1.5 flex-wrap">
-          <span className="text-[9px] uppercase tracking-widest font-semibold text-cyan-400/80 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded flex-shrink-0">
+          <span className="text-[9px] uppercase tracking-widest font-semibold text-info/80 bg-info/10 border border-info/20 px-1.5 py-0.5 rounded flex-shrink-0">
             {result.providerName}
           </span>
           <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium flex-shrink-0 flex items-center gap-0.5 ${
             probing
-              ? "text-yellow-400 border-yellow-400/20 bg-yellow-400/10"
+              ? "text-warning border-warning/20 bg-warning/10"
               : result.isOn
               ? "text-success border-success/20 bg-success/10"
               : "text-destructive border-destructive/20 bg-destructive/10"
@@ -422,7 +422,7 @@ export default function ModelScreenerPanel() {
 
             {/* Progress */}
             {scanning && scanProgress && (
-              <span className="text-[9px] font-mono text-yellow-400/80">
+              <span className="text-[9px] font-mono text-warning/80">
                 {scanProgress.done}/{scanProgress.total}
               </span>
             )}
@@ -431,7 +431,7 @@ export default function ModelScreenerPanel() {
             <button
               onClick={() => runScan()}
               disabled={scanning}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-400/5 transition-all disabled:opacity-40"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border text-[9px] text-muted-foreground hover:text-info hover:border-info/40 hover:bg-info/5 transition-all disabled:opacity-40"
             >
               <RefreshIcon spinning={scanning} />
               {scanning ? "Scanning..." : "Scan now"}
@@ -454,7 +454,7 @@ export default function ModelScreenerPanel() {
         {scanning && scanProgress && (
           <div className="w-full h-0.5 rounded-full bg-secondary overflow-hidden">
             <div
-              className="h-full bg-cyan-400/60 transition-all duration-300"
+              className="h-full bg-info/60 transition-all duration-300"
               style={{ width: `${(scanProgress.done / scanProgress.total) * 100}%` }}
             />
           </div>
@@ -530,7 +530,7 @@ export default function ModelScreenerPanel() {
                     key={pid}
                     onClick={() => setFilterProvider(pid)}
                     className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
-                      filterProvider === pid ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400" : "border-border text-muted-foreground/70 hover:bg-secondary"
+                      filterProvider === pid ? "border-info/50 bg-info/10 text-info" : "border-border text-muted-foreground/70 hover:bg-secondary"
                     }`}
                   >
                     {name} ({cnt})

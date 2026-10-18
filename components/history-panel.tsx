@@ -115,7 +115,7 @@ function HistoryItem({
             {entry.model && <span className="text-muted-foreground">model: <span className="text-foreground">{entry.model}</span></span>}
             <span className="text-muted-foreground">HTTP: <span className={entry.ok ? "text-success" : "text-destructive"}>{entry.status}</span></span>
             {entry.durationMs && <span className="text-muted-foreground">total: <span className="text-foreground">{fmtDuration(entry.durationMs)}</span></span>}
-            {entry.ttftMs != null && <span className="text-muted-foreground">TTFT: <span className="text-cyan-400">{entry.ttftMs}ms</span></span>}
+            {entry.ttftMs != null && <span className="text-muted-foreground">TTFT: <span className="text-info">{entry.ttftMs}ms</span></span>}
             {entry.tokenUsage?.totalTokens && <span className="text-muted-foreground">tokens: <span className="text-foreground">{entry.tokenUsage.totalTokens}</span></span>}
           </div>
 

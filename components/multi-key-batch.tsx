@@ -229,12 +229,12 @@ function TokenBadge({ usage }: { usage?: TokenUsage }) {
       )}
       <div className="flex items-center gap-1.5">
         {usage.promptTokens !== null && (
-          <span className="text-[9px] font-mono text-sky-400/70 leading-none tabular-nums">
+          <span className="text-[9px] font-mono text-info/70 leading-none tabular-nums">
             +{usage.promptTokens.toLocaleString()}
           </span>
         )}
         {usage.completionTokens !== null && (
-          <span className="text-[9px] font-mono text-violet-400/70 leading-none tabular-nums">
+          <span className="text-[9px] font-mono text-foreground/70 leading-none tabular-nums">
             -{usage.completionTokens.toLocaleString()}
           </span>
         )}
@@ -250,7 +250,7 @@ function StatusPill({ result }: { result: MultiKeyResult | null }) {
 
   if (result.statusText === "Skipped") {
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 whitespace-nowrap">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-warning/10 text-warning border border-warning/20 whitespace-nowrap">
         SKIP
       </span>
     )
@@ -371,14 +371,14 @@ function ExpandedDetail({
           <div className="flex items-center gap-4">
             {result.tokenUsage.promptTokens !== null && (
               <div className="flex flex-col items-start">
-                <span className="text-[10px] text-sky-400/80 font-bold uppercase tracking-wider">Input</span>
-                <span className="text-sm font-mono font-bold text-sky-400 tabular-nums">{result.tokenUsage.promptTokens.toLocaleString()}</span>
+                <span className="text-[10px] text-info/80 font-bold uppercase tracking-wider">Input</span>
+                <span className="text-sm font-mono font-bold text-info tabular-nums">{result.tokenUsage.promptTokens.toLocaleString()}</span>
               </div>
             )}
             {result.tokenUsage.completionTokens !== null && (
               <div className="flex flex-col items-start">
-                <span className="text-[10px] text-violet-400/80 font-bold uppercase tracking-wider">Output</span>
-                <span className="text-sm font-mono font-bold text-violet-400 tabular-nums">{result.tokenUsage.completionTokens.toLocaleString()}</span>
+                <span className="text-[10px] text-foreground/80 font-bold uppercase tracking-wider">Output</span>
+                <span className="text-sm font-mono font-bold text-foreground tabular-nums">{result.tokenUsage.completionTokens.toLocaleString()}</span>
               </div>
             )}
             {result.tokenUsage.totalTokens !== null && (
@@ -466,7 +466,7 @@ function MobileRow({
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5 flex-wrap">
             {entry.unknown ? (
-              <span className="text-[11px] font-semibold text-yellow-400/70">? unknown</span>
+              <span className="text-[11px] font-semibold text-warning/70">? unknown</span>
             ) : (
               <>
                 <span className="text-base leading-none select-none" aria-hidden>{providerInfo?.flag}</span>
@@ -561,7 +561,7 @@ function DesktopRow({
         {/* Provider */}
         <td className="px-2 py-2.5 w-36">
           {entry.unknown ? (
-            <span className="text-yellow-400/70 font-mono text-[10px]">? unknown</span>
+            <span className="text-warning/70 font-mono text-[10px]">? unknown</span>
           ) : (
             <div className="flex items-center gap-1.5">
               <span className="text-sm leading-none select-none flex-shrink-0" aria-hidden>{providerInfo?.flag}</span>
@@ -827,7 +827,7 @@ function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
             <span className="text-[12px] font-semibold text-foreground leading-none">{pf?.label ?? keyResult.provider}</span>
             <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${
               keyResult.modelSource === "live"
-                ? "border-teal-500/30 text-teal-400 bg-teal-500/10"
+                ? "border-info/30 text-info bg-info/10"
                 : "border-border/40 text-muted-foreground/70"
             }`}>
               {keyResult.modelSource === "live" ? "live" : "static"}
@@ -845,7 +845,7 @@ function KeyAllModelsCard({ keyResult }: { keyResult: KeyAllModelsResult }) {
           </div>
           <span className="text-[9px] font-mono text-muted-foreground/60 tabular-nums">{keyResult.total} models · {keyResult.durationMs}ms</span>
           {keyResult.fetchError && (
-            <span className="text-[9px] text-yellow-400/70 font-mono truncate max-w-[140px]">{keyResult.fetchError}</span>
+            <span className="text-[9px] text-warning/70 font-mono truncate max-w-[140px]">{keyResult.fetchError}</span>
           )}
         </div>
 
@@ -1364,7 +1364,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                         {isLive && (
                           <span
                             title="Model list is fetched live from the provider API at batch test time"
-                            className="text-[8px] px-1 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold"
+                            className="text-[8px] px-1 rounded bg-info/10 text-info border border-info/20 font-bold"
                           >
                             live
                           </span>
@@ -1583,7 +1583,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                 <span className="text-[10px] text-success/60">{validCount} valid</span>
               )}
               {unknownCount > 0 && (
-                <span className="text-[10px] text-yellow-400/60">{unknownCount} unknown</span>
+                <span className="text-[10px] text-warning/60">{unknownCount} unknown</span>
               )}
             </div>
 
@@ -1647,8 +1647,8 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
                         <div className="flex flex-col gap-0.5">
                           <span>Tokens</span>
                           <span className="flex gap-1.5 font-normal text-[9px] normal-case tracking-normal">
-                            <span className="text-sky-400/70">in</span>
-                            <span className="text-violet-400/70">out</span>
+                            <span className="text-info/70">in</span>
+                            <span className="text-foreground/70">out</span>
                           </span>
                         </div>
                       </th>
@@ -1680,7 +1680,7 @@ export default function MultiKeyBatch({ onKeysSaved }: { onKeysSaved?: () => voi
 
             {/* Unknown keys warning */}
             {unknownCount > 0 && (
-              <p className="text-[10px] text-yellow-400/70 border border-yellow-400/15 bg-yellow-400/5 rounded px-3 py-2 leading-relaxed">
+              <p className="text-[10px] text-warning/70 border border-warning/15 bg-warning/5 rounded px-3 py-2 leading-relaxed">
                 {unknownCount} {unknownCount === 1 ? "entry" : "entries"} skipped — provider could not be detected. Use format:{" "}
                 <code className="font-mono">provider:apikey</code>
               </p>

@@ -192,7 +192,7 @@ export default function VideoTester({
       <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2 border-b border-border bg-card">
         <div className="flex items-center gap-2 min-w-0">
           <span className={`w-1.5 h-1.5 flex-shrink-0 rounded-full ${
-            !isSupported ? "bg-yellow-400" :
+            !isSupported ? "bg-warning" :
             isRunning ? "bg-primary animate-pulse" :
             status === "done" ? "bg-success" :
             hasKey ? "bg-success" : "bg-muted-foreground/40"
@@ -238,8 +238,8 @@ export default function VideoTester({
       {/* Not supported */}
       {!isSupported && (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
-          <div className="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5 text-yellow-400">
+          <div className="w-10 h-10 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5 text-warning">
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -261,7 +261,7 @@ export default function VideoTester({
           {status === "idle" && (
             <div className="flex flex-col items-center justify-center min-h-full gap-5 p-6 text-center">
               {!hasKey && (
-                <p className="text-[11px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-4 py-2 rounded-lg">
+                <p className="text-[11px] text-warning/80 border border-warning/20 bg-warning/5 px-4 py-2 rounded-lg">
                   Enter your API key to generate video.
                 </p>
               )}

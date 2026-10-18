@@ -501,7 +501,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
         const colorClass = result.ok
           ? "border-success/25 bg-success/8 text-success"
           : isWarning
-          ? "border-yellow-500/25 bg-yellow-500/8 text-yellow-400"
+          ? "border-warning/25 bg-warning/8 text-warning"
           : "border-destructive/25 bg-destructive/8 text-destructive"
         const icon = result.ok ? <CheckIcon /> : <XIcon />
         const message = result.ok

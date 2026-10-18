@@ -52,9 +52,9 @@ function CopyIcon() {
 
 const TIER_COLORS: Record<string, string> = {
   free:     "text-success  bg-success/10  border-success/25",
-  starter:  "text-sky-400    bg-sky-400/10    border-sky-400/25",
-  pro:      "text-violet-400 bg-violet-400/10 border-violet-400/25",
-  business: "text-amber-400  bg-amber-400/10  border-amber-400/25",
+  starter:  "text-info    bg-info/10    border-info/25",
+  pro:      "text-foreground bg-secondary/10 border-border",
+  business: "text-warning  bg-warning/10  border-warning/25",
 }
 
 function TierBadge({ tier }: { tier: string }) {
@@ -316,7 +316,7 @@ export default function DahonoBatchTest({ apiKey }: Props) {
         disabled={!canRun || loading}
         className={`flex items-center justify-center gap-2 w-full rounded-md px-3 py-2 text-[11px] font-semibold transition-all border ${
           canRun && !loading
-            ? "bg-amber-400/10 text-amber-400 border-amber-400/30 hover:bg-amber-400/20 hover:border-amber-400/50"
+            ? "bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 hover:border-warning/50"
             : "bg-secondary text-muted-foreground border-border cursor-not-allowed opacity-50"
         }`}
       >

@@ -208,7 +208,7 @@ export default function Chat({ apiKey = "", model = GEMINI_CHAT_MODELS[0], tempe
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center min-h-[40vh] gap-5 text-center">
               {!hasKey && (
-                <div className="text-[11px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 px-4 py-2.5 rounded-lg">
+                <div className="text-[11px] text-warning/80 border border-warning/20 bg-warning/5 px-4 py-2.5 rounded-lg">
                   Enter your Gemini API key in the left panel to start chatting.
                 </div>
               )}

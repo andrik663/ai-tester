@@ -455,7 +455,7 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
             {(data as BatchTestResponse & { modelSource?: string }).modelSource === "live" && (
               <span
                 title="Model list was fetched live from the provider API"
-                className="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold"
+                className="text-[8px] px-1.5 py-0.5 rounded bg-info/10 text-info border border-info/20 font-bold"
               >
                 live
               </span>

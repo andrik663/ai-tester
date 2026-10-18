@@ -2013,7 +2013,7 @@ ${raw}`
           >
             {/* No API key warning */}
             {noKey && (
-              <div className="m-3 rounded-lg border border-yellow-500/25 bg-yellow-500/8 px-3 py-2.5 text-[11px] text-yellow-400/90 leading-relaxed">
+              <div className="m-3 rounded-lg border border-warning/25 bg-warning/8 px-3 py-2.5 text-[11px] text-warning/90 leading-relaxed">
                 Add an API key in Config to start generating code.
               </div>
             )}

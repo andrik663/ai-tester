@@ -21,17 +21,17 @@ interface QuickProvider {
 
 const QUICK_PROVIDERS: QuickProvider[] = [
   { id: "openai",      name: "OpenAI",        testerLabel: "OpenAI API Key",           keyPrefix: "sk-",       keyExample: "sk-...",        color: "text-success",   dotColor: "bg-success"   },
-  { id: "anthropic",   name: "Anthropic",     testerLabel: "Anthropic API Key",        keyPrefix: "sk-ant-",   keyExample: "sk-ant-...",    color: "text-orange-400",  dotColor: "bg-orange-400"  },
-  { id: "google",      name: "Google Gemini", testerLabel: "Google Gemini Key",        keyPrefix: "AIza",      keyExample: "AIzaSy...",     color: "text-blue-400",    dotColor: "bg-blue-400"    },
-  { id: "groq",        name: "Groq",          testerLabel: "Groq API Key",             keyPrefix: "gsk_",      keyExample: "gsk_...",       color: "text-cyan-400",    dotColor: "bg-cyan-400"    },
+  { id: "anthropic",   name: "Anthropic",     testerLabel: "Anthropic API Key",        keyPrefix: "sk-ant-",   keyExample: "sk-ant-...",    color: "text-warning",  dotColor: "bg-warning"  },
+  { id: "google",      name: "Google Gemini", testerLabel: "Google Gemini Key",        keyPrefix: "AIza",      keyExample: "AIzaSy...",     color: "text-info",    dotColor: "bg-info"    },
+  { id: "groq",        name: "Groq",          testerLabel: "Groq API Key",             keyPrefix: "gsk_",      keyExample: "gsk_...",       color: "text-info",    dotColor: "bg-info"    },
   { id: "mistral",     name: "Mistral",       testerLabel: "Mistral API Key",          keyPrefix: undefined,   keyExample: "••••••••",      color: "text-destructive",     dotColor: "bg-destructive"     },
   { id: "cohere",      name: "Cohere",        testerLabel: "Cohere API Key",           keyPrefix: undefined,   keyExample: "••••••••",      color: "text-success", dotColor: "bg-success" },
-  { id: "huggingface", name: "HuggingFace",   testerLabel: "HuggingFace Token",        keyPrefix: "hf_",       keyExample: "hf_...",        color: "text-yellow-400",  dotColor: "bg-yellow-400"  },
+  { id: "huggingface", name: "HuggingFace",   testerLabel: "HuggingFace Token",        keyPrefix: "hf_",       keyExample: "hf_...",        color: "text-warning",  dotColor: "bg-warning"  },
   { id: "github",      name: "GitHub",        testerLabel: "GitHub Token",             keyPrefix: "ghp_",      keyExample: "ghp_...",       color: "text-foreground",  dotColor: "bg-foreground"  },
-  { id: "stripe",      name: "Stripe",        testerLabel: "Stripe Secret Key",        keyPrefix: "sk_",       keyExample: "sk_live_...",   color: "text-violet-400",  dotColor: "bg-violet-400"  },
+  { id: "stripe",      name: "Stripe",        testerLabel: "Stripe Secret Key",        keyPrefix: "sk_",       keyExample: "sk_live_...",   color: "text-foreground",  dotColor: "bg-secondary"  },
   { id: "xai",         name: "xAI (Grok)",    testerLabel: "xAI API Key",              keyPrefix: undefined,   keyExample: "xai-...",       color: "text-zinc-300",    dotColor: "bg-zinc-300"    },
-  { id: "deepseek",    name: "DeepSeek",      testerLabel: "DeepSeek API Key",         keyPrefix: undefined,   keyExample: "sk-...",        color: "text-sky-400",     dotColor: "bg-sky-400"     },
-  { id: "together",    name: "Together AI",   testerLabel: "Together AI Key",          keyPrefix: undefined,   keyExample: "••••••••",      color: "text-pink-400",    dotColor: "bg-pink-400"    },
+  { id: "deepseek",    name: "DeepSeek",      testerLabel: "DeepSeek API Key",         keyPrefix: undefined,   keyExample: "sk-...",        color: "text-info",     dotColor: "bg-info"     },
+  { id: "together",    name: "Together AI",   testerLabel: "Together AI Key",          keyPrefix: undefined,   keyExample: "••••••••",      color: "text-foreground",    dotColor: "bg-secondary"    },
   { id: "dahono",      name: "Dahono Gateway",testerLabel: "Dahono API Key",           keyPrefix: undefined,   keyExample: "dk-...",        color: "text-primary",     dotColor: "bg-primary"     },
 ]
 
@@ -67,9 +67,9 @@ function StatusBadge({ valid, small = false }: { valid: boolean | null; small?: 
 function MetricChip({ label, value, accent = "default" }: { label: string; value: string; accent?: "green" | "yellow" | "red" | "blue" | "default" }) {
   const colors = {
     green:   "text-success",
-    yellow:  "text-yellow-400",
+    yellow:  "text-warning",
     red:     "text-destructive",
-    blue:    "text-blue-400",
+    blue:    "text-info",
     default: "text-foreground",
   }
   return (
@@ -415,7 +415,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
         <div className="flex items-center justify-between">
           <p className="text-[9px] text-muted-foreground/60">
             {apiKey.length >= 4 && !effectiveProvider
-              ? <span className="text-yellow-400/70">Select a provider above</span>
+              ? <span className="text-warning/70">Select a provider above</span>
               : apiKey.length >= 4
               ? <span className="font-mono">{keyMasked}</span>
               : <span>Press <kbd className="px-1 py-px rounded bg-secondary border border-border text-[8px] font-mono">/</kbd> to focus &middot; <kbd className="px-1 py-px rounded bg-secondary border border-border text-[8px] font-mono">Ctrl+Enter</kbd> to test</span>
@@ -547,7 +547,7 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
                 </div>
               </div>
               {showCurl && (
-                <pre className="text-[10px] font-mono text-cyan-400/80 bg-background/60 rounded-md border border-border px-3 py-2 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
+                <pre className="text-[10px] font-mono text-info/80 bg-background/60 rounded-md border border-border px-3 py-2 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
                   {result.curlDisplay}
                 </pre>
               )}
@@ -592,11 +592,11 @@ export default function KeyValidator({ compact = false, onValidated }: KeyValida
                 {result.logs.map((log, i) => {
                   const colors: Record<string, string> = {
                     info: "text-muted-foreground",
-                    req: "text-blue-400",
-                    res: "text-yellow-400",
+                    req: "text-info",
+                    res: "text-warning",
                     ok: "text-success",
                     err: "text-destructive",
-                    curl: "text-cyan-400",
+                    curl: "text-info",
                   }
                   const prefixes: Record<string, string> = {
                     info: "  ", req: "→ ", res: "← ", ok: "✓ ", err: "✗ ", curl: "$ ",

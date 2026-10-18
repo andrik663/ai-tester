@@ -136,7 +136,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://router.dahono.com/models",
     createKeyUrl: "https://router.dahono.com",
-    color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
+    color: "text-warning bg-warning/10 border-warning/30",
   },
   // ���─ Tier 1: Major providers ──────────────��──�����─────────────��─────���─────────
   {
@@ -157,7 +157,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.anthropic.com/en/api/messages",
     createKeyUrl: "https://console.anthropic.com/settings/keys",
-    color: "text-orange-400 bg-orange-400/10 border-orange-400/30",
+    color: "text-warning bg-warning/10 border-warning/30",
   },
   {
     id: "openai",
@@ -202,7 +202,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://ai.google.dev/gemini-api/docs/models",
     createKeyUrl: "https://aistudio.google.com/apikey",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "xai",
@@ -246,7 +246,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://platform.deepseek.com/api-docs/",
     createKeyUrl: "https://platform.deepseek.com/api_keys",
-    color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "qwen",
@@ -265,7 +265,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://help.aliyun.com/zh/model-studio/developer-reference/use-qwen-by-calling-api",
     createKeyUrl: "https://bailian.console.aliyun.com/?apiKey=1",
-    color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "zhipu",
@@ -284,7 +284,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://open.bigmodel.cn/dev/api",
     createKeyUrl: "https://open.bigmodel.cn/usercenter/apikeys",
-    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "minimax",
@@ -305,7 +305,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://platform.minimax.io/docs/guides/models-intro",
     createKeyUrl: "https://platform.minimax.io/user-center/basic-information/interface-key",
-    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   // ── Meta AI (llama.com) ───────────────────────────────────────────────────
   {
@@ -332,7 +332,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://llama.developer.meta.com/docs/overview",
     createKeyUrl: "https://llama.developer.meta.com/",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   // ── Meta / Llama providers via 3rd-party ────���─────────────────────────────
   // ── Meta / Llama providers ─────────────────────────────────────────────��──
@@ -361,7 +361,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://inference-docs.cerebras.ai/api-reference/chat-completions",
     createKeyUrl: "https://cloud.cerebras.ai/",
-    color: "text-lime-400 bg-lime-400/10 border-lime-400/30",
+    color: "text-success bg-success/10 border-success/30",
   },
   {
     id: "fireworks",
@@ -380,7 +380,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.fireworks.ai/api-reference/post-chatcompletions",
     createKeyUrl: "https://fireworks.ai/account/api-keys",
-    color: "text-orange-300 bg-orange-300/10 border-orange-300/30",
+    color: "text-warning bg-warning/10 border-warning/30",
   },
   {
     id: "novita",
@@ -453,7 +453,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://novita.ai/docs/api-reference/model-apis-llm-create-chat-completion",
     createKeyUrl: "https://novita.ai/settings/key-management",
-    color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "cloudflare",
@@ -471,7 +471,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://developers.cloudflare.com/workers-ai/models/",
     createKeyUrl: "https://dash.cloudflare.com/profile/api-tokens",
-    color: "text-amber-300 bg-amber-300/10 border-amber-300/30",
+    color: "text-warning bg-warning/10 border-warning/30",
   },
   {
     id: "openrouter",
@@ -490,7 +490,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://openrouter.ai/docs/api-reference/overview",
     createKeyUrl: "https://openrouter.ai/settings/keys",
-    color: "text-violet-300 bg-violet-300/10 border-violet-300/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "sambanova",
@@ -547,7 +547,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.hyperbolic.xyz/docs/getting-started",
     createKeyUrl: "https://app.hyperbolic.xyz/settings",
-    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "ai21",
@@ -566,7 +566,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.ai21.com/reference/jamba-chat-api-ref",
     createKeyUrl: "https://studio.ai21.com/account/api-key",
-    color: "text-sky-300 bg-sky-300/10 border-sky-300/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   // ── Tier 3: Open-source / infra providers ─────────────────────────────────
   {
@@ -586,7 +586,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://console.groq.com/docs/openai",
     createKeyUrl: "https://console.groq.com/keys",
-    color: "text-purple-400 bg-purple-400/10 border-purple-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "together",
@@ -622,7 +622,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.together.ai/docs/serverless-models",
     createKeyUrl: "https://api.together.ai/settings/api-keys",
-    color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "mistral",
@@ -678,7 +678,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.perplexity.ai/api-reference/chat-completions",
     createKeyUrl: "https://www.perplexity.ai/settings/api",
-    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "huggingface",
@@ -697,7 +697,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://huggingface.co/docs/api-inference/en/tasks/chat-completion",
     createKeyUrl: "https://huggingface.co/settings/tokens",
-    color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
+    color: "text-warning bg-warning/10 border-warning/30",
   },
   {
     id: "replicate",
@@ -719,7 +719,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://replicate.com/docs/reference/http",
     createKeyUrl: "https://replicate.com/account/api-tokens",
-    color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
+    color: "text-destructive bg-destructive/10 border-destructive/30",
   },
   // ── Tier 4: Additional Chinese / Asian providers ──────────────────────────
   {
@@ -739,7 +739,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://platform.moonshot.cn/docs/api/chat",
     createKeyUrl: "https://platform.moonshot.cn/console/api-keys",
-    color: "text-teal-300 bg-teal-300/10 border-teal-300/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "baidu",
@@ -758,7 +758,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Nlks5zkzu",
     createKeyUrl: "https://console.bce.baidu.com/iam/#/iam/accesslist",
-    color: "text-blue-300 bg-blue-300/10 border-blue-300/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "yi",
@@ -796,7 +796,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://platform.stepfun.ai/docs/Chat/chat_completion",
     createKeyUrl: "https://platform.stepfun.ai/account-info",
-    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "hunyuan",
@@ -815,7 +815,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://cloud.tencent.com/document/product/1729/111007",
     createKeyUrl: "https://console.cloud.tencent.com/hunyuan/api-key",
-    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   // ── Tier 5: Cloud providers ───────────────────────────────────────────────
   {
@@ -835,7 +835,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference",
     createKeyUrl: "https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   // ── Tier 6: Korean / multilingual providers ───────────────────────────────
   {
@@ -855,7 +855,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://developers.upstage.ai/docs/api-reference/chat-api",
     createKeyUrl: "https://console.upstage.ai/api-keys",
-    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   // ─�� Tier 7: Enterprise / specialty providers ───────��──────────────────────
   {
@@ -874,7 +874,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://dev.writer.com/api-guides/chat",
     createKeyUrl: "https://app.writer.com/aistudio/organization/api-keys",
-    color: "text-indigo-300 bg-indigo-300/10 border-indigo-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "lepton",
@@ -893,7 +893,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://lepton.ai/references/llm_models",
     createKeyUrl: "https://dashboard.lepton.ai/",
-    color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   // ── Tier 8: Image-first providers (Arena.ai) ─────────────────────────────
   {
@@ -913,7 +913,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.bfl.ai/quick_start",
     createKeyUrl: "https://api.bfl.ai/auth/register",
-    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "bytedance",
@@ -952,7 +952,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://www.recraft.ai/docs",
     createKeyUrl: "https://www.recraft.ai/profile",
-    color: "text-pink-300 bg-pink-300/10 border-pink-300/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "ideogram",
@@ -973,7 +973,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://developer.ideogram.ai/ideogram-v3",
     createKeyUrl: "https://ideogram.ai/manage-api",
-    color: "text-purple-300 bg-purple-300/10 border-purple-300/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "luma",
@@ -992,7 +992,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.lumalabs.ai/reference/create-image-generation",
     createKeyUrl: "https://lumalabs.ai/dream-machine/api/keys",
-    color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   // ── Stability AI ─────────────────────────────────────────────────────────
   {
@@ -1020,7 +1020,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://platform.stability.ai/docs/api-reference",
     createKeyUrl: "https://platform.stability.ai/account/keys",
-    color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   // ── Runway ────────────────────────────────────────────────────────────────
   {
@@ -1046,7 +1046,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.dev.runwayml.com/api/endpoints/image_to_video",
     createKeyUrl: "https://app.runwayml.com/settings/api-keys",
-    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   // ── Pika Labs ─────────────────────────────────────────────────────────────
   {
@@ -1070,7 +1070,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.pika.art/",
     createKeyUrl: "https://pika.art/dashboard/api-keys",
-    color: "text-rose-400 bg-rose-400/10 border-rose-400/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   // ── Kling (Kuaishou) direct API ───────────────────────────────────────────
   {
@@ -1097,7 +1097,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.qingque.cn/d/home/eZQDzO9eMXuVGpFPi9gqtApFq",
     createKeyUrl: "https://klingai.com/api-keys",
-    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   // ── Jempol.in ─────────────────────────────────────────────────────────────
   {
@@ -1157,7 +1157,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://fal.ai/docs",
     createKeyUrl: "https://fal.ai/dashboard/keys",
-    color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
+    color: "text-success bg-success/10 border-success/20",
   },
   {
     id: "amazon",
@@ -1175,7 +1175,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.aws.amazon.com/nova/latest/userguide/using-nova-apis.html",
     createKeyUrl: "https://console.aws.amazon.com/iam/home#/security_credentials",
-    color: "text-amber-300 bg-amber-300/10 border-amber-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   // ── Tier 9: New / Emerging providers ─────────────────────────────────────
   {
@@ -1214,7 +1214,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://www.ibm.com/docs/en/watsonx/saas?topic=tasks-text-chat",
     createKeyUrl: "https://www.ibm.com/watsonx",
-    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "neets",
@@ -1234,7 +1234,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.neets.ai/reference/create-chat-completion",
     createKeyUrl: "https://neets.ai/api",
-    color: "text-rose-300 bg-rose-300/10 border-rose-300/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   {
     id: "lamini",
@@ -1253,7 +1253,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://lamini-ai.github.io/lamini/",
     createKeyUrl: "https://app.lamini.ai/account",
-    color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "deepinfra",
@@ -1272,7 +1272,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://deepinfra.com/docs/advanced/openai_api",
     createKeyUrl: "https://deepinfra.com/dash/api_keys",
-    color: "text-indigo-300 bg-indigo-300/10 border-indigo-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "anyscale",
@@ -1291,7 +1291,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.endpoints.anyscale.com/",
     createKeyUrl: "https://console.anyscale.com/credentials",
-    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "siliconflow",
@@ -1323,7 +1323,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.siliconflow.cn/",
     createKeyUrl: "https://cloud.siliconflow.cn/account/ak",
-    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "nebius",
@@ -1352,7 +1352,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.studio.nebius.com/",
     createKeyUrl: "https://studio.nebius.com/settings/api-keys",
-    color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "featherless",
@@ -1379,7 +1379,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://featherless.ai/docs",
     createKeyUrl: "https://featherless.ai/dashboard",
-    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   // ── Free Token Faucet ──────────────────────────────────────────────────────
   {
@@ -1407,7 +1407,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://freetokenfaucet.com",
     createKeyUrl: "https://freetokenfaucet.com",
-    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+    color: "text-info bg-info/10 border-info/20",
     note: "Claim your daily free quota on freetokenfaucet.com. Use your tf_ API key.",
   },
   // ── CEOWeb3 Gateway ────────────────────────────────────────────────────────
@@ -1460,7 +1460,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://dashboard.ceoweb3.dev",
     createKeyUrl: "https://dashboard.ceoweb3.dev/redeem",
-    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
     note: "Indonesian AI gateway. 29 models — GLM, Kimi, DeepSeek, Gemini, GPT-5 Codex, MiniMax, HunyuanHY3, and Muse Spark.",
   },
   {
@@ -1502,7 +1502,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "aion-labs/aion-2.0", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/aion-labs",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "allenai",
@@ -1514,7 +1514,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "allenai/olmo-3-32b-think", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/allenai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "anthracite-org",
@@ -1538,7 +1538,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "arcee-ai/trinity-large-thinking", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/arcee-ai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
 
   {
@@ -1551,7 +1551,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "cognitivecomputations/dolphin-mistral-24b-venice-edition", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/cognitivecomputations",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "deepcogito",
@@ -1563,7 +1563,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "deepcogito/cogito-v2.1-671b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/deepcogito",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-teal-400 bg-teal-400/10 border-teal-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "gryphe",
@@ -1588,7 +1588,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "inclusionai/ring-2.6-1t", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/inclusionai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "inflection",
@@ -1607,7 +1607,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://developers.inflection.ai/",
     createKeyUrl: "https://developers.inflection.ai/",
-    color: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "kwaipilot",
@@ -1638,7 +1638,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://liquid.ai/liquid-foundation-models",
     createKeyUrl: "https://inference.liquid.ai/",
-    color: "text-sky-400 bg-sky-400/10 border-sky-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "mancer",
@@ -1657,7 +1657,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://mancer.tech/",
     createKeyUrl: "https://mancer.tech/",
-    color: "text-pink-500 bg-pink-500/10 border-pink-500/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
 
   {
@@ -1680,7 +1680,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://github.com/marketplace/models/azureml/Phi-4-mini-instruct",
     createKeyUrl: "https://github.com/settings/tokens",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
 
 
@@ -1694,7 +1694,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "morph/morph-v3-large", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/morph",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "nex-agi",
@@ -1718,7 +1718,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "nousresearch/hermes-4-70b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/nousresearch",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "perceptron",
@@ -1730,7 +1730,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "perceptron/perceptron-mk1", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/perceptron",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-rose-400 bg-rose-400/10 border-rose-400/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   {
     id: "poolside",
@@ -1742,7 +1742,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "poolside/laguna-xs.2", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/poolside",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "rekaai",
@@ -1754,7 +1754,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "rekaai/reka-edge", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/rekaai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-violet-500 bg-violet-500/10 border-violet-500/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "relace",
@@ -1766,7 +1766,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "relace/relace-search", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/relace",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "sao10k",
@@ -1778,7 +1778,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "sao10k/l3.1-70b-hanami-x1", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/sao10k",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "switchpoint",
@@ -1790,7 +1790,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "switchpoint/router", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/switchpoint",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
+    color: "text-success bg-success/10 border-success/20",
   },
 
   {
@@ -1803,7 +1803,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "thedrummer/cydonia-24b-v4.1", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/thedrummer",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "undi95",
@@ -1815,7 +1815,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "undi95/remm-slerp-l2-13b", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/undi95",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-teal-300 bg-teal-300/10 border-teal-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
 
   {
@@ -1828,7 +1828,7 @@ const PRESETS: ProviderPreset[] = [
     bodyTemplate: JSON.stringify({ model: "xiaomi/mimo-v2.5-pro", messages: [{ role: "user", content: "{{PROMPT}}" }] }, null, 2),
     docsUrl: "https://openrouter.ai/xiaomi",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-orange-500 bg-orange-500/10 border-orange-500/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
 
   // ── Marketku Router ───────────────────────────────────────────────────────
@@ -1956,7 +1956,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.openmodel.ai",
     createKeyUrl: "https://openmodel.ai",
-    color: "text-blue-300 bg-blue-300/10 border-blue-300/30",
+    color: "text-info bg-info/10 border-info/30",
   },
 
   // ── Miuclaw Gateway ───────────────────────────────────────────────────────
@@ -2013,7 +2013,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.avian.io",
     createKeyUrl: "https://avian.io",
-    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
 
   // ── Parasail ──────────────────────────────────────────────────────────────
@@ -2045,7 +2045,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.parasail.io",
     createKeyUrl: "https://parasail.io",
-    color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
 
   // ── Telnyx AI ─────────────────────────────────────────────────────────────
@@ -2075,7 +2075,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://developers.telnyx.com/docs/inference",
     createKeyUrl: "https://portal.telnyx.com/#/app/api-keys",
-    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
 
   // ── Targon (Bittensor) ────────────────────────────────────────────────────
@@ -2104,7 +2104,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.targon.com",
     createKeyUrl: "https://app.targon.com",
-    color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
 
   // ── Sakana AI (Fugu) ──────────────────────────────────────────────────────
@@ -2129,7 +2129,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://api.fugu.sakana.ai/docs",
     createKeyUrl: "https://sakana.ai/fugu/",
-    color: "text-pink-400 bg-pink-400/10 border-pink-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
 
   // ── Conduit Gateway ──────────────────────────────────────────────────────
@@ -2175,7 +2175,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://conduit.ozdoev.net",
     createKeyUrl: "https://conduit.ozdoev.net",
-    color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
   },
 
   // ── ZenMux Gateway ──────────────────────────���──────────────────────���─────
@@ -2230,7 +2230,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.zenmux.ai",
     createKeyUrl: "https://zenmux.ai",
-    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
 
   // ── Custom ──────────────────���──����──────────────────────────────────────────
@@ -2248,7 +2248,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/alfredpros",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "alpindale",
@@ -2263,7 +2263,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/alpindale",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-blue-300 bg-blue-300/10 border-blue-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "arizeai",
@@ -2278,7 +2278,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/arizeai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "bytedance-seed",
@@ -2328,7 +2328,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/essentialai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-teal-400 bg-teal-400/10 border-teal-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "hidream",
@@ -2345,7 +2345,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/hidream-ai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-pink-400 bg-pink-400/10 border-pink-400/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "kling-or",
@@ -2390,7 +2390,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://docs.leonardo.ai/reference/creategeneration",
     createKeyUrl: "https://app.leonardo.ai/settings/api-keys",
-    color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "lykon",
@@ -2405,7 +2405,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/lykon",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-fuchsia-300 bg-fuchsia-300/10 border-fuchsia-300/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "meituan",
@@ -2420,7 +2420,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/meituan",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "neversleep",
@@ -2436,7 +2436,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/neversleep",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-indigo-300 bg-indigo-300/10 border-indigo-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "opengvlab",
@@ -2451,7 +2451,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/opengvlab",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "pearlresearch",
@@ -2466,7 +2466,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/pearl-ai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-sky-300 bg-sky-300/10 border-sky-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "pixverse",
@@ -2481,7 +2481,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/pixverse",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "primeintellect",
@@ -2496,7 +2496,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/prime-intellect",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-lime-400 bg-lime-400/10 border-lime-400/20",
+    color: "text-success bg-success/10 border-success/20",
   },
   {
     id: "raifle",
@@ -2511,7 +2511,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/raifle",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-rose-300 bg-rose-300/10 border-rose-300/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
   },
   {
     id: "rundiffusion",
@@ -2527,7 +2527,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/rundiffusion",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-orange-300 bg-orange-300/10 border-orange-300/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
   {
     id: "stabilityai",
@@ -2543,7 +2543,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/stabilityai",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-violet-300 bg-violet-300/10 border-violet-300/20",
+    color: "text-foreground bg-secondary/10 border-border",
   },
   {
     id: "tngtech",
@@ -2560,7 +2560,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/tngtech",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "vidu",
@@ -2576,7 +2576,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://openrouter.ai/vidu",
     createKeyUrl: "https://openrouter.ai/keys",
-    color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+    color: "text-info bg-info/10 border-info/20",
   },
   {
     id: "wanai",
@@ -2637,7 +2637,7 @@ const PRESETS: ProviderPreset[] = [
     ],
     docsUrl: "https://router.bynara.id/docs",
     createKeyUrl: "https://router.bynara.id/",
-    color: "text-teal-400 bg-teal-400/10 border-teal-400/30",
+    color: "text-info bg-info/10 border-info/30",
     note: "Indonesian AI gateway (NaraRouter). API key prefix: sk-nry-",
   },
   {
@@ -2680,7 +2680,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.digitalocean.com/products/gradient-ai-platform/",
     createKeyUrl: "https://cloud.digitalocean.com/gen-ai/model-access-keys",
-    color: "text-sky-400 bg-sky-400/10 border-sky-400/30",
+    color: "text-info bg-info/10 border-info/30",
     note: "Use a Gradient AI model access key, not a control-plane token.",
   },
   {
@@ -2702,7 +2702,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.clarifai.com/compute/inference/api/openai",
     createKeyUrl: "https://clarifai.com/settings/security",
-    color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
     note: "Use your Clarifai Personal Access Token (PAT) as the key.",
   },
   {
@@ -2723,7 +2723,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.reka.ai",
     createKeyUrl: "https://platform.reka.ai",
-    color: "text-rose-400 bg-rose-400/10 border-rose-400/30",
+    color: "text-destructive bg-destructive/10 border-destructive/30",
   },
   {
     id: "nousresearch",
@@ -2743,7 +2743,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.nousresearch.com",
     createKeyUrl: "https://portal.nousresearch.com",
-    color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/30",
+    color: "text-info bg-info/10 border-info/30",
     note: "Key is generated from a Nous Portal subscription.",
   },
   {
@@ -2765,7 +2765,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://www.scaleway.com/en/docs/generative-apis/",
     createKeyUrl: "https://console.scaleway.com/iam/api-keys",
-    color: "text-violet-400 bg-violet-400/10 border-violet-400/30",
+    color: "text-foreground bg-secondary/10 border-border",
     note: "EU-hosted (Paris). Use a Scaleway secret API key.",
   },
   {
@@ -2787,7 +2787,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://docs.crusoecloud.com",
     createKeyUrl: "https://console.crusoecloud.com",
-    color: "text-lime-400 bg-lime-400/10 border-lime-400/30",
+    color: "text-success bg-success/10 border-success/30",
   },
   {
     id: "arceeai",
@@ -2827,7 +2827,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://www.alibabacloud.com/help/en/model-studio/",
     createKeyUrl: "https://bailian.console.aliyun.com",
-    color: "text-orange-400 bg-orange-400/10 border-orange-400/30",
+    color: "text-warning bg-warning/10 border-warning/30",
     note: "Uses the international (Singapore) DashScope endpoint. Mainland keys may need the CN endpoint instead.",
   },
   {
@@ -2910,7 +2910,7 @@ const PRESETS: ProviderPreset[] = [
     }, null, 2),
     docsUrl: "https://api.ant-ling.com",
     createKeyUrl: "https://www.inclusionai.ai",
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
+    color: "text-info bg-info/10 border-info/30",
   },
   {
     id: "custom",
@@ -3340,11 +3340,11 @@ function VideoTabIcon() {
 
 const LOG_STYLES: Record<LogEntry["level"], string> = {
   info: "text-muted-foreground",
-  req:  "text-blue-400",
-  res:  "text-yellow-400",
+  req:  "text-info",
+  res:  "text-warning",
   ok:   "text-success",
   err:  "text-destructive",
-  curl: "text-cyan-400",
+  curl: "text-info",
 }
 
 const LOG_PREFIX: Record<LogEntry["level"], string> = {
@@ -4743,7 +4743,7 @@ export default function ManualKeyTester() {
                       <>
                         <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">{streamingText}<span className="inline-block w-1.5 h-4 bg-primary/70 animate-pulse rounded-sm ml-0.5 align-middle" /></pre>
                         {ttftMs !== null && (
-                          <span className="text-[9px] text-cyan-400/70 font-mono">TTFT: {ttftMs}ms</span>
+                          <span className="text-[9px] text-info/70 font-mono">TTFT: {ttftMs}ms</span>
                         )}
                       </>
                     ) : (
@@ -4861,10 +4861,10 @@ export default function ManualKeyTester() {
                     }
 
                     function pctAccent(rem?: string, lim?: string): string {
-                      if (!rem || !lim) return "text-sky-400"
+                      if (!rem || !lim) return "text-info"
                       const pct = Math.round((parseInt(rem) / parseInt(lim)) * 100)
                       if (pct > 60) return "text-success"
-                      if (pct > 25) return "text-yellow-400"
+                      if (pct > 25) return "text-warning"
                       return "text-destructive"
                     }
 
@@ -4888,7 +4888,7 @@ export default function ManualKeyTester() {
                               {reqLim ? `${reqRem}/${reqLim}` : reqRem}
                             </span>
                             {reqResetLabel && (
-                              <span className="text-[9px] text-sky-400/70 bg-sky-400/8 px-1 rounded">
+                              <span className="text-[9px] text-info/70 bg-info/8 px-1 rounded">
                                 ↺{reqResetLabel}
                               </span>
                             )}
@@ -4992,7 +4992,7 @@ export default function ManualKeyTester() {
                     </button>
                   )}
                   {ttftMs !== null && (
-                    <span className="text-[10px] font-mono text-cyan-400/80">TTFT {ttftMs}ms</span>
+                    <span className="text-[10px] font-mono text-info/80">TTFT {ttftMs}ms</span>
                   )}
                 </div>
 
@@ -5058,7 +5058,7 @@ export default function ManualKeyTester() {
                       Works with GPT-4o, Claude Sonnet, Gemini, Llama-Vision, etc.
                     </p>
                     {!apiKey && (
-                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                      <p className="text-[10px] text-warning/80 mt-2 border border-warning/20 bg-warning/5 px-3 py-1.5 rounded-md">
                         API key required — tap the menu icon to open config
                       </p>
                     )}
@@ -5203,7 +5203,7 @@ export default function ManualKeyTester() {
                       Upload an image containing text. The model will extract and transcribe all visible text.
                     </p>
                     {!apiKey && (
-                      <p className="text-[10px] text-yellow-400/80 mt-2 border border-yellow-400/20 bg-yellow-400/5 px-3 py-1.5 rounded-md">
+                      <p className="text-[10px] text-warning/80 mt-2 border border-warning/20 bg-warning/5 px-3 py-1.5 rounded-md">
                         API key required — tap the menu icon to open config
                       </p>
                     )}
@@ -5321,9 +5321,9 @@ export default function ManualKeyTester() {
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
               {/* Mobile-visible unsupported banner */}
               {!isImageSupported && (
-                <div className="md:hidden flex-shrink-0 mx-3 mt-3 px-3 py-3 rounded-xl border border-yellow-400/25 bg-yellow-400/8 text-yellow-300 text-[11px] leading-relaxed">
+                <div className="md:hidden flex-shrink-0 mx-3 mt-3 px-3 py-3 rounded-xl border border-warning/25 bg-warning/8 text-warning text-[11px] leading-relaxed">
                   <p className="font-semibold mb-0.5">Image generation not supported</p>
-                  <p className="text-yellow-400/70">
+                  <p className="text-warning/70">
                     <strong>{selectedPreset.name}</strong> has no image API. Open config (menu icon) and switch to Google, OpenAI, Together AI, Fireworks, BFL, Recraft, or Ideogram.
                   </p>
                 </div>
@@ -5372,9 +5372,9 @@ export default function ManualKeyTester() {
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
               {/* Mobile-visible unsupported banner */}
               {!isVideoSupported && (
-                <div className="md:hidden flex-shrink-0 mx-3 mt-3 px-3 py-3 rounded-xl border border-yellow-400/25 bg-yellow-400/8 text-yellow-300 text-[11px] leading-relaxed">
+                <div className="md:hidden flex-shrink-0 mx-3 mt-3 px-3 py-3 rounded-xl border border-warning/25 bg-warning/8 text-warning text-[11px] leading-relaxed">
                   <p className="font-semibold mb-0.5">Video generation not supported</p>
-                  <p className="text-yellow-400/70">
+                  <p className="text-warning/70">
                     <strong>{selectedPreset.name}</strong> has no video API. Open config and switch to Google (Veo 3), MiniMax (Hailuo), Together AI (Wan 2.7), or Zhipu (CogVideoX).
                   </p>
                 </div>
@@ -5855,7 +5855,7 @@ export default function ManualKeyTester() {
               {liveResult && (
                 <div className={`rounded-lg border p-4 flex flex-col gap-3 transition-all ${
                   liveResult.confidence === "high"    ? "border-success/30 bg-success/5"
-                  : liveResult.confidence === "low"   ? "border-yellow-500/30 bg-yellow-500/5"
+                  : liveResult.confidence === "low"   ? "border-warning/30 bg-warning/5"
                   : "border-border bg-secondary/20"
                 }`}>
                   {/* Header row */}
@@ -5870,7 +5870,7 @@ export default function ManualKeyTester() {
                     </div>
                     <span className={`flex-shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
                       liveResult.confidence === "high"  ? "text-success bg-success/10 border-success/30"
-                      : liveResult.confidence === "low" ? "text-yellow-400 bg-yellow-400/10 border-yellow-400/30"
+                      : liveResult.confidence === "low" ? "text-warning bg-warning/10 border-warning/30"
                       : "text-muted-foreground bg-secondary border-border"
                     }`}>
                       {liveResult.confidence === "high" ? "High confidence" : liveResult.confidence === "low" ? "Low confidence" : "Unrecognised"}
@@ -5956,7 +5956,7 @@ export default function ManualKeyTester() {
                                     <code className="text-muted-foreground font-mono text-[11px] bg-secondary/50 px-1.5 py-0.5 rounded">{p.example}</code>
                                   </td>
                                   <td className="px-3 py-2.5">
-                                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.confidence === "high" ? "text-success bg-success/10 border border-success/20" : "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20"}`}>
+                                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.confidence === "high" ? "text-success bg-success/10 border border-success/20" : "text-warning bg-warning/10 border border-warning/20"}`}>
                                       {p.confidence}
                                     </span>
                                   </td>
@@ -6111,11 +6111,11 @@ export default function ManualKeyTester() {
 
                   {/* Provider note — static note or auto-detected OpenRouter routing */}
                   {(selectedPreset.note || selectedPreset.endpoint.includes("openrouter.ai")) && (
-                    <div className="flex items-start gap-2 px-2.5 py-2 rounded border border-amber-500/20 bg-amber-500/5">
-                      <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5 text-amber-400/80 flex-shrink-0 mt-px" aria-hidden>
+                    <div className="flex items-start gap-2 px-2.5 py-2 rounded border border-warning/20 bg-warning/5">
+                      <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5 text-warning/80 flex-shrink-0 mt-px" aria-hidden>
                         <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM7 7h2v5H7V7zm0-3h2v2H7V4z" fill="currentColor"/>
                       </svg>
-                      <p className="text-[10px] text-amber-400/80 leading-relaxed">
+                      <p className="text-[10px] text-warning/80 leading-relaxed">
                         {selectedPreset.note ?? "Routed via OpenRouter — use your OpenRouter API key, not a direct provider key."}
                       </p>
                     </div>

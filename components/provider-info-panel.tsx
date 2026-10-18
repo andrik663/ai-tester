@@ -162,25 +162,25 @@ function HQFlag({ code }: { code: string }) {
 
 // ── Promo badge ───────────────────────────────────��───────────────────────────
 const PROMO_COLOR: Record<string, string> = {
-  "New":           "text-sky-400 bg-sky-400/10 border-sky-400/20",
+  "New":           "text-info bg-info/10 border-info/20",
   "Free":          "text-success bg-success/10 border-success/20",
   "Free tier":     "text-success bg-success/10 border-success/20",
-  "Flagship":      "text-violet-400 bg-violet-400/10 border-violet-400/20",
-  "Popular":       "text-amber-400 bg-amber-400/10 border-amber-400/20",
+  "Flagship":      "text-foreground bg-secondary/10 border-border",
+  "Popular":       "text-warning bg-warning/10 border-warning/20",
   "Cheapest":      "text-success bg-success/10 border-success/20",
   "Best value":    "text-success bg-success/10 border-success/20",
   "Best price":    "text-success bg-success/10 border-success/20",
-  "Reasoning":     "text-rose-400 bg-rose-400/10 border-rose-400/20",
-  "Fastest":       "text-orange-400 bg-orange-400/10 border-orange-400/20",
-  "Ultra-fast":    "text-orange-400 bg-orange-400/10 border-orange-400/20",
-  "2000+ tok/s":   "text-orange-400 bg-orange-400/10 border-orange-400/20",
-  "Fast":          "text-orange-400 bg-orange-400/10 border-orange-400/20",
-  "Web search":    "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-  "Long ctx":      "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
-  "256K ctx":      "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
-  "MoE flagship":  "text-violet-400 bg-violet-400/10 border-violet-400/20",
-  "Diffusion LLM": "text-pink-400 bg-pink-400/10 border-pink-400/20",
-  "Coding":        "text-teal-400 bg-teal-400/10 border-teal-400/20",
+  "Reasoning":     "text-destructive bg-destructive/10 border-destructive/20",
+  "Fastest":       "text-warning bg-warning/10 border-warning/20",
+  "Ultra-fast":    "text-warning bg-warning/10 border-warning/20",
+  "2000+ tok/s":   "text-warning bg-warning/10 border-warning/20",
+  "Fast":          "text-warning bg-warning/10 border-warning/20",
+  "Web search":    "text-info bg-info/10 border-info/20",
+  "Long ctx":      "text-info bg-info/10 border-info/20",
+  "256K ctx":      "text-info bg-info/10 border-info/20",
+  "MoE flagship":  "text-foreground bg-secondary/10 border-border",
+  "Diffusion LLM": "text-foreground bg-secondary/10 border-border",
+  "Coding":        "text-info bg-info/10 border-info/20",
 }
 
 function PromoBadge({ label, link }: { label?: string; link?: string }) {
@@ -282,14 +282,14 @@ function LiveModelBadge({ providerId, apiKey }: { providerId: string; apiKey?: s
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className={`text-[10px] font-mono font-semibold ${data.source === "live" ? "text-sky-400" : "text-muted-foreground/70"}`}>
+      <span className={`text-[10px] font-mono font-semibold ${data.source === "live" ? "text-info" : "text-muted-foreground/70"}`}>
         {data.models.length} models
       </span>
       {data.source === "live" && !data.fallback && (
-        <span className="text-[8px] text-sky-400/60 bg-sky-400/8 px-1 rounded">live</span>
+        <span className="text-[8px] text-info/60 bg-info/8 px-1 rounded">live</span>
       )}
       {data.fallback && (
-        <span className="text-[8px] text-yellow-400/60 bg-yellow-400/8 px-1 rounded">static</span>
+        <span className="text-[8px] text-warning/60 bg-warning/8 px-1 rounded">static</span>
       )}
       <span
         role="button"
@@ -345,7 +345,7 @@ function ProviderCard({ provider, apiKey, defaultExpanded }: {
               </span>
             )}
             {provider.liveModels && (
-              <span className="text-xs text-sky-400/70 bg-sky-400/8 border border-sky-400/15 px-2 py-1 rounded-full">
+              <span className="text-xs text-info/70 bg-info/8 border border-info/15 px-2 py-1 rounded-full">
                 live
               </span>
             )}
@@ -524,7 +524,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                 <span className="font-semibold text-foreground">{PROVIDER_INFO_LIST.length}</span> providers &middot; <span className="font-semibold text-foreground">{freeCount}</span> free tiers &middot; <span className="font-semibold text-foreground">{promoCount}</span> featured models
               </p>
               {lastRefreshed && (
-                <span className="text-[9px] text-sky-400/60 bg-sky-400/8 border border-sky-400/15 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-[9px] text-info/60 bg-info/8 border border-info/15 px-1.5 py-0.5 rounded-full flex items-center gap-1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-2 h-2" aria-hidden>
                     <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
                   </svg>
@@ -647,7 +647,7 @@ export default function ProviderInfoPanel({ apiKey }: { apiKey?: string }) {
                     : opt.id === "cheapest"
                     ? "text-success bg-success/10 border-success/30"
                     : opt.id === "expensive"
-                    ? "text-rose-400 bg-rose-400/10 border-rose-400/30"
+                    ? "text-destructive bg-destructive/10 border-destructive/30"
                     : "bg-foreground text-background border-foreground"
                   : "text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
               }`}
