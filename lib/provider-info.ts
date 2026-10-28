@@ -63,6 +63,28 @@ function m(
 // ────────────────────────────────────────────────────────────────────────────
 export const PROVIDER_INFO: Record<string, ProviderInfo> = {
 
+  // ── ZRO MoonMath ──────────────────────────────────────────────────────────
+  zro: {
+    id: "zro",
+    name: "ZRO MoonMath",
+    website: "https://zro.moonmath.ai",
+    pricingUrl: "https://zro.moonmath.ai",
+    docsUrl: "https://zro.moonmath.ai",
+    description: "MoonMath ZRO OpenAI-compatible inference provider.",
+    hq: "US",
+    tier: "gateway",
+    hasFreeTier: true,
+    liveModels: true,
+    lastUpdated: "2026-10-28",
+    models: [
+      m("moonmath/zro", null, null, null, {
+        promo: true,
+        promoLabel: "Free",
+        promoLink: "https://zro.moonmath.ai",
+      }),
+    ],
+  },
+
   // ── Anthropic ─────────────────────────────────────────────────────────────
   anthropic: {
     id: "anthropic",
@@ -315,7 +337,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: false,
     lastUpdated: "2026-06-23",
     models: [
-      // ── Command A ──────────────────────────────────────────────────────────
+      // ── Command A ───��──────────────────────────────────────────────────────
       m("command-a-03-2025",               2.50, 10.00, 256, { promo: true, promoLabel: "Flagship",   promoLink: "https://cohere.com/blog/command-a" }),
       m("command-a-vision-07-2025",        null,  null, 128, { promo: true, promoLabel: "Vision",     promoLink: "https://docs.cohere.com/v2/docs/models" }),
       m("command-a-reasoning-08-2025",     null,  null, 256, { promo: true, promoLabel: "Reasoning",  promoLink: "https://docs.cohere.com/v2/docs/models" }),
@@ -390,12 +412,12 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
       m("google/veo-3.0-audio",                          null, null, null, { promo: true, promoLabel: "Video+Audio",promoLink: "https://docs.together.ai/docs/inference-models#video-models" }),
       m("ByteDance/Seedance-1.0-pro",                    null, null, null),
       m("openai/sora-2",                                 null, null, null, { promo: true, promoLabel: "Sora 2",     promoLink: "https://docs.together.ai/docs/inference-models#video-models" }),
-      // ── Audio ──────────────────────────────────────────────────────────────
+      // ── Audio ───────────────────────────────────────���──────────────────────
       m("canopylabs/orpheus-3b-0.1-ft",                  null, null, null, { promo: true, promoLabel: "TTS",        promoLink: "https://docs.together.ai/docs/inference-models#audio-models" }),
     ],
   },
 
-  // ── HuggingFace ───────────────────────────────────────────────────────────
+  // ── HuggingFace ───────────────────────��───────────────────────────────────
   huggingface: {
     id: "huggingface",
     name: "HuggingFace",
@@ -420,7 +442,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── OpenRouter ───────────────────────────────────────────────────────���────
+  // ── OpenRouter ──────────────────────────────────────��────────────────���────
   openrouter: {
     id: "openrouter",
     name: "OpenRouter",
@@ -882,7 +904,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Lepton AI ─────────────────────────────────────────────────────────────
+  // ── Lepton AI ────────────────────────────────────���────────────────────────
   lepton: {
     id: "lepton",
     name: "LeptonAI",
@@ -1024,7 +1046,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Lamini ───────────────────────────────────────────────────────────────
+  // ── Lamini ────────────────��──────────────────────────────────────────────
   lamini: {
     id: "lamini",
     name: "Lamini AI",
@@ -1131,7 +1153,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
 
   // ── New providers added 2026-06-24 (from OpenRouter catalog) ─────────────────
 
-  // ── Arcee AI ──────────────────────────────────────────────────────────────────
+  // ���─ Arcee AI ──────────────────────────────────────────────────────────────────
   "arcee-ai": {
     id: "arcee-ai", name: "Arcee AI",
     website: "https://arcee.ai", pricingUrl: "https://arcee.ai/pricing",
@@ -1252,7 +1274,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── DeepInfra ─────────────────────────────────────────────────────────────────
+  // ── DeepInfra ──────────────────────────────────��──────────────────────────────
   // Already exists
 
   // ── DigitalOcean Gradient AI ──────────────────────────────────────────────────
@@ -1344,7 +1366,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     models: [ m("llama-3.3-70b-instruct", null, null, 128, { promo: true, promoLabel: "EU" }) ],
   },
 
-  // ── Infermatic ────────────────────────────────────────────────────────────────
+  // ── Infermatic ───────────────────────────���────────────────────────────────────
   infermatic: {
     id: "infermatic", name: "Infermatic",
     website: "https://infermatic.ai", pricingUrl: "https://infermatic.ai/pricing",
@@ -1412,7 +1434,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Morph ─────────────────────────────────────────────────────────────────────
+  // ── Morph ─────────────────────────��───────────────────────────────────────────
   morph: {
     id: "morph", name: "Morph",
     website: "https://morphllm.com", pricingUrl: "https://morphllm.com/pricing",
@@ -2561,7 +2583,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Arcee AI (Conductor, native API) ─────────────────────────────────────────
+  // ── Arcee AI (Conductor, native API) ────────────────────────────────────────��
   arceeai: {
     id: "arceeai", name: "Arcee AI (Conductor)",
     website: "https://www.arcee.ai", pricingUrl: "https://www.arcee.ai/pricing",

@@ -140,6 +140,20 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
+  // ── ZRO MoonMath (OpenAI-compatible) ─────────────────────────────────────
+  zro: {
+    id: "zro",
+    modelsEndpoint: "https://zro.moonmath.ai/v1/models",
+    models: ["moonmath/zro"],
+    endpoint: "https://zro.moonmath.ai/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
   // ── Anthropic ─────────────────────────────────────────────────────────────
   anthropic: {
     id: "anthropic",
@@ -820,7 +834,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Yi (01.AI) ────────────────────────────────────────────────────────────
+  // ── Yi (01.AI) ───────────���────────────────────────────────────────────────
   yi: {
     id: "yi",
     models: [
@@ -1119,7 +1133,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Friendli AI ───────────────────────────────────────────────────────────
+  // ── Friendli AI ────────────────────────────��──────────────────────────────
   friendli: {
     id: "friendli",
     models: ["meta-llama-3-70b-instruct", "mistral-7b-instruct-v0-3"],
