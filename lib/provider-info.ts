@@ -63,6 +63,24 @@ function m(
 // ────────────────────────────────────────────────────────────────────────────
 export const PROVIDER_INFO: Record<string, ProviderInfo> = {
 
+  // ── ZRO MoonMath ──────────────────────────────────────────────────────────
+  zro: {
+    id: "zro",
+    name: "ZRO MoonMath",
+    website: "https://zro.moonmath.ai",
+    pricingUrl: "https://zro.moonmath.ai",
+    docsUrl: "https://zro.moonmath.ai",
+    description: "MoonMath ZRO OpenAI-compatible inference provider.",
+    hq: "US",
+    tier: "gateway",
+    hasFreeTier: false,
+    liveModels: true,
+    lastUpdated: "2026-10-28",
+    models: [
+      m("moonmath/zro", null, null, null),
+    ],
+  },
+
   // ── Anthropic ─────────────────────────────────────────────────────────────
   anthropic: {
     id: "anthropic",
@@ -420,7 +438,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── OpenRouter ───────────────────────────────────────────────────────���────
+  // ── OpenRouter ──────────────────────────────────────��────────────────���────
   openrouter: {
     id: "openrouter",
     name: "OpenRouter",
@@ -882,7 +900,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Lepton AI ─────────────────────────────────────────────────────────────
+  // ── Lepton AI ────────────────────────────────────���────────────────────────
   lepton: {
     id: "lepton",
     name: "LeptonAI",
@@ -1131,7 +1149,7 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
 
   // ── New providers added 2026-06-24 (from OpenRouter catalog) ─────────────────
 
-  // ── Arcee AI ──────────────────────────────────────────────────────────────────
+  // ���─ Arcee AI ──────────────────────────────────────────────────────────────────
   "arcee-ai": {
     id: "arcee-ai", name: "Arcee AI",
     website: "https://arcee.ai", pricingUrl: "https://arcee.ai/pricing",
