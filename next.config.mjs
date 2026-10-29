@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // pg-cloudflare HARUS dieksternalisasi dari bundle server: adapter
+  // @opennextjs/cloudflare hanya menyalin UTUH paket yang memakai kondisi
+  // ekspor "workerd" bila paket itu ada di serverExternalPackages
+  // (copyWorkerdPackages). Tanpa ini, pelacak file hanya menyalin stub
+  // default (dist/empty.js) dan dist/index.js versi workerd tidak pernah
+  // masuk ke bundle, sehingga esbuild gagal "Could not resolve
+  // pg-cloudflare" di Worker. Di runtime Node (Vercel), pg tidak pernah
+  // memanggil jalur Cloudflare ini, jadi tidak ada perubahan perilaku.
+  serverExternalPackages: ["pg-cloudflare"],
   typescript: {
     ignoreBuildErrors: true,
   },
