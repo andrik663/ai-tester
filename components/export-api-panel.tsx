@@ -142,7 +142,7 @@ function AgentConfig({ origin }: { origin: string }) {
           label: "Environment variables",
           lang: "bash",
           code: `export ANTHROPIC_BASE_URL="${endpoint}"
-export ANTHROPIC_API_KEY="YOUR_EXPORT_API_TOKEN"`,
+export ANTHROPIC_API_KEY="MSAKU_API_KEY"`,
         },
       ],
     },
@@ -160,7 +160,7 @@ export default defineConfig({
     openai: {
       name: "Msaku Gateway",
       baseURL: "${endpoint}",
-      apiKey: "YOUR_EXPORT_API_TOKEN",
+      apiKey: "MSAKU_API_KEY",
       models: {
         "msaku/auto": { name: "Auto (fastest provider)" },
       },
@@ -198,7 +198,7 @@ export default defineConfig({
           lang: "text",
           code: `Model Name:  msaku/auto
 Base URL:    ${origin}/api/v1
-API Key:     YOUR_EXPORT_API_TOKEN`,
+API Key:     MSAKU_API_KEY`,
         },
       ],
     },
@@ -214,7 +214,7 @@ API Key:     YOUR_EXPORT_API_TOKEN`,
 
 client = OpenAI(
     base_url="${origin}/api/v1",
-    api_key="YOUR_EXPORT_API_TOKEN",
+    api_key="MSAKU_API_KEY",
 )
 
 response = client.chat.completions.create(
@@ -230,7 +230,7 @@ print(response.choices[0].message.content)`,
 
 const client = new OpenAI({
   baseURL: "${origin}/api/v1",
-  apiKey: "YOUR_EXPORT_API_TOKEN",
+  apiKey: "MSAKU_API_KEY",
 })
 
 const res = await client.chat.completions.create({
@@ -248,8 +248,8 @@ console.log(res.choices[0].message.content)`,
       <p className="text-[9.5px] text-muted-foreground/60 leading-relaxed">
         After syncing your working keys, use Msaku gateway as a unified endpoint
         with any OpenAI-compatible coding agent or SDK.
-        Replace <span className="font-mono text-primary/70">YOUR_EXPORT_API_TOKEN</span> with
-        your token (set via <span className="font-mono text-primary/70">EXPORT_API_TOKEN</span> env var).
+        Replace <span className="font-mono text-primary/70">MSAKU_API_KEY</span> with
+        your Public Key (<span className="font-mono text-primary/70">msaku_pub_...</span>) or personal <span className="font-mono text-primary/70">msk_...</span> MSAKU.id API key.
       </p>
 
       {agents.map((agent) => (

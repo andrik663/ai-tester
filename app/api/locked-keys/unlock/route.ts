@@ -2,7 +2,7 @@
  * DELETE /api/locked-keys/unlock?id=<id>
  *
  * Removes a locked key from the DB.
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  */
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"

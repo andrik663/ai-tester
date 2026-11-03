@@ -6,7 +6,7 @@ import { pgTable, text, timestamp, integer, boolean, index } from "drizzle-orm/p
  * When a developer locks a key, it is stored here with the encrypted raw key
  * so the auto-batch cron can re-test it every 24 h and update its status.
  *
- * Raw keys are AES-256-GCM encrypted using EXPORT_API_TOKEN as the key
+ * Raw keys are AES-256-GCM encrypted using the internal gateway key as the key
  * material. They are NEVER returned over any API — only used server-side
  * for the re-verify batch.
  */

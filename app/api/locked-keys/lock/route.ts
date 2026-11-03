@@ -2,7 +2,7 @@
  * POST /api/locked-keys/lock
  *
  * Locks a working key permanently into the DB.
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  *
  * Body: {
  *   providerId: string

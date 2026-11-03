@@ -7,7 +7,7 @@
  * requested model (round-robin across providers), forwards the request to that
  * provider, and streams the response back to the caller.
  *
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  *
  * Supports: streaming (stream: true) and non-streaming
  * Key selection: fastest-first + round-robin rotation per provider

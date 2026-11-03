@@ -42,14 +42,6 @@ const rrIndex = new Map<string, number>()
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function stripQuotes(s: string): string {
-  const t = s.trim()
-  if ((t.startsWith("'") && t.endsWith("'")) || (t.startsWith('"') && t.endsWith('"'))) {
-    return t.slice(1, -1)
-  }
-  return t
-}
-
 function safeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false
   let diff = 0
@@ -59,21 +51,25 @@ function safeCompare(a: string, b: string): boolean {
   return diff === 0
 }
 
-export const DEFAULT_GATEWAY_TOKEN = "msaku_gw_default_2026"
+/** Internal token used by the gateway cache / server-side helpers. */
+export const DEFAULT_GATEWAY_TOKEN = "msaku_gw_internal_2026"
+/** Public shared API key — free tier (20 req/min per IP). */
 export const PUBLIC_GATEWAY_KEY =
   process.env.PUBLIC_GATEWAY_KEY?.trim() || "msaku_pub_v1_free_gateway_2026"
 
+/**
+ * Validate a gateway Bearer credential (sync path, non-msk_ keys only).
+ * Personal msk_... keys are verified asynchronously in lib/gateway-auth.ts.
+ */
 export function validateGatewayToken(token: string): boolean {
-  const raw = process.env.EXPORT_API_TOKEN || DEFAULT_GATEWAY_TOKEN
   const trimmed = token.trim()
-  if (safeCompare(trimmed, stripQuotes(raw))) return true
   if (safeCompare(trimmed, PUBLIC_GATEWAY_KEY)) return true
+  if (safeCompare(trimmed, DEFAULT_GATEWAY_TOKEN)) return true
   return false
 }
 
 export function getInternalToken(): string {
-  const raw = process.env.EXPORT_API_TOKEN || DEFAULT_GATEWAY_TOKEN
-  return stripQuotes(raw)
+  return DEFAULT_GATEWAY_TOKEN
 }
 
 // ── DB helpers ────────────────────────────────────────────────────────────────

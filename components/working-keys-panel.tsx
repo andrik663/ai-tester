@@ -141,7 +141,7 @@ function ChevronIcon({ open }: { open: boolean }) {
   )
 }
 
-// ── Shared: read EXPORT_API_TOKEN from same localStorage key as ExportApiPanel ─
+// ── Shared: gateway API key (Public Key or msk_ MSAKU.id key) ─
 const EXPORT_TOKEN_STORAGE_KEY = "export_api_token_v1"
 function getExportToken(): string {
   if (typeof window === "undefined") return ""
@@ -155,7 +155,7 @@ async function lockKeyToDb(
   refreshIntervalHours = 24,
 ): Promise<{ success: boolean; error?: string }> {
   const token = getExportToken()
-  if (!token) return { success: false, error: "Set your EXPORT_API_TOKEN in the Export panel first" }
+  if (!token) return { success: false, error: "Set your MSAKU_API_KEY in the Export panel first" }
   try {
     const res = await fetch("/api/locked-keys/lock", {
       method: "POST",
@@ -540,7 +540,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
   if (noToken) {
     return (
       <p className="text-[9px] text-muted-foreground/60 px-1 py-1">
-        Set your EXPORT_API_TOKEN in the Export panel to view locked keys.
+        Set your MSAKU_API_KEY in the Export panel to view locked keys.
       </p>
     )
   }

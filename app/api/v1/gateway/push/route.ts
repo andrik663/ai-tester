@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
   const internalToken = getInternalToken()
   if (!internalToken) {
     return NextResponse.json(
-      { error: "Server misconfiguration: EXPORT_API_TOKEN env var not set" },
+      { error: "Server misconfiguration: internal gateway token unavailable" },
       { status: 503 },
     )
   }

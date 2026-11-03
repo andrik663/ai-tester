@@ -74,7 +74,7 @@ const PROVIDER_FORMATS: ProviderFormat[] = [
   { id: "telnyx",    label: "Telnyx AI",              country: "US", flag: "🇺🇸", example: "telnyx:YOUR_KEY",         keyHint: "API key" },
   { id: "targon",    label: "Targon (Bittensor)",     country: "US", flag: "🇺🇸", example: "targon:YOUR_KEY",         keyHint: "API key" },
   { id: "sakana",         label: "Sakana AI (Fugu)",       country: "JP", flag: "🇯🇵", example: "sakana:YOUR_KEY",             keyHint: "API key" },
-  { id: "msaku",          label: "Msaku Gateway",          country: "ID", flag: "🇮🇩", example: "msaku:EXPORT_API_TOKEN",      keyHint: "EXPORT_API_TOKEN" },
+  { id: "msaku",          label: "Msaku Gateway",          country: "ID", flag: "🇮🇩", example: "msaku:MSAKU_API_KEY",          keyHint: "Public / msk_ key" },
   { id: "conduit",        label: "Conduit",                country: "US", flag: "🇺🇸", example: "conduit:YOUR_KEY",             keyHint: "API key" },
   { id: "zenmux",         label: "ZenMux",                 country: "US", flag: "🇺🇸", example: "zenmux:YOUR_KEY",              keyHint: "API key" },
   { id: "bynara",         label: "Bynara (NaraRouter)",    country: "ID", flag: "🇮🇩", example: "bynara:sk-nry-...",            keyHint: "sk-nry-...", autoDetect: true },

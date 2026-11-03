@@ -1,3 +1,4 @@
+import { DEFAULT_GATEWAY_TOKEN } from "@/lib/gateway-cache"
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { userSessions, userBatchResults } from "@/lib/db/user-sessions-schema"
@@ -5,13 +6,13 @@ import { lt } from "drizzle-orm"
 
 /**
  * POST /api/session/cleanup  (called by Vercel Cron every hour)
- * GET  /api/session/cleanup  (manual trigger, requires EXPORT_API_TOKEN)
+ * GET  /api/session/cleanup  (manual trigger, requires internal gateway token)
  *
  * Purges all expired sessions and their associated batch results.
  * user_batch_results rows are cascade-deleted via FK when sessions are removed.
  */
 
-const TOKEN = process.env.EXPORT_API_TOKEN ?? ""
+const TOKEN = DEFAULT_GATEWAY_TOKEN
 
 function authorized(req: NextRequest): boolean {
   if (!TOKEN) return true // no token set → open (dev mode)

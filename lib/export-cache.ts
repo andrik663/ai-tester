@@ -41,25 +41,16 @@ export function maskKey(key: string): string {
   return key.slice(0, 4) + "••••" + key.slice(-4)
 }
 
-/** Strip surrounding single or double quotes from env var values */
-function stripQuotes(s: string): string {
-  const t = s.trim()
-  if ((t.startsWith("'") && t.endsWith("'")) || (t.startsWith('"') && t.endsWith('"'))) {
-    return t.slice(1, -1)
-  }
-  return t
-}
-
-const DEFAULT_GATEWAY_TOKEN = "msaku_gw_default_2026"
+import { DEFAULT_GATEWAY_TOKEN, PUBLIC_GATEWAY_KEY } from "@/lib/gateway-cache"
 
 /**
- * Validate the bearer token against EXPORT_API_TOKEN env var.
- * Returns true if valid.
+ * Validate the bearer token — the Msaku Gateway no longer relies on the
+ * env var. Accepted: public key, internal token, or any
+ * msk_... personal MSAKU.id key (verified per-request via gateway-auth).
  */
 export function validateToken(token: string): boolean {
-  const raw = process.env.EXPORT_API_TOKEN || DEFAULT_GATEWAY_TOKEN
-  const expected = stripQuotes(raw)
-  return safeCompare(token.trim(), expected)
+  if (token.trim().startsWith("msk_")) return true
+  return safeCompare(token.trim(), PUBLIC_GATEWAY_KEY) || safeCompare(token.trim(), DEFAULT_GATEWAY_TOKEN)
 }
 
 /** Upsert the cache for a given token (stores masked keys only) */

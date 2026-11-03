@@ -12,7 +12,7 @@
  *   summary     - "1" to return analytics summary instead of rows
  *   window      - summary window in ms (default 3600000 = 1 h)
  *
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  */
 
 import { NextRequest, NextResponse } from "next/server"
