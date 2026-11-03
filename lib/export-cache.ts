@@ -41,16 +41,16 @@ export function maskKey(key: string): string {
   return key.slice(0, 4) + "••••" + key.slice(-4)
 }
 
-import { DEFAULT_GATEWAY_TOKEN, PUBLIC_GATEWAY_KEY } from "@/lib/gateway-cache"
+import { DEFAULT_GATEWAY_TOKEN } from "@/lib/gateway-cache"
 
 /**
  * Validate the bearer token — the Msaku Gateway no longer relies on the
- * env var. Accepted: public key, internal token, or any
- * msk_... personal MSAKU.id key (verified per-request via gateway-auth).
+ * env var. Accepted: internal token or any msk_... personal MSAKU.id key
+ * (verified per-request via gateway-auth).
  */
 export function validateToken(token: string): boolean {
   if (token.trim().startsWith("msk_")) return true
-  return safeCompare(token.trim(), PUBLIC_GATEWAY_KEY) || safeCompare(token.trim(), DEFAULT_GATEWAY_TOKEN)
+  return safeCompare(token.trim(), DEFAULT_GATEWAY_TOKEN)
 }
 
 /** Upsert the cache for a given token (stores masked keys only) */

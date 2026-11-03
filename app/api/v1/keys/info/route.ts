@@ -1,31 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PUBLIC_GATEWAY_KEY } from "@/lib/gateway-cache"
 import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 
 export const runtime = "nodejs"
 
 /**
  * GET /api/v1/keys/info
- * Returns the public shared API key and registration instructions for
- * personal msaku.id user keys.
+ * Returns registration instructions for personal msaku.id user keys (msk_...).
  *
  * POST /api/v1/keys/info
  * Validates a supplied API key (`Authorization: Bearer <key>` or `{ key: "..." }`)
- * and returns its tier (`public`, `msaku_user`, `api_key`, `admin`) and rate limit.
+ * and returns its tier (`msaku_user`, `api_key`, `admin`) and rate limit.
  */
 export async function GET() {
   return NextResponse.json({
     gateway: "Msaku Gateway",
     baseUrl: "https://gateway.msaku.id/api/v1",
-    customGatewayUrl: "https://free.ai.id/v1",
-    publicKey: {
-      key: PUBLIC_GATEWAY_KEY,
-      tier: "public",
-      targetGateway: "https://free.ai.id/v1",
-      rateLimitPerMinute: 20,
-      description:
-        "API Key Publik khusus untuk Custom Gateway (seperti https://free.ai.id/). Tidak digunakan untuk akses langsung ke gateway.msaku.id.",
-    },
     registeredUserKey: {
       prefix: "msk_",
       tier: "msaku_user",

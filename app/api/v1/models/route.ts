@@ -4,11 +4,11 @@
  * Msaku Gateway — OpenAI-compatible models list.
  * Returns all model IDs from the synced working keys.
  *
- * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
+ * Auth: Authorization: Bearer <msk_ MSAKU User Key>
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getInternalToken, getAllModels, getGatewayStats, PUBLIC_GATEWAY_KEY } from "@/lib/gateway-cache"
+import { getInternalToken, getAllModels, getGatewayStats } from "@/lib/gateway-cache"
 import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 
 export const runtime = "nodejs"
@@ -48,8 +48,7 @@ export async function GET(req: NextRequest) {
         avgLatencyMs: 0,
         providers: {},
         providerNodes: [],
-        publicKey: PUBLIC_GATEWAY_KEY,
-        registerKeyUrl: "https://msaku.id/profil/api-key",
+        registerKeyUrl: "https://msaku.id/gateway",
         authTier: auth.tier,
       },
     })
@@ -78,8 +77,7 @@ export async function GET(req: NextRequest) {
         providers: stats?.providers ?? {},
         providerNodes: stats?.providerNodes ?? [],
         lastPushedAt: stats?.lastPushedAt ?? null,
-        publicKey: PUBLIC_GATEWAY_KEY,
-        registerKeyUrl: "https://msaku.id/profil/api-key",
+        registerKeyUrl: "https://msaku.id/gateway",
         authTier: auth.tier,
       },
     },

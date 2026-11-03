@@ -141,11 +141,11 @@ function ChevronIcon({ open }: { open: boolean }) {
   )
 }
 
-// ── Shared: gateway API key (Public Key or msk_ MSAKU.id key) ─
-const DEFAULT_GATEWAY_PUBLIC_KEY = "msaku_pub_v1_free_gateway_2026"
+// ── Shared: gateway API key (msk_ MSAKU User Key or internal token) ─
+const DEFAULT_INTERNAL_GATEWAY_TOKEN = "msaku_gw_internal_2026"
 function getGatewayAuthToken(): string {
-  if (typeof window === "undefined") return DEFAULT_GATEWAY_PUBLIC_KEY
-  return localStorage.getItem("msaku_gateway_user_api_key")?.trim() || DEFAULT_GATEWAY_PUBLIC_KEY
+  if (typeof window === "undefined") return DEFAULT_INTERNAL_GATEWAY_TOKEN
+  return localStorage.getItem("msaku_gateway_user_api_key")?.trim() || DEFAULT_INTERNAL_GATEWAY_TOKEN
 }
 
 // ── Lock a key to DB via API ──────────────────────────────────────────────────

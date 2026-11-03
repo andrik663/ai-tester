@@ -53,19 +53,14 @@ function safeCompare(a: string, b: string): boolean {
 
 /** Internal token used by the gateway cache / server-side helpers. */
 export const DEFAULT_GATEWAY_TOKEN = "msaku_gw_internal_2026"
-/** Public shared API key — free tier (20 req/min per IP). */
-export const PUBLIC_GATEWAY_KEY =
-  process.env.PUBLIC_GATEWAY_KEY?.trim() || "msaku_pub_v1_free_gateway_2026"
 
 /**
- * Validate a gateway Bearer credential (sync path, non-msk_ keys only).
+ * Validate a gateway Bearer credential (sync path, internal/admin only).
  * Personal msk_... keys are verified asynchronously in lib/gateway-auth.ts.
  */
 export function validateGatewayToken(token: string): boolean {
   const trimmed = token.trim()
-  if (safeCompare(trimmed, PUBLIC_GATEWAY_KEY)) return true
-  if (safeCompare(trimmed, DEFAULT_GATEWAY_TOKEN)) return true
-  return false
+  return safeCompare(trimmed, DEFAULT_GATEWAY_TOKEN)
 }
 
 export function getInternalToken(): string {

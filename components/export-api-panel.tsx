@@ -280,7 +280,7 @@ console.log(res.choices[0].message.content)`,
         After syncing your working keys, use Msaku gateway as a unified endpoint
         with any OpenAI-compatible coding agent or SDK.
         Replace <span className="font-mono text-primary/70">MSAKU_API_KEY</span> with
-        your Public Key (<span className="font-mono text-primary/70">msaku_pub_...</span>) or personal <span className="font-mono text-primary/70">msk_...</span> MSAKU.id API key.
+        your personal <span className="font-mono text-primary/70">msk_...</span> MSAKU.id User API key.
       </p>
 
       {agents.map((agent) => (
