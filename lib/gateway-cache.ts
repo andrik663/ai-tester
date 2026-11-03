@@ -269,15 +269,47 @@ export async function getGatewayStats(_token: string) {
   const store = await getStore()
   if (store.keys.length === 0) return null
   const providerCounts = new Map<string, number>()
+  const providerDetails = new Map<
+    string,
+    { providerId: string; providerName: string; keyCount: number; models: Set<string>; latencies: number[] }
+  >()
   let totalModels = 0
+  let latencySum = 0
   for (const key of store.keys) {
     providerCounts.set(key.providerId, (providerCounts.get(key.providerId) ?? 0) + 1)
     totalModels += key.modelIds.length
+    latencySum += key.avgLatencyMs || 0
+    const existing = providerDetails.get(key.providerId)
+    if (existing) {
+      existing.keyCount += 1
+      for (const m of key.modelIds) existing.models.add(m)
+      if (key.avgLatencyMs > 0) existing.latencies.push(key.avgLatencyMs)
+    } else {
+      providerDetails.set(key.providerId, {
+        providerId: key.providerId,
+        providerName: key.providerName || key.providerId,
+        keyCount: 1,
+        models: new Set(key.modelIds),
+        latencies: key.avgLatencyMs > 0 ? [key.avgLatencyMs] : [],
+      })
+    }
   }
+  const providerNodes = Array.from(providerDetails.values()).map((p) => ({
+    providerId: p.providerId,
+    providerName: p.providerName,
+    keyCount: p.keyCount,
+    modelCount: p.models.size,
+    avgLatencyMs:
+      p.latencies.length > 0
+        ? Math.round(p.latencies.reduce((a, b) => a + b, 0) / p.latencies.length)
+        : 0,
+  }))
   return {
     totalKeys: store.keys.length,
     totalModels,
+    avgLatencyMs: store.keys.length > 0 ? Math.round(latencySum / store.keys.length) : 0,
     providers: Object.fromEntries(providerCounts),
+    providerNodes,
     lastPushedAt: store.lastPushedAt,
     pushCount: store.pushCount,
   }

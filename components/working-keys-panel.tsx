@@ -142,10 +142,10 @@ function ChevronIcon({ open }: { open: boolean }) {
 }
 
 // ── Shared: gateway API key (Public Key or msk_ MSAKU.id key) ─
-const EXPORT_TOKEN_STORAGE_KEY = "export_api_token_v1"
-function getExportToken(): string {
-  if (typeof window === "undefined") return ""
-  return localStorage.getItem(EXPORT_TOKEN_STORAGE_KEY) ?? ""
+const DEFAULT_GATEWAY_PUBLIC_KEY = "msaku_pub_v1_free_gateway_2026"
+function getGatewayAuthToken(): string {
+  if (typeof window === "undefined") return DEFAULT_GATEWAY_PUBLIC_KEY
+  return localStorage.getItem("msaku_gateway_user_api_key")?.trim() || DEFAULT_GATEWAY_PUBLIC_KEY
 }
 
 // ── Lock a key to DB via API ──────────────────────────────────────────────────
@@ -154,8 +154,7 @@ async function lockKeyToDb(
   record: WorkingKeyRecord,
   refreshIntervalHours = 24,
 ): Promise<{ success: boolean; error?: string }> {
-  const token = getExportToken()
-  if (!token) return { success: false, error: "Set your MSAKU_API_KEY in the Export panel first" }
+  const token = getGatewayAuthToken()
   try {
     const res = await fetch("/api/locked-keys/lock", {
       method: "POST",
@@ -482,15 +481,9 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
   const [running, setRunning]     = useState(false)
   const [runResult, setRunResult] = useState<{ tested: number; changed: number } | null>(null)
   const [open, setOpen]           = useState(true)
-  const [noToken, setNoToken]     = useState(false)
 
   const load = useCallback(async () => {
-    const token = getExportToken()
-    if (!token) {
-      setNoToken(true)
-      return
-    }
-    setNoToken(false)
+    const token = getGatewayAuthToken()
     setLoading(true)
     try {
       const res = await fetch("/api/locked-keys/list", {
@@ -508,8 +501,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
   useEffect(() => { load() }, [load, refreshTick])
 
   const handleUnlock = useCallback(async (id: string) => {
-    const token = getExportToken()
-    if (!token) return
+    const token = getGatewayAuthToken()
     await fetch(`/api/locked-keys/unlock?id=${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
@@ -518,8 +510,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
   }, [])
 
   const handleRunNow = useCallback(async () => {
-    const token = getExportToken()
-    if (!token) return
+    const token = getGatewayAuthToken()
     setRunning(true)
     setRunResult(null)
     try {
@@ -536,14 +527,6 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
       setRunning(false)
     }
   }, [load])
-
-  if (noToken) {
-    return (
-      <p className="text-[9px] text-muted-foreground/60 px-1 py-1">
-        Set your MSAKU_API_KEY in the Export panel to view locked keys.
-      </p>
-    )
-  }
 
   if (locked.length === 0 && !loading) return null
 

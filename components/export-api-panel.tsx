@@ -149,24 +149,55 @@ export ANTHROPIC_API_KEY="MSAKU_API_KEY"`,
     {
       id: "opencode",
       name: "Opencode",
-      description: "Add to your opencode config (opencode.config.ts or .opencode/config.json).",
+      description: "Add to your opencode config (opencode.json or opencode.config.ts).",
       snippets: [
         {
-          label: "opencode.config.ts",
-          lang: "ts",
-          code: `import { defineConfig } from "opencode"
-export default defineConfig({
-  provider: {
-    openai: {
-      name: "Msaku Gateway",
-      baseURL: "${endpoint}",
-      apiKey: "MSAKU_API_KEY",
-      models: {
-        "msaku/auto": { name: "Auto (fastest provider)" },
+          label: "opencode.json",
+          lang: "json",
+          code: `{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "msaku": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Msaku Gateway",
+      "options": {
+        "baseURL": "${origin}/api/v1",
+        "apiKey": "MSAKU_API_KEY"
       },
-    },
+      "models": {
+        "msaku/auto": { "name": "Msaku Auto (Fastest Provider)" }
+      }
+    }
   },
-})`,
+  "mcp": {
+    "msaku-mcp": {
+      "type": "remote",
+      "url": "https://msaku-mcp.accmeta46.workers.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer MSAKU_API_KEY"
+      }
+    }
+  }
+}`,
+        },
+      ],
+    },
+    {
+      id: "9router",
+      name: "9Router",
+      description: "Connect Msaku Gateway as an OpenAI-compatible upstream provider in 9Router.",
+      snippets: [
+        {
+          label: "9Router Provider Config (JSON / UI)",
+          lang: "json",
+          code: `{
+  "name": "Msaku AI Gateway",
+  "type": "openai-compatible",
+  "baseUrl": "${origin}/api/v1",
+  "apiKey": "MSAKU_API_KEY",
+  "defaultModel": "msaku/auto",
+  "models": ["msaku/auto"]
+}`,
         },
       ],
     },

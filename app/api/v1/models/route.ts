@@ -44,6 +44,10 @@ export async function GET(req: NextRequest) {
       _msaku: {
         message: "No working keys synced yet. Call POST /api/v1/gateway/push from the browser first.",
         totalKeys: 0,
+        totalModels: 1,
+        avgLatencyMs: 0,
+        providers: {},
+        providerNodes: [],
         publicKey: PUBLIC_GATEWAY_KEY,
         registerKeyUrl: "https://msaku.id/profil/api-key",
         authTier: auth.tier,
@@ -70,7 +74,9 @@ export async function GET(req: NextRequest) {
       _msaku: {
         totalKeys: stats?.totalKeys ?? 0,
         totalModels: models.length,
+        avgLatencyMs: stats?.avgLatencyMs ?? 0,
         providers: stats?.providers ?? {},
+        providerNodes: stats?.providerNodes ?? [],
         lastPushedAt: stats?.lastPushedAt ?? null,
         publicKey: PUBLIC_GATEWAY_KEY,
         registerKeyUrl: "https://msaku.id/profil/api-key",

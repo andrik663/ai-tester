@@ -16,20 +16,17 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { validateGatewayToken } from "@/lib/gateway-cache"
+import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 import { readGatewayLogs, getLogsSummary } from "@/lib/gateway-logs"
 
 export const runtime = "nodejs"
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-}
-
 export async function GET(req: NextRequest) {
-  // ── Auth ────────────────────────────────────────────────────────────────────
-  const authHeader = req.headers.get("authorization") ?? ""
-  const token = authHeader.replace(/^Bearer\s+/i, "").trim()
-  if (!token || !validateGatewayToken(token)) return unauthorized()
+  // ── Auth (exclusive to Msaku Gateway; no EXPORT_API_TOKEN required) ─────────
+  const auth = await authenticateGatewayRequest(req.headers, "/api/v1/logs", true)
+  if (!auth.valid) {
+    return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 })
+  }
 
   const sp = req.nextUrl.searchParams
 
