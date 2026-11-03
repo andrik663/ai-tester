@@ -4,7 +4,7 @@
  * Msaku Gateway — OpenAI-compatible models list.
  * Returns all model IDs from the synced working keys.
  *
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  */
 
 import { NextRequest, NextResponse } from "next/server"

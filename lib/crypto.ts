@@ -1,11 +1,12 @@
 /**
- * AES-256-GCM encrypt/decrypt using EXPORT_API_TOKEN as key material.
+ * AES-256-GCM encrypt/decrypt using the internal gateway key as key material.
  * Raw API keys are encrypted before storing in DB and decrypted only
  * server-side when running the auto-refresh batch.
  *
  * Uses Node.js built-in `crypto` — no extra dependency needed.
  */
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from "crypto"
+import { DEFAULT_GATEWAY_TOKEN } from "@/lib/gateway-cache"
 
 const ALGO = "aes-256-gcm"
 
@@ -14,14 +15,12 @@ function deriveKey(secret: string): Buffer {
   return createHash("sha256").update(secret).digest()
 }
 
-const DEFAULT_GATEWAY_TOKEN = "msaku_gw_default_2026"
-
 /**
  * Encrypt a plaintext string.
  * Returns hex: <12-byte IV><16-byte auth tag><ciphertext>
  */
 export function encrypt(plaintext: string): string {
-  const secret = process.env.EXPORT_API_TOKEN || DEFAULT_GATEWAY_TOKEN
+  const secret = DEFAULT_GATEWAY_TOKEN
   const key  = deriveKey(secret)
   const iv   = randomBytes(12)
   const cipher = createCipheriv(ALGO, key, iv)
@@ -34,7 +33,7 @@ export function encrypt(plaintext: string): string {
  * Decrypt a hex string produced by `encrypt`.
  */
 export function decrypt(hex: string): string {
-  const secret = process.env.EXPORT_API_TOKEN || DEFAULT_GATEWAY_TOKEN
+  const secret = DEFAULT_GATEWAY_TOKEN
   const key  = deriveKey(secret)
   const buf  = Buffer.from(hex, "hex")
   const iv   = buf.subarray(0, 12)

@@ -5,7 +5,7 @@
  * Call this from a Vercel Cron Job (vercel.json) every hour — it only
  * processes keys that are actually due.
  *
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  *
  * Also accepts ?force=true to re-test ALL locked keys regardless of schedule.
  *
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
               apiKeyMasked: row.apiKeyMasked,
               wasWorking: row.isWorking,
               isNowWorking: false,
-              error: "Decryption failed (EXPORT_API_TOKEN changed?)",
+              error: "Decryption failed (internal gateway key changed?)",
               changed: row.isWorking !== false,
             } satisfies RefreshResult
           }

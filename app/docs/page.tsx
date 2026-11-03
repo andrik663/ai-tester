@@ -610,7 +610,7 @@ Authorization: Bearer msk_YOUR_MSAKU_KEY`}
                 <p className="text-[12px] text-muted-foreground leading-relaxed">
                   <code className="font-mono text-[11px]">/api/chat</code> does not require a Bearer token —
                   authentication is handled by the Gemini API key in the body. Only the{" "}
-                  <code className="font-mono text-[11px]">/api/v1/*</code> gateway routes require <code className="font-mono text-[11px]">EXPORT_API_TOKEN</code>.
+                  <code className="font-mono text-[11px]">/api/v1/*</code> gateway routes require the Public Key or your personal <code className="font-mono text-[11px]">msk_</code> MSAKU.id key.
                 </p>
               </div>
             </div>

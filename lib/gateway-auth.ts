@@ -53,7 +53,7 @@ export function extractBearerOrHeaderKey(headers: Headers): string {
  * 1. Public API Key (`PUBLIC_GATEWAY_KEY` / `msaku_pub_...` or internal web preview placeholder `msaku-gateway`)
  * 2. Registered msaku.id user API key (`msk_...` stored hashed in `mcp_api_keys`)
  * 3. Custom `atk_...` key stored in `api_keys`
- * 4. Admin / internal `EXPORT_API_TOKEN`
+ * 4. Internal token (fixed constant, no env var needed)
  */
 export async function authenticateGatewayRequest(
   headers: Headers,
@@ -196,7 +196,7 @@ export async function authenticateGatewayRequest(
     }
   }
 
-  // 4. Admin / internal token (`EXPORT_API_TOKEN`)
+  // 4. Internal token (fixed constant)
   if (validateGatewayToken(rawKey)) {
     return {
       valid: true,

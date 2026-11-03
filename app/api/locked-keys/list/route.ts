@@ -2,7 +2,7 @@
  * GET /api/locked-keys/list
  *
  * Returns all locked keys (masked only — no raw keys ever returned).
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  *
  * Query params (optional):
  *   ?provider=anthropic     filter by providerId

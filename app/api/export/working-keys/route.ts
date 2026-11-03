@@ -5,7 +5,7 @@
  * synced working keys. Only returns masked API keys — raw keys are never
  * exposed.
  *
- * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
+ * Auth: Authorization: Bearer <Public Key / msk_ MSAKU key>
  *
  * Query params (all optional):
  *   ?provider=mistral          filter by providerId

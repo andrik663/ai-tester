@@ -1961,7 +1961,7 @@ const PRESETS: ProviderPreset[] = [
 
   // ── Msaku Gateway ───────────────────────────────────────────────────────
   // Self-hosted gateway at gateway.msaku.id — routes to all synced working keys.
-  // Use EXPORT_API_TOKEN as the API key. Sync keys first via Keys → Export API.
+  // Use the Public Key or your personal msk_... MSAKU.id API key. Sync keys first via Keys → Export API.
   {
     id: "msaku",
     name: "Msaku Gateway",
@@ -3594,7 +3594,7 @@ export default function ManualKeyTester() {
   }, [selectedPreset.id, workingKeysTick])
 
   // ── Msaku Gateway: fetch available models from /api/v1/models ─────────────
-  // No auth header required — gateway uses server-side EXPORT_API_TOKEN.
+  // Gateway auth: Public Key or personal msk_... MSAKU.id key (see lib/gateway-auth.ts).
   // We track the last providerId we cleared for, so we only clear on actual
   // provider switch — not on workingKeysTick increments (post-sync refreshes).
   const msakuLastProvider = useRef<string>("")

@@ -1406,7 +1406,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // ── Msaku Gateway ───────────────────────────────────────────────────────
   // Self-hosted gateway at https://gateway.msaku.id — routes requests to all
   // synced working keys with automatic key rotation.
-  // Auth: EXPORT_API_TOKEN (same token as the export API).
+  // Auth: Public Key or personal MSAKU.id API key (msk_...).
   // Models: dynamically fetched from /api/v1/models (reflects synced keys).
   msaku: {
     id: "msaku",
