@@ -1403,18 +1403,33 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
-  // ── Miuclaw Gateway ───────────────────────────────────────────────────────
-  // Self-hosted gateway at https://www.miuclaw.my.id — routes requests to all
+  // ── Msaku Gateway ───────────────────────────────────────────────────────
+  // Self-hosted gateway at https://gateway.msaku.id — routes requests to all
   // synced working keys with automatic key rotation.
   // Auth: EXPORT_API_TOKEN (same token as the export API).
   // Models: dynamically fetched from /api/v1/models (reflects synced keys).
+  msaku: {
+    id: "msaku",
+    models: [
+      "msaku/auto",
+    ],
+    modelsEndpoint: "https://gateway.msaku.id/api/v1/models",
+    endpoint: "https://gateway.msaku.id/api/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    concurrencyLimit: 10,
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
   miuclaw: {
     id: "miuclaw",
     models: [
-      "miuclaw/auto",
+      "msaku/auto",
     ],
-    modelsEndpoint: "https://www.miuclaw.my.id/api/v1/models",
-    endpoint: "https://www.miuclaw.my.id/api/v1/chat/completions",
+    modelsEndpoint: "https://gateway.msaku.id/api/v1/models",
+    endpoint: "https://gateway.msaku.id/api/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
     extraHeaders: { "Content-Type": "application/json" },
     concurrencyLimit: 10,

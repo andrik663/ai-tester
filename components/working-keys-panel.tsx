@@ -642,7 +642,7 @@ function LockedKeysSection({ refreshTick }: { refreshTick?: number }) {
 interface Props {
   onUseKey?: (key: string, providerId: string) => void
   refreshTick?: number
-  /** Called after a successful gateway sync so the parent can refresh Miuclaw model list */
+  /** Called after a successful gateway sync so the parent can refresh Msaku model list */
   onGatewaySync?: () => void
 }
 

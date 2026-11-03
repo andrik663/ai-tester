@@ -589,14 +589,14 @@ export async function POST(req: NextRequest) {
   const providerKey = provider.toLowerCase()
   const isVisionMode = (testMode === "vision" || testMode === "ocr") && !!imageData
 
-  // ── Miuclaw Gateway: always route to the same-origin /api/v1/* endpoint ──────
-  // This ensures both dev (localhost) and production (miuclaw.my.id) hit the
+  // ── Msaku Gateway: always route to the same-origin /api/v1/* endpoint ──────
+  // This ensures both dev (localhost) and production (gateway.msaku.id) hit the
   // correct local gateway — no cross-origin issues, no stale production URLs.
   let resolvedEndpoint = endpoint
-  if (providerKey === "miuclaw") {
+  if (providerKey === "msaku" || providerKey === "miuclaw") {
     const origin = req.nextUrl.origin
     resolvedEndpoint = `${origin}/api/v1/chat/completions`
-    log("info", `Miuclaw Gateway: rewriting endpoint to ${resolvedEndpoint}`)
+    log("info", `Msaku Gateway: rewriting endpoint to ${resolvedEndpoint}`)
   }
 
   log("info", `Provider: ${provider}`)

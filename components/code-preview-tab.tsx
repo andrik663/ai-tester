@@ -1669,12 +1669,12 @@ ${raw}`
 
     return (
       <div key={i} className="flex items-start gap-2">
-        {/* Assistant avatar — the Miuclaw cat mascot, matching the icon used
-            on the production site (miuclaw.my.id), so replies are clearly
+        {/* Assistant avatar — the Msaku mascot, matching the icon used
+            on the production site (gateway.msaku.id), so replies are clearly
             attributed to the brand rather than a generic bot glyph. */}
         <img
           src="/images/cat-mascot.png"
-          alt="Miuclaw AI"
+          alt="Msaku AI"
           className="w-6 h-6 rounded-full border border-border/50 flex-shrink-0 mt-0.5 object-cover"
         />
         <div className="flex-1 flex flex-col gap-1.5 min-w-0">
@@ -2026,13 +2026,13 @@ ${raw}`
             <div ref={chatScrollRef} className="absolute inset-0 overflow-y-auto px-3 py-3 flex flex-col gap-3">
               {messages.length === 0 && !isStreaming && (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center select-none pointer-events-none">
-                  {/* Empty-state mark — the Miuclaw cat mascot, matching the
-                      branding used on the production site (miuclaw.my.id),
+                  {/* Empty-state mark — the Msaku mascot, matching the
+                      branding used on the production site (gateway.msaku.id),
                       instead of a generic code glyph. */}
                   <div className="w-14 h-14 rounded-2xl border border-primary/20 bg-primary/8 flex items-center justify-center overflow-hidden">
                     <img
                       src="/images/cat-mascot.png"
-                      alt="Miuclaw"
+                      alt="Msaku"
                       className="w-9 h-9 rounded-lg object-cover"
                     />
                   </div>

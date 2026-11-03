@@ -1,7 +1,7 @@
 /**
  * GET /api/v1/models
  *
- * Miuclaw Gateway — OpenAI-compatible models list.
+ * Msaku Gateway — OpenAI-compatible models list.
  * Returns all model IDs from the synced working keys.
  *
  * Auth: Authorization: Bearer <EXPORT_API_TOKEN>
@@ -25,20 +25,20 @@ export async function GET(_req: NextRequest) {
 
   const now = Math.floor(Date.now() / 1000)
 
-  // Always include "miuclaw/auto" as the first model — it picks the fastest available key
+  // Always include "msaku/auto" as the first model — it picks the fastest available key
   const autoModel = {
-    id: "miuclaw/auto",
+    id: "msaku/auto",
     object: "model",
     created: now,
-    owned_by: "miuclaw",
-    _provider: "Miuclaw Gateway (auto-select)",
+    owned_by: "msaku",
+    _provider: "Msaku Gateway (auto-select)",
   }
 
   if (models.length === 0) {
     return NextResponse.json({
       object: "list",
       data: [autoModel],
-      _miuclaw: {
+      _msaku: {
         message: "No working keys synced yet. Call POST /api/v1/gateway/push from the browser first.",
         totalKeys: 0,
       },
@@ -51,7 +51,7 @@ export async function GET(_req: NextRequest) {
       data: [
         autoModel,
         ...models
-          .filter((m) => m.id !== "miuclaw/auto")
+          .filter((m) => m.id !== "msaku/auto" && m.id !== "miuclaw/auto")
           .map((m) => ({
             id: m.id,
             object: "model",
@@ -61,7 +61,7 @@ export async function GET(_req: NextRequest) {
             _provider: m.providerName,
           })),
       ],
-      _miuclaw: {
+      _msaku: {
         totalKeys: stats?.totalKeys ?? 0,
         totalModels: models.length,
         providers: stats?.providers ?? {},

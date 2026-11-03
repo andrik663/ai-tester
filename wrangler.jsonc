@@ -11,5 +11,11 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  "routes": [
+    {
+      "pattern": "gateway.msaku.id",
+      "custom_domain": true
+    }
+  ]
 }

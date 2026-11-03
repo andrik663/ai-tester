@@ -1,7 +1,7 @@
 /**
  * POST /api/v1/chat/completions
  *
- * Miuclaw Gateway — OpenAI-compatible chat completions proxy.
+ * Msaku Gateway — OpenAI-compatible chat completions proxy.
  *
  * Accepts a standard OpenAI chat request, picks the best working key for the
  * requested model (round-robin across providers), forwards the request to that
@@ -70,13 +70,14 @@ const PROVIDER_MAX_TOKENS: Record<string, number> = {
   friendli:     32_768,  // Friendli AI: 32k
 
   // ── Gateways (routes to underlying models — use a generous but safe cap) ────
-  dahono:       65_535,  // Dahono/Miuclaw gateway — cap matches the highest underlying model (Gemini)
+  dahono:       65_535,  // Dahono/Msaku gateway — cap matches the highest underlying model (Gemini)
   openrouter:   65_535,  // OpenRouter: routes to any provider, allow up to 65k
   bynara:       32_768,  // NaraRouter — routes Claude, Gemini, DeepSeek, Qwen; 32k safe cap
   marketku:     65_535,  // Marketku router — 65k (highest underlying model)
   conduit:      65_535,  // Conduit gateway — 65k
   zenmux:       65_535,  // ZenMux gateway — 65k
-  miuclaw:      65_535,  // Miuclaw self-hosted gateway — 65k
+  msaku:        65_535,  // Msaku self-hosted gateway — 65k
+  miuclaw:      65_535,  // Legacy alias — 65k
   openmodel:    65_535,  // OpenModel gateway — 65k
   avian:        65_535,  // Avian gateway — 65k
 }
@@ -401,8 +402,8 @@ export async function POST(req: NextRequest) {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
           "Connection": "keep-alive",
-          "X-Miuclaw-Provider": key.providerId,
-          "X-Miuclaw-Model": body.model,
+          "X-Msaku-Provider": key.providerId,
+          "X-Msaku-Model": body.model,
         },
       })
     }
@@ -419,8 +420,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, {
       status: 200,
       headers: {
-        "X-Miuclaw-Provider": key.providerId,
-        "X-Miuclaw-Model": body.model,
+        "X-Msaku-Provider": key.providerId,
+        "X-Msaku-Model": body.model,
         "Content-Type": contentType,
       },
     })
@@ -438,7 +439,7 @@ export async function POST(req: NextRequest) {
       error: `All available keys failed. Last error from '${lastProvider}': ${lastError}`,
       model: body.model,
       provider: lastProvider,
-      hint: "Sync fresh working keys via the Keys tab → Export to Miuclaw Gateway.",
+      hint: "Sync fresh working keys via the Keys tab → Export to Msaku Gateway.",
     },
     { status: lastStatus },
   )

@@ -5,7 +5,7 @@ import { CodeBlock } from "@/components/docs/code-block"
 import { EndpointCard } from "@/components/docs/endpoint-card"
 import { ParamTable } from "@/components/docs/param-table"
 
-const BASE_URL = "https://www.miuclaw.my.id"
+const BASE_URL = "https://gateway.msaku.id"
 
 // ── Sidebar sections ──────────────────────────────────────────────────────────
 const SECTIONS = [
@@ -28,7 +28,7 @@ const CURL_CHAT = `curl ${BASE_URL}/api/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "miuclaw/auto",
+    "model": "msaku/auto",
     "messages": [
       { "role": "user", "content": "Hello!" }
     ]
@@ -38,7 +38,7 @@ const CURL_CHAT_STREAM = `curl ${BASE_URL}/api/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "miuclaw/auto",
+    "model": "msaku/auto",
     "messages": [{ "role": "user", "content": "Explain quantum computing" }],
     "stream": true,
     "max_tokens": 512
@@ -126,10 +126,10 @@ const RESP_MODELS = `{
   "object": "list",
   "data": [
     {
-      "id": "miuclaw/auto",
+      "id": "msaku/auto",
       "object": "model",
       "created": 1700000000,
-      "owned_by": "miuclaw"
+      "owned_by": "msaku"
     },
     {
       "id": "llama-3.3-70b-versatile",
@@ -190,7 +190,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="miuclaw/auto",   # auto-routes to fastest available
+    model="msaku/auto",   # auto-routes to fastest available
     messages=[{"role": "user", "content": "Hello!"}],
 )
 print(response.choices[0].message.content)`
@@ -203,7 +203,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: "miuclaw/auto",
+  model: "msaku/auto",
   messages: [{ role: "user", content: "Hello!" }],
 });
 console.log(response.choices[0].message.content);`
@@ -211,7 +211,7 @@ console.log(response.choices[0].message.content);`
 const SDK_LANGCHAIN = `from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
-    model="miuclaw/auto",
+    model="msaku/auto",
     openai_api_key="YOUR_TOKEN",
     openai_api_base="${BASE_URL}/api/v1",
 )
@@ -240,7 +240,7 @@ export default function DocsPage() {
               ← Back
             </a>
             <span className="text-border/60">|</span>
-            <span className="text-[13px] font-semibold text-foreground">Miuclaw Gateway</span>
+            <span className="text-[13px] font-semibold text-foreground">Msaku Gateway</span>
             <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/25">
               API Docs
             </span>
@@ -284,7 +284,7 @@ export default function DocsPage() {
           <section id="overview">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-foreground mb-2 text-balance">
-                Miuclaw Gateway API
+                Msaku Gateway API
               </h1>
               <p className="text-muted-foreground leading-relaxed text-[14px]">
                 An OpenAI-compatible gateway that automatically routes requests to the fastest available provider.
@@ -340,7 +340,7 @@ export default function DocsPage() {
             <h2 className="text-lg font-bold text-foreground mb-1">List Models</h2>
             <p className="text-[13px] text-muted-foreground mb-4 leading-relaxed">
               Returns all models currently active in the gateway, including the special{" "}
-              <code className="text-primary/90 font-mono text-[12px]">miuclaw/auto</code> model which
+              <code className="text-primary/90 font-mono text-[12px]">msaku/auto</code> model which
               automatically selects the fastest available provider for each request.
             </p>
 
@@ -376,7 +376,7 @@ export default function DocsPage() {
             <div className="mb-5">
               <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Request body</p>
               <ParamTable params={[
-                { name: "model",       type: "string",   required: true,  description: 'Model ID or "miuclaw/auto" for automatic routing' },
+                { name: "model",       type: "string",   required: true,  description: 'Model ID or "msaku/auto" for automatic routing' },
                 { name: "messages",    type: "array",    required: true,  description: "Array of {role, content} message objects" },
                 { name: "stream",      type: "boolean",  required: false, default: "false", description: "Stream response chunks using SSE" },
                 { name: "max_tokens",  type: "integer",  required: false, description: "Maximum tokens to generate" },
@@ -399,7 +399,7 @@ export default function DocsPage() {
             <div className="mt-5 p-3.5 rounded-lg border border-primary/20 bg-primary/5">
               <p className="text-[12px] text-primary/80 leading-relaxed">
                 <strong className="text-primary">Tip:</strong> Use{" "}
-                <code className="font-mono text-[11px]">model: &quot;miuclaw/auto&quot;</code> to let the gateway pick the
+                <code className="font-mono text-[11px]">model: &quot;msaku/auto&quot;</code> to let the gateway pick the
                 fastest available provider automatically. It uses round-robin rotation across
                 providers with the lowest average latency.
               </p>
@@ -733,7 +733,7 @@ export default function DocsPage() {
           {/* Footer ---------------------------------------------------------- */}
           <footer className="pt-8 border-t border-border/30">
             <p className="text-[12px] text-muted-foreground/70 text-center">
-              Miuclaw Gateway &mdash; API Docs &mdash; {BASE_URL}
+              Msaku Gateway &mdash; API Docs &mdash; {BASE_URL}
             </p>
           </footer>
 

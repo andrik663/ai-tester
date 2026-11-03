@@ -1959,26 +1959,26 @@ const PRESETS: ProviderPreset[] = [
     color: "text-info bg-info/10 border-info/30",
   },
 
-  // ── Miuclaw Gateway ───────────────────────────────────────────────────────
-  // Self-hosted gateway at miuclaw.my.id — routes to all synced working keys.
+  // ── Msaku Gateway ───────────────────────────────────────────────────────
+  // Self-hosted gateway at gateway.msaku.id — routes to all synced working keys.
   // Use EXPORT_API_TOKEN as the API key. Sync keys first via Keys → Export API.
   {
-    id: "miuclaw",
-    name: "Miuclaw Gateway",
+    id: "msaku",
+    name: "Msaku Gateway",
     country: "ID",
-    endpoint: "https://www.miuclaw.my.id/api/v1/chat/completions",
+    endpoint: "https://gateway.msaku.id/api/v1/chat/completions",
     method: "POST",
     headers: {
       "Authorization": "Bearer {{API_KEY}}",
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "miuclaw/auto",
+      model: "msaku/auto",
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
     models: [
-      { id: "miuclaw/auto", label: "Auto (fastest key)", tag: "Gateway", ctx: "varies", in: "varies", out: "varies", cache: "" },
+      { id: "msaku/auto", label: "Auto (fastest key)", tag: "Gateway", ctx: "varies", in: "varies", out: "varies", cache: "" },
     ],
     docsUrl: "/api/v1/models",
     createKeyUrl: "/keys",
@@ -3038,7 +3038,8 @@ const PROVIDER_DOMAIN: Record<string, string> = {
   telnyx:         "telnyx.com",
   targon:         "targon.com",
   sakana:         "sakana.ai",
-  miuclaw:        "www.miuclaw.my.id",
+  msaku:          "gateway.msaku.id",
+  miuclaw:        "gateway.msaku.id",
   conduit:        "conduit.ozdoev.net",
   zenmux:         "zenmux.ai",
   bynara:         "router.bynara.id",
@@ -3420,9 +3421,9 @@ interface ChatMessage {
   ts: string
 }
 
-// Default provider on load — Miuclaw Gateway (self-hosted aggregator), so a
+// Default provider on load — Msaku Gateway (self-hosted aggregator), so a
 // fresh visit (no login, no saved key) lands ready to test via the gateway.
-const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "miuclaw") ?? PRESETS[0]
+const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "msaku") ?? PRESETS[0]
 
 // This dashboard (all providers, all tabs) is only ever rendered behind the
 // dev-login gate in app/page.tsx — public visitors get the standalone
@@ -3569,7 +3570,7 @@ export default function ManualKeyTester() {
   // Reload working models whenever the provider or workingKeysTick changes,
   // and auto-fill chatModel + apiKey from the first saved record.
   useEffect(() => {
-    if (selectedPreset.id === "miuclaw") return // handled below
+    if (selectedPreset.id === "msaku") return // handled below
     const records = loadWorkingKeys().filter((r) => r.providerId === selectedPreset.id)
     const seen = new Set<string>()
     const deduped = records.filter((r) => {
@@ -3592,17 +3593,17 @@ export default function ManualKeyTester() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPreset.id, workingKeysTick])
 
-  // ── Miuclaw Gateway: fetch available models from /api/v1/models ─────────────
+  // ── Msaku Gateway: fetch available models from /api/v1/models ─────────────
   // No auth header required — gateway uses server-side EXPORT_API_TOKEN.
   // We track the last providerId we cleared for, so we only clear on actual
   // provider switch — not on workingKeysTick increments (post-sync refreshes).
-  const miuclawLastProvider = useRef<string>("")
+  const msakuLastProvider = useRef<string>("")
   useEffect(() => {
-    if (selectedPreset.id !== "miuclaw") return
+    if (selectedPreset.id !== "msaku") return
 
-    // Only clear stale models when switching TO miuclaw from a different provider
-    if (miuclawLastProvider.current !== "miuclaw") {
-      miuclawLastProvider.current = "miuclaw"
+    // Only clear stale models when switching TO msaku from a different provider
+    if (msakuLastProvider.current !== "msaku") {
+      msakuLastProvider.current = "msaku"
       setWorkingModels([])
       setChatModel("")
     }
@@ -3614,7 +3615,7 @@ export default function ManualKeyTester() {
         if (!res.ok || cancelled) return
         const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
         if (cancelled) return
-        const models = (data.data ?? []).filter((m) => m.id !== "miuclaw/auto")
+        const models = (data.data ?? []).filter((m) => m.id !== "msaku/auto" && m.id !== "miuclaw/auto")
         if (models.length === 0) {
           // Gateway has no keys synced — clear any stale models from previous session
           setWorkingModels([])
@@ -3654,9 +3655,9 @@ export default function ManualKeyTester() {
   }
   
   // Set default model when provider changes
-  // Skip for Miuclaw — it fetches real model list from /api/v1/models asynchronously
+  // Skip for Msaku — it fetches real model list from /api/v1/models asynchronously
   useEffect(() => {
-    if (selectedPreset.id === "miuclaw") return
+    if (selectedPreset.id === "msaku") return
     if (selectedPreset.models && selectedPreset.models.length > 0) {
       const defaultModel = selectedPreset.models[0].id
       setChatModel(defaultModel)
@@ -3921,7 +3922,7 @@ export default function ManualKeyTester() {
   }
 
   async function runTest() {
-    const isMiuclaw = selectedPreset.id === "miuclaw"
+    const isMiuclaw = selectedPreset.id === "msaku"
     if ((!isMiuclaw && !apiKey.trim()) || !prompt.trim() || loading || isStreaming) return
 
     const ts = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
@@ -4642,8 +4643,8 @@ export default function ManualKeyTester() {
                   }}
                   className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer flex-1 min-w-0 truncate"
                 >
-                  {selectedPreset.id === "miuclaw" ? (
-                    // Miuclaw: show gateway models with clean names — no latency suffix
+                  {selectedPreset.id === "msaku" ? (
+                    // Msaku: show gateway models with clean names — no latency suffix
                     workingModels.length > 0 ? (
                       workingModels.map((m) => (
                         <option key={m.modelId} value={m.modelId}>
@@ -4676,7 +4677,7 @@ export default function ManualKeyTester() {
                 </select>
                 {workingModels.length > 0 && (
                   <span className="text-[9px] text-primary/60 border border-primary/20 bg-primary/8 rounded px-1 py-0.5 flex-shrink-0 whitespace-nowrap">
-                    {workingModels.length} {selectedPreset.id === "miuclaw" ? "models" : "saved"}
+                    {workingModels.length} {selectedPreset.id === "msaku" ? "models" : "saved"}
                   </span>
                 )}
               </div>
@@ -4692,10 +4693,10 @@ export default function ManualKeyTester() {
                   <div>
                     <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {selectedPreset.id === "miuclaw"
+                      {selectedPreset.id === "msaku"
                         ? workingModels.length > 0
                           ? "Ready — send a message to test"
-                          : "No models synced — go to Keys → Sync to Miuclaw Gateway"
+                          : "No models synced — go to Keys → Sync to Msaku Gateway"
                         : apiKey
                           ? "Ready — send a message to test"
                           : workingModels.length > 0
@@ -4913,8 +4914,8 @@ export default function ManualKeyTester() {
             {/* Chat input */}
             <div className="border-t border-border px-3 sm:px-4 py-3 flex-shrink-0 bg-card">
 
-              {/* Inline API key input — hidden for Miuclaw, shown for others when no saved key exists */}
-              {selectedPreset.id !== "miuclaw" && !apiKey.trim() && workingModels.length === 0 && (
+              {/* Inline API key input — hidden for Msaku, shown for others when no saved key exists */}
+              {selectedPreset.id !== "msaku" && !apiKey.trim() && workingModels.length === 0 && (
                 <div className="flex items-center gap-2 px-1 py-1 mb-2 rounded-lg border border-primary/20 bg-primary/5">
                   <div className="relative flex-1 min-w-0">
                     <input
@@ -4950,14 +4951,14 @@ export default function ManualKeyTester() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={(selectedPreset.id === "miuclaw" || apiKey.trim()) ? "Describe what to build... (Enter to send)" : "Enter API key above first..."}
-                  disabled={(loading || isStreaming) || (selectedPreset.id !== "miuclaw" && !apiKey.trim())}
+                  placeholder={(selectedPreset.id === "msaku" || apiKey.trim()) ? "Describe what to build... (Enter to send)" : "Enter API key above first..."}
+                  disabled={(loading || isStreaming) || (selectedPreset.id !== "msaku" && !apiKey.trim())}
                   rows={2}
                   className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/70 resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runTest}
-                  disabled={(selectedPreset.id !== "miuclaw" && !apiKey.trim()) || !prompt.trim() || loading || isStreaming}
+                  disabled={(selectedPreset.id !== "msaku" && !apiKey.trim()) || !prompt.trim() || loading || isStreaming}
                   className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 w-11 sm:w-auto sm:min-w-[80px] h-[46px]"
                 >
                   {loading || isStreaming ? <SpinnerIcon /> : <SendIcon />}
@@ -5633,7 +5634,7 @@ export default function ManualKeyTester() {
             }}
             workingModels={workingModels}
             presetModels={selectedPreset.models?.map((m) => ({ id: m.id, label: m.label }))}
-            isMiuclaw={selectedPreset.id === "miuclaw"}
+            isMiuclaw={selectedPreset.id === "msaku"}
             activeSkillConfigs={activeSkillConfigs}
           />
         )}

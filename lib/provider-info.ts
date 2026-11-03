@@ -1717,21 +1717,37 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     ],
   },
 
-  // ── Miuclaw Gateway ───────────────────────────────────────────────────────────
-  miuclaw: {
-    id: "miuclaw",
-    name: "Miuclaw Gateway",
-    website: "https://www.miuclaw.my.id",
-    pricingUrl: "https://www.miuclaw.my.id",
-    docsUrl: "https://www.miuclaw.my.id/api/v1/models",
-    description: "Self-hosted AI gateway at miuclaw.my.id — aggregates all synced working keys from every provider into one OpenAI-compatible endpoint. Automatic key rotation, fastest-first selection, and zero extra cost. Requires EXPORT_API_TOKEN.",
+  // ── Msaku Gateway ───────────────────────────────────────────────────────────
+  msaku: {
+    id: "msaku",
+    name: "Msaku Gateway",
+    website: "https://gateway.msaku.id",
+    pricingUrl: "https://gateway.msaku.id",
+    docsUrl: "https://gateway.msaku.id/api/v1/models",
+    description: "Self-hosted AI gateway at gateway.msaku.id — aggregates all synced working keys from every provider into one OpenAI-compatible endpoint. Automatic key rotation, fastest-first selection, and zero extra cost. Requires EXPORT_API_TOKEN.",
     hq: "ID",
     tier: "gateway",
     hasFreeTier: true,
     liveModels: true,
     lastUpdated: "2026-06-28",
     models: [
-      m("miuclaw/auto", null, null, 0, { promo: true, promoLabel: "Auto-route", promoLink: "https://www.miuclaw.my.id" }),
+      m("msaku/auto", null, null, 0, { promo: true, promoLabel: "Auto-route", promoLink: "https://gateway.msaku.id" }),
+    ],
+  },
+  miuclaw: {
+    id: "miuclaw",
+    name: "Msaku Gateway",
+    website: "https://gateway.msaku.id",
+    pricingUrl: "https://gateway.msaku.id",
+    docsUrl: "https://gateway.msaku.id/api/v1/models",
+    description: "Self-hosted AI gateway at gateway.msaku.id — aggregates all synced working keys from every provider into one OpenAI-compatible endpoint. Automatic key rotation, fastest-first selection, and zero extra cost. Requires EXPORT_API_TOKEN.",
+    hq: "ID",
+    tier: "gateway",
+    hasFreeTier: true,
+    liveModels: true,
+    lastUpdated: "2026-06-28",
+    models: [
+      m("msaku/auto", null, null, 0, { promo: true, promoLabel: "Auto-route", promoLink: "https://gateway.msaku.id" }),
     ],
   },
 
