@@ -158,11 +158,11 @@ export ANTHROPIC_API_KEY="YOUR_EXPORT_API_TOKEN"`,
 export default defineConfig({
   provider: {
     openai: {
-      name: "Miuclaw Gateway",
+      name: "Msaku Gateway",
       baseURL: "${endpoint}",
       apiKey: "YOUR_EXPORT_API_TOKEN",
       models: {
-        "miuclaw/auto": { name: "Auto (fastest provider)" },
+        "msaku/auto": { name: "Auto (fastest provider)" },
       },
     },
   },
@@ -180,7 +180,7 @@ export default defineConfig({
           lang: "json",
           code: `{
   "github.copilot.advanced": {
-    "debug.overrideEngine": "miuclaw/auto",
+    "debug.overrideEngine": "msaku/auto",
     "debug.testOverrideProxyUrl": "${endpoint}",
     "debug.overrideProxyUrl": "${endpoint}"
   }
@@ -196,7 +196,7 @@ export default defineConfig({
         {
           label: "Manual config (Settings)",
           lang: "text",
-          code: `Model Name:  miuclaw/auto
+          code: `Model Name:  msaku/auto
 Base URL:    ${origin}/api/v1
 API Key:     YOUR_EXPORT_API_TOKEN`,
         },
@@ -218,7 +218,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="miuclaw/auto",
+    model="msaku/auto",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 print(response.choices[0].message.content)`,
@@ -234,7 +234,7 @@ const client = new OpenAI({
 })
 
 const res = await client.chat.completions.create({
-  model: "miuclaw/auto",
+  model: "msaku/auto",
   messages: [{ role: "user", content: "Hello!" }],
 })
 console.log(res.choices[0].message.content)`,
@@ -246,7 +246,7 @@ console.log(res.choices[0].message.content)`,
   return (
     <div className="flex flex-col gap-4 px-3 py-3 overflow-y-auto">
       <p className="text-[9.5px] text-muted-foreground/60 leading-relaxed">
-        After syncing your working keys, use Miuclaw gateway as a unified endpoint
+        After syncing your working keys, use Msaku gateway as a unified endpoint
         with any OpenAI-compatible coding agent or SDK.
         Replace <span className="font-mono text-primary/70">YOUR_EXPORT_API_TOKEN</span> with
         your token (set via <span className="font-mono text-primary/70">EXPORT_API_TOKEN</span> env var).
@@ -295,7 +295,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
       const res = await fetch("/api/v1/models")
       if (!res.ok) return
       const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
-      const models = (data.data ?? []).filter((m: { id: string }) => m.id !== "miuclaw/auto")
+      const models = (data.data ?? []).filter((m: { id: string }) => m.id !== "msaku/auto" && m.id !== "miuclaw/auto")
       const providerSet = new Set(models.map((m: { owned_by?: string }) => m.owned_by ?? "unknown"))
       setGatewayStats({ keys: models.length, providers: providerSet.size })
     } catch { /* silently ignore */ }
@@ -442,7 +442,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
       {/* Header */}
       <div className="flex flex-col gap-0.5">
         <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-          Miuclaw Gateway
+          Msaku Gateway
         </h3>
         <p className="text-[10px] text-muted-foreground leading-relaxed">
           Push your working keys into the gateway. The{" "}

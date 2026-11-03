@@ -1,7 +1,7 @@
 import { pgTable, serial, text, integer, bigint, boolean, timestamp } from "drizzle-orm/pg-core"
 
 /**
- * gateway_logs — one row per request that passes through Miuclaw gateway
+ * gateway_logs — one row per request that passes through Msaku gateway
  * (/api/v1/chat/completions).
  *
  * Kept deliberately lean: only the fields needed for real-time analytics

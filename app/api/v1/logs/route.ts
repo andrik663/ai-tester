@@ -1,7 +1,7 @@
 /**
  * GET /api/v1/logs
  *
- * Miuclaw Gateway — real-time request log reader.
+ * Msaku Gateway — real-time request log reader.
  *
  * Query params:
  *   limit       - max rows (default 100, max 500)

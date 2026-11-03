@@ -284,8 +284,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { provider, apiKey, headers, messages, systemPrompt, rawBody, model } = body
-  // Miuclaw Gateway: always route to same-origin /api/v1/chat/completions
-  const endpoint = provider === "miuclaw"
+  // Msaku Gateway: always route to same-origin /api/v1/chat/completions
+  const endpoint = (provider === "msaku" || provider === "miuclaw")
     ? `${req.nextUrl.origin}/api/v1/chat/completions`
     : body.endpoint
 
