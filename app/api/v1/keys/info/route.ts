@@ -17,19 +17,24 @@ export async function GET() {
   return NextResponse.json({
     gateway: "Msaku Gateway",
     baseUrl: "https://gateway.msaku.id/api/v1",
+    customGatewayUrl: "https://free.ai.id/v1",
     publicKey: {
       key: PUBLIC_GATEWAY_KEY,
       tier: "public",
+      targetGateway: "https://free.ai.id/v1",
       rateLimitPerMinute: 20,
-      description: "API Key publik gratis (shared rate limit 20 req/menit per IP).",
+      description:
+        "API Key Publik khusus untuk Custom Gateway (seperti https://free.ai.id/). Tidak digunakan untuk akses langsung ke gateway.msaku.id.",
     },
     registeredUserKey: {
       prefix: "msk_",
       tier: "msaku_user",
+      targetGateway: "https://gateway.msaku.id/api/v1",
       rateLimitPerMinute: 120,
       registerUrl: "https://msaku.id/profil/api-key",
       gatewayPageUrl: "https://msaku.id/gateway",
-      description: "API Key khusus user terdaftar di msaku.id (120 req/menit per key).",
+      description:
+        "API Key User terdaftar MSAKU.id (msk_...) khusus untuk mengakses https://gateway.msaku.id dan MCP Server Msaku (120 req/menit).",
     },
   })
 }

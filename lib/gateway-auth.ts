@@ -49,11 +49,13 @@ export function extractBearerOrHeaderKey(headers: Headers): string {
 }
 
 /**
- * Validate a Msaku Gateway credential:
- * 1. Public API Key (`PUBLIC_GATEWAY_KEY` / `msaku_pub_...` or internal web preview placeholder `msaku-gateway`)
- * 2. Registered msaku.id user API key (`msk_...` stored hashed in `mcp_api_keys`)
- * 3. Custom `atk_...` key stored in `api_keys`
- * 4. Internal token (fixed constant, no env var needed)
+ * Validate a Msaku Gateway credential (`gateway.msaku.id`):
+ * - Registered msaku.id user API key (`msk_...` stored hashed in `mcp_api_keys`) -> 120 RPM
+ * - Note: Public API Key (`PUBLIC_GATEWAY_KEY`) is strictly for Custom Gateways
+ *   (such as `https://free.ai.id/`). To access `https://gateway.msaku.id/api/v1/chat/completions`,
+ *   users must use their personal `msk_...` User API Key from msaku.id.
+ * - Custom `atk_...` key stored in `api_keys`
+ * - Internal token (fixed constant, no env var needed)
  */
 export async function authenticateGatewayRequest(
   headers: Headers,
@@ -79,29 +81,40 @@ export async function authenticateGatewayRequest(
     return {
       valid: false,
       status: 401,
-      error: `Missing API key. Use the public key (${PUBLIC_GATEWAY_KEY}) or generate a personal msk_... key at https://msaku.id/profil/api-key`,
+      error: `API Key User wajib diisi. Untuk mengakses gateway.msaku.id, gunakan API Key User pribadi Anda (msk_...) yang dibuat di https://msaku.id/gateway. (API Key Publik ${PUBLIC_GATEWAY_KEY} khusus untuk Custom Gateway seperti https://free.ai.id/)`,
     }
   }
 
-  // 1. Public API key or internal web preview placeholder
+  // 1. Public API key (`PUBLIC_GATEWAY_KEY`):
+  // Allowed only for read-only discovery (e.g. /api/v1/models or /api/v1/logs),
+  // rejected on chat completions at gateway.msaku.id because gateway.msaku.id
+  // requires a personal MSAKU User API key (msk_...), whereas Public API Key
+  // is for Custom Gateways such as https://free.ai.id/.
   if (
     rawKey === PUBLIC_GATEWAY_KEY ||
     rawKey === "msaku-gateway" ||
     rawKey === "miuclaw-gateway"
   ) {
+    if (!allowAnonymousRead && endpoint.includes("/chat/completions")) {
+      return {
+        valid: false,
+        status: 401,
+        error: `API Key Publik (${PUBLIC_GATEWAY_KEY}) berfungsi untuk Custom Gateway seperti https://free.ai.id/. Untuk mengakses gateway.msaku.id, gunakan API Key User pribadi Anda (msk_...) dari https://msaku.id/gateway.`,
+      }
+    }
     const rl = checkRateWindow(`pub:${ip}`, PUBLIC_RPM)
     if (!rl.allowed) {
       return {
         valid: false,
         status: 429,
-        error: `Rate limit API key publik tercapai (${PUBLIC_RPM} req/menit). Daftar/masuk di https://msaku.id/profil/api-key untuk membuat API key pribadi (msk_...) dengan kuota lebih tinggi.`,
+        error: `Rate limit tercapai (${PUBLIC_RPM} req/menit). Gunakan API key pribadi user (msk_...) dari https://msaku.id/gateway.`,
       }
     }
     return {
       valid: true,
       tier: "public",
       keyPrefix: PUBLIC_GATEWAY_KEY.slice(0, 14),
-      keyLabel: "Public Shared Key",
+      keyLabel: "Public Key (Custom Gateway / free.ai.id)",
       rateLimitPerMinute: PUBLIC_RPM,
     }
   }
@@ -210,6 +223,6 @@ export async function authenticateGatewayRequest(
   return {
     valid: false,
     status: 401,
-    error: `API key tidak dikenali. Gunakan Public Key (${PUBLIC_GATEWAY_KEY}) atau buat API key pribadi di https://msaku.id/profil/api-key`,
+    error: `API key tidak dikenali. Untuk akses gateway.msaku.id, gunakan API Key User (msk_...) dari https://msaku.id/gateway. Untuk Custom Gateway (seperti https://free.ai.id/), gunakan Public Key (${PUBLIC_GATEWAY_KEY}).`,
   }
 }

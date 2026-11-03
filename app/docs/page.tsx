@@ -317,31 +317,32 @@ export default function DocsPage() {
           <section id="authentication">
             <h2 className="text-lg font-bold text-foreground mb-1">Authentication</h2>
             <p className="text-[13px] text-muted-foreground mb-4 leading-relaxed">
-              Msaku Gateway supports two types of API keys in the{" "}
-              <code className="text-primary/90 font-mono text-[12px]">Authorization: Bearer &lt;KEY&gt;</code> header:
+              Terdapat pemisahan fungsi yang jelas antara <strong>API Key Publik</strong> (untuk Custom Gateway seperti{" "}
+              <code className="text-primary/90 font-mono text-[12px]">https://free.ai.id/</code>) dan{" "}
+              <strong>API Key User</strong> (<code className="text-primary/90 font-mono text-[12px]">msk_...</code> khusus untuk mengakses{" "}
+              <code className="text-primary/90 font-mono text-[12px]">https://gateway.msaku.id</code>):
             </p>
             <div className="grid sm:grid-cols-2 gap-3 mb-4">
               <div className="p-3.5 rounded-lg border border-border/50 bg-secondary/10">
-                <p className="text-[12px] font-semibold text-foreground mb-1">1. Public API Key (Free / Shared)</p>
+                <p className="text-[12px] font-semibold text-foreground mb-1">1. Public API Key (Custom Gateway — free.ai.id)</p>
                 <p className="text-[11px] text-muted-foreground mb-2">
-                  Ready to use immediately without registration (rate limit: 20 requests/minute per IP):
+                  Digunakan khusus untuk Custom Gateway eksternal seperti{" "}
+                  <a href="https://free.ai.id/" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    https://free.ai.id/
+                  </a>:
                 </p>
                 <code className="block px-2.5 py-1.5 rounded bg-background border border-border font-mono text-[11px] text-primary break-all">
                   msaku_pub_v1_free_gateway_2026
                 </code>
               </div>
               <div className="p-3.5 rounded-lg border border-primary/30 bg-primary/5">
-                <p className="text-[12px] font-semibold text-foreground mb-1">2. Registered MSAKU.ID User Key (msk_...)</p>
+                <p className="text-[12px] font-semibold text-foreground mb-1">2. API Key User MSAKU.ID (Akses gateway.msaku.id)</p>
                 <p className="text-[11px] text-muted-foreground mb-2">
-                  Personal API key for registered users at{" "}
+                  Khusus untuk mengakses <strong>https://gateway.msaku.id</strong> dan MCP Server Msaku. Buat di{" "}
                   <a href="https://msaku.id/gateway" target="_blank" rel="noopener noreferrer" className="text-primary underline">
                     msaku.id/gateway
                   </a>{" "}
-                  or{" "}
-                  <a href="https://msaku.id/profil/api-key" target="_blank" rel="noopener noreferrer" className="text-primary underline">
-                    msaku.id/profil/api-key
-                  </a>{" "}
-                  (rate limit: 120 requests/minute):
+                  (kuota 120 req/menit):
                 </p>
                 <code className="block px-2.5 py-1.5 rounded bg-background border border-border font-mono text-[11px] text-foreground break-all">
                   msk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -351,11 +352,11 @@ export default function DocsPage() {
             <CodeBlock
               title="Authorization header"
               language="bash"
-              code={`# Using Public API Key:
-Authorization: Bearer msaku_pub_v1_free_gateway_2026
+              code={`# 1. Akses https://gateway.msaku.id (Wajib API Key User msk_...):
+Authorization: Bearer msk_YOUR_MSAKU_USER_KEY
 
-# Or using your personal MSAKU.ID API Key:
-Authorization: Bearer msk_YOUR_MSAKU_KEY`}
+# 2. Akses Custom Gateway seperti https://free.ai.id/ (API Key Publik):
+Authorization: Bearer msaku_pub_v1_free_gateway_2026`}
             />
           </section>
 

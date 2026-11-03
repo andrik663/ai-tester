@@ -9,9 +9,9 @@ const STORAGE_USER_KEY = "msaku_gateway_user_api_key"
 /**
  * Public-facing single-page dashboard at gateway.msaku.id.
  *
- * Supports two API key modes right from the top bar:
- * 1. API Key Publik (`msaku_pub_v1_free_gateway_2026`) — free shared key (20 req/min)
- * 2. API Key User MSAKU (`msk_...`) — personal key for registered msaku.id users (120 req/min)
+ * Supports two distinct API key roles right from the top bar:
+ * 1. API Key Publik (`msaku_pub_v1_free_gateway_2026`) — khusus untuk Custom Gateway (seperti `https://free.ai.id/`)
+ * 2. API Key User MSAKU (`msk_...`) — khusus untuk mengakses `https://gateway.msaku.id` bagi user terdaftar msaku.id (120 req/min)
  */
 export default function PublicCodePreview() {
   const [chatModel, setChatModel] = useState("")
@@ -19,6 +19,7 @@ export default function PublicCodePreview() {
   const [publicKey, setPublicKey] = useState(DEFAULT_PUBLIC_KEY)
   const [userKey, setUserKey] = useState("")
   const [activeTier, setActiveTier] = useState<"public" | "msaku_user">("public")
+  const [customGatewayEndpoint, setCustomGatewayEndpoint] = useState("https://free.ai.id/v1/chat/completions")
   const [showKeyModal, setShowKeyModal] = useState(false)
   const [keyInput, setKeyInput] = useState("")
   const [verifying, setVerifying] = useState(false)
@@ -109,10 +110,14 @@ export default function PublicCodePreview() {
   }
 
   const effectiveKey = activeTier === "msaku_user" && userKey ? userKey : publicKey
+  const effectiveEndpoint =
+    activeTier === "msaku_user" && userKey
+      ? "https://gateway.msaku.id/api/v1/chat/completions"
+      : customGatewayEndpoint
 
   return (
     <div className="flex flex-col h-dvh bg-background text-foreground font-sans overflow-hidden">
-      {/* Top bar for Public API Key & MSAKU Registered User API Key */}
+      {/* Top bar for Public API Key (Custom Gateway) & MSAKU Registered User API Key (gateway.msaku.id) */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 border-b border-border/50 bg-secondary/20 text-[11px]">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-semibold text-foreground truncate">Msaku Gateway</span>
@@ -121,7 +126,9 @@ export default function PublicCodePreview() {
               ? "bg-primary/15 text-primary border-primary/30"
               : "bg-muted/50 text-muted-foreground border-border"
           }`}>
-            {activeTier === "msaku_user" ? `User MSAKU (${userKey.slice(0, 10)}•••)` : "Public Key (20 req/m)"}
+            {activeTier === "msaku_user"
+              ? `User Key → gateway.msaku.id (${userKey.slice(0, 10)}•••)`
+              : "Public Key → Custom Gateway (free.ai.id)"}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -130,7 +137,7 @@ export default function PublicCodePreview() {
             onClick={() => setShowKeyModal((v) => !v)}
             className="px-2.5 py-1 rounded-md border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary font-medium text-[11px] transition-colors"
           >
-            {showKeyModal ? "Tutup API Key" : "API Key Publik & User MSAKU"}
+            {showKeyModal ? "Tutup API Key" : "API Key Publik (Custom) & Key User (gateway.msaku.id)"}
           </button>
           <a
             href="/docs"
@@ -144,14 +151,17 @@ export default function PublicCodePreview() {
       {showKeyModal && (
         <div className="border-b border-border bg-card px-3 py-3 text-xs">
           <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Public API Key Card */}
+            {/* Public API Key Card (for Custom Gateway e.g. https://free.ai.id/) */}
             <div className="p-3 rounded-lg border border-border/70 bg-secondary/10 flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">1. API Key Publik (Gratis)</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">20 req/menit</span>
+                <span className="font-semibold text-foreground">1. API Key Publik (Custom Gateway)</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">free.ai.id</span>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Bisa langsung dipakai untuk testing di kodingan / SDK OpenAI tanpa login:
+                Fungsi <strong>API Key Publik</strong> adalah untuk terhubung ke <strong>Custom Gateway</strong> seperti{" "}
+                <a href="https://free.ai.id/" target="_blank" rel="noopener noreferrer" className="text-primary underline font-mono">
+                  https://free.ai.id/
+                </a>:
               </p>
               <div className="flex items-center gap-1.5">
                 <code className="flex-1 truncate px-2 py-1.5 rounded border border-border bg-background font-mono text-[11px] text-foreground">
@@ -165,16 +175,25 @@ export default function PublicCodePreview() {
                   {copiedPub ? "Tersalin!" : "Salin"}
                 </button>
               </div>
+              <div className="flex items-center gap-1.5 pt-0.5">
+                <span className="text-[10px] text-muted-foreground shrink-0">Custom URL:</span>
+                <input
+                  type="text"
+                  value={customGatewayEndpoint}
+                  onChange={(e) => setCustomGatewayEndpoint(e.target.value)}
+                  className="flex-1 min-w-0 px-2 py-1 rounded border border-border bg-background font-mono text-[10.5px] text-foreground"
+                />
+              </div>
             </div>
 
-            {/* Registered MSAKU User API Key Card */}
+            {/* Registered MSAKU User API Key Card (for gateway.msaku.id) */}
             <div className="p-3 rounded-lg border border-primary/25 bg-primary/5 flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">2. API Key User Terdaftar MSAKU.ID</span>
+                <span className="font-semibold text-foreground">2. API Key User (Akses gateway.msaku.id)</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono">120 req/menit</span>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Khusus user yang sudah registrasi di{" "}
+                Untuk mengakses <strong>gateway.msaku.id</strong>, wajib menggunakan <strong>API Key User</strong> (<code className="font-mono">msk_...</code>) yang dibuat di{" "}
                 <a
                   href="https://msaku.id/gateway"
                   target="_blank"
@@ -182,15 +201,6 @@ export default function PublicCodePreview() {
                   className="text-primary underline underline-offset-2 font-medium"
                 >
                   msaku.id/gateway
-                </a>{" "}
-                atau{" "}
-                <a
-                  href="https://msaku.id/profil/api-key"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline underline-offset-2 font-medium"
-                >
-                  msaku.id/profil/api-key
                 </a>:
               </p>
               <div className="flex items-center gap-1.5">
@@ -198,7 +208,7 @@ export default function PublicCodePreview() {
                   type="password"
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder="Tempel key msk_... Anda di sini"
+                  placeholder="Tempel key user msk_... Anda di sini"
                   className="flex-1 min-w-0 px-2.5 py-1.5 rounded border border-border bg-background font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <button
@@ -223,9 +233,9 @@ export default function PublicCodePreview() {
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <CodePreviewTab
           provider="msaku"
-          providerName="Msaku Gateway"
+          providerName={activeTier === "msaku_user" ? "Msaku Gateway (gateway.msaku.id)" : "Custom Gateway (free.ai.id)"}
           apiKey={effectiveKey}
-          endpoint="https://gateway.msaku.id/api/v1/chat/completions"
+          endpoint={effectiveEndpoint}
           headers={{ Authorization: "Bearer {{API_KEY}}", "Content-Type": "application/json" }}
           model={chatModel || "msaku/auto"}
           onModelChange={setChatModel}
