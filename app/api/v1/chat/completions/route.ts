@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getInternalToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey } from "@/lib/gateway-cache"
+import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from "@/lib/providers"
 import { writeGatewayLog } from "@/lib/gateway-logs"
 
@@ -271,14 +272,17 @@ function buildEndpoint(providerId: string, modelId: string, apiKey: string): str
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // ── Resolve internal gateway token from server env ──────────────────────────
-  const token = getInternalToken()
-  if (!token) {
+  // ── Validate API Key (Public Key / Registered MSAKU User msk_... / Admin) ──
+  const auth = await authenticateGatewayRequest(req.headers, "/api/v1/chat/completions")
+  if (!auth.valid) {
     return NextResponse.json(
-      { error: "Server misconfiguration: EXPORT_API_TOKEN env var not set" },
-      { status: 503 },
+      { error: auth.error || "Unauthorized" },
+      { status: auth.status || 401 },
     )
   }
+
+  // ── Resolve internal gateway token from server env ──────────────────────────
+  const token = getInternalToken()
 
   // ── Parse request ───────────────────────────────────────────────────────────
   let body: ChatRequest
@@ -404,6 +408,7 @@ export async function POST(req: NextRequest) {
           "Connection": "keep-alive",
           "X-Msaku-Provider": key.providerId,
           "X-Msaku-Model": body.model,
+          "X-Msaku-Auth-Tier": auth.tier ?? "public",
         },
       })
     }
@@ -422,6 +427,7 @@ export async function POST(req: NextRequest) {
       headers: {
         "X-Msaku-Provider": key.providerId,
         "X-Msaku-Model": body.model,
+        "X-Msaku-Auth-Tier": auth.tier ?? "public",
         "Content-Type": contentType,
       },
     })

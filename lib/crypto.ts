@@ -14,13 +14,14 @@ function deriveKey(secret: string): Buffer {
   return createHash("sha256").update(secret).digest()
 }
 
+const DEFAULT_GATEWAY_TOKEN = "msaku_gw_default_2026"
+
 /**
  * Encrypt a plaintext string.
  * Returns hex: <12-byte IV><16-byte auth tag><ciphertext>
  */
 export function encrypt(plaintext: string): string {
-  const secret = process.env.EXPORT_API_TOKEN
-  if (!secret) throw new Error("EXPORT_API_TOKEN not set — cannot encrypt key")
+  const secret = process.env.EXPORT_API_TOKEN || DEFAULT_GATEWAY_TOKEN
   const key  = deriveKey(secret)
   const iv   = randomBytes(12)
   const cipher = createCipheriv(ALGO, key, iv)
@@ -33,8 +34,7 @@ export function encrypt(plaintext: string): string {
  * Decrypt a hex string produced by `encrypt`.
  */
 export function decrypt(hex: string): string {
-  const secret = process.env.EXPORT_API_TOKEN
-  if (!secret) throw new Error("EXPORT_API_TOKEN not set — cannot decrypt key")
+  const secret = process.env.EXPORT_API_TOKEN || DEFAULT_GATEWAY_TOKEN
   const key  = deriveKey(secret)
   const buf  = Buffer.from(hex, "hex")
   const iv   = buf.subarray(0, 12)

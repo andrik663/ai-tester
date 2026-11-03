@@ -8,16 +8,19 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getInternalToken, getAllModels, getGatewayStats } from "@/lib/gateway-cache"
+import { getInternalToken, getAllModels, getGatewayStats, PUBLIC_GATEWAY_KEY } from "@/lib/gateway-cache"
+import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 
 export const runtime = "nodejs"
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const auth = await authenticateGatewayRequest(req.headers, "/api/v1/models", true)
+  if (!auth.valid) {
+    return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 })
+  }
+
   // ── Resolve internal token ──────────────────────────────────────────────────
   const token = getInternalToken()
-  if (!token) {
-    return NextResponse.json({ error: "Server misconfiguration: EXPORT_API_TOKEN not set" }, { status: 503 })
-  }
 
   // ── Build response ──────────────────────────────────────────────────────────
   const models = await getAllModels(token)
@@ -41,6 +44,9 @@ export async function GET(_req: NextRequest) {
       _msaku: {
         message: "No working keys synced yet. Call POST /api/v1/gateway/push from the browser first.",
         totalKeys: 0,
+        publicKey: PUBLIC_GATEWAY_KEY,
+        registerKeyUrl: "https://msaku.id/profil/api-key",
+        authTier: auth.tier,
       },
     })
   }
@@ -66,6 +72,9 @@ export async function GET(_req: NextRequest) {
         totalModels: models.length,
         providers: stats?.providers ?? {},
         lastPushedAt: stats?.lastPushedAt ?? null,
+        publicKey: PUBLIC_GATEWAY_KEY,
+        registerKeyUrl: "https://msaku.id/profil/api-key",
+        authTier: auth.tier,
       },
     },
     {

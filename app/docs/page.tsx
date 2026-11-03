@@ -317,22 +317,46 @@ export default function DocsPage() {
           <section id="authentication">
             <h2 className="text-lg font-bold text-foreground mb-1">Authentication</h2>
             <p className="text-[13px] text-muted-foreground mb-4 leading-relaxed">
-              All endpoints that require authentication use a Bearer token passed in the{" "}
-              <code className="text-primary/90 font-mono text-[12px]">Authorization</code> header.
-              The token is configured as <code className="text-primary/90 font-mono text-[12px]">EXPORT_API_TOKEN</code> on the server.
+              Msaku Gateway supports two types of API keys in the{" "}
+              <code className="text-primary/90 font-mono text-[12px]">Authorization: Bearer &lt;KEY&gt;</code> header:
             </p>
+            <div className="grid sm:grid-cols-2 gap-3 mb-4">
+              <div className="p-3.5 rounded-lg border border-border/50 bg-secondary/10">
+                <p className="text-[12px] font-semibold text-foreground mb-1">1. Public API Key (Free / Shared)</p>
+                <p className="text-[11px] text-muted-foreground mb-2">
+                  Ready to use immediately without registration (rate limit: 20 requests/minute per IP):
+                </p>
+                <code className="block px-2.5 py-1.5 rounded bg-background border border-border font-mono text-[11px] text-primary break-all">
+                  msaku_pub_v1_free_gateway_2026
+                </code>
+              </div>
+              <div className="p-3.5 rounded-lg border border-primary/30 bg-primary/5">
+                <p className="text-[12px] font-semibold text-foreground mb-1">2. Registered MSAKU.ID User Key (msk_...)</p>
+                <p className="text-[11px] text-muted-foreground mb-2">
+                  Personal API key for registered users at{" "}
+                  <a href="https://msaku.id/gateway" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    msaku.id/gateway
+                  </a>{" "}
+                  or{" "}
+                  <a href="https://msaku.id/profil/api-key" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    msaku.id/profil/api-key
+                  </a>{" "}
+                  (rate limit: 120 requests/minute):
+                </p>
+                <code className="block px-2.5 py-1.5 rounded bg-background border border-border font-mono text-[11px] text-foreground break-all">
+                  msk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                </code>
+              </div>
+            </div>
             <CodeBlock
               title="Authorization header"
               language="bash"
-              code={`Authorization: Bearer YOUR_TOKEN`}
+              code={`# Using Public API Key:
+Authorization: Bearer msaku_pub_v1_free_gateway_2026
+
+# Or using your personal MSAKU.ID API Key:
+Authorization: Bearer msk_YOUR_MSAKU_KEY`}
             />
-            <div className="mt-4 p-3.5 rounded-lg border border-warning/25 bg-warning/8">
-              <p className="text-[12px] text-warning/90 leading-relaxed">
-                <strong className="text-warning">Note:</strong> The <code className="font-mono text-[11px]">/api/v1/gateway/push</code> endpoint
-                does not require a bearer token — it is protected by server environment access only.
-                Do not expose this endpoint publicly without additional firewall rules.
-              </p>
-            </div>
           </section>
 
           {/* List Models ----------------------------------------------------- */}
