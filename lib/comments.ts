@@ -24,22 +24,24 @@ export const MAX_MESSAGE_LENGTH = 140
 
 // ── Auto-create DDL ───────────────────────────────────────────────────────────
 
-const CREATE_TABLE_SQL = `
-CREATE TABLE IF NOT EXISTS comments (
+const CREATE_TABLE_STMTS = [
+  `CREATE TABLE IF NOT EXISTS comments (
   id          SERIAL PRIMARY KEY,
   name        TEXT        NOT NULL DEFAULT 'Anonim',
   message     TEXT        NOT NULL,
   avatar_seed TEXT        NOT NULL,
   ts_ms       BIGINT      NOT NULL DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS comments_ts_ms_idx ON comments (ts_ms DESC);
-`
+)`,
+  `CREATE INDEX IF NOT EXISTS comments_ts_ms_idx ON comments (ts_ms DESC)`,
+]
 
 async function ensureTable(): Promise<void> {
   const client = await pool.connect()
   try {
-    await client.query(CREATE_TABLE_SQL)
+    for (const stmt of CREATE_TABLE_STMTS) {
+      await client.query(stmt)
+    }
   } finally {
     client.release()
   }

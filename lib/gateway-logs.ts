@@ -31,8 +31,8 @@ export interface GatewayLogRow extends GatewayLogEntry {
 
 // ── Auto-create DDL ───────────────────────────────────────────────────────────
 
-const CREATE_TABLE_SQL = `
-CREATE TABLE IF NOT EXISTS gateway_logs (
+const CREATE_TABLE_STMTS = [
+  `CREATE TABLE IF NOT EXISTS gateway_logs (
   id                SERIAL PRIMARY KEY,
   model             TEXT        NOT NULL,
   provider_id       TEXT        NOT NULL,
@@ -42,21 +42,23 @@ CREATE TABLE IF NOT EXISTS gateway_logs (
   latency_ms        INTEGER     NOT NULL DEFAULT 0,
   error_message     TEXT,
   streaming         BOOLEAN     NOT NULL DEFAULT FALSE,
-  fallback_used     BOOLEAN     NOT NULL DEFAULT FALSE,
+  fallback_used     boolean     NOT NULL DEFAULT FALSE,
   attempt_count     INTEGER     NOT NULL DEFAULT 1,
   prompt_tokens     INTEGER     NOT NULL DEFAULT 0,
   completion_tokens INTEGER     NOT NULL DEFAULT 0,
   ts_ms             BIGINT      NOT NULL DEFAULT 0,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS gateway_logs_ts_ms_idx      ON gateway_logs (ts_ms DESC);
-CREATE INDEX IF NOT EXISTS gateway_logs_provider_idx   ON gateway_logs (provider_id, ts_ms DESC);
-`
+)`,
+  `CREATE INDEX IF NOT EXISTS gateway_logs_ts_ms_idx      ON gateway_logs (ts_ms DESC)`,
+  `CREATE INDEX IF NOT EXISTS gateway_logs_provider_idx   ON gateway_logs (provider_id, ts_ms DESC)`,
+]
 
 async function ensureTable(): Promise<void> {
   const client = await pool.connect()
   try {
-    await client.query(CREATE_TABLE_SQL)
+    for (const stmt of CREATE_TABLE_STMTS) {
+      await client.query(stmt)
+    }
   } finally {
     client.release()
   }
