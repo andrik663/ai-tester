@@ -11,6 +11,7 @@
 import { cookies } from "next/headers"
 import { GATEWAY_ADMIN_COOKIE, verifyAdminSession } from "@/lib/gateway-admin-session"
 import { GatewaySharedLogin, GatewaySharedPanel } from "@/components/gateway-shared-admin"
+import ManualKeyTester from "@/components/manual-key-tester"
 
 // This page reads the request cookie, so it must NEVER be statically
 // prerendered: a build-time render has no request context, and on the
@@ -44,5 +45,5 @@ export default async function GatewaySharedAdminPage() {
     // the login form instead of failing the whole page.
     authed = false
   }
-  return authed ? <GatewaySharedPanel /> : <GatewaySharedLogin />
+  return authed ? <ManualKeyTester initialTab="admin-shared" /> : <GatewaySharedLogin />
 }
