@@ -12,6 +12,12 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    // Pagu token harian kunci shared per user msk_. Angka token/hari;
+    // "0" = tanpa pagu (tidak disarankan). Edit nilai di sini — deploy
+    // berikutnya otomatis memakai nilai baru.
+    "SHARED_DAILY_TOKEN_BUDGET_PER_USER": "1000000"
+  },
   "routes": [
     {
       "pattern": "gateway.msaku.id",
