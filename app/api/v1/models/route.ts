@@ -28,23 +28,14 @@ export async function GET(req: NextRequest) {
 
   const now = Math.floor(Date.now() / 1000)
 
-  // Always include "msaku/auto" as the first model — it picks the fastest available key
-  const autoModel = {
-    id: "msaku/auto",
-    object: "model",
-    created: now,
-    owned_by: "msaku",
-    _provider: "Msaku Gateway (auto-select)",
-  }
-
   if (models.length === 0) {
     return NextResponse.json({
       object: "list",
-      data: [autoModel],
+      data: [],
       _msaku: {
         message: "No working keys synced yet. Call POST /api/v1/gateway/push from the browser first.",
         totalKeys: 0,
-        totalModels: 1,
+        totalModels: 0,
         avgLatencyMs: 0,
         providers: {},
         providerNodes: [],
@@ -58,7 +49,6 @@ export async function GET(req: NextRequest) {
     {
       object: "list",
       data: [
-        autoModel,
         ...models
           .filter((m) => m.id !== "msaku/auto" && m.id !== "miuclaw/auto")
           .map((m) => ({
