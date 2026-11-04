@@ -26,7 +26,7 @@ export default async function GatewaySharedAdminPage() {
   const secret = process.env.GATEWAY_SHARED_ADMIN_TOKEN
   if (!secret) {
     return (
-      <div style={{ maxWidth: 720, margin: "48px auto", padding: "0 16px", fontFamily: "system-ui, sans-serif", color: "#e4e4e7" }}>
+      <div style={{ maxWidth: 720, margin: "48px auto", padding: "0 16px", fontFamily: "system-ui, sans-serif", color: "#e4e4e7", background: "#0e0f11" }}>
         <h1 style={{ fontSize: 22 }}>Panel Admin — Kunci Shared Gateway</h1>
         <p style={{ color: "#a1a1aa", fontSize: 14, lineHeight: 1.6 }}>
           Panel ini belum diaktifkan: set env <code>GATEWAY_SHARED_ADMIN_TOKEN</code> di environment

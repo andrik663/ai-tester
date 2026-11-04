@@ -1,18 +1,21 @@
 "use client"
 
 /**
- * Client UI for the admin shared-key panel. This file contains NO secrets:
- * - The login form sends the shared admin token once to the login route
- *   (over HTTPS) and receives only a session cookie in return.
- * - The panel never fetches, displays, or stores provider keys. The list
- *   API deliberately returns no api_key column, and the add form clears
- *   its key field after a successful submit.
- * - Removing a row deletes that shared row only (by id); private user
- *   keys are never listed here and can never be touched from this panel.
+ * Admin shared-key panel, styled like the gateway tester dashboard
+ * (PR #113 design tokens: one dark canvas #0e0f11, one panel grey #151619,
+ * sidebar #0a0b0d, hairline borders #222327, colour reserved for status).
+ *
+ * This file is UI ONLY. All behaviour is unchanged from PR #116/#117:
+ * - Login sends the shared admin token once to the login route and gets
+ *   only a session cookie back; the token never enters client code.
+ * - The list API returns no api_key column, so provider keys are never
+ *   displayed, fetched, or stored by this UI.
+ * - Remove deletes one shared row by id; private user keys are never
+ *   listed here and cannot be touched from this panel.
  */
 
 import { useCallback, useEffect, useState } from "react"
-import type { CSSProperties, FormEvent } from "react"
+import type { CSSProperties, FormEvent, ReactNode } from "react"
 
 type SharedRow = {
   id: number
@@ -23,34 +26,95 @@ type SharedRow = {
   pushedAt: number
 }
 
-const panelStyle: CSSProperties = {
-  maxWidth: 720,
-  margin: "48px auto",
-  padding: "0 16px",
-  fontFamily: "system-ui, sans-serif",
-  color: "#e4e4e7",
+// ── Design tokens (same as the tester dashboard) ─────────────────────────────
+const BG = "#0e0f11"
+const CARD = "#151619"
+const SIDEBAR = "#0a0b0d"
+const MUTED_BG = "#1d1e22"
+const LINE = "#222327"
+const TEXT = "#e4e4e7"
+const DIM = "#a1a1aa"
+const FAINT = "#71717a"
+
+const shell: CSSProperties = { minHeight: "100vh", background: BG, color: TEXT, fontFamily: "system-ui, sans-serif" }
+const header: CSSProperties = {
+  height: 48, display: "flex", alignItems: "center", justifyContent: "space-between",
+  padding: "0 16px", borderBottom: `1px solid ${LINE}`, background: BG, position: "sticky", top: 0, zIndex: 10,
+}
+const brand: CSSProperties = { fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em" }
+const badge: CSSProperties = {
+  display: "inline-block", marginLeft: 8, padding: "2px 8px", borderRadius: 999,
+  border: `1px solid ${LINE}`, background: MUTED_BG, color: DIM, fontSize: 11, fontWeight: 600, verticalAlign: "middle",
+}
+const ghostBtn: CSSProperties = {
+  height: 36, padding: "0 14px", borderRadius: 6, border: `1px solid ${LINE}`,
+  background: MUTED_BG, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer",
+}
+const solidBtn: CSSProperties = {
+  height: 44, padding: "0 16px", borderRadius: 6, border: "none",
+  background: TEXT, color: "#0e0f11", fontSize: 13, fontWeight: 700, cursor: "pointer",
+}
+const input: CSSProperties = {
+  width: "100%", height: 44, padding: "0 12px", borderRadius: 6, border: `1px solid ${LINE}`,
+  background: CARD, color: TEXT, fontSize: 13, boxSizing: "border-box", outline: "none",
+}
+const card: CSSProperties = { background: CARD, border: `1px solid ${LINE}`, borderRadius: 6 }
+const statLabel: CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4 }
+const statValue: CSSProperties = { fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }
+const pill: CSSProperties = {
+  display: "inline-block", padding: "3px 8px", borderRadius: 999, background: MUTED_BG,
+  border: `1px solid ${LINE}`, fontSize: 12, color: TEXT, margin: "0 6px 6px 0",
+}
+const navItem: CSSProperties = {
+  display: "block", width: "100%", textAlign: "left", padding: "9px 12px", fontSize: 13,
+  border: "none", borderLeft: "2px solid transparent", background: "transparent", color: DIM, cursor: "pointer",
+}
+const navActive: CSSProperties = { ...navItem, background: CARD, borderLeft: "2px solid #e4e4e7", color: TEXT, fontWeight: 600 }
+
+const responsive = `
+  .gw-admin-body { display: flex; }
+  .gw-admin-sidebar { width: 240px; flex-shrink: 0; background: ${SIDEBAR}; border-right: 1px solid ${LINE}; padding: 16px 12px; }
+  .gw-admin-main { flex: 1; min-width: 0; padding: 24px; }
+  .gw-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .gw-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .gw-form-full { grid-column: 1 / -1; }
+  @media (max-width: 768px) {
+    .gw-admin-sidebar { display: none; }
+    .gw-admin-main { padding: 16px; }
+    .gw-stats { grid-template-columns: 1fr; }
+    .gw-form-grid { grid-template-columns: 1fr; }
+  }
+`
+
+function Shell({ children, onLogout }: { children: ReactNode; onLogout?: () => void }) {
+  return (
+    <div style={shell}>
+      <style>{responsive}</style>
+      <header style={header}>
+        <div style={brand}>Msaku Gateway<span style={badge}>ADMIN</span></div>
+        {onLogout && (
+          <button onClick={onLogout} style={ghostBtn}>Keluar</button>
+        )}
+      </header>
+      {children}
+    </div>
+  )
 }
 
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: 6,
-  border: "1px solid #3f3f46",
-  background: "#151619",
-  color: "#e4e4e7",
-  fontSize: 14,
-  boxSizing: "border-box",
-}
-
-const buttonStyle: CSSProperties = {
-  padding: "10px 16px",
-  borderRadius: 6,
-  border: "none",
-  background: "#e4e4e7",
-  color: "#0e0f11",
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: "pointer",
+function Sidebar({ active }: { active: string }) {
+  return (
+    <aside className="gw-admin-sidebar">
+      <div style={{ fontSize: 11, color: FAINT, fontWeight: 700, letterSpacing: "0.08em", padding: "0 12px 8px" }}>ADMIN</div>
+      <button style={active === "shared" ? navActive : navItem}>Kunci Shared</button>
+      <button style={active === "tambah" ? navActive : navItem} onClick={() => document.getElementById("gw-tambah")?.scrollIntoView({ behavior: "smooth" })}>
+        Tambah Kunci
+      </button>
+      <div style={{ marginTop: 24, padding: "0 12px", fontSize: 12, color: FAINT, lineHeight: 1.6 }}>
+        Kunci provider tidak pernah ditampilkan di browser. Yang terlihat di sini hanya provider dan
+        daftar modelnya.
+      </div>
+    </aside>
+  )
 }
 
 export function GatewaySharedLogin() {
@@ -79,28 +143,32 @@ export function GatewaySharedLogin() {
   }
 
   return (
-    <div style={panelStyle}>
-      <h1 style={{ fontSize: 22, marginBottom: 8 }}>Panel Admin — Kunci Shared Gateway</h1>
-      <p style={{ color: "#a1a1aa", fontSize: 14, lineHeight: 1.6 }}>
-        Login memakai token admin shared (<code>GATEWAY_SHARED_ADMIN_TOKEN</code>) yang sudah diset di
-        environment deployment. Token ini tidak pernah ditampilkan atau disimpan di browser — yang
-        disimpan hanya sesi login selama 24 jam.
-      </p>
-      <form onSubmit={submit} style={{ display: "grid", gap: 12, marginTop: 20 }}>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Token admin shared"
-          autoComplete="current-password"
-          style={inputStyle}
-        />
-        {error && <p style={{ color: "#f87171", fontSize: 14 }}>{error}</p>}
-        <button type="submit" disabled={busy || !password} style={buttonStyle}>
-          {busy ? "Memeriksa…" : "Masuk"}
-        </button>
-      </form>
-    </div>
+    <Shell>
+      <div style={{ maxWidth: 400, margin: "72px auto", padding: "0 16px" }}>
+        <div style={{ ...card, padding: 24 }}>
+          <div style={brand}>Msaku Gateway<span style={badge}>ADMIN</span></div>
+          <h1 style={{ fontSize: 18, margin: "16px 0 8px" }}>Panel Admin — Kunci Shared</h1>
+          <p style={{ color: DIM, fontSize: 13, lineHeight: 1.6, margin: "0 0 20px" }}>
+            Login memakai token admin shared (<code>GATEWAY_SHARED_ADMIN_TOKEN</code>) yang sudah
+            diset di environment deployment. Yang disimpan browser hanya sesi login 24 jam.
+          </p>
+          <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Token admin shared"
+              autoComplete="current-password"
+              style={input}
+            />
+            {error && <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>}
+            <button type="submit" disabled={busy || !password} style={solidBtn}>
+              {busy ? "Memeriksa…" : "Masuk"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </Shell>
   )
 }
 
@@ -183,67 +251,101 @@ export function GatewaySharedPanel() {
     window.location.reload()
   }
 
+  const totalModels = rows.reduce((n, r) => n + r.modelIds.length, 0)
+  const providerCount = new Set(rows.map((r) => r.providerId)).size
+
   return (
-    <div style={panelStyle}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ fontSize: 22 }}>Panel Admin — Kunci Shared Gateway</h1>
-        <button onClick={logout} style={{ ...buttonStyle, background: "#27272a", color: "#e4e4e7" }}>
-          Keluar
-        </button>
+    <Shell onLogout={logout}>
+      <div className="gw-admin-body">
+        <Sidebar active="shared" />
+        <main className="gw-admin-main">
+          <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>Kunci Shared Gateway</h1>
+          <p style={{ color: DIM, fontSize: 13, lineHeight: 1.6, margin: "0 0 20px", maxWidth: 640 }}>
+            Kunci di sini disajikan ke <strong>semua user msk_</strong> sebagai fallback di belakang
+            kunci mereka sendiri. Kunci provider tidak pernah ditampilkan di panel ini.
+          </p>
+
+          <div className="gw-stats" style={{ marginBottom: 16 }}>
+            <div style={{ ...card, padding: 16 }}>
+              <div style={statLabel}>Kunci shared aktif</div>
+              <div style={statValue}>{rows.length}</div>
+            </div>
+            <div style={{ ...card, padding: 16 }}>
+              <div style={statLabel}>Total model shared</div>
+              <div style={statValue}>{totalModels}</div>
+            </div>
+            <div style={{ ...card, padding: 16 }}>
+              <div style={statLabel}>Provider</div>
+              <div style={statValue}>{providerCount}</div>
+            </div>
+          </div>
+
+          {loadError && <p style={{ color: "#f87171", fontSize: 13 }}>{loadError}</p>}
+          {notice && <p style={{ color: DIM, fontSize: 13 }}>{notice}</p>}
+
+          <div style={{ ...card, overflow: "hidden" }}>
+            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${LINE}`, fontSize: 13, fontWeight: 700 }}>
+              Kunci shared aktif ({rows.length})
+            </div>
+            {rows.length === 0 ? (
+              <p style={{ color: DIM, fontSize: 13, padding: "16px", margin: 0 }}>Belum ada kunci shared.</p>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: DIM }}>
+                    <th style={{ padding: "10px 16px", fontWeight: 600 }}>Provider</th>
+                    <th style={{ padding: "10px 16px", fontWeight: 600 }}>Model</th>
+                    <th style={{ padding: "10px 16px" }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id} style={{ borderTop: `1px solid ${LINE}` }}>
+                      <td style={{ padding: "12px 16px" }}>
+                        <div style={{ fontWeight: 600 }}>{row.providerName}</div>
+                        <div style={{ color: FAINT, fontSize: 12 }}>{row.providerId}</div>
+                      </td>
+                      <td style={{ padding: "12px 16px" }}>
+                        {row.modelIds.map((m) => (
+                          <span key={m} style={pill}>{m}</span>
+                        ))}
+                      </td>
+                      <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                        <button
+                          onClick={() => remove(row)}
+                          style={{ height: 32, padding: "0 12px", borderRadius: 6, border: `1px solid #7f1d1d`, background: "transparent", color: "#fca5a5", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                        >
+                          Cabut
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div id="gw-tambah" style={{ ...card, padding: 20, marginTop: 16 }}>
+            <h2 style={{ fontSize: 15, margin: "0 0 4px" }}>Tambah kunci shared</h2>
+            <p style={{ color: DIM, fontSize: 13, margin: "0 0 16px" }}>
+              Sekali disimpan, kunci langsung dibagikan ke semua user msk_.
+            </p>
+            <form onSubmit={add} style={{ display: "grid", gap: 12 }}>
+              <div className="gw-form-grid">
+                <input value={providerId} onChange={(e) => setProviderId(e.target.value)} placeholder="providerId, mis. anthropic" style={input} />
+                <input value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Nama provider, mis. Claude (Anthropic)" style={input} />
+                <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Kunci provider (tidak pernah ditampilkan lagi setelah disimpan)" autoComplete="off" style={input} className="gw-form-full" />
+                <input value={models} onChange={(e) => setModels(e.target.value)} placeholder="Model, pisahkan koma — mis. claude-sonnet-4-5" style={input} className="gw-form-full" />
+              </div>
+              <div>
+                <button type="submit" disabled={busy || !providerId || !apiKey || !models} style={solidBtn}>
+                  {busy ? "Menyimpan…" : "Bagikan ke semua user"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </main>
       </div>
-      <p style={{ color: "#a1a1aa", fontSize: 14, lineHeight: 1.6 }}>
-        Kunci di sini disajikan ke <strong>semua user msk_</strong> sebagai fallback di belakang kunci
-        mereka sendiri. Kunci provider tidak pernah ditampilkan di panel ini — yang terlihat hanya
-        provider dan daftar modelnya.
-      </p>
-
-      {loadError && <p style={{ color: "#f87171", fontSize: 14 }}>{loadError}</p>}
-      {notice && <p style={{ color: "#a1a1aa", fontSize: 14 }}>{notice}</p>}
-
-      <h2 style={{ fontSize: 16, marginTop: 28 }}>Kunci shared aktif ({rows.length})</h2>
-      {rows.length === 0 ? (
-        <p style={{ color: "#a1a1aa", fontSize: 14 }}>Belum ada kunci shared.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-          <thead>
-            <tr style={{ textAlign: "left", color: "#a1a1aa" }}>
-              <th style={{ padding: "8px 4px" }}>Provider</th>
-              <th style={{ padding: "8px 4px" }}>Model</th>
-              <th style={{ padding: "8px 4px" }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} style={{ borderTop: "1px solid #27272a" }}>
-                <td style={{ padding: "8px 4px" }}>
-                  {row.providerName}
-                  <div style={{ color: "#71717a", fontSize: 12 }}>{row.providerId}</div>
-                </td>
-                <td style={{ padding: "8px 4px" }}>{row.modelIds.join(", ")}</td>
-                <td style={{ padding: "8px 4px", textAlign: "right" }}>
-                  <button
-                    onClick={() => remove(row)}
-                    style={{ ...buttonStyle, background: "#7f1d1d", color: "#fecaca", padding: "6px 12px" }}
-                  >
-                    Cabut
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <h2 style={{ fontSize: 16, marginTop: 32 }}>Tambah kunci shared</h2>
-      <form onSubmit={add} style={{ display: "grid", gap: 12 }}>
-        <input value={providerId} onChange={(e) => setProviderId(e.target.value)} placeholder="providerId, mis. anthropic" style={inputStyle} />
-        <input value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Nama provider, mis. Claude (Anthropic)" style={inputStyle} />
-        <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Kunci provider (tidak pernah ditampilkan lagi setelah disimpan)" autoComplete="off" style={inputStyle} />
-        <input value={models} onChange={(e) => setModels(e.target.value)} placeholder="Model, pisahkan koma — mis. claude-sonnet-4-5" style={inputStyle} />
-        <button type="submit" disabled={busy || !providerId || !apiKey || !models} style={buttonStyle}>
-          {busy ? "Menyimpan…" : "Bagikan ke semua user"}
-        </button>
-      </form>
-    </div>
+    </Shell>
   )
 }
