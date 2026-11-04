@@ -1410,9 +1410,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   // Models: dynamically fetched from /api/v1/models (reflects synced keys).
   msaku: {
     id: "msaku",
-    models: [
-      "msaku/auto",
-    ],
+    models: [], // live via /api/v1/models — msaku/auto dihapus permanen
     modelsEndpoint: "https://gateway.msaku.id/api/v1/models",
     endpoint: "https://gateway.msaku.id/api/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
@@ -1425,9 +1423,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
   miuclaw: {
     id: "miuclaw",
-    models: [
-      "msaku/auto",
-    ],
+    models: [], // live via /api/v1/models — msaku/auto dihapus permanen
     modelsEndpoint: "https://gateway.msaku.id/api/v1/models",
     endpoint: "https://gateway.msaku.id/api/v1/chat/completions",
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),

@@ -237,6 +237,8 @@ export async function pickKey(_token: string, providerId: string): Promise<Gatew
 }
 
 export async function pickAnyKey(_token: string, modelId: string): Promise<GatewayKey | null> {
+  // msaku/auto & miuclaw/auto are permanently deleted — reject at resolution
+  if (modelId === "msaku/auto" || modelId === "miuclaw/auto") return null
   const store = await getStore()
   const candidates = store.keys.filter((k) => k.modelIds.includes(modelId))
   if (candidates.length === 0) return null
@@ -251,6 +253,8 @@ export async function getAllModels(_token: string): Promise<Array<{ id: string; 
   const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
   for (const key of sorted) {
     for (const modelId of key.modelIds) {
+      // msaku/auto & miuclaw/auto are permanently deleted — never resurface
+      if (modelId === "msaku/auto" || modelId === "miuclaw/auto") continue
       if (!seen.has(modelId)) {
         seen.add(modelId)
         result.push({ id: modelId, providerId: key.providerId, providerName: key.providerName })

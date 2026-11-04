@@ -2,118 +2,225 @@
 
 import { useEffect, useRef, useState } from "react"
 import CodePreviewTab from "@/components/code-preview-tab"
+import { KeyRound, Lock, Loader2, ExternalLink } from "lucide-react"
 
 const STORAGE_USER_KEY = "msaku_gateway_user_api_key"
 
 /**
  * Single-page dashboard at gateway.msaku.id.
  *
- * Uses the personal MSAKU.id User API Key (`msk_...`) created at
- * https://msaku.id/gateway or https://msaku.id/profil/api-key (120 req/min).
- * There is no public API key — gateway.msaku.id is exclusive to registered
- * MSAKU.id users.
+ * ACCESS GATE: gateway.msaku.id is exclusive to registered MSAKU.id users.
+ * Visitors see only a locked verification screen — the dashboard unlocks
+ * after a valid personal MSAKU User API Key (msk_...) is verified via
+ * POST /api/v1/keys/info. All /api/v1/* endpoints enforce the same rule
+ * server-side, so a visitor can never actually use the gateway.
  */
 export default function PublicCodePreview() {
   const [chatModel, setChatModel] = useState("")
   const [workingModels, setWorkingModels] = useState<Array<{ modelId: string; apiKey: string; latencyMs: number }>>([])
   const [userKey, setUserKey] = useState("")
-  const [showKeyModal, setShowKeyModal] = useState(false)
   const [keyInput, setKeyInput] = useState("")
   const [verifying, setVerifying] = useState(false)
   const [verifyMsg, setVerifyMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [checkingStored, setCheckingStored] = useState(true)
+  const [unlocked, setUnlocked] = useState(false)
 
   const lastFetched = useRef(false)
 
-  useEffect(() => {
+  const verifyKey = async (key: string): Promise<boolean> => {
     try {
-      const saved = localStorage.getItem(STORAGE_USER_KEY)
-      if (saved && saved.trim()) {
-        setUserKey(saved.trim())
-        setKeyInput(saved.trim())
-      }
-    } catch {}
+      const res = await fetch("/api/v1/keys/info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.valid || data.tier === "anonymous_read") return false
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  // On mount: verify the stored key (if any). Otherwise stay locked.
+  useEffect(() => {
+    let cancelled = false
+    const init = async () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_USER_KEY)
+        if (saved && saved.trim() && (await verifyKey(saved.trim()))) {
+          if (cancelled) return
+          setUserKey(saved.trim())
+          setKeyInput(saved.trim())
+          setUnlocked(true)
+        }
+      } catch {}
+      if (!cancelled) setCheckingStored(false)
+    }
+    void init()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
+  // Load gateway models once unlocked
   useEffect(() => {
+    if (!unlocked || lastFetched.current) return
+    lastFetched.current = true
     let cancelled = false
     const fetchModels = async () => {
       try {
-        const res = await fetch("/api/v1/models")
+        const res = await fetch("/api/v1/models", {
+          headers: { Authorization: `Bearer ${userKey}` },
+        })
         if (!res.ok || cancelled) return
         const data = (await res.json()) as {
           data?: Array<{ id: string }>
         }
         if (cancelled) return
+        // msaku/auto & miuclaw/auto are permanently deleted — exclude legacy rows
         const models = (data.data ?? []).filter((m) => m.id !== "msaku/auto" && m.id !== "miuclaw/auto")
         if (models.length === 0) return
         setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: "", latencyMs: -1 })))
         setChatModel((prev) => prev || models[0].id)
       } catch {
-        // Network error — leave empty, CodePreviewTab falls back to "msaku/auto"
+        // Network error — leave empty
       }
     }
     fetchModels()
-    lastFetched.current = true
-    return () => { cancelled = true }
-  }, [])
+    return () => {
+      cancelled = true
+    }
+  }, [unlocked, userKey])
 
   async function handleSaveUserKey() {
     const trimmed = keyInput.trim()
     if (!trimmed) {
       try { localStorage.removeItem(STORAGE_USER_KEY) } catch {}
       setUserKey("")
+      setUnlocked(false)
       setVerifyMsg({ ok: false, text: "Masukkan API Key User MSAKU (msk_...) Anda." })
       return
     }
     setVerifying(true)
     setVerifyMsg(null)
-    try {
-      const res = await fetch("/api/v1/keys/info", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: trimmed }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.valid) {
-        setVerifyMsg({ ok: false, text: data.error || "API Key tidak valid." })
-        return
-      }
-      try { localStorage.setItem(STORAGE_USER_KEY, trimmed) } catch {}
-      setUserKey(trimmed)
-      setVerifyMsg({
-        ok: true,
-        text: `Key User aktif (${data.keyLabel || data.tier} — ${data.rateLimitPerMinute ?? 120} req/menit).`,
-      })
-    } catch {
-      setVerifyMsg({ ok: false, text: "Gagal memverifikasi key." })
-    } finally {
+    const valid = await verifyKey(trimmed)
+    if (!valid) {
       setVerifying(false)
+      setVerifyMsg({
+        ok: false,
+        text: "API Key tidak valid atau bukan milik pengguna terdaftar. Buat key di msaku.id/gateway.",
+      })
+      return
     }
+    try { localStorage.setItem(STORAGE_USER_KEY, trimmed) } catch {}
+    setUserKey(trimmed)
+    setUnlocked(true)
+    setVerifying(false)
+    setVerifyMsg({ ok: true, text: "API Key User tervalidasi — dashboard terbuka." })
   }
 
+  function handleLockAgain() {
+    try { localStorage.removeItem(STORAGE_USER_KEY) } catch {}
+    setUserKey("")
+    setKeyInput("")
+    setUnlocked(false)
+    setWorkingModels([])
+    setChatModel("")
+    lastFetched.current = false
+  }
+
+  // ── Locked gate screen (visitors & invalid keys) ───────────────────────────
+  if (checkingStored) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-background text-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="size-4 animate-spin text-primary" />
+          Memeriksa akses Msaku Gateway…
+        </div>
+      </div>
+    )
+  }
+
+  if (!unlocked) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4 text-foreground">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-7 text-center shadow-lg">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
+            <Lock className="size-6 text-primary" />
+          </div>
+          <h1 className="mt-4 text-lg font-bold tracking-tight text-foreground">
+            Msaku Gateway Khusus Pengguna Terdaftar
+          </h1>
+          <p className="mx-auto mt-2 text-xs leading-relaxed text-muted-foreground">
+            <code className="font-mono text-foreground">gateway.msaku.id</code> hanya dapat diakses oleh
+            pengguna yang sudah terdaftar di <strong>msaku.id</strong>. Pengunjung tidak diijinkan.
+            Masukkan API Key User pribadi Anda (<code className="font-mono">msk_...</code>) untuk membuka dashboard.
+          </p>
+
+          <div className="mt-5 flex items-center gap-2">
+            <div className="relative flex-1">
+              <KeyRound className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+              <input
+                type="password"
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleSaveUserKey()
+                }}
+                placeholder="msk_API_KEY_USER_ANDA"
+                className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveUserKey}
+              disabled={verifying}
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {verifying ? <Loader2 className="size-3.5 animate-spin" /> : null}
+              Buka
+            </button>
+          </div>
+
+          {verifyMsg && (
+            <p className={`mt-2.5 text-[11px] ${verifyMsg.ok ? "text-emerald-500" : "text-destructive"}`}>
+              {verifyMsg.text}
+            </p>
+          )}
+
+          <a
+            href="https://msaku.id/gateway"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+          >
+            Daftar / buat API Key User di msaku.id/gateway
+            <ExternalLink className="size-3.5" />
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Unlocked dashboard (verified MSAKU users only) ─────────────────────────
   return (
     <div className="flex flex-col h-dvh bg-background text-foreground font-sans overflow-hidden">
-      {/* Top bar for MSAKU Registered User API Key (gateway.msaku.id) */}
+      {/* Top bar — verified user session */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 border-b border-border/50 bg-secondary/20 text-[11px]">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-semibold text-foreground truncate">Msaku Gateway</span>
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
-            userKey
-              ? "bg-primary/15 text-primary border-primary/30"
-              : "bg-muted/50 text-muted-foreground border-border"
-          }`}>
-            {userKey
-              ? `User Key Aktif (${userKey.slice(0, 10)}•••)`
-              : "Wajib API Key User MSAKU (msk_...)"}
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono border bg-primary/15 text-primary border-primary/30">
+            User Key Aktif ({userKey.slice(0, 10)}•••) · 120 req/menit
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setShowKeyModal((v) => !v)}
-            className="px-2.5 py-1 rounded-md border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary font-medium text-[11px] transition-colors"
+            onClick={handleLockAgain}
+            className="px-2 py-1 rounded-md border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground text-[11px] transition-colors"
           >
-            {showKeyModal ? "Tutup API Key" : "Masukkan API Key User (msk_...)"}
+            Kunci / Ganti Key
           </button>
           <a
             href="/docs"
@@ -124,64 +231,17 @@ export default function PublicCodePreview() {
         </div>
       </div>
 
-      {showKeyModal && (
-        <div className="border-b border-border bg-card px-3 py-3 text-xs">
-          <div className="max-w-xl mx-auto">
-            <div className="p-3.5 rounded-lg border border-primary/25 bg-primary/5 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">API Key User Terdaftar MSAKU.ID</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono">120 req/menit</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Msaku Gateway (<code className="font-mono">gateway.msaku.id</code>) khusus pengguna terdaftar MSAKU.id.
-                Buat atau salin API Key User (<code className="font-mono">msk_...</code>) Anda di{" "}
-                <a
-                  href="https://msaku.id/gateway"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline underline-offset-2 font-medium"
-                >
-                  msaku.id/gateway
-                </a>:
-              </p>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="password"
-                  value={keyInput}
-                  onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder="Tempel key user msk_... Anda di sini"
-                  className="flex-1 min-w-0 px-2.5 py-1.5 rounded border border-border bg-background font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={handleSaveUserKey}
-                  disabled={verifying}
-                  className="px-3 py-1.5 rounded bg-primary text-primary-foreground hover:opacity-90 text-[11px] font-medium shrink-0 disabled:opacity-50"
-                >
-                  {verifying ? "Cek..." : "Gunakan"}
-                </button>
-              </div>
-              {verifyMsg && (
-                <p className={`text-[11px] ${verifyMsg.ok ? "text-emerald-400" : "text-destructive"}`}>
-                  {verifyMsg.text}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <CodePreviewTab
           provider="msaku"
           providerName="Msaku Gateway"
-          apiKey={userKey || "msk_API_KEY_USER_ANDA"}
+          apiKey={userKey}
           endpoint="https://gateway.msaku.id/api/v1/chat/completions"
           headers={{ Authorization: "Bearer {{API_KEY}}", "Content-Type": "application/json" }}
-          model={chatModel || "msaku/auto"}
+          model={chatModel}
           onModelChange={setChatModel}
           workingModels={workingModels}
-          presetModels={[{ id: "msaku/auto", label: "Auto (fastest key)" }]}
+          presetModels={[]}
           isMiuclaw
         />
       </div>

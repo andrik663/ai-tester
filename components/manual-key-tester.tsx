@@ -1973,13 +1973,11 @@ const PRESETS: ProviderPreset[] = [
       "Content-Type": "application/json",
     },
     bodyTemplate: JSON.stringify({
-      model: "msaku/auto",
+      model: "MODEL_ID", // ambil dari GET /api/v1/models
       max_tokens: 1024,
       messages: [{ role: "user", content: "{{PROMPT}}" }],
     }, null, 2),
-    models: [
-      { id: "msaku/auto", label: "Auto (fastest key)", tag: "Gateway", ctx: "varies", in: "varies", out: "varies", cache: "" },
-    ],
+    models: [],
     docsUrl: "/api/v1/models",
     createKeyUrl: "/keys",
     color: "text-success bg-success/10 border-success/30",

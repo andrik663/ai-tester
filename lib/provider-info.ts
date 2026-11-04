@@ -1731,7 +1731,6 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-28",
     models: [
-      m("msaku/auto", null, null, 0, { promo: true, promoLabel: "Auto-route", promoLink: "https://gateway.msaku.id" }),
     ],
   },
   miuclaw: {
@@ -1747,7 +1746,6 @@ export const PROVIDER_INFO: Record<string, ProviderInfo> = {
     liveModels: true,
     lastUpdated: "2026-06-28",
     models: [
-      m("msaku/auto", null, null, 0, { promo: true, promoLabel: "Auto-route", promoLink: "https://gateway.msaku.id" }),
     ],
   },
 

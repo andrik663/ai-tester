@@ -272,6 +272,30 @@ function buildEndpoint(providerId: string, modelId: string, apiKey: string): str
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  // Parse & basic-shape the request first so we can reject deleted models early.
+  // msaku/auto & miuclaw/auto are permanently deleted — reject explicitly.
+  let preBody: { model?: string }
+  try {
+    preBody = await req.json()
+  } catch {
+    return NextResponse.json(
+      { error: { message: "Invalid JSON body", type: "invalid_request_error", code: "invalid_json" } },
+      { status: 400 },
+    )
+  }
+  const requestedModel = String(preBody?.model ?? "").trim()
+  if (requestedModel.toLowerCase() === "msaku/auto" || requestedModel.toLowerCase() === "miuclaw/auto") {
+    return NextResponse.json(
+      {
+        error: {
+          message: 'Model "msaku/auto" telah dihapus permanen. Pilih Model ID lain dari GET /api/v1/models.',
+          type: "invalid_request_error",
+          code: "model_deleted",
+        },
+      },
+      { status: 400 },
+    )
+  }
   // ── Validate API Key (Public Key / Registered MSAKU User msk_... / Admin) ──
   const auth = await authenticateGatewayRequest(req.headers, "/api/v1/chat/completions")
   if (!auth.valid) {
@@ -284,13 +308,8 @@ export async function POST(req: NextRequest) {
   // ── Resolve internal gateway token from server env ──────────────────────────
   const token = getInternalToken()
 
-  // ── Parse request ───────────────────────────────────────────────────────────
-  let body: ChatRequest
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
-  }
+  // ── Parse request (already parsed above as preBody) ─────────────────────────
+  const body = preBody as unknown as ChatRequest
 
   if (!body.model) {
     return NextResponse.json({ error: "model is required" }, { status: 400 })

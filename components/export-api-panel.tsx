@@ -165,7 +165,8 @@ export ANTHROPIC_API_KEY="MSAKU_API_KEY"`,
         "apiKey": "MSAKU_API_KEY"
       },
       "models": {
-        "msaku/auto": { "name": "Msaku Auto (Fastest Provider)" }
+        // ambil Model ID dari GET https://gateway.msaku.id/api/v1/models
+        "MODEL_ID": { "name": "Model pilihan Anda" }
       }
     }
   },
@@ -195,8 +196,8 @@ export ANTHROPIC_API_KEY="MSAKU_API_KEY"`,
   "type": "openai-compatible",
   "baseUrl": "${origin}/api/v1",
   "apiKey": "MSAKU_API_KEY",
-  "defaultModel": "msaku/auto",
-  "models": ["msaku/auto"]
+  "defaultModel": "MODEL_ID",
+  "models": ["MODEL_ID"] // ambil dari /api/v1/models
 }`,
         },
       ],
@@ -211,7 +212,7 @@ export ANTHROPIC_API_KEY="MSAKU_API_KEY"`,
           lang: "json",
           code: `{
   "github.copilot.advanced": {
-    "debug.overrideEngine": "msaku/auto",
+    "debug.overrideEngine": "MODEL_ID",
     "debug.testOverrideProxyUrl": "${endpoint}",
     "debug.overrideProxyUrl": "${endpoint}"
   }
@@ -227,7 +228,7 @@ export ANTHROPIC_API_KEY="MSAKU_API_KEY"`,
         {
           label: "Manual config (Settings)",
           lang: "text",
-          code: `Model Name:  msaku/auto
+          code: `Model Name:  MODEL_ID (dari /api/v1/models)
 Base URL:    ${origin}/api/v1
 API Key:     MSAKU_API_KEY`,
         },
@@ -249,7 +250,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="msaku/auto",
+    model="MODEL_ID",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 print(response.choices[0].message.content)`,
@@ -265,7 +266,7 @@ const client = new OpenAI({
 })
 
 const res = await client.chat.completions.create({
-  model: "msaku/auto",
+  model: "MODEL_ID",
   messages: [{ role: "user", content: "Hello!" }],
 })
 console.log(res.choices[0].message.content)`,

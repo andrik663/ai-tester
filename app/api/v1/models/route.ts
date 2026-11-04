@@ -14,7 +14,7 @@ import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 export const runtime = "nodejs"
 
 export async function GET(req: NextRequest) {
-  const auth = await authenticateGatewayRequest(req.headers, "/api/v1/models", true)
+  const auth = await authenticateGatewayRequest(req.headers, "/api/v1/models", false)
   if (!auth.valid) {
     return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 })
   }
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
 
   const now = Math.floor(Date.now() / 1000)
 
+  // msaku/auto is permanently deleted — only real synced models are returned.
   if (models.length === 0) {
     return NextResponse.json({
       object: "list",

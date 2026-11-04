@@ -28,7 +28,7 @@ const CURL_CHAT = `curl ${BASE_URL}/api/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "msaku/auto",
+    "model": "MODEL_ID",            // pilih dari GET /api/v1/models
     "messages": [
       { "role": "user", "content": "Hello!" }
     ]
@@ -38,7 +38,7 @@ const CURL_CHAT_STREAM = `curl ${BASE_URL}/api/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "msaku/auto",
+    "model": "MODEL_ID",            // pilih dari GET /api/v1/models
     "messages": [{ "role": "user", "content": "Explain quantum computing" }],
     "stream": true,
     "max_tokens": 512
@@ -126,7 +126,7 @@ const RESP_MODELS = `{
   "object": "list",
   "data": [
     {
-      "id": "msaku/auto",
+      "id": "MODEL_ID",
       "object": "model",
       "created": 1700000000,
       "owned_by": "msaku"
@@ -190,7 +190,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="msaku/auto",   # auto-routes to fastest available
+    model="MODEL_ID",        # pilih dari GET /api/v1/models
     messages=[{"role": "user", "content": "Hello!"}],
 )
 print(response.choices[0].message.content)`
@@ -203,7 +203,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: "msaku/auto",
+  model: "MODEL_ID",
   messages: [{ role: "user", content: "Hello!" }],
 });
 console.log(response.choices[0].message.content);`
@@ -211,7 +211,7 @@ console.log(response.choices[0].message.content);`
 const SDK_LANGCHAIN = `from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
-    model="msaku/auto",
+    model="MODEL_ID",
     openai_api_key="YOUR_TOKEN",
     openai_api_base="${BASE_URL}/api/v1",
 )
@@ -350,9 +350,8 @@ export default function DocsPage() {
           <section id="models">
             <h2 className="text-lg font-bold text-foreground mb-1">List Models</h2>
             <p className="text-[13px] text-muted-foreground mb-4 leading-relaxed">
-              Returns all models currently active in the gateway, including the special{" "}
-              <code className="text-primary/90 font-mono text-[12px]">msaku/auto</code> model which
-              automatically selects the fastest available provider for each request.
+              Returns all models currently active in the gateway from synced working keys.
+              Gunakan salah satu Model ID yang dikembalikan endpoint ini untuk request chat.
             </p>
 
             <div className="mb-4">
@@ -387,7 +386,7 @@ export default function DocsPage() {
             <div className="mb-5">
               <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Request body</p>
               <ParamTable params={[
-                { name: "model",       type: "string",   required: true,  description: 'Model ID or "msaku/auto" for automatic routing' },
+                { name: "model",       type: "string",   required: true,  description: 'Model ID dari GET /api/v1/models' },
                 { name: "messages",    type: "array",    required: true,  description: "Array of {role, content} message objects" },
                 { name: "stream",      type: "boolean",  required: false, default: "false", description: "Stream response chunks using SSE" },
                 { name: "max_tokens",  type: "integer",  required: false, description: "Maximum tokens to generate" },
@@ -409,9 +408,9 @@ export default function DocsPage() {
 
             <div className="mt-5 p-3.5 rounded-lg border border-primary/20 bg-primary/5">
               <p className="text-[12px] text-primary/80 leading-relaxed">
-                <strong className="text-primary">Tip:</strong> Use{" "}
-                <code className="font-mono text-[11px]">model: &quot;msaku/auto&quot;</code> to let the gateway pick the
-                fastest available provider automatically. It uses round-robin rotation across
+                <strong className="text-primary">Tip:</strong> Selalu ambil daftar Model ID terbaru dari{" "}
+                <code className="font-mono text-[11px]">GET /api/v1/models</code> sebelum mengirim request chat —
+                hanya model dari key yang tersinkron dan masih aktif yang dilayani gateway.
                 providers with the lowest average latency.
               </p>
             </div>
