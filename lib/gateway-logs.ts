@@ -21,6 +21,14 @@ export interface GatewayLogEntry {
   attemptCount:     number
   promptTokens?:    number
   completionTokens?: number
+  /** msaku.id user_id of the msk_ caller, or null for admin/atk_/anonymous.
+   * This is what makes shared-key abuse traceable: usage can be summed
+   * per user instead of only as a global total. Raw provider keys are
+   * NEVER logged — only the provider/model and this caller id. */
+  callerUserId?:    number | null
+  /** true when the provider key that served this request was an
+   * admin-shared key (is_shared). Private-key usage is logged with false. */
+  isSharedKey?:     boolean
 }
 
 export interface GatewayLogRow extends GatewayLogEntry {
@@ -49,8 +57,13 @@ const CREATE_TABLE_STMTS = [
   ts_ms             BIGINT      NOT NULL DEFAULT 0,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 )`,
+  // Idempotent migrations for tables created before these columns existed.
+  // (CREATE TABLE IF NOT EXISTS alone never adds columns to an old table.)
+  `ALTER TABLE gateway_logs ADD COLUMN IF NOT EXISTS caller_user_id INTEGER`,
+  `ALTER TABLE gateway_logs ADD COLUMN IF NOT EXISTS is_shared_key BOOLEAN NOT NULL DEFAULT FALSE`,
   `CREATE INDEX IF NOT EXISTS gateway_logs_ts_ms_idx      ON gateway_logs (ts_ms DESC)`,
   `CREATE INDEX IF NOT EXISTS gateway_logs_provider_idx   ON gateway_logs (provider_id, ts_ms DESC)`,
+  `CREATE INDEX IF NOT EXISTS gateway_logs_caller_shared_idx ON gateway_logs (caller_user_id, is_shared_key, ts_ms DESC)`,
 ]
 
 async function ensureTable(): Promise<void> {
@@ -76,8 +89,8 @@ export async function writeGatewayLog(entry: GatewayLogEntry): Promise<void> {
     INSERT INTO gateway_logs
       (model, provider_id, provider_name, success, status_code, latency_ms,
        error_message, streaming, fallback_used, attempt_count,
-       prompt_tokens, completion_tokens, ts_ms)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       prompt_tokens, completion_tokens, ts_ms, caller_user_id, is_shared_key)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
   `
   const values = [
     entry.model,
@@ -93,6 +106,8 @@ export async function writeGatewayLog(entry: GatewayLogEntry): Promise<void> {
     entry.promptTokens ?? 0,
     entry.completionTokens ?? 0,
     tsMs,
+    entry.callerUserId ?? null,
+    entry.isSharedKey === true,
   ]
 
   const client = await pool.connect()
@@ -119,6 +134,8 @@ export interface LogsQueryOptions {
   providerId?: string   // filter by provider
   model?:      string   // filter by model
   failedOnly?: boolean  // only rows where success = false
+  callerUserId?: number // only rows from this msk_ user
+  sharedOnly?: boolean  // only rows served by an admin-shared key
 }
 
 export async function readGatewayLogs(opts: LogsQueryOptions = {}): Promise<GatewayLogRow[]> {
@@ -141,6 +158,13 @@ export async function readGatewayLogs(opts: LogsQueryOptions = {}): Promise<Gate
   if (opts.failedOnly) {
     where.push(`success = FALSE`)
   }
+  if (typeof opts.callerUserId === "number") {
+    params.push(opts.callerUserId)
+    where.push(`caller_user_id = $${params.length}`)
+  }
+  if (opts.sharedOnly) {
+    where.push(`is_shared_key = TRUE`)
+  }
 
   const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : ""
   params.push(limit)
@@ -149,6 +173,7 @@ export async function readGatewayLogs(opts: LogsQueryOptions = {}): Promise<Gate
     SELECT id, model, provider_id, provider_name, success, status_code,
            latency_ms, error_message, streaming, fallback_used, attempt_count,
            prompt_tokens, completion_tokens, ts_ms,
+           caller_user_id, is_shared_key,
            created_at::text AS created_at
     FROM gateway_logs
     ${whereClause}
@@ -174,6 +199,8 @@ export async function readGatewayLogs(opts: LogsQueryOptions = {}): Promise<Gate
       promptTokens:     r.prompt_tokens,
       completionTokens: r.completion_tokens,
       tsMs:             Number(r.ts_ms),
+      callerUserId:     r.caller_user_id ?? null,
+      isSharedKey:      r.is_shared_key === true,
       createdAt:        r.created_at,
     }))
   } catch (err: unknown) {
@@ -252,6 +279,47 @@ export async function getLogsSummary(windowMs = 3_600_000): Promise<LogsSummary>
     }
   } catch {
     return { total: 0, successCount: 0, failCount: 0, avgLatencyMs: 0, p95LatencyMs: 0, topModels: [], topProviders: [], rps: 0 }
+  } finally {
+    client.release()
+  }
+}
+
+// ── Shared-key daily budget ───────────────────────────────────────────────────
+// A shared key is one provider quota spent by many users, so a single user
+// must not be able to drain it in a day. The cap is deliberately simple
+// and soft: it counts logged, successful, non-streaming token usage for
+// that user on shared keys since UTC midnight. Streaming responses do not
+// return token usage through this passthrough, so they are NOT counted
+// here (they are still bounded by the per-key 120 req/min rate limit).
+// Logs are best-effort, so this is a drain-prevention cap, not a billing
+// guarantee — on a log-query error it returns 0 (fail open) rather than
+// blocking every shared request during a logging outage.
+
+/** Daily shared-key token budget per msk_ user. Env override, 0 = no cap. */
+export function sharedDailyTokenBudget(): number {
+  const raw = Number(process.env.SHARED_DAILY_TOKEN_BUDGET_PER_USER ?? 1_000_000)
+  if (!Number.isFinite(raw) || raw < 0) return 1_000_000
+  return Math.floor(raw)
+}
+
+/** Tokens this user has spent on shared keys since UTC midnight today. */
+export async function getSharedTokenUsageToday(callerUserId: number): Promise<number> {
+  const now = new Date()
+  const startOfDayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  const client = await pool.connect()
+  try {
+    const { rows } = await client.query(
+      `SELECT COALESCE(SUM(prompt_tokens + completion_tokens), 0)::int AS total
+       FROM gateway_logs
+       WHERE caller_user_id = $1
+         AND is_shared_key = TRUE
+         AND success = TRUE
+         AND ts_ms >= $2`,
+      [callerUserId, startOfDayUtc],
+    )
+    return Number(rows[0]?.total ?? 0)
+  } catch {
+    return 0
   } finally {
     client.release()
   }
