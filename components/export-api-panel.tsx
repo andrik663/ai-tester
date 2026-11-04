@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { type WorkingKeyRecord } from "@/lib/working-keys-store"
 import GatewayLogsPanel from "@/components/gateway-logs-panel"
+import GatewaySharedTab from "@/components/gateway-shared-tab"
 
 const CHUNK_SIZE = 8 // keys per request — keeps payloads small and avoids timeouts
 
@@ -137,7 +138,7 @@ function CopyIcon() {
 
 // ── Agent configs ─────────────────────────────────────────────────────────────
 
-type AgentTab = "sync" | "logs" | "agents"
+type AgentTab = "sync" | "logs" | "agents" | "admin"
 
 function AgentConfig({ origin }: { origin: string }) {
   const endpoint = `${origin}/api/v1/chat/completions`
@@ -516,6 +517,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
           { id: "sync",   label: "Sync"   },
           { id: "logs",   label: "Logs"   },
           { id: "agents", label: "Agents" },
+          { id: "admin",  label: "Admin"  },
         ] as { id: AgentTab; label: string }[]).map((t) => (
           <button
             key={t.id}
@@ -541,6 +543,11 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
       {/* Agents tab */}
       {activeTab === "agents" && (
         <AgentConfig origin={origin} />
+      )}
+
+      {/* Admin tab — shared keys, inside the dashboard */}
+      {activeTab === "admin" && (
+        <GatewaySharedTab />
       )}
 
       {/* Sync tab */}
