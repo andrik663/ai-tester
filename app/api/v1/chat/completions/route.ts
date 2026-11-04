@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getInternalToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey } from "@/lib/gateway-cache"
+import { getInternalToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey, GatewayKeyScope, scopeForAuth } from "@/lib/gateway-cache"
 import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from "@/lib/providers"
 import { writeGatewayLog } from "@/lib/gateway-logs"
@@ -115,14 +115,16 @@ interface ChatRequest {
  * Find which provider owns the requested model.
  * First checks the gateway cache (working keys), then falls back to PROVIDER_CONFIGS.
  */
-async function resolveProvider(token: string, modelId: string): Promise<GatewayKey | null> {
+async function resolveProvider(token: string, modelId: string, scope: GatewayKeyScope = null): Promise<GatewayKey | null> {
   // 1. Try to find a key that has this exact model confirmed working
-  const byModel = await pickAnyKey(token, modelId)
+  // Scope is threaded through every pick: the fallback candidates below
+  // come only from this caller's own store, never from another user's keys.
+  const byModel = await pickAnyKey(token, modelId, scope)
   if (byModel) return byModel
 
   // 2. Infer provider from model ID prefix (e.g. "gpt-4o" → openai, "claude" → anthropic)
   // Then pick the fastest key for that provider
-  const store = await getGatewayStore(token)
+  const store = await getGatewayStore(token, scope)
   if (!store) return null
 
   const lower = modelId.toLowerCase()
@@ -172,7 +174,7 @@ async function resolveProvider(token: string, modelId: string): Promise<GatewayK
 
   for (const [providerId, prefixes] of providerHints) {
     if (prefixes.some((p) => lower.startsWith(p) || lower.includes(p))) {
-      const key = await pickKey(token, providerId)
+      const key = await pickKey(token, providerId, scope)
       if (key) return key
     }
   }
@@ -182,7 +184,10 @@ async function resolveProvider(token: string, modelId: string): Promise<GatewayK
   //    that may just work on a general-purpose provider.
   const hasProviderPrefix = lower.includes("/")
   if (!hasProviderPrefix && store.keys.length > 0) {
-    const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
+    // Own keys before shared keys, then fastest first.
+    const sorted = [...store.keys].sort(
+      (a, b) => Number(a.isShared) - Number(b.isShared) || a.avgLatencyMs - b.avgLatencyMs,
+    )
     return sorted[0]
   }
 
@@ -308,6 +313,12 @@ export async function POST(req: NextRequest) {
   // ── Resolve internal gateway token from server env ──────────────────────────
   const token = getInternalToken()
 
+  // Owner scope for every key read below: an msk_ caller spends their
+  // own synced keys first, then admin-shared keys; the fallback candidate
+  // list is built from the same scoped store, so it can never fall back
+  // to another user's private key.
+  const scope = scopeForAuth(auth)
+
   // ── Parse request (already parsed above as preBody) ─────────────────────────
   const body = preBody as unknown as ChatRequest
 
@@ -328,7 +339,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Key selection: build ordered candidate list with fallback ─────────────────
-  const primaryKey = await resolveProvider(token, body.model)
+  const primaryKey = await resolveProvider(token, body.model, scope)
   if (!primaryKey) {
     return NextResponse.json(
       {
@@ -340,7 +351,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Build candidate list: primary key first, then all other keys (for fallback)
-  const store = await getGatewayStore(token)
+  const store = await getGatewayStore(token, scope)
   const otherKeys: GatewayKey[] = store
     ? store.keys.filter((k) => k.apiKey !== primaryKey.apiKey && k.providerId !== primaryKey.providerId)
     : []

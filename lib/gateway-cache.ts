@@ -9,11 +9,21 @@
  *   - Raw API keys are stored encrypted-at-rest by Neon's managed infra.
  *   - Keys are NEVER logged, NEVER returned to external callers.
  *   - Only /api/v1/chat/completions reads the raw keys server-side.
+ *   - OWNER ISOLATION: every synced provider key belongs to exactly one
+ *     owner (gateway_keys.owner_user_id). An msk_ caller sees their own
+ *     rows PLUS admin-shared rows (gateway_keys.is_shared), so one msk_
+ *     user can never spend another user's private key, and a bucketed
+ *     prune can never delete another user's rows or shared rows. Rows
+ *     with owner_user_id NULL and is_shared false are the legacy/admin
+ *     pool: served to admin and atk_ callers only, never to an msk_ user.
+ *     Within an msk_ caller's view, their own keys are always tried
+ *     before shared keys. The in-memory cache is keyed per scope for the
+ *     same reason — a shared cache entry would leak across owners.
  */
 
 import { pool, db } from "@/lib/db"
 import { gatewayKeys as gatewayKeysTable } from "@/lib/db/gateway-schema"
-import { notInArray } from "drizzle-orm"
+import { and, eq, isNull, notInArray, or } from "drizzle-orm"
 
 
 export interface GatewayKey {
@@ -24,6 +34,10 @@ export interface GatewayKey {
   modelIds: string[]
   avgLatencyMs: number
   pushedAt: number
+  /** msaku.id user_id that synced this key, or null for the legacy/admin pool */
+  ownerUserId: number | null
+  /** true = admin-shared: served to every registered msk_ user as fallback */
+  isShared: boolean
 }
 
 export interface GatewayStore {
@@ -32,13 +46,49 @@ export interface GatewayStore {
   pushCount: number
 }
 
+/**
+ * Which slice of gateway_keys a caller may see.
+ * - number: an msk_ user — only rows owned by that user_id.
+ * - null: the legacy/admin pool — only rows with owner_user_id IS NULL.
+ * - "all": admin — every row (operator maintenance only; routes must
+ *   never pass "all" for an ordinary msk_/atk_ caller).
+ */
+export type GatewayKeyScope = number | "all" | null
+
+/** Derive the read scope from an authenticated gateway request result. */
+export function scopeForAuth(auth: { tier?: string; userId?: number }): GatewayKeyScope {
+  if (auth.tier === "msaku_user" && typeof auth.userId === "number" && auth.userId > 0) {
+    return auth.userId
+  }
+  if (auth.tier === "admin") {
+    return "all"
+  }
+  // atk_ callers (and anything else authenticated without a user_id) may
+  // only use the legacy pool — never another msk_ user's private rows.
+  return null
+}
+
+function scopeKey(scope: GatewayKeyScope): string {
+  return scope === "all" ? "all" : scope === null ? "legacy" : `msk:${scope}`
+}
+
 // ── In-memory cache layer (avoids DB round-trip on every chat request) ────────
-let memCache: GatewayStore | null = null
-let memCacheAt = 0
+// Per-scope entries: a single shared entry would hand one owner's keys to
+// another owner on the next request within the TTL window.
+interface CacheEntry {
+  store: GatewayStore
+  at: number
+}
+const memCaches = new Map<string, CacheEntry>()
 const MEM_TTL_MS = 30_000 // 30 seconds
 
-// Round-robin index per providerId for key rotation
+// Round-robin index per (scope, providerId) for key rotation
 const rrIndex = new Map<string, number>()
+
+function bustCache(): void {
+  memCaches.clear()
+  rrIndex.clear()
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -69,18 +119,92 @@ export function getInternalToken(): string {
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
-export async function dbLoadKeyCount(): Promise<number> {
+/** Drizzle WHERE clause for READS in a scope, or undefined for admin "all". */
+function readWhere(scope: GatewayKeyScope) {
+  if (scope === "all") return undefined
+  // Legacy/atk_ scope: legacy pool only — shared rows are NOT included.
+  if (scope === null) {
+    return and(isNull(gatewayKeysTable.ownerUserId), eq(gatewayKeysTable.isShared, false))
+  }
+  // msk_ scope: the user's own rows PLUS admin-shared rows.
+  return or(
+    eq(gatewayKeysTable.ownerUserId, scope),
+    eq(gatewayKeysTable.isShared, true),
+  )
+}
+
+/** Prune bucket: a scope for reads, plus "shared" for the admin shared pool. */
+export type GatewayPruneScope = GatewayKeyScope | "shared"
+
+/** Drizzle WHERE clause for PRUNES. Pruning never crosses buckets: an msk_
+ * prune touches only that user's own rows, a legacy prune only legacy rows,
+ * and a shared prune only shared rows. */
+function pruneWhere(scope: GatewayPruneScope) {
+  if (scope === "all") return undefined
+  if (scope === "shared") return eq(gatewayKeysTable.isShared, true)
+  if (scope === null) {
+    return and(isNull(gatewayKeysTable.ownerUserId), eq(gatewayKeysTable.isShared, false))
+  }
+  return eq(gatewayKeysTable.ownerUserId, scope)
+}
+
+/** Candidate order: the caller's own keys first, shared keys as fallback,
+ * then fastest first within each group. This is what keeps a shared key
+ * from being drained by users who already have their own key. */
+function sortCandidates(keys: GatewayKey[]): GatewayKey[] {
+  return [...keys].sort(
+    (a, b) => Number(a.isShared) - Number(b.isShared) || a.avgLatencyMs - b.avgLatencyMs,
+  )
+}
+
+// ── Lazy owner-column migration ─────────────────────────────────────────────
+// Same pattern as lib/gateway-logs.ts ensureTable(): the first gateway
+// read/write in a process adds the owner column + indexes if they are not
+// there yet, so deploying this code is enough — no manual migration run
+// is required. scripts/migrate-gateway-owner.mjs does the same thing
+// standalone for operators who prefer to run it explicitly. If the DDL
+// fails (e.g. DB unreachable), reads below still fail closed via their
+// catch blocks instead of falling back to the global pool.
+let ownerColumnEnsured = false
+async function ensureOwnerColumn(): Promise<void> {
+  if (ownerColumnEnsured) return
+  ownerColumnEnsured = true
   try {
-    const rows = await db.select({ id: gatewayKeysTable.id }).from(gatewayKeysTable)
+    const client = await pool.connect()
+    try {
+      await client.query(`ALTER TABLE gateway_keys ADD COLUMN IF NOT EXISTS owner_user_id INTEGER`)
+      await client.query(`CREATE INDEX IF NOT EXISTS gateway_keys_owner_idx ON gateway_keys (owner_user_id)`)
+      await client.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS gateway_keys_provider_key_owner_unique ON gateway_keys (provider_id, api_key, owner_user_id)`,
+      )
+      await client.query(`ALTER TABLE gateway_keys ADD COLUMN IF NOT EXISTS is_shared BOOLEAN NOT NULL DEFAULT FALSE`)
+      await client.query(`CREATE INDEX IF NOT EXISTS gateway_keys_shared_idx ON gateway_keys (is_shared)`)
+    } finally {
+      client.release()
+    }
+  } catch {
+    // Swallowed on purpose: dbLoadKeys/dbLoadKeyCount fail closed, and
+    // upsert/prune surface a 500 from the push route instead of leaking.
+  }
+}
+
+export async function dbLoadKeyCount(scope: GatewayKeyScope = null): Promise<number> {
+  await ensureOwnerColumn()
+  try {
+    const where = readWhere(scope)
+    const query = db.select({ id: gatewayKeysTable.id }).from(gatewayKeysTable)
+    const rows = where ? await query.where(where) : await query
     return rows.length
   } catch {
     return 0
   }
 }
 
-async function dbLoadKeys(): Promise<GatewayKey[]> {
+async function dbLoadKeys(scope: GatewayKeyScope): Promise<GatewayKey[]> {
+  await ensureOwnerColumn()
   try {
-    const rows = await db
+    const where = readWhere(scope)
+    const base = db
       .select({
         providerId: gatewayKeysTable.providerId,
         providerName: gatewayKeysTable.providerName,
@@ -88,9 +212,14 @@ async function dbLoadKeys(): Promise<GatewayKey[]> {
         modelIds: gatewayKeysTable.modelIds,
         avgLatencyMs: gatewayKeysTable.avgLatencyMs,
         pushedAt: gatewayKeysTable.pushedAt,
+        ownerUserId: gatewayKeysTable.ownerUserId,
+        isShared: gatewayKeysTable.isShared,
       })
       .from(gatewayKeysTable)
-      .orderBy(gatewayKeysTable.avgLatencyMs)
+    const rows = where ? await base.where(where) : await base
+    // Sorted in memory: the conditional where makes a typed orderBy chain
+    // awkward here, and these row counts are small.
+    rows.sort((a, b) => (a.avgLatencyMs ?? 0) - (b.avgLatencyMs ?? 0))
     return rows.map((r) => ({
       providerId: r.providerId,
       providerName: r.providerName,
@@ -98,8 +227,12 @@ async function dbLoadKeys(): Promise<GatewayKey[]> {
       modelIds: r.modelIds ?? [],
       avgLatencyMs: r.avgLatencyMs,
       pushedAt: Number(r.pushedAt),
+      ownerUserId: r.ownerUserId ?? null,
+      isShared: r.isShared === true,
     }))
   } catch {
+    // Fail closed: if the owner_user_id column does not exist yet (the
+    // migration has not run), return no keys rather than the global pool.
     return []
   }
 }
@@ -123,134 +256,212 @@ function toPgArray(arr: string[]): string {
  * template expansion. This is the only approach that works reliably on both
  * local pg and the Neon serverless driver.
  */
-export async function upsertGatewayKeyChunk(keys: GatewayKey[]): Promise<void> {
+export async function upsertGatewayKeyChunk(
+  keys: GatewayKey[],
+  ownerUserId: number | null = null,
+): Promise<void> {
   if (keys.length === 0) return
 
+  await ensureOwnerColumn()
   const client = await pool.connect()
   try {
     for (const k of keys) {
-      await client.query(
-        `INSERT INTO gateway_keys
-           (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (provider_id, api_key) DO UPDATE SET
-           provider_name  = EXCLUDED.provider_name,
-           model_ids      = EXCLUDED.model_ids,
-           avg_latency_ms = EXCLUDED.avg_latency_ms,
-           pushed_at      = EXCLUDED.pushed_at,
-           updated_at     = now()`,
-        [
-          k.providerId,
-          k.providerName,
-          k.apiKey,
-          toPgArray(k.modelIds),        // single string param, pg casts to text[]
-          Math.round(k.avgLatencyMs),  // column is INTEGER — round float averages
-          k.pushedAt,
-        ],
-      )
+      // The owner comes from server-side auth (push route), never from the
+      // client body: a caller can only write rows stamped with their own
+      // user_id, or with NULL for the legacy/admin pool. isShared is
+      // likewise decided by the push route (admin only); a non-admin
+      // caller's keys are always stored as non-shared.
+      const owner = k.ownerUserId ?? ownerUserId
+      const shared = k.isShared === true
+      if (owner === null) {
+        // Legacy/shared pool: keep the original (provider_id, api_key)
+        // conflict target. This also means an admin push with shared=true
+        // for a key that already exists as a legacy row upgrades that row
+        // to shared, and a legacy push for a shared row downgrades it —
+        // both are explicit admin actions, not user actions.
+        await client.query(
+          `INSERT INTO gateway_keys
+             (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared)
+           VALUES ($1, $2, $3, $4, $5, $6, NULL, $7)
+           ON CONFLICT (provider_id, api_key) DO UPDATE SET
+             provider_name  = EXCLUDED.provider_name,
+             model_ids      = EXCLUDED.model_ids,
+             avg_latency_ms = EXCLUDED.avg_latency_ms,
+             pushed_at      = EXCLUDED.pushed_at,
+             is_shared      = EXCLUDED.is_shared,
+             updated_at     = now()`,
+          [
+            k.providerId,
+            k.providerName,
+            k.apiKey,
+            toPgArray(k.modelIds),        // single string param, pg casts to text[]
+            Math.round(k.avgLatencyMs),  // column is INTEGER — round float averages
+            k.pushedAt,
+            shared,
+          ],
+        )
+      } else {
+        // Owned row: conflict target includes the owner, so the same
+        // provider key synced by a second user becomes a second row owned
+        // by that user instead of overwriting (stealing) the first row.
+        await client.query(
+          `INSERT INTO gateway_keys
+             (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
+           ON CONFLICT (provider_id, api_key, owner_user_id) DO UPDATE SET
+             provider_name  = EXCLUDED.provider_name,
+             model_ids      = EXCLUDED.model_ids,
+             avg_latency_ms = EXCLUDED.avg_latency_ms,
+             pushed_at      = EXCLUDED.pushed_at,
+             is_shared      = FALSE,
+             updated_at     = now()`,
+          [
+            k.providerId,
+            k.providerName,
+            k.apiKey,
+            toPgArray(k.modelIds),
+            Math.round(k.avgLatencyMs),
+            k.pushedAt,
+            owner,
+          ],
+        )
+      }
     }
   } finally {
     client.release()
   }
 
-  // Bust in-memory cache so next read picks up fresh DB state
-  memCache = null
-  memCacheAt = 0
+  // Bust the in-memory cache so the next read picks up fresh DB state.
+  bustCache()
 }
 
 /**
  * After all chunks are sent, delete rows whose api_key is NOT in the
  * current full set — this removes keys that were revoked or re-tested away.
  */
-export async function pruneStaleGatewayKeys(currentApiKeys: string[]): Promise<number> {
-  if (currentApiKeys.length === 0) {
-    // Nothing to keep — wipe everything
-    const deleted = await db.delete(gatewayKeysTable).returning({ id: gatewayKeysTable.id })
-    memCache = null
-    memCacheAt = 0
-    return deleted.length
-  }
-  const deleted = await db
-    .delete(gatewayKeysTable)
-    .where(notInArray(gatewayKeysTable.apiKey, currentApiKeys))
-    .returning({ id: gatewayKeysTable.id })
-  memCache = null
-  memCacheAt = 0
+export async function pruneStaleGatewayKeys(
+  currentApiKeys: string[],
+  scope: GatewayPruneScope,
+): Promise<number> {
+  // Bucketed prune: this is the fix for "one user's sync deleted another
+  // user's keys". Only rows in the caller's own bucket are ever deleted:
+  // own rows for an msk_ user, legacy rows for a legacy push, shared rows
+  // for an admin shared push. The admin "all" scope is the only one that
+  // may prune globally, and routes must never pass it for an ordinary caller.
+  await ensureOwnerColumn()
+  const scopeClause = pruneWhere(scope)
+  const where =
+    currentApiKeys.length === 0
+      ? scopeClause
+      : scopeClause
+        ? and(scopeClause, notInArray(gatewayKeysTable.apiKey, currentApiKeys))
+        : notInArray(gatewayKeysTable.apiKey, currentApiKeys)
+  const deleted = where
+    ? await db.delete(gatewayKeysTable).where(where).returning({ id: gatewayKeysTable.id })
+    : await db.delete(gatewayKeysTable).returning({ id: gatewayKeysTable.id })
+  bustCache()
   return deleted.length
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-/** Load keys — from memory cache if fresh, otherwise from DB */
-async function getStore(): Promise<GatewayStore> {
+/** Load keys for one scope — from that scope's cache if fresh, else from DB */
+async function getStore(scope: GatewayKeyScope): Promise<GatewayStore> {
+  const key = scopeKey(scope)
   const now = Date.now()
-  if (memCache && now - memCacheAt < MEM_TTL_MS) {
-    return memCache
+  const cached = memCaches.get(key)
+  if (cached && now - cached.at < MEM_TTL_MS) {
+    return cached.store
   }
-  const keys = await dbLoadKeys()
+  const keys = await dbLoadKeys(scope)
   const store: GatewayStore = {
     keys,
     lastPushedAt: keys.length > 0 ? Math.max(...keys.map((k) => k.pushedAt)) : 0,
     pushCount: 0,
   }
-  memCache = store
-  memCacheAt = now
+  memCaches.set(key, { store, at: now })
   return store
 }
 
 /**
  * Replace all keys atomically (single-call path, used by legacy callers).
  * For large key sets prefer the chunked path: upsertGatewayKeyChunk + pruneStaleGatewayKeys.
+ * The ownerUserId stamps the replacement rows; pass null only for the
+ * legacy/admin pool — never for an msk_ user's keys.
  */
-export async function setGatewayKeys(_token: string, keys: GatewayKey[]): Promise<void> {
-  await upsertGatewayKeyChunk(keys)
+export async function setGatewayKeys(
+  _token: string,
+  keys: GatewayKey[],
+  ownerUserId: number | null = null,
+): Promise<void> {
+  await upsertGatewayKeyChunk(keys, ownerUserId)
   const currentApiKeys = keys.map((k) => k.apiKey)
-  await pruneStaleGatewayKeys(currentApiKeys)
-  rrIndex.clear()
+  await pruneStaleGatewayKeys(currentApiKeys, ownerUserId)
+  bustCache()
 }
 
 /** Synchronous wrapper used by routes that already have keys loaded */
-export function setGatewayKeysSync(_token: string, keys: GatewayKey[]): void {
+export function setGatewayKeysSync(
+  _token: string,
+  keys: GatewayKey[],
+  ownerUserId: number | null = null,
+): void {
   // Fire-and-forget; bust cache immediately
-  upsertGatewayKeyChunk(keys)
-    .then(() => pruneStaleGatewayKeys(keys.map((k) => k.apiKey)))
+  upsertGatewayKeyChunk(keys, ownerUserId)
+    .then(() => pruneStaleGatewayKeys(keys.map((k) => k.apiKey), ownerUserId))
     .catch(() => { /* ignore — cache already busted */ })
-  memCache = null
-  memCacheAt = 0
-  rrIndex.clear()
+  bustCache()
 }
 
-export async function getGatewayStore(_token: string): Promise<GatewayStore | null> {
-  const store = await getStore()
+export async function getGatewayStore(
+  _token: string,
+  scope: GatewayKeyScope = null,
+): Promise<GatewayStore | null> {
+  const store = await getStore(scope)
   return store.keys.length > 0 ? store : null
 }
 
-export async function pickKey(_token: string, providerId: string): Promise<GatewayKey | null> {
-  const store = await getStore()
+export async function pickKey(
+  _token: string,
+  providerId: string,
+  scope: GatewayKeyScope = null,
+): Promise<GatewayKey | null> {
+  const store = await getStore(scope)
   const candidates = store.keys.filter((k) => k.providerId === providerId)
   if (candidates.length === 0) return null
-  candidates.sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
-  const idx = rrIndex.get(providerId) ?? 0
-  const key = candidates[idx % candidates.length]
-  rrIndex.set(providerId, idx + 1)
+  // Own keys first: round-robin only within the owned pool when the caller
+  // has one, so a provider-prefix fallback never spends the shared key
+  // while the caller still has their own key for that provider.
+  const owned = candidates.filter((k) => !k.isShared)
+  const pool = sortCandidates(owned.length > 0 ? owned : candidates)
+  const rrKey = `${scopeKey(scope)}:${providerId}`
+  const idx = rrIndex.get(rrKey) ?? 0
+  const key = pool[idx % pool.length]
+  rrIndex.set(rrKey, idx + 1)
   return key
 }
 
-export async function pickAnyKey(_token: string, modelId: string): Promise<GatewayKey | null> {
+export async function pickAnyKey(
+  _token: string,
+  modelId: string,
+  scope: GatewayKeyScope = null,
+): Promise<GatewayKey | null> {
   // msaku/auto & miuclaw/auto are permanently deleted — reject at resolution
   if (modelId === "msaku/auto" || modelId === "miuclaw/auto") return null
-  const store = await getStore()
+  const store = await getStore(scope)
   const candidates = store.keys.filter((k) => k.modelIds.includes(modelId))
   if (candidates.length === 0) return null
-  candidates.sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
-  return candidates[0]
+  return sortCandidates(candidates)[0]
 }
 
-export async function getAllModels(_token: string): Promise<Array<{ id: string; providerId: string; providerName: string }>> {
-  const store = await getStore()
+export async function getAllModels(
+  _token: string,
+  scope: GatewayKeyScope = null,
+): Promise<Array<{ id: string; providerId: string; providerName: string }>> {
+  const store = await getStore(scope)
   const seen = new Set<string>()
   const result: Array<{ id: string; providerId: string; providerName: string }> = []
-  const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
+  const sorted = sortCandidates(store.keys)
   for (const key of sorted) {
     for (const modelId of key.modelIds) {
       // msaku/auto & miuclaw/auto are permanently deleted — never resurface
@@ -264,8 +475,8 @@ export async function getAllModels(_token: string): Promise<Array<{ id: string; 
   return result
 }
 
-export async function getGatewayStats(_token: string) {
-  const store = await getStore()
+export async function getGatewayStats(_token: string, scope: GatewayKeyScope = null) {
+  const store = await getStore(scope)
   if (store.keys.length === 0) return null
   const providerCounts = new Map<string, number>()
   const providerDetails = new Map<
