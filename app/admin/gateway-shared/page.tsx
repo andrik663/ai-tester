@@ -12,6 +12,16 @@ import { cookies } from "next/headers"
 import { GATEWAY_ADMIN_COOKIE, verifyAdminSession } from "@/lib/gateway-admin-session"
 import { GatewaySharedLogin, GatewaySharedPanel } from "@/components/gateway-shared-admin"
 
+// This page reads the request cookie, so it must NEVER be statically
+// prerendered: a build-time render has no request context, and on the
+// OpenNext/Cloudflare build that surfaced as a runtime 500 for this route
+// (the API routes from the same PR worked, the page did not). Forcing
+// dynamic + nodejs runtime makes every request render with a real cookie
+// store. The session check below is additionally wrapped so that any
+// headers/crypto failure degrades to the login form, never a 500.
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
 export default async function GatewaySharedAdminPage() {
   const secret = process.env.GATEWAY_SHARED_ADMIN_TOKEN
   if (!secret) {
@@ -25,7 +35,14 @@ export default async function GatewaySharedAdminPage() {
       </div>
     )
   }
-  const store = await cookies()
-  const authed = await verifyAdminSession(secret, store.get(GATEWAY_ADMIN_COOKIE)?.value)
+  let authed = false
+  try {
+    const store = await cookies()
+    authed = await verifyAdminSession(secret, store.get(GATEWAY_ADMIN_COOKIE)?.value)
+  } catch {
+    // No usable request context (or crypto unavailable) — fall through to
+    // the login form instead of failing the whole page.
+    authed = false
+  }
   return authed ? <GatewaySharedPanel /> : <GatewaySharedLogin />
 }
