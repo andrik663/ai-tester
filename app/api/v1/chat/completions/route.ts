@@ -295,6 +295,15 @@ export async function POST(req: NextRequest) {
   if (!body.model) {
     return NextResponse.json({ error: "model is required" }, { status: 400 })
   }
+
+  // msaku/auto has been removed from the gateway — reject it explicitly
+  // instead of letting it fall through provider resolution.
+  if (body.model === "msaku/auto") {
+    return NextResponse.json(
+      { error: "Model Not Found", model: body.model },
+      { status: 404 },
+    )
+  }
   if (!Array.isArray(body.messages) || body.messages.length === 0) {
     return NextResponse.json({ error: "messages array is required" }, { status: 400 })
   }
