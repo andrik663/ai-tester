@@ -32,11 +32,37 @@
  * behind their own keys. Only admin may set shared; msk_/atk_ callers
  * sending shared:true get it forced to false. An admin shared prune
  * deletes only shared rows, never private user rows.
+ *
+ * SHARED ADMIN TOKEN (new in this change): marking keys shared no longer
+ * accepts the internal admin token alone. It requires a separate,
+ * server-only secret in GATEWAY_SHARED_ADMIN_TOKEN, sent as the request's
+ * Authorization bearer. Rationale: the internal token is imported by
+ * client components (e.g. the tester UI), so it ships in the browser
+ * bundle and cannot be treated as a secret. The shared token is read
+ * only here, server-side, and is never imported by client code — so it
+ * never lands in the bundle. If the env var is unset, shared pushes are
+ * rejected (503) instead of falling back to the weaker token. The old
+ * internal token still works for ordinary (non-shared) admin pushes.
+ * Operator setup after deploy: set GATEWAY_SHARED_ADMIN_TOKEN to a fresh
+ * random secret in the deployment environment, then use that token for
+ * shared pushes. Rotating it instantly revokes the old shared-push access.
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { timingSafeEqual } from "crypto"
 import { upsertGatewayKeyChunk, pruneStaleGatewayKeys, GatewayKey, dbLoadKeyCount, GatewayPruneScope } from "@/lib/gateway-cache"
-import { authenticateGatewayRequest } from "@/lib/gateway-auth"
+import { authenticateGatewayRequest, extractBearerOrHeaderKey } from "@/lib/gateway-auth"
+
+/** Constant-time check that this request carries the shared admin token. */
+function hasSharedAdminToken(headers: Headers): boolean {
+  const expected = process.env.GATEWAY_SHARED_ADMIN_TOKEN ?? ""
+  if (!expected) return false
+  const presented = extractBearerOrHeaderKey(headers)
+  if (!presented) return false
+  const a = Buffer.from(presented)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -106,27 +132,12 @@ function sanitize(raw: unknown[], ownerUserId: number | null, isShared: boolean)
 }
 
 export async function POST(req: NextRequest) {
-  // ── Guard: authenticate the syncing caller ──────────────────────────────────
-  // Previously this route only checked that an internal token EXISTED on
-  // the server — it never checked the request — so anyone could push and
-  // prune the whole global pool. Now the caller must authenticate, and
-  // their rows are stamped with their own owner (see header comment).
-  const auth = await authenticateGatewayRequest(req.headers, "/api/v1/gateway/push")
-  if (!auth.valid) {
-    return NextResponse.json(
-      {
-        error:
-          auth.error ||
-          "Sync membutuhkan API Key User MSAKU (msk_...) — simpan dulu kunci msk_ Anda di tester, lalu sync ulang.",
-      },
-      { status: auth.status || 401 },
-    )
-  }
-  // msk_ callers own their rows; admin/atk_ callers write the legacy pool.
-  const ownerUserId: number | null =
-    auth.tier === "msaku_user" && typeof auth.userId === "number" ? auth.userId : null
-
-  // ── Parse body ──────────────────────────────────────────────────────────────
+  // ── Parse body first: the shared flag decides which auth applies ──────────
+  // A shared push is authenticated ONLY by the shared admin token (see
+  // header comment) — that token is not a recognised msk_/atk_/internal
+  // credential, so it must be checked before the general auth below,
+  // which would otherwise reject it as unrecognised. The shared token
+  // grants nothing else: without shared:true it authenticates no push.
   let body: PushBody
   try {
     body = await req.json()
@@ -138,10 +149,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "keys must be an array" }, { status: 400 })
   }
 
-  // Shared flag: ONLY an admin push may set it. An msk_ or atk_ caller
-  // sending shared:true gets it silently forced to false — otherwise any
-  // user could inject their key into every other user's model list.
-  const isShared = auth.tier === "admin" && body.shared === true
+  const wantsShared = body.shared === true
+  let auth: { valid: boolean; tier?: string; userId?: number; status?: number; error?: string }
+  if (wantsShared) {
+    if (!process.env.GATEWAY_SHARED_ADMIN_TOKEN) {
+      return NextResponse.json(
+        { error: "Kunci bersama belum diaktifkan: set env GATEWAY_SHARED_ADMIN_TOKEN di environment deployment, lalu ulangi push shared ini." },
+        { status: 503 },
+      )
+    }
+    if (!hasSharedAdminToken(req.headers)) {
+      return NextResponse.json(
+        { error: "Menandai kunci sebagai shared membutuhkan token admin khusus shared (env GATEWAY_SHARED_ADMIN_TOKEN). Token admin internal saja tidak cukup." },
+        { status: 403 },
+      )
+    }
+    auth = { valid: true, tier: "admin" }
+  } else {
+    // ── Guard: authenticate the syncing caller ────────────────────────────────
+    // Previously this route only checked that an internal token EXISTED on
+    // the server — it never checked the request — so anyone could push and
+    // prune the whole global pool. Now the caller must authenticate, and
+    // their rows are stamped with their own owner (see header comment).
+    auth = await authenticateGatewayRequest(req.headers, "/api/v1/gateway/push")
+    if (!auth.valid) {
+      return NextResponse.json(
+        {
+          error:
+            auth.error ||
+            "Sync membutuhkan API Key User MSAKU (msk_...) — simpan dulu kunci msk_ Anda di tester, lalu sync ulang.",
+        },
+        { status: auth.status || 401 },
+      )
+    }
+  }
+  // msk_ callers own their rows; admin/atk_ callers write the legacy pool.
+  const ownerUserId: number | null =
+    auth.tier === "msaku_user" && typeof auth.userId === "number" ? auth.userId : null
+
+  // Shared flag: true only when the shared admin token authorised this
+  // push (checked above). Every other caller gets false, even if they
+  // sent shared:true — otherwise any user could inject their key into
+  // every other user's model list.
+  const isShared = wantsShared
   // Prune bucket follows the push kind: an msk_ prune touches only that
   // user's own rows (never shared rows), a legacy prune only legacy rows,
   // and an admin shared prune only shared rows.

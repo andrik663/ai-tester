@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getInternalToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey, GatewayKeyScope, scopeForAuth } from "@/lib/gateway-cache"
 import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from "@/lib/providers"
-import { writeGatewayLog } from "@/lib/gateway-logs"
+import { writeGatewayLog, getSharedTokenUsageToday, sharedDailyTokenBudget } from "@/lib/gateway-logs"
 
 // Status codes that should trigger fallback to another key
 const FALLBACK_STATUS_CODES = new Set([401, 403, 429, 500, 502, 503, 504])
@@ -319,6 +319,13 @@ export async function POST(req: NextRequest) {
   // to another user's private key.
   const scope = scopeForAuth(auth)
 
+  // Caller identity for per-user logging and the shared-key budget below.
+  // Only msk_ callers have a user_id; admin/atk_ callers are logged with
+  // null and are not subject to the shared budget (admin owns the pool).
+  const callerUserId: number | null =
+    auth.tier === "msaku_user" && typeof auth.userId === "number" ? auth.userId : null
+  const sharedLimit = sharedDailyTokenBudget()
+
   // ── Parse request (already parsed above as preBody) ─────────────────────────
   const body = preBody as unknown as ChatRequest
 
@@ -362,8 +369,24 @@ export async function POST(req: NextRequest) {
   let lastStatus = 502
   let lastProvider = primaryKey.providerId
   let attemptCount = 0
+  // Shared-budget state, computed lazily once per request (same user/day).
+  let sharedUsageToday: number | null = null
+  let sharedBudgetHit = false
 
   for (const key of candidates) {
+    // Shared-key budget: a shared candidate is skipped, never attempted,
+    // once this user has spent today's shared budget. Private keys are
+    // never subject to this cap — they are the user's own quota. If every
+    // candidate is skipped this way, the 429 below is returned.
+    if (key.isShared && callerUserId !== null && sharedLimit > 0) {
+      if (sharedUsageToday === null) {
+        sharedUsageToday = await getSharedTokenUsageToday(callerUserId)
+      }
+      if (sharedUsageToday >= sharedLimit) {
+        sharedBudgetHit = true
+        continue
+      }
+    }
     const endpoint = buildEndpoint(key.providerId, body.model, key.apiKey)
     if (!endpoint) continue // skip providers needing extra config
 
@@ -389,7 +412,7 @@ export async function POST(req: NextRequest) {
         model: body.model, providerId: key.providerId, providerName: key.providerName,
         success: false, statusCode: 502, latencyMs: Date.now() - t0,
         errorMessage: lastError.slice(0, 200), streaming: !!body.stream,
-        fallbackUsed: attemptCount > 1, attemptCount,
+        fallbackUsed: attemptCount > 1, attemptCount, callerUserId, isSharedKey: key.isShared,
       }).catch(() => {})
       continue // network error — try next key
     }
@@ -404,7 +427,7 @@ export async function POST(req: NextRequest) {
         model: body.model, providerId: key.providerId, providerName: key.providerName,
         success: false, statusCode: upstreamRes.status, latencyMs: Date.now() - t0,
         errorMessage: lastError.slice(0, 200), streaming: !!body.stream,
-        fallbackUsed: attemptCount > 1, attemptCount,
+        fallbackUsed: attemptCount > 1, attemptCount, callerUserId, isSharedKey: key.isShared,
       }).catch(() => {})
       continue
     }
@@ -416,7 +439,7 @@ export async function POST(req: NextRequest) {
         model: body.model, providerId: key.providerId, providerName: key.providerName,
         success: false, statusCode: upstreamRes.status, latencyMs: Date.now() - t0,
         errorMessage: errText.slice(0, 200), streaming: !!body.stream,
-        fallbackUsed: attemptCount > 1, attemptCount,
+        fallbackUsed: attemptCount > 1, attemptCount, callerUserId, isSharedKey: key.isShared,
       }).catch(() => {})
       return NextResponse.json(
         {
@@ -437,7 +460,7 @@ export async function POST(req: NextRequest) {
       writeGatewayLog({
         model: body.model, providerId: key.providerId, providerName: key.providerName,
         success: true, statusCode: 200, latencyMs,
-        streaming: true, fallbackUsed: attemptCount > 1, attemptCount,
+        streaming: true, fallbackUsed: attemptCount > 1, attemptCount, callerUserId, isSharedKey: key.isShared,
       }).catch(() => {})
       return new NextResponse(upstreamRes.body, {
         status: 200,
@@ -457,7 +480,7 @@ export async function POST(req: NextRequest) {
     writeGatewayLog({
       model: body.model, providerId: key.providerId, providerName: key.providerName,
       success: true, statusCode: 200, latencyMs,
-      streaming: false, fallbackUsed: attemptCount > 1, attemptCount,
+      streaming: false, fallbackUsed: attemptCount > 1, attemptCount, callerUserId, isSharedKey: key.isShared,
       promptTokens:     usage?.prompt_tokens     ?? 0,
       completionTokens: usage?.completion_tokens ?? 0,
     }).catch(() => {})
@@ -472,12 +495,31 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  // ── All candidates skipped on the shared budget ───────────────────────────
+  if (sharedBudgetHit && attemptCount === 0) {
+    writeGatewayLog({
+      model: body.model, providerId: primaryKey.providerId, providerName: primaryKey.providerName,
+      success: false, statusCode: 429, latencyMs: 0,
+      errorMessage: "Shared-key daily token budget reached", streaming: !!body.stream,
+      fallbackUsed: false, attemptCount: 0, callerUserId, isSharedKey: true,
+    }).catch(() => {})
+    return NextResponse.json(
+      {
+        error: "Batas token harian kunci bersama tercapai untuk akun ini. Coba lagi besok, atau pakai kunci provider sendiri untuk model ini.",
+        model: body.model,
+        sharedDailyTokenBudget: sharedLimit,
+        sharedTokensUsedToday: sharedUsageToday ?? 0,
+      },
+      { status: 429 },
+    )
+  }
+
   // ── All candidates failed ─────────────────────────────────────────────────
   writeGatewayLog({
     model: body.model, providerId: lastProvider, providerName: lastProvider,
     success: false, statusCode: lastStatus, latencyMs: 0,
     errorMessage: `All keys failed: ${lastError.slice(0, 200)}`,
-    streaming: !!body.stream, fallbackUsed: true, attemptCount,
+    streaming: !!body.stream, fallbackUsed: true, attemptCount, callerUserId, isSharedKey: primaryKey.isShared,
   }).catch(() => {})
   return NextResponse.json(
     {
