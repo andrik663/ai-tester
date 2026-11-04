@@ -18,10 +18,18 @@
  *
  * SECURITY: Raw API keys are persisted server-side in Neon only.
  * They are NEVER returned to any external client and NEVER logged.
+ *
+ * OWNER ISOLATION: this route is authenticated (msk_ user key, atk_ key,
+ * or the internal admin token). Synced rows are stamped with the caller's
+ * owner (their msk_ user_id, or NULL for the legacy/admin pool), and the
+ * final-chunk prune deletes ONLY rows in that same scope — it can never
+ * delete another msk_ user's keys. Callers must NOT send an owner in the
+ * body: any owner field present is ignored and replaced server-side.
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getInternalToken, upsertGatewayKeyChunk, pruneStaleGatewayKeys, GatewayKey, dbLoadKeyCount } from "@/lib/gateway-cache"
+import { upsertGatewayKeyChunk, pruneStaleGatewayKeys, GatewayKey, dbLoadKeyCount, GatewayKeyScope } from "@/lib/gateway-cache"
+import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -42,7 +50,7 @@ interface PushBody {
   allApiKeys?: string[]
 }
 
-function sanitize(raw: unknown[]): GatewayKey[] {
+function sanitize(raw: unknown[], ownerUserId: number | null): GatewayKey[] {
   const cleaned = (raw as unknown[])
     .filter((k): k is GatewayKeyInput =>
       typeof k === "object" && k !== null &&
@@ -57,6 +65,8 @@ function sanitize(raw: unknown[]): GatewayKey[] {
       modelIds: k.modelIds.filter((m) => typeof m === "string" && m.trim().length > 0),
       avgLatencyMs: Math.round(Number(k.avgLatencyMs ?? 0)),
       pushedAt: Number(k.pushedAt ?? Date.now()),
+      // Owner is server-side auth only — never taken from the request body.
+      ownerUserId,
     }))
     .filter((k) => k.providerId && k.apiKey && k.modelIds.length > 0)
 
@@ -80,14 +90,26 @@ function sanitize(raw: unknown[]): GatewayKey[] {
 }
 
 export async function POST(req: NextRequest) {
-  // ── Guard: env check ────────────────────────────────────────────────────────
-  const internalToken = getInternalToken()
-  if (!internalToken) {
+  // ── Guard: authenticate the syncing caller ──────────────────────────────────
+  // Previously this route only checked that an internal token EXISTED on
+  // the server — it never checked the request — so anyone could push and
+  // prune the whole global pool. Now the caller must authenticate, and
+  // their rows are stamped with their own owner (see header comment).
+  const auth = await authenticateGatewayRequest(req.headers, "/api/v1/gateway/push")
+  if (!auth.valid) {
     return NextResponse.json(
-      { error: "Server misconfiguration: internal gateway token unavailable" },
-      { status: 503 },
+      {
+        error:
+          auth.error ||
+          "Sync membutuhkan API Key User MSAKU (msk_...) — simpan dulu kunci msk_ Anda di tester, lalu sync ulang.",
+      },
+      { status: auth.status || 401 },
     )
   }
+  // msk_ callers own their rows; admin/atk_ callers write the legacy pool.
+  const ownerUserId: number | null =
+    auth.tier === "msaku_user" && typeof auth.userId === "number" ? auth.userId : null
+  const scope: GatewayKeyScope = ownerUserId
 
   // ── Parse body ──────────────────────────────────────────────────────────────
   let body: PushBody
@@ -101,7 +123,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "keys must be an array" }, { status: 400 })
   }
 
-  const sanitized = sanitize(body.keys)
+  const sanitized = sanitize(body.keys, ownerUserId)
 
   // ── Determine mode ──────────────────────────────────────────────────────────
   const chunkIndex  = typeof body.chunkIndex  === "number" ? body.chunkIndex  : 0
@@ -111,23 +133,25 @@ export async function POST(req: NextRequest) {
 
   // ── DB writes — wrapped so ANY failure returns JSON (never an HTML 500) ──────
   try {
-    // UPSERT this chunk
-    await upsertGatewayKeyChunk(sanitized)
+    // UPSERT this chunk (stamped with the caller's owner)
+    await upsertGatewayKeyChunk(sanitized, ownerUserId)
 
     let pruned = 0
 
-    // On final chunk: prune stale keys
+    // On final chunk: prune stale keys — ONLY within the caller's scope.
+    // Another msk_ user's rows are never touched, even if their api_key
+    // values are absent from this caller's allApiKeys list.
     if (isLastChunk) {
       const allApiKeys = Array.isArray(body.allApiKeys)
         ? body.allApiKeys.filter((k) => typeof k === "string" && k.trim().length > 0)
         : sanitized.map((k) => k.apiKey)        // single-shot: keep only what was sent
-      pruned = await pruneStaleGatewayKeys(allApiKeys)
+      pruned = await pruneStaleGatewayKeys(allApiKeys, scope)
     }
 
-    // Build response
+    // Build response (counts are scoped to this caller, not global)
     const providerCount = new Set(sanitized.map((k) => k.providerId)).size
     const modelCount    = sanitized.reduce((acc, k) => acc + k.modelIds.length, 0)
-    const totalInDb     = isLastChunk ? await dbLoadKeyCount() : null
+    const totalInDb     = isLastChunk ? await dbLoadKeyCount(scope) : null
 
     return NextResponse.json({
       ok: true,
@@ -137,6 +161,7 @@ export async function POST(req: NextRequest) {
       providers: providerCount,
       models:    modelCount,
       pruned,
+      ownerScope: ownerUserId !== null ? `msk_user:${ownerUserId}` : "legacy",
       ...(totalInDb !== null ? { totalInDb } : {}),
       ...(isChunked ? { isLastChunk } : {}),
     })

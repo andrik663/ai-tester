@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getInternalToken, getAllModels, getGatewayStats } from "@/lib/gateway-cache"
+import { getInternalToken, getAllModels, getGatewayStats, scopeForAuth } from "@/lib/gateway-cache"
 import { authenticateGatewayRequest } from "@/lib/gateway-auth"
 
 export const runtime = "nodejs"
@@ -23,8 +23,11 @@ export async function GET(req: NextRequest) {
   const token = getInternalToken()
 
   // ── Build response ──────────────────────────────────────────────────────────
-  const models = await getAllModels(token)
-  const stats = await getGatewayStats(token)
+  // Owner-scoped: an msk_ caller only sees models from their own synced
+  // keys, never another user's. Counts below are scoped the same way.
+  const scope = scopeForAuth(auth)
+  const models = await getAllModels(token, scope)
+  const stats = await getGatewayStats(token, scope)
 
   const now = Math.floor(Date.now() / 1000)
 

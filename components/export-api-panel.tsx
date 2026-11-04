@@ -17,7 +17,25 @@ interface SyncResult {
   totalModels?: number
   totalProviders?: number
   totalInDb?: number
+  ownerScope?: string
   error?: string
+}
+
+// ── Stored MSAKU user key (msk_...) ───────────────────────────────────────────
+// The tester already stores a verified msk_ key under this localStorage key
+// (see public-code-preview.tsx). Sync sends it so the server stamps the
+// synced provider keys with THIS user as owner — without it, the push is
+// rejected, because an unauthenticated sync could otherwise overwrite or
+// prune another user's keys. Never fall back to the internal token here.
+const STORAGE_USER_KEY = "msaku_gateway_user_api_key"
+
+function getStoredMsakuKey(): string | null {
+  if (typeof window === "undefined") return null
+  try {
+    return localStorage.getItem(STORAGE_USER_KEY)?.trim() || null
+  } catch {
+    return null
+  }
 }
 
 interface Progress {
@@ -367,6 +385,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
     let totalModels    = 0
     let totalProviders = 0
     let totalInDb      = 0
+    let ownerScope: string | undefined
 
     setProgress({ chunk: 0, total: totalChunks, phase: "uploading" })
 
@@ -380,15 +399,22 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
           ...(isLast ? { allApiKeys } : {}),
         }
 
+        // Owner-scoped sync: the server stamps rows with this msk_ user's
+        // id and prunes only that user's rows. Without a stored msk_ key
+        // the server rejects the push (401) instead of touching the pool.
+        const storedKey = getStoredMsakuKey()
         const res = await fetch("/api/v1/gateway/push", {
           method:  "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(storedKey ? { Authorization: `Bearer ${storedKey}` } : {}),
+          },
           body:    JSON.stringify(body),
         })
 
         let data: {
           ok?: boolean; synced?: number; providers?: number
-          models?: number; totalInDb?: number; error?: string
+          models?: number; totalInDb?: number; ownerScope?: string; error?: string
         }
         try {
           data = await res.json()
@@ -404,6 +430,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
         totalModels    += data.models    ?? 0
         totalProviders  = Math.max(totalProviders, data.providers ?? 0)
         if (isLast) totalInDb = data.totalInDb ?? 0
+        if (data.ownerScope) ownerScope = data.ownerScope
 
         setProgress({ chunk: i + 1, total: totalChunks, phase: isLast ? "pruning" : "uploading" })
       }
@@ -417,7 +444,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
 
     // ── Done ─────────────────────────────────────────────────────────────────
     setProgress({ chunk: totalChunks, total: totalChunks, phase: "done" })
-    setResult({ ok: true, totalSynced, totalModels, totalProviders, totalInDb })
+    setResult({ ok: true, totalSynced, totalModels, totalProviders, totalInDb, ownerScope })
     onSynced?.()
     await refreshGatewayStats()
     setSyncing(false)
@@ -537,7 +564,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
           : "border-destructive/25 bg-destructive/8 text-destructive"
         const icon = result.ok ? <CheckIcon /> : <XIcon />
         const message = result.ok
-          ? `Synced ${result.totalSynced} key${(result.totalSynced ?? 0) !== 1 ? "s" : ""} — ${result.totalModels} models across ${result.totalProviders} providers. Gateway has ${result.totalInDb} keys ready.`
+          ? `Synced ${result.totalSynced} key${(result.totalSynced ?? 0) !== 1 ? "s" : ""} — ${result.totalModels} models across ${result.totalProviders} providers. Gateway has ${result.totalInDb} keys ready${result.ownerScope ? ` (owner: ${result.ownerScope} — only this owner can spend them)` : ""}.`
           : result.error
         return (
           <div className={`flex items-start gap-2 px-3 py-2.5 rounded-lg border text-[10px] leading-relaxed ${colorClass}`}>
