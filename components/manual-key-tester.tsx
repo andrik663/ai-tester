@@ -3155,18 +3155,18 @@ function SidebarProviderRow({ p, isPinned, isSelected, togglePin, applyPreset }:
       {/* Main row button */}
       <button
         onClick={() => applyPreset(p)}
-        className={`text-xs font-medium py-2 rounded transition-colors text-left flex items-center gap-2 min-w-0 flex-1 ${
-          pinnable ? "pl-2.5 pr-7" : "px-2.5"
+        className={`text-[13px] font-medium py-2.5 rounded-md transition-colors text-left flex items-center gap-2 min-w-0 flex-1 ${
+          pinnable ? "pl-3 pr-8" : "px-3"
         } ${
           isSelected
-            ? "bg-secondary text-foreground"
-            : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground"
+            ? "bg-secondary text-foreground shadow-[inset_2px_0_0_0_#e9e9eb]"
+            : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
         }`}
       >
         <span className={`w-4 h-4 flex items-center justify-center flex-shrink-0 transition-opacity ${
           isSelected ? "opacity-100" : hovered ? "opacity-90" : "opacity-60"
         }`}>
-          <ProviderLogo providerId={p.id} providerName={p.name} className="w-4 h-4" />
+          <ProviderLogo providerId={p.id} providerName={p.name} className="w-5 h-5" />
         </span>
         <span className="flex-1 min-w-0 truncate">{p.name}</span>
         {p.country && !hovered && (
@@ -4218,7 +4218,7 @@ export default function ManualKeyTester() {
       <aside className={`
         flex-shrink-0 border-r border-border bg-sidebar flex flex-col overflow-hidden h-full
         fixed md:static inset-y-0 left-0 z-40 md:z-auto
-        w-[85vw] max-w-xs md:w-60 lg:w-64
+        w-[88vw] max-w-sm md:w-72 lg:w-80
         transition-transform duration-200 ease-in-out md:transition-none md:translate-x-0
         ${configOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
@@ -4226,15 +4226,15 @@ export default function ManualKeyTester() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/12 border border-primary/25 flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-md bg-secondary border border-border flex items-center justify-center flex-shrink-0">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-primary">
                 <circle cx="7" cy="12" r="4" />
                 <path d="M11 12h9M17 10v4" />
               </svg>
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-foreground leading-tight tracking-tight">API Tester</p>
-                <p className="text-[10px] text-muted-foreground/60">{visiblePresets.length} providers</p>
+              <p className="text-[15px] font-semibold text-foreground leading-tight tracking-tight">Msaku Gateway</p>
+                <p className="text-[11px] text-muted-foreground">{visiblePresets.length} providers · keys never stored</p>
             </div>
           </div>
           <button
@@ -4253,11 +4253,11 @@ export default function ManualKeyTester() {
 
           {/* Onboarding hint — shown once, dismissable */}
           {!onboardingDismissed && (
-            <div className="mx-3 mt-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 flex items-center gap-2 relative flex-shrink-0">
+            <div className="mx-3 mt-3 rounded-md border border-border bg-secondary/60 px-3 py-2.5 flex items-center gap-2 relative flex-shrink-0">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-primary flex-shrink-0">
                 <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
               </svg>
-              <p className="text-[11px] text-muted-foreground flex-1 leading-snug">Pick a provider, paste your key, then use the Test tab.</p>
+              <p className="text-[11px] text-muted-foreground flex-1 leading-snug">1. Pick a provider · 2. Paste your key · 3. Press Test.</p>
               <button
                 onClick={dismissOnboarding}
                 className="w-4 h-4 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground transition-colors flex-shrink-0"
@@ -4286,7 +4286,7 @@ export default function ManualKeyTester() {
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
                 placeholder={`Search ${visiblePresets.length} providers...`}
-                className="w-full rounded-lg border border-border bg-background/60 text-foreground text-[11px] pl-7 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
+                className="w-full rounded-md border border-border bg-background text-foreground text-[13px] pl-8 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
               />
               {sidebarSearch && (
                 <button
@@ -4404,11 +4404,11 @@ export default function ManualKeyTester() {
           </div>
 
           {/* ── DESKTOP: single combined header row ───────────────────────────── */}
-          <div className="hidden md:flex items-center gap-1 px-2 h-10">
+          <div className="hidden md:flex items-center gap-1 px-4 h-12">
             {/* Provider badge — desktop only */}
-            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground mr-1 flex-shrink-0">
-              <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-3 h-3 opacity-60 flex-shrink-0" />
-              <span className="font-medium text-foreground/60 max-w-[80px] truncate">{selectedPreset.name}</span>
+            <span className="flex items-center gap-2 text-[13px] text-muted-foreground mr-2 flex-shrink-0">
+              <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold text-foreground max-w-[160px] truncate">{selectedPreset.name}</span>
             </span>
 
             {/* Divider */}
@@ -4427,10 +4427,10 @@ export default function ManualKeyTester() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as typeof activeTab)}
-                  className={`px-3 h-7 rounded-md text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                  className={`px-3 h-12 border-b-2 text-[13px] font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
                     activeTab === t.id || (t.id === "saved" && (activeTab === "history" || activeTab === "collections"))
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                      ? "border-foreground text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {t.label}
@@ -4685,12 +4685,12 @@ export default function ManualKeyTester() {
             <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4 flex flex-col gap-3">
               {chatHistory.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full gap-4 text-center max-w-sm mx-auto w-full">
-                  <div className="w-12 h-12 rounded-xl border border-primary/20 bg-primary/8 flex items-center justify-center flex-shrink-0">
+                  <div className="w-14 h-14 rounded-lg border border-border bg-secondary flex items-center justify-center flex-shrink-0">
                     <ProviderLogo providerId={selectedPreset.id} providerName={selectedPreset.name} className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{selectedPreset.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-[15px] font-semibold text-foreground">{selectedPreset.name}</p>
+                    <p className="text-[13px] text-muted-foreground mt-1 leading-relaxed">
                       {selectedPreset.id === "msaku"
                         ? workingModels.length > 0
                           ? "Ready — send a message to test"
@@ -4709,7 +4709,7 @@ export default function ManualKeyTester() {
                         <button
                           key={s}
                           onClick={() => setPrompt(s)}
-                          className="text-[10px] px-2.5 py-1 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-ring/50 hover:bg-secondary/60 transition-colors"
+                          className="text-xs px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                         >
                           {s}
                         </button>
@@ -4721,7 +4721,7 @@ export default function ManualKeyTester() {
 
               {chatHistory.map((msg, i) => (
                 <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                  <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                  <div className={`max-w-[82%] rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-sm"
                       : "bg-card border border-border text-foreground rounded-bl-sm"
@@ -4914,14 +4914,14 @@ export default function ManualKeyTester() {
 
               {/* Inline API key input — hidden for Msaku, shown for others when no saved key exists */}
               {selectedPreset.id !== "msaku" && !apiKey.trim() && workingModels.length === 0 && (
-                <div className="flex items-center gap-2 px-1 py-1 mb-2 rounded-lg border border-primary/20 bg-primary/5">
+                <div className="flex items-center gap-2 px-2 py-1.5 mb-2 rounded-md border border-border bg-secondary/40">
                   <div className="relative flex-1 min-w-0">
                     <input
                       type={showKey ? "text" : "password"}
                       value={apiKey}
                       onChange={(e) => handleApiKeyChange(e.target.value)}
                       placeholder="Paste API key to start..."
-                      className="w-full rounded-lg border border-border bg-background text-foreground text-[11px] font-mono px-2.5 py-2 pr-7 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
+                      className="w-full rounded-md border border-border bg-background text-foreground text-[13px] font-mono px-3 py-2.5 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
                     />
                     <button
                       onClick={() => setShowKey((v) => !v)}
@@ -4935,7 +4935,7 @@ export default function ManualKeyTester() {
                       href={selectedPreset.createKeyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-shrink-0 text-[10px] text-primary/60 hover:text-primary transition-colors whitespace-nowrap"
+                      className="flex-shrink-0 text-xs font-medium text-foreground/70 hover:text-foreground transition-colors whitespace-nowrap"
                     >
                       Get key →
                     </a>
@@ -4952,12 +4952,12 @@ export default function ManualKeyTester() {
                   placeholder={(selectedPreset.id === "msaku" || apiKey.trim()) ? "Describe what to build... (Enter to send)" : "Enter API key above first..."}
                   disabled={(loading || isStreaming) || (selectedPreset.id !== "msaku" && !apiKey.trim())}
                   rows={2}
-                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/70 resize-none disabled:opacity-40 leading-relaxed"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runTest}
                   disabled={(selectedPreset.id !== "msaku" && !apiKey.trim()) || !prompt.trim() || loading || isStreaming}
-                  className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0 w-11 sm:w-auto sm:min-w-[80px] h-[46px]"
+                  className="flex items-center justify-center gap-1.5 px-3 sm:px-4 rounded-lg bg-primary text-primary-foreground text-[13px] font-semibold hover:bg-primary-hover disabled:opacity-40 transition-colors flex-shrink-0 w-11 sm:w-auto sm:min-w-[88px] h-11"
                 >
                   {loading || isStreaming ? <SpinnerIcon /> : <SendIcon />}
                   <span className="hidden sm:inline">{loading || isStreaming ? "..." : "Send"}</span>
@@ -5169,7 +5169,7 @@ export default function ManualKeyTester() {
                   placeholder={visionImage ? "Optional: ask about the image..." : "Upload an image first..."}
                   disabled={!apiKey.trim() || !visionImage || visionLoading}
                   rows={2}
-                  className="flex-1 min-w-0 rounded-xl border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/70 resize-none disabled:opacity-40 leading-relaxed"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-background text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground resize-none disabled:opacity-40 leading-relaxed"
                 />
                 <button
                   onClick={runVisionTest}
