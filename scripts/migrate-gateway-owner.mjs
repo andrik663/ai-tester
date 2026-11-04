@@ -10,6 +10,9 @@
  *   3. Adds a unique index on (provider_id, api_key, owner_user_id) so
  *      the same provider key synced by two different msk_ users becomes
  *      two separate rows instead of one overwriting the other.
+ *   4. Adds gateway_keys.is_shared (BOOLEAN, NOT NULL DEFAULT FALSE)
+ *      plus an index on it, for admin-shared keys served to every
+ *      registered msk_ user as a fallback behind their own keys.
  *
  * WHAT IT DOES NOT DO:
  *   - It does NOT backfill owner_user_id. Rows synced before this change
@@ -42,6 +45,12 @@ CREATE INDEX IF NOT EXISTS gateway_keys_owner_idx
 
 CREATE UNIQUE INDEX IF NOT EXISTS gateway_keys_provider_key_owner_unique
   ON gateway_keys (provider_id, api_key, owner_user_id);
+
+ALTER TABLE gateway_keys
+  ADD COLUMN IF NOT EXISTS is_shared BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS gateway_keys_shared_idx
+  ON gateway_keys (is_shared);
 `
 
 const client = await pool.connect()

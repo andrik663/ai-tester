@@ -184,7 +184,10 @@ async function resolveProvider(token: string, modelId: string, scope: GatewayKey
   //    that may just work on a general-purpose provider.
   const hasProviderPrefix = lower.includes("/")
   if (!hasProviderPrefix && store.keys.length > 0) {
-    const sorted = [...store.keys].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)
+    // Own keys before shared keys, then fastest first.
+    const sorted = [...store.keys].sort(
+      (a, b) => Number(a.isShared) - Number(b.isShared) || a.avgLatencyMs - b.avgLatencyMs,
+    )
     return sorted[0]
   }
 
@@ -310,9 +313,10 @@ export async function POST(req: NextRequest) {
   // ── Resolve internal gateway token from server env ──────────────────────────
   const token = getInternalToken()
 
-  // Owner scope for every key read below: an msk_ caller spends only
-  // their own synced keys; the fallback candidate list is built from the
-  // same scoped store, so it can never fall back to another user's key.
+  // Owner scope for every key read below: an msk_ caller spends their
+  // own synced keys first, then admin-shared keys; the fallback candidate
+  // list is built from the same scoped store, so it can never fall back
+  // to another user's private key.
   const scope = scopeForAuth(auth)
 
   // ── Parse request (already parsed above as preBody) ─────────────────────────
