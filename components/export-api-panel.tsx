@@ -339,6 +339,8 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
   const [progress, setProgress] = useState<Progress | null>(null)
   const [result, setResult]     = useState<SyncResult | null>(null)
   const [gatewayStats, setGatewayStats] = useState<{ keys: number; providers: number } | null>(null)
+  const [sharedSyncing, setSharedSyncing] = useState(false)
+  const [sharedResult, setSharedResult] = useState<{ ok: boolean; count?: number; error?: string } | null>(null)
 
   const refreshGatewayStats = useCallback(async () => {
     try {
@@ -450,6 +452,52 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
     setSyncing(false)
   }, [keys, syncing, onSynced, refreshGatewayStats])
 
+  // ── Admin shared sync: same keys, shared destination ───────────────────────
+  // Posts the grouped tester keys to the session-gated admin sync route,
+  // which stores them as shared (owner NULL, is_shared TRUE) WITHOUT pruning
+  // other shared rows. No token is sent from this page: auth is the panel
+  // admin session cookie (login once at /admin/gateway-shared). A 401 here
+  // means "not logged in as admin", not "no msk_ key" — the two syncs have
+  // different auth on purpose.
+  const handleSharedSync = useCallback(async () => {
+    if (syncing || sharedSyncing) return
+    let groupedKeys: GatewayKeyPayload[]
+    try {
+      groupedKeys = groupKeys(keys)
+    } catch (err) {
+      setSharedResult({ ok: false, error: `Failed to prepare keys: ${err instanceof Error ? err.message : String(err)}` })
+      return
+    }
+    if (groupedKeys.length === 0) {
+      setSharedResult({ ok: false, error: "No local keys to share — add and test keys first, then share." })
+      return
+    }
+    setSharedSyncing(true)
+    setSharedResult(null)
+    try {
+      const res = await fetch("/api/admin/gateway-shared/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keys: groupedKeys }),
+      })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; synced?: number; error?: string }
+      if (!res.ok || !data.ok) {
+        throw new Error(
+          res.status === 401
+            ? "Belum login admin — login dulu di /admin/gateway-shared, lalu tekan lagi tombol ini."
+            : (data.error ?? `server error ${res.status}`),
+        )
+      }
+      setSharedResult({ ok: true, count: data.synced ?? groupedKeys.length })
+      onSynced?.()
+      await refreshGatewayStats()
+    } catch (err) {
+      setSharedResult({ ok: false, error: err instanceof Error ? err.message : String(err) })
+    } finally {
+      setSharedSyncing(false)
+    }
+  }, [keys, syncing, sharedSyncing, onSynced, refreshGatewayStats])
+
   const origin   = typeof window !== "undefined" ? window.location.origin : ""
   const endpoint = `${origin}/api/v1/chat/completions`
   const grouped  = typeof window !== "undefined" ? groupKeys(keys) : []
@@ -533,6 +581,37 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
             ? `Sync ${grouped.length} key${grouped.length !== 1 ? "s" : ""} to Gateway`
             : "Sync to Gateway"}
       </button>
+
+      {/* Admin shared sync — full-feature tester input, shared destination */}
+      <div className="flex flex-col gap-2 rounded-md border border-border bg-secondary/20 p-3">
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          Admin: bagikan kunci di atas sebagai{" "}
+          <span className="font-semibold text-foreground">shared</span> ke semua user msk_
+          (fallback di belakang kunci mereka sendiri). Perlu login admin dulu di{" "}
+          <a href="/admin/gateway-shared" className="text-primary/80 underline">panel admin</a> —
+          sesi itulah yang mengotentikasi; tidak ada token yang dikirim dari halaman ini.
+          Sync ini tidak menghapus kunci shared lain.
+        </p>
+        <button
+          onClick={handleSharedSync}
+          disabled={syncing || sharedSyncing}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-md bg-primary/10 border border-primary/25 hover:bg-primary/18 hover:border-primary/40 text-[11px] font-semibold text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        >
+          <SyncIcon spinning={sharedSyncing} />
+          {sharedSyncing
+            ? "Membagikan…"
+            : grouped.length > 0
+              ? `Bagikan ${grouped.length} kunci sebagai shared`
+              : "Bagikan sebagai shared"}
+        </button>
+        {sharedResult && (
+          <p className={`text-[10px] leading-relaxed ${sharedResult.ok ? "text-primary" : "text-destructive"}`}>
+            {sharedResult.ok
+              ? `✓ ${sharedResult.count} kunci dibagikan sebagai shared — aktif untuk semua user msk_ dalam ~30 detik.`
+              : sharedResult.error}
+          </p>
+        )}
+      </div>
 
       {/* Progress bar — visible only while syncing */}
       {syncing && progress && progress.total > 0 && (
