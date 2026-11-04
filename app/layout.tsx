@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'API Key Tester — Validate Any AI Key Instantly',
-  description: 'Free developer tool to test and validate API keys for 40+ AI providers. Get instant status, latency, quota, rate limits, model list, and cURL inspector. Keys never stored.',
+  description: 'Free developer tool to test and validate API keys for 129 AI providers. Get instant status, latency, quota, rate limits, model list, and cURL inspector. Keys never stored.',
   icons: {
     icon: [
       { url: '/icon.png', type: 'image/png' },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#121214',
+  themeColor: '#0e0f11',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

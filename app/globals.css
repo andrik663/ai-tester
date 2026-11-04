@@ -1,3 +1,8 @@
+/* Msaku Gateway design system — restrained developer tool, not a showcase page:
+   one near-black canvas, one panel grey, one sidebar grey, hairline borders.
+   Colour is reserved for status (success / error / info) — never for decoration,
+   no gradients, no glow, no animated tickers. Hierarchy comes from type size,
+   weight and spacing, the way a human product designer layers a real tool. */
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
@@ -63,10 +68,10 @@
      Warm graphite, deliberately flat. No glow, no texture — hierarchy
      comes from elevation steps of the same neutral, the way a designer
      layers greys, not from saturated tints. */
-  --background:         #121214;
+  --background:         #0e0f11;
   --foreground:         #e9e9eb;
 
-  --card:               #1a1a1d;
+  --card:               #151619;
   --card-foreground:    #e9e9eb;
   --popover:            #1e1e22;
   --popover-foreground: #e9e9eb;
@@ -79,13 +84,13 @@
   --primary-foreground: #131315;
 
   /* ── Secondary / muted surfaces ─────────────────────────────────── */
-  --secondary:           #232327;
+  --secondary:           #1d1e22;
   --secondary-foreground:#e9e9eb;
-  --muted:               #232327;
+  --muted:               #1d1e22;
   --muted-foreground:    #a3a3ac;
 
   /* Accent doubles as the hover surface; kept neutral on purpose. */
-  --accent:              #26262b;
+  --accent:              #222327;
   --accent-foreground:   #e9e9eb;
 
   /* ── Status (desaturated, readable on dark) ─────────────────────── */
@@ -113,14 +118,14 @@
 
   /* ── Radius ───────────────────────────────────────────────────────
      Tighter corners read as engineered, not inflated. */
-  --radius: 0.5rem;
+  --radius: 0.375rem;
 
   /* ── Sidebar — one step below the main canvas ───────────────────── */
-  --sidebar:                #0e0e10;
+  --sidebar:                #0a0b0d;
   --sidebar-foreground:     #e9e9eb;
   --sidebar-primary:        #ececee;
   --sidebar-primary-foreground: #131315;
-  --sidebar-accent:         #232327;
+  --sidebar-accent:         #1d1e22;
   --sidebar-accent-foreground: #e9e9eb;
   --sidebar-border:         oklch(1 0 0 / 8%);
   --sidebar-ring:           #6f6f7a;
