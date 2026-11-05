@@ -239,6 +239,37 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     extractReply: openaiReply,
   },
 
+  // ── UnliRouter (OpenAI-compatible, MeongTopup) ───────────────────────────
+  // Sumber: https://unli.meongtopup.my.id/docs — base /v1, semua model ID
+  // diawali unli/. Daftar statis = daftar live GET /api/models (publik,
+  // tanpa auth, 11 model, diverifikasi 2026-11-05); /v1/models butuh kunci
+  // valid (401 tanpa kunci / kunci tidak valid) — parser default
+  // OpenAI-style { data: [{ id }] } dipakai.
+  unlirouter: {
+    id: "unlirouter",
+    modelsEndpoint: "https://unli.meongtopup.my.id/v1/models",
+    models: [
+      "unli/DeepSeek-V4-Flash-0731",
+      "unli/GLM-5.3-Flash",
+      "unli/MiniMax-M2.7",
+      "unli/deepseek-v4-flash",
+      "unli/deepseek-v4.1-flash",
+      "unli/gpt-5.6-luna",
+      "unli/mimo-v2.5",
+      "unli/mimo-v2.6-flash",
+      "unli/minimax-m2.7",
+      "unli/minimax-m3",
+      "unli/minimax-m3.1",
+    ],
+    endpoint: "https://unli.meongtopup.my.id/v1/chat/completions",
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: { "Content-Type": "application/json" },
+    buildBody: (model, maxTokens = BATCH_MAX_TOKENS) => ({
+      model, max_tokens: maxTokens, messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: openaiReply,
+  },
+
   // ── ZRO MoonMath (OpenAI-compatible) ─────────────────────────────────────
   zro: {
     id: "zro",
