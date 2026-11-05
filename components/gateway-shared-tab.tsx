@@ -76,15 +76,61 @@ export default function GatewaySharedTab() {
     }
   }
 
+  // Admin login lives HERE now, inside the dashboard: the separate
+  // /admin/gateway-shared dashboard page was deleted on purpose — the
+  // tester dashboard itself is the admin panel. This form posts the shared
+  // admin token once to the login API route (which stays, it is an API,
+  // not a page) and reloads into the list on success.
+  const [password, setPassword] = useState("")
+  const [loginError, setLoginError] = useState("")
+  const [loggingIn, setLoggingIn] = useState(false)
+
+  async function login(e: React.FormEvent) {
+    e.preventDefault()
+    setLoginError("")
+    setLoggingIn(true)
+    try {
+      const res = await fetch("/api/admin/gateway-shared/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      })
+      const data = await res.json().catch(() => ({})) as { error?: string }
+      if (!res.ok) throw new Error(data.error ?? `Login gagal (${res.status})`)
+      window.location.reload()
+    } catch (err) {
+      setLoginError(err instanceof Error ? err.message : "Login gagal")
+    } finally {
+      setLoggingIn(false)
+    }
+  }
+
   if (error === "unauthorized") {
     return (
       <div className="flex flex-col gap-2 p-4">
         <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Admin — Kunci Shared</h3>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Tab ini hanya untuk admin. Login dulu di{" "}
-          <a href="/admin/gateway-shared" className="text-primary/80 underline">panel admin</a>{" "}
-          (sesi 24 jam), lalu kembali ke tab ini — daftar kunci shared akan tampil di sini.
+          Tab ini hanya untuk admin. Login dengan token admin shared di bawah ini (sesi 24 jam) —
+          token dikirim sekali ke route login dan tidak pernah disimpan di halaman ini.
         </p>
+        <form onSubmit={login} className="flex flex-col gap-2 max-w-sm">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Token admin shared"
+            autoComplete="current-password"
+            className="px-3 py-2 rounded-md border border-border bg-secondary/20 text-[11px] text-foreground focus:outline-none"
+          />
+          {loginError && <p className="text-[11px] text-destructive">{loginError}</p>}
+          <button
+            type="submit"
+            disabled={loggingIn || !password}
+            className="self-start px-3 py-2 rounded-md bg-primary/10 border border-primary/25 text-[11px] font-semibold text-primary disabled:opacity-40 transition-all"
+          >
+            {loggingIn ? "Memeriksa…" : "Masuk sebagai admin"}
+          </button>
+        </form>
       </div>
     )
   }
