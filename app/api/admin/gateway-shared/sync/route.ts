@@ -19,7 +19,7 @@
  *   Shared keys not present in this payload are left untouched, so syncing
  *   one new Claude key cannot wipe other shared keys.
  * - Without a valid admin session the route answers 401; the UI then
- *   points the admin to log in once at /admin/gateway-shared.
+ *   points the admin to log in once in the dashboard Admin tab.
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   const cookie = req.cookies.get(GATEWAY_ADMIN_COOKIE)?.value
   if (!(await verifyAdminSession(secret, cookie))) {
     return NextResponse.json(
-      { error: "Belum login admin. Login dulu di /admin/gateway-shared, lalu ulangi sync shared ini." },
+      { error: "Belum login admin. Login dulu di tab Admin dashboard, lalu ulangi sync shared ini." },
       { status: 401 },
     )
   }
