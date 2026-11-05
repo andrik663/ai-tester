@@ -2,7 +2,6 @@ import { neon } from "@neondatabase/serverless"
 import { drizzle } from "drizzle-orm/neon-http"
 import * as apiKeySchema from "./api-key-schema"
 import * as lockedKeysSchema from "./locked-keys-schema"
-import * as userSessionsSchema from "./user-sessions-schema"
 import * as gatewaySchema from "./gateway-schema"
 import * as gatewayLogsSchema from "./gateway-logs-schema"
 import * as commentsSchema from "./comments-schema"
@@ -32,7 +31,6 @@ export const pool = {
 const schema = {
   ...apiKeySchema,
   ...lockedKeysSchema,
-  ...userSessionsSchema,
   ...gatewaySchema,
   ...gatewayLogsSchema,
   ...commentsSchema,
