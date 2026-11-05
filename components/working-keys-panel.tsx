@@ -10,7 +10,6 @@ import {
 } from "@/lib/working-keys-store"
 import { buildProviderHeaders, resolveProviderEndpoint } from "@/lib/providers"
 import ExportApiPanel from "@/components/export-api-panel"
-import UserSessionPanel, { type WorkingKeyForSession } from "@/components/user-session-panel"
 import { inferCapabilities, loadScreenerResults, maskApiKey, type CapabilityTag, type ScreenerModelResult } from "@/lib/model-screener"
 
 // ── Types for locked keys (DB-backed) ────────────────────────────────────────
@@ -636,17 +635,7 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
   const [modelSearch, setModelSearch]       = useState<string>("")
   const [confirmClear, setConfirmClear]     = useState(false)
   const [lockedTick, setLockedTick]         = useState(0)
-  const [sessionToken, setSessionToken]     = useState<string | null>(null)
   const [screenerResults, setScreenerResults] = useState<ScreenerModelResult[]>([])
-
-  const sessionKeys: WorkingKeyForSession[] = records.map((r) => ({
-    providerId:   r.providerId,
-    providerName: r.providerName,
-    modelId:      r.modelId,
-    apiKeyMasked: "••••" + r.apiKey.slice(-4),
-    isWorking:    true,
-    latencyMs:    r.latencyMs,
-  }))
 
   const reload = useCallback(() => {
     setRecords(loadWorkingKeys().sort((a, b) => b.savedAt - a.savedAt))
@@ -934,11 +923,6 @@ export default function WorkingKeysPanel({ onUseKey: _onUseKey, refreshTick, onG
       </p>
 
       <LockedKeysSection refreshTick={lockedTick} />
-
-      <UserSessionPanel
-        pendingKeys={sessionToken ? sessionKeys : undefined}
-        onSessionToken={setSessionToken}
-      />
 
       <ExportApiPanel keys={records} onSynced={onGatewaySync} />
     </div>
