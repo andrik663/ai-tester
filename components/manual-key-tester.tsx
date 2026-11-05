@@ -93,6 +93,7 @@ function detectProviderFromKey(key: string): string | null {
   if (k.startsWith("esec_"))           return "anyscale"       // Anyscale
   if (k.startsWith("neets-"))          return "neets"          // Neets AI
   if (k.startsWith("sk-nry-"))         return "bynara"         // Bynara (NaraRouter)
+  if (k.startsWith("sk-unli-"))        return "unlirouter"     // UnliRouter — sk-unli- keys
 
   // ── OpenAI — project keys (most specific first) ───────────────────────────
   if (k.startsWith("sk-proj-"))         return "openai"        // OpenAI project key
@@ -3005,6 +3006,39 @@ const PRESETS: ProviderPreset[] = [
     createKeyUrl: "https://ai.meongtopup.my.id/docs/",
     color: "text-warning bg-warning/10 border-warning/30",
     note: "OpenAI-compatible (base /v1); semua model ID diawali meng/. Docs tidak mempublikasikan harga per token, jadi kolom harga dikosongkan.",
+  },
+  {
+    id: "unlirouter",
+    name: "UnliRouter",
+    country: "ID",
+    endpoint: "https://unli.meongtopup.my.id/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer {{API_KEY}}",
+      "Content-Type": "application/json",
+    },
+    bodyTemplate: JSON.stringify({
+      model: "unli/deepseek-v4-flash",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: "{{PROMPT}}" }],
+    }, null, 2),
+    models: [
+      { id: "unli/DeepSeek-V4-Flash-0731", label: "DeepSeek V4 Flash 0731", tag: "DeepSeek", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/GLM-5.3-Flash", label: "GLM 5.3 Flash", tag: "GLM", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/MiniMax-M2.7", label: "MiniMax M2.7", tag: "MiniMax", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/deepseek-v4-flash", label: "DeepSeek V4 Flash", tag: "DeepSeek", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/deepseek-v4.1-flash", label: "DeepSeek V4.1 Flash", tag: "DeepSeek", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/gpt-5.6-luna", label: "GPT-5.6 Luna", tag: "GPT", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/mimo-v2.5", label: "Mimo V2.5", tag: "Mimo", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/mimo-v2.6-flash", label: "Mimo V2.6 Flash", tag: "Mimo", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/minimax-m2.7", label: "MiniMax M2.7", tag: "MiniMax", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/minimax-m3", label: "MiniMax M3", tag: "MiniMax", ctx: "–", in: "", out: "", cache: "" },
+      { id: "unli/minimax-m3.1", label: "MiniMax M3.1", tag: "MiniMax", ctx: "–", in: "", out: "", cache: "" },
+    ],
+    docsUrl: "https://unli.meongtopup.my.id/docs",
+    createKeyUrl: "https://unli.meongtopup.my.id/docs",
+    color: "text-warning bg-warning/10 border-warning/30",
+    note: "OpenAI-compatible (base /v1); semua model ID diawali unli/. Kunci berformat sk-unli-; cek masa aktif & kuota di unli.meongtopup.my.id/check. Docs tidak mempublikasikan harga per token, jadi kolom harga dikosongkan.",
   },
   {
     id: "custom",
