@@ -210,8 +210,11 @@ export async function POST(req: NextRequest) {
 
   // ── DB writes — wrapped so ANY failure returns JSON (never an HTML 500) ──────
   try {
-    // UPSERT this chunk (stamped with the caller's owner)
-    await upsertGatewayKeyChunk(sanitized, ownerUserId)
+    // UPSERT this chunk (stamped with the caller's owner). Keys that
+    // collide with a legacy/shared/other-owned row are reported in
+    // `skipped` instead of failing the whole chunk (see
+    // upsertGatewayKeyChunk).
+    const { skipped } = await upsertGatewayKeyChunk(sanitized, ownerUserId)
 
     let pruned = 0
 
@@ -234,7 +237,8 @@ export async function POST(req: NextRequest) {
       ok: true,
       chunkIndex,
       totalChunks,
-      synced:    sanitized.length,
+      synced:    sanitized.length - skipped.length,
+      ...(skipped.length > 0 ? { skipped } : {}),
       providers: providerCount,
       models:    modelCount,
       pruned,
