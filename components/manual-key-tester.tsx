@@ -11,7 +11,6 @@ import WorkingKeysPanel from "@/components/working-keys-panel"
 import SkillsPanel, { type ActiveSkillConfig } from "@/components/skills-panel"
 import { loadWorkingKeys } from "@/lib/working-keys-store"
 import MultiKeyBatch from "@/components/multi-key-batch"
-import { GatewaySharedTabContent } from "@/components/gateway-shared-admin"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
 import { explainApiError } from "@/lib/explain-api-error"
@@ -3427,7 +3426,7 @@ const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "msaku") ?? 
 // This dashboard (all providers, all tabs) is only ever rendered behind the
 // dev-login gate in app/page.tsx — public visitors get the standalone
 // PublicCodePreview component instead, so no per-preset gating is needed here.
-export default function ManualKeyTester({ initialTab }: { initialTab?: "unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills" | "admin-shared" } = {}) {
+export default function ManualKeyTester({ initialTab }: { initialTab?: "unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills" } = {}) {
   const visiblePresets = PRESETS_DEDUPED
   const visibleComparePresets = PRESETS.filter((p) => p.id !== "custom")
 
@@ -3474,7 +3473,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
     setActiveEnv(env)
   }, [])
   // Tab state
-  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills" | "admin-shared">(initialTab ?? "unified")
+  const [activeTab, setActiveTab] = useState<"unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills">(initialTab ?? "unified")
   const [activeSkillConfigs, setActiveSkillConfigs] = useState<ActiveSkillConfig[]>([])
   // Pinned providers — persisted in localStorage
   const [pinnedProviders, setPinnedProviders] = useState<string[]>([])
@@ -4424,8 +4423,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                 { id: "skills" as const,        label: activeSkillConfigs.length > 0 ? `Skills (${activeSkillConfigs.length})` : "Skills" },
                 { id: "saved" as const,         label: "Saved" },
                 { id: "leaderboard" as const,   label: "Rank"  },
-                { id: "admin-shared" as const,  label: "Shared" },
-              ]).map((t) => (
+                              ]).map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as typeof activeTab)}
@@ -4498,8 +4496,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                 { id: "skills" as const,        label: activeSkillConfigs.length > 0 ? `Skills\u00a0${activeSkillConfigs.length}` : "Skills" },
                 { id: "saved" as const,         label: "Saved" },
                 { id: "leaderboard" as const,   label: "Rank"  },
-                { id: "admin-shared" as const,  label: "Shared" },
-              ]).map((t) => (
+                              ]).map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as typeof activeTab)}
@@ -5651,13 +5648,6 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
         {activeTab === "skills" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
             <SkillsPanel onActiveSkillChange={setActiveSkillConfigs} />
-          </div>
-        )}
-
-        {/* ── ADMIN SHARED TAB — kunci shared untuk semua user msk_ ────────── */}
-        {activeTab === "admin-shared" && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <GatewaySharedTabContent />
           </div>
         )}
 

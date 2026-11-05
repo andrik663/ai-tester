@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { type WorkingKeyRecord } from "@/lib/working-keys-store"
 import GatewayLogsPanel from "@/components/gateway-logs-panel"
+import GatewaySharedTab from "@/components/gateway-shared-tab"
 
 const CHUNK_SIZE = 8 // keys per request — keeps payloads small and avoids timeouts
 
@@ -137,7 +138,7 @@ function CopyIcon() {
 
 // ── Agent configs ─────────────────────────────────────────────────────────────
 
-type AgentTab = "sync" | "logs" | "agents"
+type AgentTab = "sync" | "logs" | "agents" | "admin"
 
 function AgentConfig({ origin }: { origin: string }) {
   const endpoint = `${origin}/api/v1/chat/completions`
@@ -456,7 +457,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
   // Posts the grouped tester keys to the session-gated admin sync route,
   // which stores them as shared (owner NULL, is_shared TRUE) WITHOUT pruning
   // other shared rows. No token is sent from this page: auth is the panel
-  // admin session cookie (login once at /admin/gateway-shared). A 401 here
+  // admin session cookie (login once in the dashboard Admin tab). A 401 here
   // means "not logged in as admin", not "no msk_ key" — the two syncs have
   // different auth on purpose.
   const handleSharedSync = useCallback(async () => {
@@ -484,7 +485,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
       if (!res.ok || !data.ok) {
         throw new Error(
           res.status === 401
-            ? "Belum login admin — login dulu di /admin/gateway-shared, lalu tekan lagi tombol ini."
+            ? "Belum login admin — login dulu di tab Admin di bawah, lalu tekan lagi tombol ini."
             : (data.error ?? `server error ${res.status}`),
         )
       }
@@ -516,6 +517,7 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
           { id: "sync",   label: "Sync"   },
           { id: "logs",   label: "Logs"   },
           { id: "agents", label: "Agents" },
+          { id: "admin",  label: "Admin"  },
         ] as { id: AgentTab; label: string }[]).map((t) => (
           <button
             key={t.id}
@@ -541,6 +543,11 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
       {/* Agents tab */}
       {activeTab === "agents" && (
         <AgentConfig origin={origin} />
+      )}
+
+      {/* Admin tab — shared keys, inside the dashboard */}
+      {activeTab === "admin" && (
+        <GatewaySharedTab />
       )}
 
       {/* Sync tab */}
@@ -587,9 +594,9 @@ export default function ExportApiPanel({ keys, onSynced }: Props) {
         <p className="text-[10px] text-muted-foreground leading-relaxed">
           Admin: bagikan kunci di atas sebagai{" "}
           <span className="font-semibold text-foreground">shared</span> ke semua user msk_
-          (fallback di belakang kunci mereka sendiri). Perlu login admin dulu di{" "}
-          <a href="/admin/gateway-shared" className="text-primary/80 underline">panel admin</a> —
-          sesi itulah yang mengotentikasi; tidak ada token yang dikirim dari halaman ini.
+          (fallback di belakang kunci mereka sendiri). Perlu login admin dulu di tab{" "}
+          <span className="font-semibold text-foreground">Admin</span> di bawah — sesi itulah
+          yang mengotentikasi; tidak ada token yang dikirim dari halaman ini.
           Sync ini tidak menghapus kunci shared lain.
         </p>
         <button
