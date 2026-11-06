@@ -3804,7 +3804,12 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
     let cancelled = false
     const fetchModels = async () => {
       try {
-        const res = await fetch("/api/v1/models")
+        const storedMsk =
+          typeof window !== "undefined" ? localStorage.getItem("msaku_gateway_user_api_key")?.trim() : ""
+        const res = await fetch("/api/v1/models", {
+          cache: "no-store",
+          headers: storedMsk ? { Authorization: `Bearer ${storedMsk}` } : undefined,
+        })
         if (!res.ok || cancelled) return
         const data = await res.json() as { data?: Array<{ id: string; owned_by?: string }> }
         if (cancelled) return
@@ -3815,7 +3820,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
           setChatModel("")
           return
         }
-        setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: "", latencyMs: -1 })))
+        setWorkingModels(models.map((m) => ({ modelId: m.id, apiKey: storedMsk || "", latencyMs: -1 })))
         setChatModel((prev) => prev || models[0].id) // keep existing selection if any
       } catch {
         // Network error — leave empty
@@ -5456,37 +5461,6 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
 
             {/* Chat input */}
             <div className="border-t border-border px-3 sm:px-4 py-3 flex-shrink-0 bg-card">
-
-              {/* Inline API key input — hidden for Msaku, shown for others when no saved key exists */}
-              {selectedPreset.id !== "msaku" && !apiKey.trim() && workingModels.length === 0 && (
-                <div className="flex items-center gap-2 px-2 py-1.5 mb-2 rounded-md border border-border bg-secondary/40">
-                  <div className="relative flex-1 min-w-0">
-                    <input
-                      type={showKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => handleApiKeyChange(e.target.value)}
-                      placeholder="Paste API key to start..."
-                      className="w-full rounded-md border border-border bg-background text-foreground text-[13px] font-mono px-3 py-2.5 pr-8 focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
-                    />
-                    <button
-                      onClick={() => setShowKey((v) => !v)}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground transition-colors"
-                    >
-                      <EyeIcon show={showKey} />
-                    </button>
-                  </div>
-                  {selectedPreset.createKeyUrl && (
-                    <a
-                      href={selectedPreset.createKeyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-shrink-0 text-xs font-medium text-foreground/70 hover:text-foreground transition-colors whitespace-nowrap"
-                    >
-                      Get key →
-                    </a>
-                  )}
-                </div>
-              )}
 
               {/* Textarea + send button */}
               <div className="flex gap-2 items-end">

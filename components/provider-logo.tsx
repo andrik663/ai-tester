@@ -163,6 +163,17 @@ export const PROVIDER_DOMAIN: Record<string, string> = {
 // ── Crisp inline SVG brand marks for top AI providers ─────────────────────────
 function BrandSvgMark({ id, className }: { id: string; className: string }) {
   switch (id) {
+    case "dahono":
+      return (
+        <svg viewBox="0 0 28 28" className={`${className} flex-shrink-0 rounded-md`} role="img" aria-label="Dahono">
+          <rect width="28" height="28" rx="6.5" fill="#7c3aed" />
+          <path
+            d="M8 7.5h5.8a6.5 6.5 0 0 1 0 13H8v-13zm3.1 2.7v7.6h2.7a3.8 3.8 0 0 0 0-7.6h-2.7z"
+            fill="#ffffff"
+          />
+          <circle cx="19.5" cy="14" r="1.8" fill="#c4b5fd" />
+        </svg>
+      )
     case "msaku":
     case "miuclaw":
       return (
@@ -351,6 +362,7 @@ function BrandSvgMark({ id, className }: { id: string; className: string }) {
 }
 
 const BUILTIN_SVG_IDS = new Set([
+  "dahono",
   "msaku",
   "miuclaw",
   "openai",
