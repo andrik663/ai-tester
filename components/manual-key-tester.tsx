@@ -24,6 +24,7 @@ import LeaderboardPanel from "@/components/leaderboard-panel"
 import CodePreviewTab from "@/components/code-preview-tab"
 import VirtualStudioHeader from "@/components/virtual-studio-header"
 import VirtualN8nCanvas from "@/components/virtual-n8n-canvas"
+import ProviderLogo from "@/components/provider-logo"
 import { pushHistory, type HistoryEntry } from "@/lib/history"
 import { getActiveEnvironment, interpolate, type Environment } from "@/lib/environments"
 import type { SavedRequest } from "@/lib/collections"
@@ -3222,7 +3223,7 @@ function providerColor(name: string): string {
   return colors[Math.abs(h) % colors.length]
 }
 
-function ProviderLogo({
+function _UnusedLocalProviderLogo({
   providerId,
   providerName = "",
   className = "w-4 h-4",
@@ -3579,6 +3580,8 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
   const [showLog, setShowLog] = useState(false)
   const [showRawResponse, setShowRawResponse] = useState(false)
   const [showBodyEditor, setShowBodyEditor] = useState(false)
+  const [showClassicEndpointDetails, setShowClassicEndpointDetails] = useState(false)
+  const [showClassicQuickBatch, setShowClassicQuickBatch] = useState(false)
   const [batchView, setBatchView] = useState<"config" | "run">("run")
   const [copiedCurl, setCopiedCurl] = useState(false)
   const [copiedCurlFull, setCopiedCurlFull] = useState(false)
@@ -4430,6 +4433,8 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
             country: p.country,
             endpoint: p.endpoint,
             createKeyUrl: p.createKeyUrl,
+            docsUrl: p.docsUrl,
+            method: p.method,
           }))}
           selectedProviderId={selectedPreset.id}
           selectedProviderName={selectedPreset.name}
@@ -4802,71 +4807,267 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
 
           {/* Sub-tab row — only shown inside Unified tab */}
           {activeTab === "unified" && (
-            <div className="flex items-center gap-0.5 px-2 md:px-3 h-9 bg-sidebar/60 border-t border-border/40 overflow-x-auto scrollbar-none">
-              {([
-                {
-                  id: "chat" as const,
-                  label: "Chat",
-                  icon: (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: "vision" as const,
-                  label: "Vision",
-                  icon: <ImageIcon />,
-                },
-                {
-                  id: "ocr" as const,
-                  label: "OCR",
-                  icon: <ScanIcon />,
-                },
-                {
-                  id: "image-gen" as const,
-                  label: "Image",
-                  icon: <PhotoIcon />,
-                },
-                {
-                  id: "video-gen" as const,
-                  label: "Video",
-                  icon: <VideoTabIcon />,
-                },
-                {
-                  id: "compare" as const,
-                  label: "Compare",
-                  icon: (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-                      <rect x="3" y="3" width="7" height="18" rx="1" />
-                      <rect x="14" y="3" width="7" height="18" rx="1" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: "code" as const,
-                  label: "Code",
-                  icon: (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
-                      <polyline points="16 18 22 12 16 6" />
-                      <polyline points="8 6 2 12 8 18" />
-                    </svg>
-                  ),
-                },
-              ]).map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setUnifiedSubTab(t.id)}
-                  className={`flex items-center gap-1 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
-                    unifiedSubTab === t.id
-                      ? "bg-primary/15 text-primary border border-primary/30"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  {t.icon}
-                  {t.label}
-                </button>
-              ))}
+            <div className="flex flex-col border-t border-border/40 bg-sidebar/50">
+              <div className="flex items-center justify-between gap-2 px-2 md:px-3 h-9 overflow-x-auto scrollbar-none">
+                <div className="flex items-center gap-0.5">
+                  {([
+                    {
+                      id: "chat" as const,
+                      label: "Chat",
+                      icon: (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      id: "vision" as const,
+                      label: "Vision",
+                      icon: <ImageIcon />,
+                    },
+                    {
+                      id: "ocr" as const,
+                      label: "OCR",
+                      icon: <ScanIcon />,
+                    },
+                    {
+                      id: "image-gen" as const,
+                      label: "Image",
+                      icon: <PhotoIcon />,
+                    },
+                    {
+                      id: "video-gen" as const,
+                      label: "Video",
+                      icon: <VideoTabIcon />,
+                    },
+                    {
+                      id: "compare" as const,
+                      label: "Compare",
+                      icon: (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                          <rect x="3" y="3" width="7" height="18" rx="1" />
+                          <rect x="14" y="3" width="7" height="18" rx="1" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      id: "code" as const,
+                      label: "Code",
+                      icon: (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                          <polyline points="16 18 22 12 16 6" />
+                          <polyline points="8 6 2 12 8 18" />
+                        </svg>
+                      ),
+                    },
+                  ]).map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setUnifiedSubTab(t.id)}
+                      className={`flex items-center gap-1 px-2.5 h-7 rounded text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                        unifiedSubTab === t.id
+                          ? "bg-primary/15 text-primary border border-primary/30"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                      }`}
+                    >
+                      {t.icon}
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Quick action buttons right on the sub-tab bar */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowClassicQuickBatch((v) => !v)
+                      if (!showClassicQuickBatch) setShowClassicEndpointDetails(false)
+                    }}
+                    className={`flex items-center gap-1 px-2.5 h-7 rounded text-[11px] font-semibold border transition-colors ${
+                      showClassicQuickBatch
+                        ? "bg-success/15 text-success border-success/40"
+                        : "bg-background text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                    title="Uji semua model untuk provider ini sekaligus"
+                  >
+                    <span>⚡ Batch Test ({selectedPreset.name})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowClassicEndpointDetails((v) => !v)
+                      if (!showClassicEndpointDetails) setShowClassicQuickBatch(false)
+                    }}
+                    className={`flex items-center gap-1 px-2.5 h-7 rounded text-[11px] font-medium border transition-colors ${
+                      showClassicEndpointDetails
+                        ? "bg-primary/15 text-primary border-primary/40"
+                        : "bg-background text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    <span>Endpoint &amp; Details</span>
+                    <ChevronIcon open={showClassicEndpointDetails} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Clean Unified API Key + Endpoint Bar (Always accessible in Classic Mode) */}
+              <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-t border-border/40 bg-card/70">
+                {/* Method + Endpoint URL */}
+                <div className="flex items-center gap-1.5 flex-1 min-w-[240px]">
+                  <select
+                    value={method}
+                    onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "DELETE")}
+                    aria-label="HTTP Method"
+                    className="h-8 rounded border border-border bg-background px-2 font-mono text-[11px] font-semibold text-success focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    {["POST", "GET", "PUT", "DELETE"].map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="url"
+                    value={endpoint}
+                    onChange={(e) => setEndpoint(e.target.value)}
+                    placeholder="https://api.example.com/v1/chat/completions"
+                    aria-label="Endpoint URL"
+                    className="h-8 flex-1 min-w-0 rounded border border-border bg-background px-2.5 font-mono text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+
+                {/* API Key Input right next to Endpoint */}
+                {selectedPreset.id !== "msaku" && (
+                  <div className="flex items-center gap-1.5 flex-1 min-w-[220px]">
+                    <div className="relative flex-1 min-w-0">
+                      <input
+                        type={showKey ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => handleApiKeyChange(e.target.value)}
+                        placeholder={`API Key ${selectedPreset.name}...`}
+                        aria-label="API Key"
+                        className="h-8 w-full rounded border border-border bg-background pl-2.5 pr-7 font-mono text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowKey((v) => !v)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground"
+                        title={showKey ? "Sembunyikan Key" : "Tampilkan Key"}
+                      >
+                        <EyeIcon show={showKey} />
+                      </button>
+                    </div>
+                    {selectedPreset.createKeyUrl && (
+                      <a
+                        href={selectedPreset.createKeyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="h-8 inline-flex items-center px-2.5 rounded border border-border bg-secondary/50 hover:bg-secondary text-[11px] font-medium text-foreground whitespace-nowrap transition-colors"
+                      >
+                        Get Key ↗
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Collapsible Quick Single-Key Batch Panel */}
+              {showClassicQuickBatch && (
+                <div className="border-t border-border/60 bg-background/95 px-4 py-3 max-h-80 overflow-y-auto">
+                  <div className="max-w-3xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-xs font-semibold text-foreground">
+                          Batch Test Semua Model — {selectedPreset.name}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Menguji seluruh model {selectedPreset.name} menggunakan API key di atas dan otomatis menyimpan yang aktif.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowClassicQuickBatch(false)}
+                        className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-border"
+                      >
+                        Tutup
+                      </button>
+                    </div>
+                    <ProviderBatchTest
+                      providerId={selectedPreset.id}
+                      providerName={selectedPreset.name}
+                      apiKey={apiKey}
+                      onSaved={() => setWorkingKeysTick((t) => t + 1)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Endpoint Details (Headers, System Prompt, JSON Body Template, Key Info) */}
+              {showClassicEndpointDetails && (
+                <div className="border-t border-border/60 bg-background/95 px-4 py-3 max-h-96 overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl">
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-semibold text-foreground">Request Headers</label>
+                          <span className="text-[10px] font-mono text-muted-foreground">
+                            {"{{API_KEY}}"} otomatis diganti
+                          </span>
+                        </div>
+                        <HeaderEditor rows={headerRows} onChange={setHeaderRows} />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-foreground block mb-1">
+                          System Prompt (Opsional)
+                        </label>
+                        <textarea
+                          value={systemPrompt}
+                          onChange={(e) => setSystemPrompt(e.target.value)}
+                          rows={2}
+                          placeholder="You are a helpful assistant..."
+                          className="w-full rounded border border-border bg-card text-foreground text-[11px] font-mono px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-semibold text-foreground">
+                            JSON Body Template
+                          </label>
+                          {selectedPreset.docsUrl && (
+                            <a
+                              href={selectedPreset.docsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-info hover:underline"
+                            >
+                              Dokumentasi Resmi ↗
+                            </a>
+                          )}
+                        </div>
+                        <textarea
+                          value={bodyTemplate}
+                          onChange={(e) => setBodyTemplate(e.target.value)}
+                          rows={5}
+                          spellCheck={false}
+                          className="w-full rounded border border-border bg-card text-foreground text-[11px] font-mono px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-ring"
+                        />
+                      </div>
+
+                      {apiKey.trim().length >= 8 && (
+                        <KeyInfoPanel
+                          provider={selectedPreset.id}
+                          apiKey={apiKey}
+                          responseHeaders={lastResponseHeaders}
+                          fetchTick={keyInfoTick}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -5091,11 +5292,29 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                         HTTP {result.status} �� {result.ok ? "Success" : "Failed"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       {result.durationMs !== undefined && (
                         <span className="text-[11px] font-mono text-muted-foreground">
                           <span className="text-foreground font-semibold">{result.durationMs}</span>ms
                         </span>
+                      )}
+                      {result.responseBody && (
+                        <button
+                          type="button"
+                          onClick={() => setShowRawResponse((v) => !v)}
+                          className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-border/50 bg-card/40 hover:bg-secondary transition-colors"
+                        >
+                          {showRawResponse ? "Hide JSON" : "Raw JSON"}
+                        </button>
+                      )}
+                      {result.logs && result.logs.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowLog((v) => !v)}
+                          className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded border border-border/50 bg-card/40 hover:bg-secondary transition-colors"
+                        >
+                          {showLog ? "Hide Logs" : `Logs (${result.logs.length})`}
+                        </button>
                       )}
                       {result.curlFull && (
                         <button
@@ -5108,6 +5327,20 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                       )}
                     </div>
                   </div>
+                  {showRawResponse && result.responseBody && (
+                    <pre className="max-h-56 overflow-y-auto px-4 py-2.5 text-[10px] font-mono text-muted-foreground bg-background/80 border-b border-border/40 whitespace-pre-wrap break-all">
+                      {result.responseBody}
+                    </pre>
+                  )}
+                  {showLog && result.logs && result.logs.length > 0 && (
+                    <div className="max-h-48 overflow-y-auto px-4 py-2 text-[10px] font-mono bg-background/80 border-b border-border/40 space-y-0.5">
+                      {result.logs.map((l, idx) => (
+                        <div key={idx} className={LOG_STYLES[l.level]}>
+                          {LOG_PREFIX[l.level]}{l.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {/* Error explanation */}
                   {!result.ok && (() => {
                     const exp = explainApiError(result.status, result.responseBody ?? result.statusText)
