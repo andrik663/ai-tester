@@ -14,9 +14,11 @@ const SECTIONS = [
   { id: "models",          label: "List Models" },
   { id: "chat",            label: "Chat Completions" },
   { id: "streaming",       label: "Streaming" },
+  { id: "rate-limits",     label: "Rate Limits" },
   { id: "chat-flow",       label: "Chat UI Flow" },
   { id: "push",            label: "Sync Keys (Push)" },
   { id: "errors",          label: "Error Codes" },
+  { id: "cli",             label: "NaraCLI → MsakuCLI" },
   { id: "sdks",            label: "SDK Examples" },
 ] as const
 
@@ -602,6 +604,43 @@ export default function DocsPage() {
             </div>
           </section>
 
+          {/* Rate Limits ------------------------------------------------------ */}
+          <section id="rate-limits">
+            <h2 className="text-lg font-bold text-foreground mb-1">Rate Limits &amp; Quotas</h2>
+            <p className="text-[13px] text-muted-foreground mb-4 leading-relaxed">
+              Msaku Gateway applies layered limits: per API key, per provider, and a daily shared-token
+              budget for shared keys. Responses include <code className="text-primary/90 font-mono text-[12px]">X-Msaku-Provider</code> and{" "}
+              <code className="text-primary/90 font-mono text-[12px]">X-Msaku-Model</code> headers.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-4 mb-5">
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[12px] font-semibold text-foreground mb-1">Per API key (msk_...)</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">120 requests per minute per personal key. Applies to both streaming and non-streaming requests.</p>
+              </div>
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[12px] font-semibold text-foreground mb-1">Per provider</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">Each provider has its own concurrency limit (typically 10 concurrent requests). When a provider returns 429, the gateway automatically falls back to the next available key.</p>
+              </div>
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[12px] font-semibold text-foreground mb-1">Shared-key daily budget</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">1,000,000 tokens per day per msk_ user on shared keys (default, configurable via <code className="font-mono">SHARED_DAILY_TOKEN_BUDGET_PER_USER</code>). Private keys are never capped. Streaming usage is not counted.</p>
+              </div>
+              <div className="p-3.5 rounded-lg border border-border/40 bg-secondary/10">
+                <p className="text-[12px] font-semibold text-foreground mb-1">429 handling</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">A 429 from the gateway means either your key rate limit or the shared daily budget was hit. The error message tells you which one.</p>
+              </div>
+            </div>
+
+            <CodeBlock
+              title="Example 429 response"
+              language="json"
+              code={`{
+  "error": "Rate limit tercapai (120 req/menit). Tunggu sebentar lalu coba lagi."
+}`}
+            />
+          </section>
+
           {/* Push ------------------------------------------------------------ */}
           <section id="push">
             <h2 className="text-lg font-bold text-foreground mb-1">Sync Keys (Push)</h2>
@@ -693,6 +732,74 @@ export default function DocsPage() {
   "model": "gpt-5-ultra"
 }`}
               />
+            </div>
+          </section>
+
+          {/* CLI Tooling ---------------------------------------------------- */}
+          <section id="cli">
+            <h2 className="text-lg font-bold text-foreground mb-1">MsakuCLI — Official CLI</h2>
+            <p className="text-[13px] text-muted-foreground mb-4 leading-relaxed">
+              Command-line client untuk Msaku Gateway: login sekali, lalu chat, list models, atau stream
+              langsung dari terminal. Kompatibel dengan agent coding lain via base URL.
+            </p>
+
+            <div className="mb-5">
+              <CodeBlock title="Install" language="bash" code={`npm install -g @msaku/cli\n# atau tanpa install:\nnpx @msaku/cli --help`} />
+            </div>
+
+            <div className="mb-5">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quickstart</p>
+              <CodeBlock
+                title="3 langkah mulai"
+                language="bash"
+                code={`# 1. Simpan API key msaku.id kamu\nmsaku login --api-key msk_your_key_here\n\n# 2. Cek koneksi & kuota\nmsaku status\n\n# 3. Chat / stream\nmsaku chat "Explain edge computing in 3 bullets"\nmsaku stream --model claude-sonnet-4-5 "Write a haiku about APIs"`}
+              />
+            </div>
+
+            <div className="mb-5">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Semua perintah</p>
+              <div className="rounded-lg border border-border/40 overflow-hidden">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="border-b border-border/40 bg-secondary/30">
+                      <th className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Command</th>
+                      <th className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["msaku login --api-key <key>",  "Simpan kunci msk_... ke ~/.msaku/credentials (chmod 600)"],
+                      ["msaku status",                 "Cek base URL, status auth, jumlah model, dan tier kunci"],
+                      ["msaku models",                 "List semua model yang tersedia di gateway"],
+                      ["msaku chat \"...\"",            "Chat completion sekali jalan, print hasil lengkap"],
+                      ["msaku stream \"...\"",          "Stream token real-time ke terminal"],
+                      ["msaku logout",                 "Hapus kredensial tersimpan"],
+                    ].map(([cmd, desc], i) => (
+                      <tr key={cmd} className={`border-b border-border/20 last:border-0 ${i % 2 === 0 ? "bg-background/30" : "bg-secondary/10"}`}>
+                        <td className="px-3 py-2.5 font-mono text-primary/90 whitespace-nowrap">{cmd}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground">{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Integrasi dengan coding agent</p>
+              <CodeBlock
+                title="Environment variables"
+                language="bash"
+                code={`# Claude Code\nexport ANTHROPIC_BASE_URL="${BASE_URL}/v1"\nexport ANTHROPIC_API_KEY="msk_your_key_here"\n\n# OpenAI SDK / Cursor / Opencode\nexport OPENAI_BASE_URL="${BASE_URL}/v1"\nexport OPENAI_API_KEY="msk_your_key_here"`}
+              />
+            </div>
+
+            <div className="p-3.5 rounded-lg border border-primary/25 bg-primary/5">
+              <p className="text-[12px] text-foreground/90 leading-relaxed">
+                <strong>Tip:</strong> Semua perintah menerima <code className="font-mono text-primary">--model &lt;id&gt;</code> untuk
+                pin model tertentu, dan <code className="font-mono text-primary">--api-key</code> untuk override kredensial satu kali.
+                Tanpa <code className="font-mono text-primary">--model</code>, gateway memilih kunci tercepat yang tersedia secara otomatis.
+              </p>
             </div>
           </section>
 
