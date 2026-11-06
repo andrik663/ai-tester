@@ -432,9 +432,16 @@ export default function VirtualN8nCanvas({
     return `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`
   }
 
-  const storedMskSample =
-    (typeof window !== "undefined" && localStorage.getItem("msaku_gateway_user_api_key")?.trim()) ||
-    "msk_API_KEY_ANDA"
+  // Read the stored msk_ key in an effect (never during render) so SSR and
+  // client HTML match — reading localStorage during render causes a
+  // hydration mismatch when the visitor already has a key stored.
+  const [storedMskSample, setStoredMskSample] = useState("msk_API_KEY_ANDA")
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("msaku_gateway_user_api_key")?.trim()
+      if (stored) setStoredMskSample(stored)
+    } catch {}
+  }, [])
 
   return (
     <div className="flex flex-1 min-h-0 flex-col bg-[#060c16] text-slate-100 select-none overflow-hidden">

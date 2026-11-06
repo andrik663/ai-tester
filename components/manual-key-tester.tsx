@@ -22,6 +22,8 @@ import EnvSwitcher from "@/components/env-switcher"
 import ModelScreenerPanel from "@/components/model-screener-panel"
 import LeaderboardPanel from "@/components/leaderboard-panel"
 import CodePreviewTab from "@/components/code-preview-tab"
+import VirtualStudioHeader from "@/components/virtual-studio-header"
+import VirtualN8nCanvas from "@/components/virtual-n8n-canvas"
 import { pushHistory, type HistoryEntry } from "@/lib/history"
 import { getActiveEnvironment, interpolate, type Environment } from "@/lib/environments"
 import type { SavedRequest } from "@/lib/collections"
@@ -3584,6 +3586,20 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
   const [selectedDahonoModel, setSelectedDahonoModel] = useState("dahono/deepseek-v4-flash")
   const [configOpen, setConfigOpen] = useState(false)
   const [sidebarSearch, setSidebarSearch] = useState("")
+  // UI Mode: "virtual" (n8n-style drag & drop canvas) or "classic"
+  const [uiMode, setUiMode] = useState<"virtual" | "classic">("virtual")
+  useEffect(() => {
+    try {
+      const savedMode = localStorage.getItem("msaku_studio_ui_mode")
+      if (savedMode === "classic" || savedMode === "virtual") setUiMode(savedMode)
+    } catch {}
+  }, [])
+  function handleToggleUiMode(nextMode: "virtual" | "classic") {
+    setUiMode(nextMode)
+    try {
+      localStorage.setItem("msaku_studio_ui_mode", nextMode)
+    } catch {}
+  }
   // ── New feature state ────────────────────────────────────────────────────────
   // System prompt
   const [systemPrompt, setSystemPrompt]           = useState("")
