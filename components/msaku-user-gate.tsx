@@ -5,6 +5,33 @@ import { useEffect, useState, type ReactNode } from "react"
 // Kunci msk_ yang sama dipakai panel Keys tester untuk Sync (export-api-panel).
 const STORED_MSK_KEY = "msaku_gateway_user_api_key"
 
+// Brand provider yang tampil di marquee "Route Requests Across Top AI
+// Providers." di bawah kartu gerbang — sama seperti seksi di homepage
+// router.bynara.id. Hanya nama brand yang memang ada sebagai provider
+// di gateway ini (PRESETS di components/manual-key-tester.tsx); tampil
+// sebagai wordmark teks abu-abu, bukan logo resmi, supaya tidak ada
+// klaim afiliasi dan tidak perlu aset gambar per brand.
+const TOP_PROVIDER_BRANDS = [
+  "OpenAI",
+  "Claude",
+  "Gemini",
+  "DeepSeek",
+  "Meta AI",
+  "Mistral AI",
+  "Grok",
+  "Qwen",
+  "Groq",
+  "Together AI",
+  "OpenRouter",
+  "Cohere",
+  "Perplexity",
+  "Moonshot AI",
+  "GLM",
+  "Bynara",
+  "MeongTopup",
+  "UnliRouter",
+]
+
 /**
  * Gerbang Studio — khusus pengguna terdaftar msaku.id.
  *
@@ -120,14 +147,25 @@ export default function MsakuUserGate({ children }: { children: ReactNode }) {
         flex: 1,
         minHeight: 0,
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
         background: "#0e0f11",
         color: "#e4e4e7",
-        padding: 16,
+        padding: "48px 16px 64px",
         overflowY: "auto",
       }}
     >
+      <style>{`
+        @keyframes msaku-brand-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .msaku-brand-track { animation: msaku-brand-marquee 42s linear infinite; }
+        .msaku-brand-marquee:hover .msaku-brand-track { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) {
+          .msaku-brand-track { animation: none; }
+        }
+      `}</style>
       <div
         style={{
           width: "100%",
@@ -216,6 +254,59 @@ export default function MsakuUserGate({ children }: { children: ReactNode }) {
           </>
         )}
       </div>
+
+      {/* ── Branding provider berjalan, ala seksi homepage router.bynara.id ── */}
+      <section
+        style={{
+          width: "100%",
+          maxWidth: 860,
+          textAlign: "center",
+          marginTop: 72,
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "clamp(28px, 6vw, 40px)",
+            lineHeight: 1.15,
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            margin: "0 0 12px",
+          }}
+        >
+          Route Requests Across Top AI Providers.
+        </h2>
+        <p style={{ fontSize: 16, lineHeight: 1.6, color: "#a1a1aa", margin: "0 0 36px" }}>
+          Switch providers without changing your integration.
+        </p>
+        <div
+          className="msaku-brand-marquee"
+          style={{
+            overflow: "hidden",
+            maskImage: "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+          }}
+        >
+          <div className="msaku-brand-track" style={{ display: "flex", width: "max-content" }}>
+            {[...TOP_PROVIDER_BRANDS, ...TOP_PROVIDER_BRANDS].map((brand, i) => (
+              <span
+                key={i}
+                aria-hidden={i >= TOP_PROVIDER_BRANDS.length}
+                style={{
+                  fontSize: 22,
+                  fontWeight: 600,
+                  letterSpacing: "-0.02em",
+                  color: "#52525b",
+                  whiteSpace: "nowrap",
+                  paddingRight: 56,
+                }}
+              >
+                {brand}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
