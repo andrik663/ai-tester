@@ -1,0 +1,18 @@
+{
+  "name": "msaku-cli",
+  "version": "1.0.0",
+  "description": "Official command-line client for Msaku Gateway (gateway.msaku.id) — OpenAI-compatible AI gateway for MSAKU.id users.",
+  "bin": {
+    "msaku": "./bin/msaku.js"
+  },
+  "files": ["bin/", "README.md"],
+  "keywords": ["msaku", "gateway", "ai", "openai", "cli", "anthropic", "llm"],
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrik663/ai-tester",
+    "directory": "cli"
+  },
+  "homepage": "https://gateway.msaku.id/docs#cli"
+}
