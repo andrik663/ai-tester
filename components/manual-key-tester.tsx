@@ -3299,7 +3299,7 @@ function SidebarProviderRow({ p, isPinned, isSelected, togglePin, applyPreset }:
           <ProviderLogo providerId={p.id} providerName={p.name} className="w-5 h-5" />
         </span>
         <span className="flex-1 min-w-0 truncate">{p.name}</span>
-        {p.country && !hovered && (
+        {p.country && (
           <span className="flex-shrink-0 text-[10px] font-mono font-semibold tracking-wider text-muted-foreground/75 uppercase">
             {p.country}
           </span>
@@ -3312,10 +3312,10 @@ function SidebarProviderRow({ p, isPinned, isSelected, togglePin, applyPreset }:
           onClick={(e) => togglePin(p.id, e)}
           aria-label={isPinned ? "Unpin provider" : "Pin provider to top"}
           title={isPinned ? "Unpin" : "Pin to top"}
-          style={{ opacity: isPinned ? 1 : hovered ? 0.65 : 0 }}
+          style={{ opacity: isPinned ? 1 : hovered ? 0.85 : 0.45 }}
           className={`absolute right-1 flex items-center justify-center w-5 h-5 rounded transition-opacity ${
-            isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary hover:opacity-100"
-          } ${!isPinned && !hovered ? "pointer-events-none" : ""}`}
+            isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary"
+          }`}
         >
           <svg
             viewBox="0 0 24 24"
@@ -3324,7 +3324,7 @@ function SidebarProviderRow({ p, isPinned, isSelected, togglePin, applyPreset }:
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="w-3 h-3"
+            className="w-3.5 h-3.5"
           >
             <line x1="12" y1="17" x2="12" y2="22" />
             <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
@@ -3624,6 +3624,52 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
     })
   }
 
+  // Hidden models per provider — the user curates their own model list.
+  // Persisted in localStorage (same pattern as pinned providers). Tester
+  // UI only: Batch uses the server-side list and is unaffected.
+  const [hiddenModels, setHiddenModels] = useState<Record<string, string[]>>({})
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("ai_tester_hidden_models")
+      if (stored) setHiddenModels(JSON.parse(stored))
+    } catch {}
+  }, [])
+  function persistHiddenModels(next: Record<string, string[]>) {
+    try { localStorage.setItem("ai_tester_hidden_models", JSON.stringify(next)) } catch {}
+  }
+  function hideModel(providerId: string, modelId: string) {
+    setHiddenModels((prev) => {
+      const list = prev[providerId] ?? []
+      if (list.includes(modelId)) return prev
+      const next = { ...prev, [providerId]: [...list, modelId] }
+      persistHiddenModels(next)
+      return next
+    })
+    // Never leave the chat pointing at a model the user just hid.
+    if (providerId === selectedPreset.id && modelId === chatModel) {
+      const remaining = [
+        ...workingModels.map((m) => m.modelId),
+        ...(selectedPreset.models ?? []).map((m) => m.id),
+      ].filter((id) => id !== modelId && !(hiddenModels[providerId] ?? []).includes(id))
+      setChatModel(remaining[0] ?? "")
+    }
+  }
+  function showModel(providerId: string, modelId: string) {
+    setHiddenModels((prev) => {
+      const next = { ...prev, [providerId]: (prev[providerId] ?? []).filter((id) => id !== modelId) }
+      persistHiddenModels(next)
+      return next
+    })
+  }
+  function showAllModels(providerId: string) {
+    setHiddenModels((prev) => {
+      const next = { ...prev }
+      delete next[providerId]
+      persistHiddenModels(next)
+      return next
+    })
+  }
+
   // Onboarding banner — dismissed in localStorage
   // Start as false (matches SSR), sync from localStorage after mount to avoid hydration mismatch
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(false)
@@ -3761,6 +3807,12 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPreset.id, workingKeysTick])
+
+  // ── Model curation (derived): visible vs hidden models, selected provider ──
+  const hiddenForProvider = hiddenModels[selectedPreset.id] ?? []
+  const visibleWorkingModels = workingModels.filter((m) => !hiddenForProvider.includes(m.modelId))
+  const visiblePresetModels = (selectedPreset.models ?? []).filter((m) => !hiddenForProvider.includes(m.id))
+  const [manageModelsOpen, setManageModelsOpen] = useState(false)
 
   // Get the current model based on active sub-tab
   const getCurrentModel = () => {
@@ -4356,12 +4408,13 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-md bg-secondary border border-border flex items-center justify-center flex-shrink-0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-primary">
-                <circle cx="7" cy="12" r="4" />
-                <path d="M11 12h9M17 10v4" />
-              </svg>
-            </div>
+            {/* Msaku brand mark — same artwork as msaku.id/favicon.svg (#2962FF + white M) */}
+            <svg viewBox="0 0 28 28" className="w-9 h-9 flex-shrink-0 rounded-md" role="img" aria-label="Msaku">
+              <rect width="28" height="28" rx="6.16" fill="#2962FF" />
+              <g transform="translate(1.4 1.4) scale(0.9)">
+                <path d="M5 21V7l9 9 9-9v14" fill="none" stroke="white" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+              </g>
+            </svg>
             <div>
               <p className="text-[15px] font-semibold text-foreground leading-tight tracking-tight">Msaku Gateway</p>
                 <p className="text-[11px] text-muted-foreground">{visiblePresets.length} providers · keys never stored</p>
@@ -4469,7 +4522,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                           <line x1="12" y1="17" x2="12" y2="22" />
                           <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
                         </svg>
-                        <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/70">Pinned</span>
+                        <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/70">Pinned ({pinned.length})</span>
                       </div>
                       {pinned.map((p) => (
                         <SidebarProviderRow key={p.id} p={p} isPinned={true} isSelected={selectedPreset.id === p.id} togglePin={togglePin} applyPreset={applyPreset} />
@@ -4481,7 +4534,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                   {/* "All providers" label — only when pinned section is showing */}
                   {!q && middle.length > 0 && pinned.length > 0 && (
                     <div className="px-1 pt-0.5 pb-0.5">
-                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/60">All providers</span>
+                      <span className="text-[9px] font-semibold tracking-widest uppercase text-muted-foreground/60">All providers ({middle.length})</span>
                     </div>
                   )}
 
@@ -4759,6 +4812,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
 
             {/* Model selector bar — working keys models + static preset models */}
             {(workingModels.length > 0 || (selectedPreset.models && selectedPreset.models.length > 0)) && (
+              <>
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border/50 bg-sidebar/30 flex-shrink-0">
                 <span className="text-[10px] text-muted-foreground/70 flex-shrink-0">Model</span>
                 <select
@@ -4766,49 +4820,112 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                   onChange={(e) => {
                     setChatModel(e.target.value)
                     // Auto-fill API key from working key if available
-                    const wm = workingModels.find((m) => m.modelId === e.target.value)
+                    const wm = visibleWorkingModels.find((m) => m.modelId === e.target.value)
                     if (wm && !apiKey.trim()) handleApiKeyChange(wm.apiKey)
                   }}
                   className="text-[11px] font-medium bg-background text-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer flex-1 min-w-0 truncate"
                 >
                   {selectedPreset.id === "msaku" ? (
                     // Msaku: show gateway models with clean names — no latency suffix
-                    workingModels.length > 0 ? (
-                      workingModels.map((m) => (
+                    visibleWorkingModels.length > 0 ? (
+                      visibleWorkingModels.map((m) => (
                         <option key={m.modelId} value={m.modelId}>
                           {m.modelId}
                         </option>
                       ))
+                    ) : workingModels.length > 0 ? (
+                      <option value="" disabled>Semua model disembunyikan — buka Kelola model</option>
                     ) : (
                       <option value="" disabled>Sync keys first (Keys → Gateway)</option>
                     )
                   ) : (
                     <>
-                      {workingModels.length > 0 && (
-                        <optgroup label={`Saved working (${workingModels.length})`}>
-                          {workingModels.map((m) => (
+                      {visibleWorkingModels.length > 0 && (
+                        <optgroup label={`Saved working (${visibleWorkingModels.length})`}>
+                          {visibleWorkingModels.map((m) => (
                             <option key={m.modelId} value={m.modelId}>
                               {m.modelId} · {m.latencyMs}ms
                             </option>
                           ))}
                         </optgroup>
                       )}
-                      {selectedPreset.models && selectedPreset.models.length > 0 && (
+                      {visiblePresetModels.length > 0 && (
                         <optgroup label="All models">
-                          {selectedPreset.models.map((m) => (
+                          {visiblePresetModels.map((m) => (
                             <option key={m.id} value={m.id}>{m.label}</option>
                           ))}
                         </optgroup>
                       )}
+                      {visibleWorkingModels.length === 0 && visiblePresetModels.length === 0 && (
+                        <option value="" disabled>Semua model disembunyikan — buka Kelola model</option>
+                      )}
                     </>
                   )}
                 </select>
-                {workingModels.length > 0 && (
+                <button
+                  onClick={() => setManageModelsOpen((v) => !v)}
+                  title="Kelola model — sembunyikan / tampilkan model provider ini"
+                  className={`text-[11px] font-medium border rounded px-2 py-1.5 flex-shrink-0 whitespace-nowrap transition-colors ${
+                    manageModelsOpen
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Kelola model{hiddenForProvider.length > 0 ? ` (${hiddenForProvider.length} disembunyikan)` : ""}
+                </button>
+                {visibleWorkingModels.length > 0 && (
                   <span className="text-[9px] text-primary/60 border border-primary/20 bg-primary/8 rounded px-1 py-0.5 flex-shrink-0 whitespace-nowrap">
-                    {workingModels.length} {selectedPreset.id === "msaku" ? "models" : "saved"}
+                    {visibleWorkingModels.length} {selectedPreset.id === "msaku" ? "models" : "saved"}
                   </span>
                 )}
               </div>
+              {manageModelsOpen && (
+                <div className="border-b border-border/50 bg-sidebar/30 px-3 py-2.5 flex-shrink-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold text-foreground">Kelola model — {selectedPreset.name}</span>
+                    {hiddenForProvider.length > 0 && (
+                      <button onClick={() => showAllModels(selectedPreset.id)} className="text-[11px] text-primary hover:underline flex-shrink-0">
+                        Tampilkan semua ({hiddenForProvider.length})
+                      </button>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    Sembunyikan model yang tidak kamu pakai — hanya daftar di perangkat ini yang berubah, Batch tidak terpengaruh.
+                  </p>
+                  <div className="mt-2 flex max-h-52 flex-col gap-px overflow-y-auto">
+                    {visibleWorkingModels.map((m) => (
+                      <div key={`w-${m.modelId}`} className="flex items-center gap-2 rounded px-1.5 py-1 text-[12px] hover:bg-secondary/60">
+                        <span className="min-w-0 flex-1 truncate font-mono">{m.modelId}</span>
+                        <span className="flex-shrink-0 text-[10px] text-muted-foreground">tersimpan</span>
+                        <button onClick={() => hideModel(selectedPreset.id, m.modelId)} title="Sembunyikan model" aria-label={`Sembunyikan ${m.modelId}`} className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive">×</button>
+                      </div>
+                    ))}
+                    {visiblePresetModels.map((m) => (
+                      <div key={`p-${m.id}`} className="flex items-center gap-2 rounded px-1.5 py-1 text-[12px] hover:bg-secondary/60">
+                        <span className="min-w-0 flex-1 truncate font-mono">{m.id}</span>
+                        <button onClick={() => hideModel(selectedPreset.id, m.id)} title="Sembunyikan model" aria-label={`Sembunyikan ${m.id}`} className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive">×</button>
+                      </div>
+                    ))}
+                    {visibleWorkingModels.length === 0 && visiblePresetModels.length === 0 && (
+                      <p className="py-1 text-[11px] text-muted-foreground">Semua model provider ini sedang disembunyikan.</p>
+                    )}
+                  </div>
+                  {hiddenForProvider.length > 0 && (
+                    <div className="mt-2 border-t border-border/50 pt-2">
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Disembunyikan ({hiddenForProvider.length})</p>
+                      <div className="flex max-h-32 flex-col gap-px overflow-y-auto">
+                        {hiddenForProvider.map((id) => (
+                          <div key={`h-${id}`} className="flex items-center gap-2 rounded px-1.5 py-1 text-[12px] text-muted-foreground hover:bg-secondary/60">
+                            <span className="min-w-0 flex-1 truncate font-mono line-through">{id}</span>
+                            <button onClick={() => showModel(selectedPreset.id, id)} title="Tampilkan lagi" aria-label={`Tampilkan ${id}`} className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-primary/10 hover:text-primary">↺</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              </>
             )}
 
             {/* Chat messages area */}
