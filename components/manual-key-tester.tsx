@@ -4385,7 +4385,56 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
   }
 
   return (
-    <div className="flex h-full bg-background text-foreground font-sans overflow-hidden relative antialiased">
+    <div className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden relative antialiased">
+      <VirtualStudioHeader
+        uiMode={uiMode}
+        onToggleMode={handleToggleUiMode}
+        activeTab={activeTab}
+        unifiedSubTab={unifiedSubTab}
+        selectedProviderId={selectedPreset.id}
+        selectedProviderName={selectedPreset.name}
+        apiKey={apiKey}
+        workingModelsCount={workingModels.length}
+        workingKeysTick={workingKeysTick}
+        onSelectProviderById={(pid) => {
+          const found = PRESETS_DEDUPED.find((p) => p.id === pid)
+          if (found) applyPreset(found)
+        }}
+        onNavigateTab={(tab, subTab) => {
+          setActiveTab(tab)
+          if (subTab) setUnifiedSubTab(subTab)
+        }}
+      />
+
+      {uiMode === "virtual" ? (
+        <VirtualN8nCanvas
+          providers={visiblePresets.map((p) => ({
+            id: p.id,
+            name: p.name,
+            country: p.country,
+            endpoint: p.endpoint,
+            createKeyUrl: p.createKeyUrl,
+          }))}
+          selectedProviderId={selectedPreset.id}
+          selectedProviderName={selectedPreset.name}
+          apiKey={apiKey}
+          onApiKeyChange={handleApiKeyChange}
+          workingModelsCount={workingModels.length}
+          workingKeysTick={workingKeysTick}
+          onSelectProviderById={(pid) => {
+            const found = PRESETS_DEDUPED.find((p) => p.id === pid)
+            if (found) applyPreset(found)
+          }}
+          onOpenClassicTab={(tab, subTab) => {
+            handleToggleUiMode("classic")
+            setActiveTab(tab)
+            if (subTab) setUnifiedSubTab(subTab)
+          }}
+          onSwitchToClassic={() => handleToggleUiMode("classic")}
+          onTriggerGatewaySync={() => setWorkingKeysTick((t) => t + 1)}
+        />
+      ) : (
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
 
       {/* ─�� Mobile config overlay backdrop ────────────────────────────────── */}
       {configOpen && (
@@ -6518,6 +6567,8 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
 
       </div>
 
+      </div>
+      )}
     </div>
   )
 }
