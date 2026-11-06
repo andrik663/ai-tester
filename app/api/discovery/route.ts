@@ -13,7 +13,11 @@
  *      the rest fall back to the static list, flagged source "static").
  *
  * Auth: Authorization: Bearer <msk_ / atk_ / admin token> (same gate as
- * /api/v1/*). Keys are used server-side only and NEVER returned.
+ * /api/v1/*). Anonymous callers get 401 — discovery spends synced keys and
+ * runs 98 provider fetches, so it must not be triggerable without a key.
+ * (Do NOT pass allowAnonymousRead=true: anonymous callers would silently
+ * fall through to the legacy/admin key pool.) Keys are used server-side
+ * only and NEVER returned.
  *
  * Response:
  *   { providers: [{ providerId, providerName, liveTotal, staticTotal,
@@ -109,8 +113,10 @@ function totalsOf(entries: DiscoveryEntry[]) {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await authenticateGatewayRequest(req.headers, "/api/discovery", true)
-  if (!auth.valid) {
+  // allowAnonymousRead=false: anonymous callers must get 401, not a scan
+  // against the legacy/admin key pool.
+  const auth = await authenticateGatewayRequest(req.headers, "/api/discovery", false)
+  if (!auth.valid || auth.tier === "anonymous_read") {
     return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 })
   }
 

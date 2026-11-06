@@ -4,9 +4,13 @@
  * Gateway usage analytics, aggregated from gateway_logs.
  *
  * Auth: Authorization: Bearer <msk_ / atk_ / admin token> (same gate as
- * /api/v1/*). Scope:
+ * /api/v1/*). Anonymous callers get 401 — never global data. Scope:
  *   - msaku_user → only the caller's own rows (caller_user_id = userId)
  *   - admin / atk_ → global, plus a per-user top list
+ *
+ * NOTE: do NOT pass allowAnonymousRead=true here (unlike /api/v1/logs):
+ * an anonymous caller has no userId, so the "own rows" filter would be
+ * empty and the query would silently fall through to GLOBAL analytics.
  *
  * Returns only aggregates — no key values, no message content.
  */
@@ -24,8 +28,9 @@ const WINDOWS: Record<string, number> = {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await authenticateGatewayRequest(req.headers, "/api/analytics", true)
-  if (!auth.valid) {
+  // allowAnonymousRead=false: anonymous callers must get 401, not data.
+  const auth = await authenticateGatewayRequest(req.headers, "/api/analytics", false)
+  if (!auth.valid || auth.tier === "anonymous_read") {
     return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 })
   }
 
@@ -34,14 +39,17 @@ export async function GET(req: NextRequest) {
   const windowMs = WINDOWS[windowKey]
   const since = Date.now() - windowMs
 
-  const isGlobal = auth.tier === "admin" || auth.tier === "atk"
+  // admin (internal token) and api_key (atk_ operator key) see global usage.
+  const isGlobal = auth.tier === "admin" || auth.tier === "api_key"
   const userId = typeof auth.userId === "number" && auth.userId > 0 ? auth.userId : null
-  // msk_ users see only their own rows; admin/atk_ see everything.
-  const ownOnly = !isGlobal && userId !== null
-  const where = ownOnly
-    ? "WHERE ts_ms > $1 AND caller_user_id = $2"
-    : "WHERE ts_ms > $1"
-  const params: (number)[] = ownOnly ? [since, userId as number] : [since]
+  // A non-global caller without a userId must never see global rows.
+  if (!isGlobal && userId === null) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  const where = isGlobal
+    ? "WHERE ts_ms > $1"
+    : "WHERE ts_ms > $1 AND caller_user_id = $2"
+  const params: (number)[] = isGlobal ? [since] : [since, userId as number]
 
   try {
     const client = await pool.connect()
