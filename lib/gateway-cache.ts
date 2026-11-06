@@ -249,6 +249,23 @@ function toPgArray(arr: string[]): string {
   return `{${escaped.join(",")}}`
 }
 
+export interface SkippedGatewayKey {
+  providerId: string
+  reason: "shared" | "owned_by_other_user" | "conflict"
+}
+
+// Postgres unique-violation (23505) raised against the OLD global unique
+// `gateway_keys_provider_key_unique` (provider_id, api_key). The Neon
+// serverless driver surfaces pg-style `code`/`constraint`; fall back to
+// matching the constraint name in the message.
+function isOldGlobalConflict(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false
+  const e = err as { code?: unknown; constraint?: unknown; message?: unknown }
+  if (e.code !== "23505") return false
+  if (e.constraint === "gateway_keys_provider_key_unique") return true
+  return typeof e.message === "string" && e.message.includes("gateway_keys_provider_key_unique")
+}
+
 /**
  * UPSERT one key at a time using pool.query() with native pg parameter
  * binding. model_ids is passed as a single $4 parameter in pg-array wire
@@ -259,11 +276,12 @@ function toPgArray(arr: string[]): string {
 export async function upsertGatewayKeyChunk(
   keys: GatewayKey[],
   ownerUserId: number | null = null,
-): Promise<void> {
-  if (keys.length === 0) return
+): Promise<{ skipped: SkippedGatewayKey[] }> {
+  if (keys.length === 0) return { skipped: [] }
 
   await ensureOwnerColumn()
   const client = await pool.connect()
+  const skipped: SkippedGatewayKey[] = []
   try {
     for (const k of keys) {
       // The owner comes from server-side auth (push route), never from the
@@ -304,27 +322,82 @@ export async function upsertGatewayKeyChunk(
         // Owned row: conflict target includes the owner, so the same
         // provider key synced by a second user becomes a second row owned
         // by that user instead of overwriting (stealing) the first row.
-        await client.query(
-          `INSERT INTO gateway_keys
-             (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
-           ON CONFLICT (provider_id, api_key, owner_user_id) DO UPDATE SET
-             provider_name  = EXCLUDED.provider_name,
-             model_ids      = EXCLUDED.model_ids,
-             avg_latency_ms = EXCLUDED.avg_latency_ms,
-             pushed_at      = EXCLUDED.pushed_at,
-             is_shared      = FALSE,
-             updated_at     = now()`,
-          [
-            k.providerId,
-            k.providerName,
-            k.apiKey,
-            toPgArray(k.modelIds),
-            Math.round(k.avgLatencyMs),
-            k.pushedAt,
-            owner,
-          ],
-        )
+        try {
+          await client.query(
+            `INSERT INTO gateway_keys
+               (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
+             ON CONFLICT (provider_id, api_key, owner_user_id) DO UPDATE SET
+               provider_name  = EXCLUDED.provider_name,
+               model_ids      = EXCLUDED.model_ids,
+               avg_latency_ms = EXCLUDED.avg_latency_ms,
+               pushed_at      = EXCLUDED.pushed_at,
+               is_shared      = FALSE,
+               updated_at     = now()`,
+            [
+              k.providerId,
+              k.providerName,
+              k.apiKey,
+              toPgArray(k.modelIds),
+              Math.round(k.avgLatencyMs),
+              k.pushedAt,
+              owner,
+            ],
+          )
+        } catch (err) {
+          // The OLD global unique (provider_id, api_key) can still fire
+          // when this key value already exists under a DIFFERENT owner —
+          // most commonly a legacy row (owner NULL) synced before per-user
+          // isolation (PR #114). That constraint is not the ON CONFLICT
+          // target above, so Postgres raises 23505 instead of upserting
+          // and the whole chunk used to fail with "duplicate key value
+          // violates unique constraint gateway_keys_provider_key_unique".
+          if (!isOldGlobalConflict(err)) throw err
+          const found = await client.query(
+            `SELECT id, owner_user_id, is_shared FROM gateway_keys WHERE provider_id = $1 AND api_key = $2`,
+            [k.providerId, k.apiKey],
+          )
+          const row = found.rows[0] as
+            | { id: number; owner_user_id: number | null; is_shared: boolean }
+            | undefined
+          if (!row) throw err
+          if (row.owner_user_id === null && row.is_shared !== true) {
+            // Legacy non-shared row: the caller holds this key value and
+            // synced it before isolation existed — adopt the row into
+            // their own bucket instead of failing. (A row with the same
+            // triple cannot already exist for this owner: had it existed,
+            // the INSERT above would have matched the owner-scoped
+            // ON CONFLICT target instead of raising.)
+            try {
+              await client.query(
+                `UPDATE gateway_keys SET
+                   provider_name = $1, model_ids = $2, avg_latency_ms = $3,
+                   pushed_at = $4, owner_user_id = $5, is_shared = FALSE,
+                   updated_at = now()
+                 WHERE id = $6`,
+                [
+                  k.providerName,
+                  toPgArray(k.modelIds),
+                  Math.round(k.avgLatencyMs),
+                  k.pushedAt,
+                  owner,
+                  row.id,
+                ],
+              )
+            } catch {
+              skipped.push({ providerId: k.providerId, reason: "conflict" })
+            }
+          } else {
+            // Shared row: leave everyone's fallback alone — the key stays
+            // usable via the shared pool. Other owner's row: never steal
+            // it. Either way this key is not stored as the caller's own
+            // row; report it instead of failing the whole chunk.
+            skipped.push({
+              providerId: k.providerId,
+              reason: row.is_shared ? "shared" : "owned_by_other_user",
+            })
+          }
+        }
       }
     }
   } finally {
@@ -333,6 +406,7 @@ export async function upsertGatewayKeyChunk(
 
   // Bust the in-memory cache so the next read picks up fresh DB state.
   bustCache()
+  return { skipped }
 }
 
 /**
