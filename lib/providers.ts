@@ -2539,6 +2539,35 @@ export function buildProviderHeaders(provider: string, apiKey: string): Record<s
   }
 }
 
+// ── Custom provider endpoint helpers ────────────────────────────────────
+// Custom providers may paste a bare base URL (https://api.example.com),
+// a base with /v1 (https://api.example.com/v1), or a full chat URL.
+// These helpers normalize any of those shapes into a usable endpoint.
+
+/** Normalize any user-pasted custom URL into an OpenAI-compatible chat endpoint. */
+export function normalizeCustomChatEndpoint(rawUrl: string): string | null {
+  const url = (rawUrl ?? "").trim().replace(/\/+$/, "")
+  if (!url || !/^https?:\/\//i.test(url)) return null
+  if (/\/chat\/completions$/i.test(url)) return url
+  if (/\/v\d+$/i.test(url)) return `${url}/chat/completions`
+  return `${url}/v1/chat/completions`
+}
+
+/** Derive the /models listing endpoint from any user-pasted custom URL. */
+export function normalizeCustomModelsEndpoint(rawUrl: string): string | null {
+  const url = (rawUrl ?? "").trim().replace(/\/+$/, "")
+  if (!url || !/^https?:\/\//i.test(url)) return null
+  if (/\/chat\/completions$/i.test(url)) return url.replace(/\/chat\/completions$/i, "/models")
+  if (/\/models$/i.test(url)) return url
+  if (/\/v\d+$/i.test(url)) return `${url}/models`
+  return `${url}/v1/models`
+}
+
+/** True when a providerId is not a built-in config — i.e. a user-created custom provider. */
+export function isCustomProviderId(providerId: string): boolean {
+  return !(providerId in PROVIDER_CONFIGS)
+}
+
 /** Resolve the POST endpoint for a provider + key.
  *  Returns null for providers that need extra config (Cloudflare account ID, Azure resource name).
  */

@@ -38,6 +38,8 @@ export interface GatewayKey {
   ownerUserId: number | null
   /** true = admin-shared: served to every registered msk_ user as fallback */
   isShared: boolean
+  /** Custom provider chat endpoint (OpenAI-compatible); NULL for built-in providers */
+  endpointUrl?: string | null
 }
 
 export interface GatewayStore {
@@ -179,6 +181,7 @@ async function ensureOwnerColumn(): Promise<void> {
       )
       await client.query(`ALTER TABLE gateway_keys ADD COLUMN IF NOT EXISTS is_shared BOOLEAN NOT NULL DEFAULT FALSE`)
       await client.query(`CREATE INDEX IF NOT EXISTS gateway_keys_shared_idx ON gateway_keys (is_shared)`)
+      await client.query(`ALTER TABLE gateway_keys ADD COLUMN IF NOT EXISTS endpoint_url TEXT`)
     } finally {
       client.release()
     }
@@ -214,6 +217,7 @@ async function dbLoadKeys(scope: GatewayKeyScope): Promise<GatewayKey[]> {
         pushedAt: gatewayKeysTable.pushedAt,
         ownerUserId: gatewayKeysTable.ownerUserId,
         isShared: gatewayKeysTable.isShared,
+        endpointUrl: gatewayKeysTable.endpointUrl,
       })
       .from(gatewayKeysTable)
     const rows = where ? await base.where(where) : await base
@@ -229,6 +233,7 @@ async function dbLoadKeys(scope: GatewayKeyScope): Promise<GatewayKey[]> {
       pushedAt: Number(r.pushedAt),
       ownerUserId: r.ownerUserId ?? null,
       isShared: r.isShared === true,
+      endpointUrl: r.endpointUrl ?? null,
     }))
   } catch {
     // Fail closed: if the owner_user_id column does not exist yet (the
@@ -299,14 +304,15 @@ export async function upsertGatewayKeyChunk(
         // both are explicit admin actions, not user actions.
         await client.query(
           `INSERT INTO gateway_keys
-             (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared)
-           VALUES ($1, $2, $3, $4, $5, $6, NULL, $7)
+             (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared, endpoint_url)
+           VALUES ($1, $2, $3, $4, $5, $6, NULL, $7, $8)
            ON CONFLICT (provider_id, api_key) DO UPDATE SET
              provider_name  = EXCLUDED.provider_name,
              model_ids      = EXCLUDED.model_ids,
              avg_latency_ms = EXCLUDED.avg_latency_ms,
              pushed_at      = EXCLUDED.pushed_at,
              is_shared      = EXCLUDED.is_shared,
+             endpoint_url   = EXCLUDED.endpoint_url,
              updated_at     = now()`,
           [
             k.providerId,
@@ -316,6 +322,7 @@ export async function upsertGatewayKeyChunk(
             Math.round(k.avgLatencyMs),  // column is INTEGER — round float averages
             k.pushedAt,
             shared,
+            k.endpointUrl ?? null,
           ],
         )
       } else {
@@ -325,14 +332,15 @@ export async function upsertGatewayKeyChunk(
         try {
           await client.query(
             `INSERT INTO gateway_keys
-               (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
+               (provider_id, provider_name, api_key, model_ids, avg_latency_ms, pushed_at, owner_user_id, is_shared, endpoint_url)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, $8)
              ON CONFLICT (provider_id, api_key, owner_user_id) DO UPDATE SET
                provider_name  = EXCLUDED.provider_name,
                model_ids      = EXCLUDED.model_ids,
                avg_latency_ms = EXCLUDED.avg_latency_ms,
                pushed_at      = EXCLUDED.pushed_at,
                is_shared      = FALSE,
+               endpoint_url   = EXCLUDED.endpoint_url,
                updated_at     = now()`,
             [
               k.providerId,
@@ -342,6 +350,7 @@ export async function upsertGatewayKeyChunk(
               Math.round(k.avgLatencyMs),
               k.pushedAt,
               owner,
+              k.endpointUrl ?? null,
             ],
           )
         } catch (err) {
@@ -373,14 +382,15 @@ export async function upsertGatewayKeyChunk(
                 `UPDATE gateway_keys SET
                    provider_name = $1, model_ids = $2, avg_latency_ms = $3,
                    pushed_at = $4, owner_user_id = $5, is_shared = FALSE,
-                   updated_at = now()
-                 WHERE id = $6`,
+                   endpoint_url = $6, updated_at = now()
+                 WHERE id = $7`,
                 [
                   k.providerName,
                   toPgArray(k.modelIds),
                   Math.round(k.avgLatencyMs),
                   k.pushedAt,
                   owner,
+                  k.endpointUrl ?? null,
                   row.id,
                 ],
               )

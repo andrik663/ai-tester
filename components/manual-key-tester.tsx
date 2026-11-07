@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect, useCallback } from "react"
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import useSWR from "swr"
 import type { ManualTestResult } from "@/app/api/manual-test/route"
 import type { LogEntry } from "@/app/api/test-key/route"
@@ -9,7 +9,7 @@ import ImageTester from "@/components/image-tester"
 import VideoTester from "@/components/video-tester"
 import WorkingKeysPanel from "@/components/working-keys-panel"
 import SkillsPanel, { type ActiveSkillConfig } from "@/components/skills-panel"
-import { loadWorkingKeys } from "@/lib/working-keys-store"
+import { loadWorkingKeys, appendWorkingResults } from "@/lib/working-keys-store"
 import MultiKeyBatch from "@/components/multi-key-batch"
 import { getImageCapabilities, getVideoCapabilities, IMAGE_ASPECT_RATIOS } from "@/lib/provider-capabilities"
 import { copyToClipboard } from "@/lib/clipboard"
@@ -3049,7 +3049,11 @@ const PRESETS: ProviderPreset[] = [
     country: "",
     endpoint: "",
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      // Pre-filled so pasting an API key is enough — no manual header editing needed.
+      Authorization: "Bearer {{API_KEY}}",
+    },
     bodyTemplate: JSON.stringify({
       model: "your-model",
       messages: [{ role: "user", content: "{{PROMPT}}" }],
@@ -3057,6 +3061,7 @@ const PRESETS: ProviderPreset[] = [
     docsUrl: "",
     createKeyUrl: "",
     color: "text-muted-foreground bg-muted/10 border-border",
+    note: "Provider kustom OpenAI-compatible. Isi Endpoint URL dengan base URL (https://domain.com), base /v1 (https://domain.com/v1), atau URL lengkap /v1/chat/completions. Tempel API key di kolom key; header Authorization terisi otomatis.",
   },
 ]
 
@@ -3068,6 +3073,55 @@ const PRESETS_DEDUPED: ProviderPreset[] = (() => {
   for (const p of PRESETS) seen.set(p.id, p)
   return Array.from(seen.values())
 })()
+
+// ── User-created custom providers (localStorage persisted) ─────────────────
+// Users can save their own named custom providers (e.g. "Constellation Gate")
+// with their own endpoint. They appear in the sidebar like any provider and
+// their synced keys route through the gateway via gateway_keys.endpoint_url.
+const CUSTOM_PROVIDERS_KEY = "ai_tester_custom_providers_v1"
+
+function loadCustomProviders(): ProviderPreset[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(CUSTOM_PROVIDERS_KEY)
+    if (!raw) return []
+    const list = JSON.parse(raw) as ProviderPreset[]
+    return Array.isArray(list) ? list.filter((p) => p?.id?.startsWith("custom:")) : []
+  } catch {
+    return []
+  }
+}
+
+function persistCustomProviders(list: ProviderPreset[]): void {
+  try { localStorage.setItem(CUSTOM_PROVIDERS_KEY, JSON.stringify(list)) } catch {}
+}
+
+function slugifyCustomName(name: string): string {
+  const slug = (name ?? "").toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  return slug || "provider"
+}
+
+function isCustomPreset(p: ProviderPreset): boolean {
+  return p.id === "custom" || p.id.startsWith("custom:")
+}
+
+function buildCustomPreset(name: string, endpoint: string, method: "POST" | "GET", headers: Record<string, string>, bodyTemplate: string): ProviderPreset {
+  return {
+    id: `custom:${slugifyCustomName(name)}`,
+    name: (name ?? "").trim() || "Custom Provider",
+    country: "",
+    endpoint,
+    method,
+    headers: { "Content-Type": "application/json", Authorization: "Bearer {{API_KEY}}", ...headers },
+    bodyTemplate,
+    docsUrl: "",
+    createKeyUrl: "",
+    color: "text-muted-foreground bg-muted/10 border-border",
+    note: `Provider kustom milikmu. Endpoint tersimpan bersama key saat di-sync ke gateway, jadi modelnya bisa dipanggil langsung dari /api/v1/chat/completions.`,
+  }
+}
 
 // ── Provider logos ────────────────────────────────────────────────────────────
 // Uses Google's faviconV2 service (returns 64px PNG, no CORS issues).
@@ -3277,7 +3331,7 @@ interface SidebarProviderRowProps {
 
 function SidebarProviderRow({ p, isPinned, isSelected, togglePin, applyPreset }: SidebarProviderRowProps) {
   const [hovered, setHovered] = useState(false)
-  const pinnable = p.id !== "dahono" && p.id !== "custom"
+  const pinnable = p.id !== "dahono" && !isCustomPreset(p)
 
   return (
     <div
@@ -3560,7 +3614,40 @@ const DEFAULT_PRESET: ProviderPreset = PRESETS.find((p) => p.id === "msaku") ?? 
 // dev-login gate in app/page.tsx — public visitors get the standalone
 // PublicCodePreview component instead, so no per-preset gating is needed here.
 export default function ManualKeyTester({ initialTab }: { initialTab?: "unified" | "working-keys" | "multi-batch" | "auto-detect" | "info" | "history" | "collections" | "environments" | "screener" | "saved" | "leaderboard" | "skills" } = {}) {
-  const visiblePresets = PRESETS_DEDUPED
+  // User-created custom providers ("custom:<slug>") — persisted in localStorage.
+  const [customPresets, setCustomPresets] = useState<ProviderPreset[]>([])
+  useEffect(() => {
+    setCustomPresets(loadCustomProviders())
+  }, [])
+  const allPresets = useMemo(
+    () => [...PRESETS_DEDUPED, ...customPresets],
+    [customPresets],
+  )
+  const visiblePresets = allPresets
+  const [customName, setCustomName] = useState("")
+  const [customSavedMsg, setCustomSavedMsg] = useState<string | null>(null)
+
+  function handleSaveCustomProvider() {
+    const name = customName.trim()
+    if (!name) return
+    const preset = buildCustomPreset(name, endpoint, method as "POST" | "GET", Object.fromEntries(headerRows.filter((r) => r.key.trim()).map((r) => [r.key, r.value])), bodyTemplate)
+    setCustomPresets((prev) => {
+      const next = [...prev.filter((p) => p.id !== preset.id), preset]
+      persistCustomProviders(next)
+      return next
+    })
+    setCustomSavedMsg(`Tersimpan sebagai "${preset.name}" (id: ${preset.id}) — muncul di sidebar.`)
+    setSelectedPreset(preset)
+  }
+
+  function handleDeleteCustomProvider(id: string) {
+    setCustomPresets((prev) => {
+      const next = prev.filter((p) => p.id !== id)
+      persistCustomProviders(next)
+      return next
+    })
+    setSelectedPreset((cur) => (cur.id === id ? PRESETS_DEDUPED.find((p) => p.id === "custom") ?? cur : cur))
+  }
   const visibleComparePresets = PRESETS.filter((p) => p.id !== "custom")
 
   const [selectedPreset, setSelectedPreset] = useState<ProviderPreset>(DEFAULT_PRESET)
@@ -4110,6 +4197,10 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
     setSelectedPreset(preset)
     setEndpoint(preset.endpoint)
     setMethod(preset.method)
+    // Prefill the custom-name field when editing a saved custom provider;
+    // clear it for the built-in Custom / cURL entry.
+    setCustomName(isCustomPreset(preset) && preset.id !== "custom" ? preset.name : "")
+    setCustomSavedMsg(null)
     setHeaderRows(
       Object.entries(preset.headers).map(([key, value], i) => ({ key, value, id: i }))
     )
@@ -4325,6 +4416,30 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
           responseHeaders: data.responseHeaders,
           curlFull: data.curlFull,
         })
+
+        // Auto-save passing results to Working Keys — previously only batch
+        // runs were saved, so single Test successes (esp. custom providers)
+        // never reached the sync-to-gateway pipeline.
+        if (data.ok && getCurrentModel() && apiKey.trim()) {
+          appendWorkingResults(
+            selectedPreset.id,
+            selectedPreset.name,
+            apiKey.trim(),
+            [{
+              modelId: getCurrentModel(),
+              latencyMs: data.durationMs,
+              tokenUsage: data.tokenUsage
+                ? {
+                    prompt: data.tokenUsage.promptTokens,
+                    completion: data.tokenUsage.completionTokens,
+                    total: data.tokenUsage.totalTokens,
+                  }
+                : undefined,
+            }],
+            isCustomPreset(selectedPreset) ? endpoint : undefined,
+          )
+          setWorkingKeysTick((t) => t + 1)
+        }
 
         if (Notification.permission === "granted" && document.hidden && reply) {
           new Notification(`${selectedPreset.name} replied`, { body: reply.slice(0, 80) + "…", silent: true })
@@ -4566,14 +4681,15 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
             {(() => {
               const q = sidebarSearch.trim().toLowerCase()
               const matched = q ? visiblePresets.filter((p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)) : visiblePresets
-              // Dahono always first, Custom always last, user-pinned after dahono, rest sorted A→Z
+              // Dahono always first, Custom (+ user-created customs) always last,
+              // user-pinned after dahono, rest sorted A→Z
               const dahonoRow = matched.filter((p) => p.id === "dahono")
-              const customRow = matched.filter((p) => p.id === "custom")
+              const customRow = matched.filter((p) => isCustomPreset(p))
               const pinned    = matched
-                .filter((p) => p.id !== "dahono" && p.id !== "custom" && pinnedProviders.includes(p.id))
+                .filter((p) => p.id !== "dahono" && !isCustomPreset(p) && pinnedProviders.includes(p.id))
                 .sort((a, b) => pinnedProviders.indexOf(a.id) - pinnedProviders.indexOf(b.id))
               const middle    = matched
-                .filter((p) => p.id !== "dahono" && p.id !== "custom" && !pinnedProviders.includes(p.id))
+                .filter((p) => p.id !== "dahono" && !isCustomPreset(p) && !pinnedProviders.includes(p.id))
                 .sort((a, b) => a.name.localeCompare(b.name))
 
               if ([...dahonoRow, ...pinned, ...middle, ...customRow].length === 0) return (
@@ -5000,6 +5116,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                       providerId={selectedPreset.id}
                       providerName={selectedPreset.name}
                       apiKey={apiKey}
+                      customEndpoint={isCustomPreset(selectedPreset) ? endpoint : undefined}
                       onSaved={() => setWorkingKeysTick((t) => t + 1)}
                     />
                   </div>
@@ -5011,6 +5128,53 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                 <div className="border-t border-border/60 bg-background/95 px-4 py-3 max-h-96 overflow-y-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl">
                     <div className="space-y-3">
+                      {/* Custom provider: name & save-as-provider controls */}
+                      {isCustomPreset(selectedPreset) && (
+                        <div className="rounded border border-border bg-secondary/30 p-2.5 space-y-1.5">
+                          <label className="text-[11px] font-semibold text-foreground block">
+                            Nama Provider Custom
+                          </label>
+                          <div className="flex gap-1.5">
+                            <input
+                              type="text"
+                              value={customName}
+                              onChange={(e) => { setCustomName(e.target.value); setCustomSavedMsg(null) }}
+                              placeholder="mis. Constellation Gate, Proxy Kantor..."
+                              className="h-8 flex-1 min-w-0 rounded border border-border bg-background px-2.5 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleSaveCustomProvider}
+                              disabled={!customName.trim() || !endpoint.trim()}
+                              className="h-8 px-2.5 rounded border border-primary/40 bg-primary/10 text-[11px] font-semibold text-primary disabled:opacity-40 whitespace-nowrap"
+                            >
+                              Simpan Provider
+                            </button>
+                          </div>
+                          {customSavedMsg && (
+                            <p className="text-[10px] text-success">{customSavedMsg}</p>
+                          )}
+                          {customPresets.length > 0 && (
+                            <div className="flex flex-col gap-1 pt-1">
+                              {customPresets.map((cp) => (
+                                <div key={cp.id} className="flex items-center justify-between gap-2 rounded border border-border/60 bg-background px-2 py-1">
+                                  <span className="text-[10px] font-mono text-foreground truncate">
+                                    {cp.name}
+                                    <span className="text-muted-foreground/60 ml-1.5">{cp.endpoint}</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteCustomProvider(cp.id)}
+                                    className="text-[10px] text-destructive/80 hover:text-destructive whitespace-nowrap"
+                                  >
+                                    Hapus
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <label className="text-[11px] font-semibold text-foreground">Request Headers</label>
@@ -6677,6 +6841,7 @@ export default function ManualKeyTester({ initialTab }: { initialTab?: "unified"
                       providerId={selectedPreset.id}
                       providerName={selectedPreset.name}
                       apiKey={apiKey}
+                      customEndpoint={isCustomPreset(selectedPreset) ? endpoint : undefined}
                       onSaved={() => setWorkingKeysTick((t) => t + 1)}
                     />
                   </div>

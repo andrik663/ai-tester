@@ -21,6 +21,10 @@ export const gatewayKeys = pgTable("gateway_keys", {
   // to false server-side. Revoking is instant: set it false (or delete
   // the row) and the model disappears for all msk_ users within the cache TTL.
   isShared: boolean("is_shared").notNull().default(false),
+  // Custom provider chat endpoint (OpenAI-compatible). Set only for
+  // user-created custom providers; built-in providers leave it NULL and
+  // resolve via PROVIDER_CONFIGS in lib/providers.ts.
+  endpointUrl: text("endpoint_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({

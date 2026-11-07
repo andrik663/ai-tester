@@ -85,12 +85,13 @@ type GatewayKeyPayload = {
   modelIds: string[]
   avgLatencyMs: number
   pushedAt: number
+  endpointUrl?: string
 }
 
 function groupKeys(records: WorkingKeyRecord[]): GatewayKeyPayload[] {
   const grouped = new Map<string, {
     providerId: string; providerName: string; apiKey: string
-    modelIds: string[]; latencies: number[]
+    modelIds: string[]; latencies: number[]; endpointUrl?: string
   }>()
   for (const rec of records) {
     const key = `${rec.providerId}::${rec.apiKey}`
@@ -107,6 +108,7 @@ function groupKeys(records: WorkingKeyRecord[]): GatewayKeyPayload[] {
         apiKey: rec.apiKey,
         modelIds: [rec.modelId],
         latencies: [rec.latencyMs],
+        endpointUrl: rec.endpointUrl,
       })
     }
   }
@@ -117,6 +119,7 @@ function groupKeys(records: WorkingKeyRecord[]): GatewayKeyPayload[] {
     modelIds: g.modelIds,
     avgLatencyMs: g.latencies.reduce((a, b) => a + b, 0) / g.latencies.length,
     pushedAt: Date.now(),
+    ...(g.endpointUrl ? { endpointUrl: g.endpointUrl } : {}),
   }))
 }
 

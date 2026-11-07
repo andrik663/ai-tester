@@ -18,13 +18,15 @@
 
 export interface WorkingKeyRecord {
   id: string             // unique: `${providerId}::${modelId}::${timestamp}`
-  providerId: string     // e.g. "cerebras"
-  providerName: string   // e.g. "Cerebras"
+  providerId: string     // e.g. "cerebras" or "custom:constellation-gate"
+  providerName: string   // e.g. "Cerebras" or a user-chosen custom name
   apiKey: string         // the key that worked
   modelId: string        // e.g. "zai-glm-4.7"
   latencyMs: number
   tokenUsage?: { prompt?: number; completion?: number; total?: number }
   savedAt: number        // Date.now()
+  /** Custom provider base/chat endpoint — present only for custom providers */
+  endpointUrl?: string
 }
 
 /** localStorage key — bump the version suffix if the shape changes. */
@@ -93,6 +95,7 @@ export function appendWorkingResults(
     latencyMs: number
     tokenUsage?: { prompt?: number; completion?: number; total?: number }
   }>,
+  endpointUrl?: string,
 ): WorkingKeyRecord[] {
   const existing = loadWorkingKeys()
 
@@ -101,6 +104,7 @@ export function appendWorkingResults(
     id: `${providerId}::${r.modelId}::${batchTs + i}`,
     providerId,
     providerName,
+    ...(endpointUrl ? { endpointUrl } : {}),
     apiKey,
     modelId: r.modelId,
     latencyMs: r.latencyMs,

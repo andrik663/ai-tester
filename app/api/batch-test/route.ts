@@ -2,9 +2,57 @@ import { NextRequest, NextResponse } from "next/server"
 import {
   PROVIDER_CONFIGS as SHARED_PROVIDER_CONFIGS,
   DEFAULT_PROMPT,
+  BATCH_MAX_TOKENS,
   fetchLiveModels,
+  normalizeCustomChatEndpoint,
+  normalizeCustomModelsEndpoint,
   type ProviderConfig,
 } from "@/lib/providers"
+
+/**
+ * Build a generic OpenAI-compatible config for a user-created custom provider.
+ * Accepts a base URL (https://api.example.com), a /v1 base, or a full chat URL.
+ */
+function buildCustomProviderConfig(chatEndpoint: string, customHeaders?: Record<string, string>): ProviderConfig {
+  return {
+    id: "custom",
+    models: [],
+    endpoint: chatEndpoint,
+    authHeader: (key: string) => ({ Authorization: `Bearer ${key}` }),
+    extraHeaders: customHeaders,
+    buildBody: (modelId: string, maxTokens?: number) => ({
+      model: modelId,
+      max_tokens: maxTokens ?? BATCH_MAX_TOKENS,
+      messages: [{ role: "user", content: DEFAULT_PROMPT }],
+    }),
+    extractReply: (parsed) => {
+      const choices = (parsed as { choices?: Array<{ message?: { content?: string } }> }).choices
+      return choices?.[0]?.message?.content
+    },
+  }
+}
+
+/** Fetch the live model list for a custom provider from its /models endpoint. */
+async function fetchCustomLiveModels(
+  modelsEndpoint: string,
+  apiKey: string,
+  timeoutMs = 10_000,
+): Promise<string[]> {
+  try {
+    const res = await fetch(modelsEndpoint, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    if (!res.ok) return []
+    const data = (await res.json()) as { data?: { id?: string }[]; models?: { id?: string }[] }
+    const entries = data?.data ?? data?.models ?? []
+    return entries
+      .map((m) => (typeof m?.id === "string" ? m.id : ""))
+      .filter((id) => id && id !== "unknown")
+  } catch {
+    return []
+  }
+}
 
 // Re-export so existing component imports still compile
 export { SHARED_PROVIDER_CONFIGS as PROVIDER_CONFIGS }
@@ -152,10 +200,16 @@ async function pLimit<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[
 export async function POST(req: NextRequest) {
   let providerId = ""
   let apiKey = ""
+  let customEndpoint = ""
+  let customModels: string[] = []
   try {
     const body = await req.json()
     providerId = String(body.providerId ?? "").trim()
     apiKey     = String(body.apiKey     ?? "").trim()
+    customEndpoint = String(body.customEndpoint ?? "").trim()
+    if (Array.isArray(body.customModels)) {
+      customModels = body.customModels.map((m: unknown) => String(m).trim()).filter(Boolean)
+    }
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
@@ -164,10 +218,54 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "apiKey is required" }, { status: 400 })
   }
 
-  const cfg = SHARED_PROVIDER_CONFIGS[providerId]
-  if (!cfg) {
-    return NextResponse.json({ error: `Unknown provider: ${providerId}` }, { status: 400 })
+  // ── Custom provider path: requires a customEndpoint (base or full chat URL) ──
+  const isCustom = !SHARED_PROVIDER_CONFIGS[providerId]
+  if (isCustom) {
+    const chatEndpoint = normalizeCustomChatEndpoint(customEndpoint)
+    if (!chatEndpoint) {
+      return NextResponse.json(
+        { error: `Provider kustom "${providerId}" membutuhkan Endpoint URL (https://domain.com, https://domain.com/v1, atau URL lengkap /chat/completions)` },
+        { status: 400 },
+      )
+    }
+    const cfg = buildCustomProviderConfig(chatEndpoint)
+
+    // Model list: user-typed models first, else live /v1/models fetch.
+    let modelIds = customModels
+    let modelSource: string = "custom"
+    if (modelIds.length === 0) {
+      const modelsUrl = normalizeCustomModelsEndpoint(customEndpoint)
+      if (modelsUrl) {
+        const live = await fetchCustomLiveModels(modelsUrl, apiKey)
+        if (live.length > 0) {
+          modelIds = live
+          modelSource = "live"
+        }
+      }
+    }
+    if (modelIds.length === 0) {
+      return NextResponse.json(
+        { error: `Tidak ada model untuk "${providerId}". Isi daftar model di konfigurasi atau pastikan GET ${normalizeCustomModelsEndpoint(customEndpoint)} merespons.` },
+        { status: 404 },
+      )
+    }
+
+    const start = Date.now()
+    const tasks = modelIds.map((modelId) => () => testModel(modelId, cfg, apiKey))
+    const results = await pLimit(tasks, cfg.concurrencyLimit ?? 6)
+    const durationMs = Date.now() - start
+    return NextResponse.json({
+      provider: providerId,
+      total: results.length,
+      passed: results.filter((r) => r.ok).length,
+      failed: results.filter((r) => !r.ok).length,
+      results,
+      durationMs,
+      modelSource,
+    } satisfies BatchTestResponse & { modelSource: string })
   }
+
+  const cfg = SHARED_PROVIDER_CONFIGS[providerId]
 
   // ── Resolve model list: live fetch if provider supports it, else static ────
   // This makes Dahono (and any other provider with modelsEndpoint) always use

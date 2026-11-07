@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getInternalToken, pickAnyKey, pickKey, getGatewayStore, GatewayKey, GatewayKeyScope, scopeForAuth } from "@/lib/gateway-cache"
 import { authenticateGatewayRequest } from "@/lib/gateway-auth"
-import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders } from "@/lib/providers"
+import { PROVIDER_CONFIGS, resolveProviderEndpoint, buildProviderHeaders, normalizeCustomChatEndpoint } from "@/lib/providers"
 import { writeGatewayLog, getSharedTokenUsageToday, sharedDailyTokenBudget } from "@/lib/gateway-logs"
 
 // Status codes that should trigger fallback to another key
@@ -261,15 +261,22 @@ function buildForwardBody(
 }
 
 /**
- * Build the endpoint URL for a specific provider + model.
- * Google requires the model in the URL path.
+ * Build the endpoint URL for a specific provider key + model.
+ * Custom providers (unknown to PROVIDER_CONFIGS) use their stored endpointUrl —
+ * a full chat URL or a base URL, normalized here. Built-in providers resolve
+ * from PROVIDER_CONFIGS; Google requires the model in the URL path.
  */
-function buildEndpoint(providerId: string, modelId: string, apiKey: string): string | null {
+function buildEndpoint(providerId: string, modelId: string, apiKey: string, endpointUrl?: string | null): string | null {
   if (providerId === "google") {
     return `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`
   }
   if (providerId === "huggingface") {
     return `https://api-inference.huggingface.co/models/${modelId}/v1/chat/completions`
+  }
+  // Custom provider: use the endpoint stored with the synced key.
+  const isBuiltin = providerId in PROVIDER_CONFIGS
+  if (!isBuiltin && endpointUrl) {
+    return normalizeCustomChatEndpoint(endpointUrl)
   }
   return resolveProviderEndpoint(providerId, apiKey)
 }
@@ -387,7 +394,7 @@ export async function POST(req: NextRequest) {
         continue
       }
     }
-    const endpoint = buildEndpoint(key.providerId, body.model, key.apiKey)
+    const endpoint = buildEndpoint(key.providerId, body.model, key.apiKey, key.endpointUrl)
     if (!endpoint) continue // skip providers needing extra config
 
     const headers = buildProviderHeaders(key.providerId, key.apiKey)

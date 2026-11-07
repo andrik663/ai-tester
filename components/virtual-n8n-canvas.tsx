@@ -1436,6 +1436,11 @@ print(res.choices[0].message.content)`
                           providerId={selectedProviderId}
                           providerName={selectedProviderName}
                           apiKey={apiKey}
+                          customEndpoint={
+                            (selectedProviderId === "custom" || selectedProviderId.startsWith("custom:"))
+                              ? providers.find((p) => p.id === selectedProviderId)?.endpoint || undefined
+                              : undefined
+                          }
                           onSaved={() => {
                             onTriggerGatewaySync()
                             void refreshState()

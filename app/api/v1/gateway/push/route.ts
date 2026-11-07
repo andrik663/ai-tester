@@ -74,6 +74,8 @@ interface GatewayKeyInput {
   modelIds: string[]
   avgLatencyMs?: number
   pushedAt?: number
+  /** Custom provider OpenAI-compatible chat endpoint (optional) */
+  endpointUrl?: string
 }
 
 interface PushBody {
@@ -105,6 +107,10 @@ function sanitize(raw: unknown[], ownerUserId: number | null, isShared: boolean)
       modelIds: k.modelIds.filter((m) => typeof m === "string" && m.trim().length > 0),
       avgLatencyMs: Math.round(Number(k.avgLatencyMs ?? 0)),
       pushedAt: Number(k.pushedAt ?? Date.now()),
+      endpointUrl:
+        typeof k.endpointUrl === "string" && /^https?:\/\//i.test(k.endpointUrl.trim())
+          ? k.endpointUrl.trim()
+          : null,
       // Owner and shared are server-side auth only — never taken from the
       // request body except the admin's shared flag, decided below.
       ownerUserId,

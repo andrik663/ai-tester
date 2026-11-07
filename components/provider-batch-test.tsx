@@ -266,6 +266,10 @@ interface Props {
   providerId: string
   apiKey: string
   providerName?: string
+  /** Custom provider endpoint (base or full chat URL) — required for custom providers */
+  customEndpoint?: string
+  /** Custom provider model list override (optional; falls back to live /models fetch) */
+  customModels?: string[]
   /** Called after passing results are saved — parent can refresh its Working Keys panel */
   onSaved?: (savedCount: number) => void
 }
@@ -273,21 +277,16 @@ interface Props {
 // Providers that fetch live model list from the gateway (Dahono, OpenAI, Groq, etc.)
 // Imported directly from lib/providers.ts — single source of truth.
 const DYNAMIC_PROVIDERS = PROVIDERS_WITH_LIVE_MODELS
-// Providers that truly cannot be batch-tested (no standard chat endpoint or
-// require interactive OAuth / variable env-based URLs):
-//   - "custom"  : user-defined endpoint, no static model list
-//   - "azure"   : endpoint URL varies per user ({{AZURE_RESOURCE_NAME}})
-// All other providers — including image/video ones — are allowed through so the
-// "Run All" button is always visible. The batch-test API will surface its own
-// error for providers with non-chat endpoints instead of silently hiding the button.
+// Providers that truly cannot be batch-tested (require interactive OAuth /
+// variable env-based URLs). "custom" is supported since the custom-endpoint
+// batch API accepts a base or full OpenAI-compatible chat URL.
 const UNSUPPORTED_PROVIDERS = new Set([
-  "custom",
   "azure",
 ])
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ProviderBatchTest({ providerId, apiKey, providerName, onSaved }: Props) {
+export default function ProviderBatchTest({ providerId, apiKey, providerName, customEndpoint, customModels, onSaved }: Props) {
   const [loading, setLoading]           = useState(false)
   const [data, setData]                 = useState<BatchTestResponse | null>(null)
   const [error, setError]               = useState<string | null>(null)
@@ -295,7 +294,11 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
   const [skeletonCount, setSkeletonCount] = useState(0)
   const [savedCount, setSavedCount]     = useState<number | null>(null)
 
-  const canRun = apiKey.trim().length >= 4 && !UNSUPPORTED_PROVIDERS.has(providerId)
+  const isCustomProvider = !DYNAMIC_PROVIDERS.has(providerId) && !PROVIDER_CONFIGS[providerId]
+  const canRun =
+    apiKey.trim().length >= 4 &&
+    !UNSUPPORTED_PROVIDERS.has(providerId) &&
+    (!isCustomProvider || Boolean(customEndpoint?.trim()))
 
   // How many models will be tested (used for skeleton count)
   const estimatedCount =
@@ -314,12 +317,16 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
 
     // For providers with live model lists, quickly fetch model count for skeleton display
     let skelCount = estimatedCount
-    if (DYNAMIC_PROVIDERS.has(providerId)) {
+    if (DYNAMIC_PROVIDERS.has(providerId) || isCustomProvider) {
       try {
         const r = await fetch("/api/fetch-models", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ provider: providerId, apiKey: apiKey.trim() }),
+          body: JSON.stringify({
+            provider: providerId,
+            apiKey: apiKey.trim(),
+            ...(customEndpoint?.trim() ? { customEndpoint: customEndpoint!.trim() } : {}),
+          }),
         })
         const d = await r.json()
         skelCount = d?.total ?? d?.models?.length ?? 14
@@ -331,7 +338,12 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
       const res = await fetch("/api/batch-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId, apiKey: apiKey.trim() }),
+        body: JSON.stringify({
+          providerId,
+          apiKey: apiKey.trim(),
+          ...(customEndpoint?.trim() ? { customEndpoint: customEndpoint!.trim() } : {}),
+          ...(customModels && customModels.length > 0 ? { customModels } : {}),
+        }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`)
@@ -350,6 +362,7 @@ export default function ProviderBatchTest({ providerId, apiKey, providerName, on
             latencyMs: r.latencyMs,
             tokenUsage: r.tokenUsage,
           })),
+          isCustomProvider ? customEndpoint?.trim() : undefined,
         )
         setSavedCount(passing.length)
         onSaved?.(passing.length)

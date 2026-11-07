@@ -31,7 +31,12 @@ interface LockedKeyRecord {
 
 // Build a ready-to-run curl command — key is masked in the output
 function buildCurlCommand(record: WorkingKeyRecord): string {
-  const endpoint = resolveProviderEndpoint(record.providerId, record.apiKey)
+  // Custom providers use their stored endpoint; built-ins resolve from the config table.
+  const endpoint = record.endpointUrl
+    ? record.endpointUrl.includes("/chat/completions")
+      ? record.endpointUrl
+      : `${record.endpointUrl.replace(/\/+$/, "")}/v1/chat/completions`
+    : resolveProviderEndpoint(record.providerId, record.apiKey)
   if (!endpoint) return `# endpoint requires extra config\n# Provider: ${record.providerName}`
 
   const headers = buildProviderHeaders(record.providerId, record.apiKey)
